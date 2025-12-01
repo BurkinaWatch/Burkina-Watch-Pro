@@ -1071,10 +1071,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   // ROUTES CHATBOT
   // ----------------------------------------
-  const openai = new OpenAI({
+  const hasOpenAIKey = !!(process.env.OPENAI_API_KEY || process.env.REPLIT_AI_API_KEY);
+  const openai = hasOpenAIKey ? new OpenAI({
     apiKey: process.env.OPENAI_API_KEY || process.env.REPLIT_AI_API_KEY,
     baseURL: process.env.REPLIT_AI_API_KEY ? "https://api.replit.ai/v1beta1" : undefined,
-  });
+  }) : null;
 
   const SYSTEM_PROMPT = `Tu es "Assistance Burkina Watch", un assistant intelligent et bienveillant qui aide les citoyens du Burkina Faso à utiliser la plateforme de veille citoyenne Burkina Watch.
 
@@ -1106,6 +1107,13 @@ Important : Si l'utilisateur est en danger immédiat, privilégie toujours la s�
 
   app.post("/api/chat", async (req: any, res) => {
     try {
+      if (!hasOpenAIKey || !openai) {
+        return res.status(503).json({
+          error: "L'assistant IA n'est pas disponible. La clé API OpenAI n'est pas configurée.",
+          unavailable: true
+        });
+      }
+
       const validationResult = insertChatMessageSchema.safeParse(req.body);
 
       if (!validationResult.success) {
