@@ -1,0 +1,278 @@
+import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Sparkles, X, Send, Loader2, Shield } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { nanoid } from "nanoid";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export default function ChatBot() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [sessionId] = useState(() => nanoid());
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Charger l'historique de la conversation
+  const { data: history, isLoading: historyLoading, isError: historyError } = useQuery<Message[]>({
+    queryKey: ["/api/chat/history", sessionId],
+    queryFn: async () => {
+      const res = await fetch(`/api/chat/history/${sessionId}`);
+      if (!res.ok) throw new Error("Erreur lors du chargement de l'historique");
+      return res.json();
+    },
+    enabled: isOpen,
+    retry: 1,
+  });
+
+  // Afficher une erreur si le chargement de l'historique échoue
+  useEffect(() => {
+    if (historyError && isOpen) {
+      toast({
+        title: "Erreur de chargement",
+        description: "Impossible de charger l'historique des conversations précédentes.",
+        variant: "destructive",
+      });
+    }
+  }, [historyError, isOpen, toast]);
+
+  // Fusionner l'historique chargé avec les messages locaux
+  // Seulement charger l'historique si aucun message local n'existe
+  useEffect(() => {
+    if (history && history.length > 0 && messages.length === 0) {
+      setMessages(history);
+    }
+  }, [history, messages.length]);
+
+  const chatMutation = useMutation({
+    mutationFn: async (message: string) => {
+      const res = await apiRequest("POST", "/api/chat", {
+        sessionId,
+        userId: user?.id || null,
+        content: message,
+        role: "user",
+      });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setMessages(prev => [...prev, { role: "assistant", content: data.message }]);
+    },
+    onError: (error: any) => {
+      console.error("Chat error:", error);
+      
+      // Parser l'erreur pour extraire les détails
+      const errorMessage = error?.message || "";
+      let errorDetails: { error?: string; quotaExceeded?: boolean } = {};
+      
+      try {
+        // Format de l'erreur: "503: {\"error\":\"...\",\"quotaExceeded\":true}"
+        const match = errorMessage.match(/\d+:\s*({.*})/);
+        if (match && match[1]) {
+          errorDetails = JSON.parse(match[1]);
+        }
+      } catch (e) {
+        // Si parsing échoue, utiliser le message générique
+      }
+      
+      // Afficher un toast différencié selon le type d'erreur
+      if (errorDetails.quotaExceeded) {
+        toast({
+          title: "Quota d'IA épuisé",
+          description: errorDetails.error || "Le quota d'utilisation de l'assistant est temporairement épuisé. Veuillez réessayer dans quelques instants.",
+          variant: "destructive",
+        });
+        
+        // Ajouter un message système dans le chat
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: "⚠️ Désolé, le quota d'utilisation de l'assistant IA est temporairement épuisé. Veuillez réessayer dans quelques instants. Pour toute urgence, n'hésitez pas à appeler le 17 (Police) ou 18 (Pompiers).",
+        }]);
+      } else {
+        toast({
+          title: "Erreur",
+          description: errorDetails.error || "Impossible d'envoyer le message. Veuillez réessayer.",
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!input.trim() || chatMutation.isPending) return;
+
+    const userMessage = input.trim();
+    setInput("");
+    setMessages(prev => [...prev, { role: "user", content: userMessage }]);
+    chatMutation.mutate(userMessage);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  if (!isOpen) {
+    return (
+      <div className="fixed bottom-[280px] md:bottom-[340px] right-4 z-50 animate-float">
+        <div className="relative">
+          {/* Anneau pulsant aux couleurs du Burkina */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-red-500 via-yellow-400 to-green-600 animate-pulse opacity-40 blur-sm"></div>
+          
+          {/* Bouton principal */}
+          <Button
+            onClick={() => setIsOpen(true)}
+            className="relative w-16 h-16 md:w-20 md:h-20 rounded-full shadow-2xl bg-gradient-to-br from-red-600 via-yellow-500 to-green-600 hover:from-red-700 hover:via-yellow-600 hover:to-green-700 transition-all duration-300 hover:scale-110 hover:shadow-3xl border-2 border-yellow-400/50"
+            size="lg"
+            data-testid="button-open-chatbot"
+          >
+            {/* Étoile symbolisant l'excellence burkinabé */}
+            <div className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6">
+              <svg viewBox="0 0 24 24" className="fill-yellow-300 animate-spin-slow">
+                <path d="M12 2l2.4 7.4h7.6l-6 4.6 2.3 7.4-6.3-4.6-6.3 4.6 2.3-7.4-6-4.6h7.6z"/>
+              </svg>
+            </div>
+            
+            <div className="flex flex-col items-center gap-0.5 text-white">
+              <Sparkles className="w-6 h-6 md:w-7 md:h-7 drop-shadow-lg" />
+              <span className="text-[10px] md:text-xs font-bold tracking-wide">ASSISTANT</span>
+            </div>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Card className="fixed bottom-6 left-6 w-96 h-[600px] shadow-2xl flex flex-col z-50 border-2 border-primary/20">
+      <CardHeader className="bg-gradient-to-r from-primary to-green-600 text-white p-4 rounded-t-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Shield className="w-5 h-5" />
+            <CardTitle className="text-lg font-bold" data-testid="text-chatbot-title">
+              Assistance Burkina Watch
+            </CardTitle>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsOpen(false)}
+            className="text-white hover:bg-white/20"
+            data-testid="button-close-chatbot"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+        <p className="text-xs text-white/90 mt-1">
+          Votre assistant pour signaler et rester en sécurité
+        </p>
+      </CardHeader>
+
+      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+          {historyLoading ? (
+            <div className="flex flex-col items-center justify-center h-full text-center p-6 space-y-4">
+              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+              <p className="text-sm text-muted-foreground">Chargement de l'historique...</p>
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center p-6 space-y-4">
+              <Shield className="w-16 h-16 text-primary/30" />
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Bonjour ! 👋</h3>
+                <p className="text-sm text-muted-foreground">
+                  Je suis là pour vous aider à utiliser Burkina Watch.
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Posez-moi des questions sur :
+                </p>
+                <ul className="text-xs text-muted-foreground mt-2 space-y-1">
+                  <li>• Comment créer un signalement</li>
+                  <li>• Les conseils de sécurité</li>
+                  <li>• Comment fonctionne l'anonymat</li>
+                  <li>• Les numéros d'urgence</li>
+                </ul>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="space-y-4">
+            {messages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                data-testid={`message-${msg.role}-${idx}`}
+              >
+                <div
+                  className={`max-w-[85%] rounded-lg px-4 py-2 ${
+                    msg.role === "user"
+                      ? "bg-primary text-white"
+                      : "bg-muted text-foreground"
+                  }`}
+                >
+                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                </div>
+              </div>
+            ))}
+            {chatMutation.isPending && (
+              <div className="flex justify-start">
+                <div className="bg-muted rounded-lg px-4 py-2 flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-sm text-muted-foreground">En train d'écrire...</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+
+        <div className="border-t p-4 bg-background">
+          <div className="flex gap-2">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={historyLoading ? "Chargement..." : "Tapez votre message..."}
+              disabled={chatMutation.isPending || historyLoading}
+              className="flex-1"
+              data-testid="input-chat-message"
+            />
+            <Button
+              onClick={handleSend}
+              disabled={!input.trim() || chatMutation.isPending || historyLoading}
+              size="icon"
+              className="bg-primary hover:bg-primary/90"
+              data-testid="button-send-message"
+            >
+              {chatMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            ⚠️ En cas d'urgence, appelez le 17 (Police) ou 18 (Pompiers)
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

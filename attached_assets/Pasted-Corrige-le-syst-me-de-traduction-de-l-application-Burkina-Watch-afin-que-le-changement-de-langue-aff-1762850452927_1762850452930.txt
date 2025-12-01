@@ -1,0 +1,73 @@
+Corrige le système de traduction de l’application Burkina Watch afin que le changement de langue affecte **toutes les pages et tous les composants**.
+
+Problème actuel :
+Le sélecteur de langue fonctionne, mais seules certaines sections (titre et slogan) changent de langue.
+Les autres composants gardent le texte initial ou ne se mettent pas à jour.
+
+Objectif :
+Faire en sorte que la sélection de langue se répercute sur **l’ensemble de l’application** sans avoir à recharger manuellement.
+
+Actions à effectuer :
+1. Vérifie que tous les composants utilisent bien le hook `useTranslation()` de `react-i18next` au lieu de textes statiques.
+   Exemple :
+   ```js
+   import { useTranslation } from 'react-i18next';
+   const { t } = useTranslation();
+   <Text>{t('menu.signalements')}</Text>
+Supprime tous les textes écrits en dur dans le JSX.
+Remplace-les par des clés de traduction centralisées dans les fichiers JSON du dossier /locales.
+
+Assure-toi que le provider i18n (I18nextProvider) englobe bien toute l’application (dans App.js ou index.js).
+Exemple :
+
+js
+Copier le code
+import { I18nextProvider } from 'react-i18next';
+import i18n from './i18n';
+<I18nextProvider i18n={i18n}>
+    <App />
+</I18nextProvider>
+Ajoute un listener global sur le changement de langue :
+
+Lorsqu’une nouvelle langue est choisie, appelle i18n.changeLanguage(langueChoisie) ;
+
+Force le re-render automatique via le contexte React ou un state global.
+
+Vérifie que les pages suivantes sont bien reliées à i18next :
+
+Accueil
+
+Signalements / Détails d’un signalement
+
+Carte
+
+SOS
+
+Profil
+
+Tableau de bord
+
+Paramètres / Aide / À propos
+Toutes doivent récupérer leurs textes via la fonction t() et non en dur.
+
+Charge la bonne langue au démarrage :
+
+Vérifie AsyncStorage / localStorage pour lire la dernière langue choisie ;
+
+Si aucune n’est trouvée, par défaut : “fr”.
+
+Teste la cohérence :
+
+Quand on change la langue, tout le texte change instantanément ;
+
+Même les notifications, pop-ups, boutons, et placeholders doivent être mis à jour ;
+
+Pas besoin de recharger manuellement l’app.
+
+Optionnel : ajoute un log console à chaque changement de langue (console.log('Langue active :', i18n.language)) pour faciliter le débogage.
+
+Résultat attendu :
+Lorsque l’utilisateur sélectionne une langue (français, anglais, mooré, dioula, fulfuldé),
+→ toutes les pages changent automatiquement de texte,
+→ la préférence est sauvegardée,
+→ et le changement est instantané sans perte de contexte ni rechargement complet.

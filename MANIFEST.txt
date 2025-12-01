@@ -1,0 +1,123 @@
+# BURKINA WATCH - CONTENU DE L'ARCHIVE PORTABLE
+# ==============================================
+
+## Fichiers de documentation
+- README_PORTABLE.md          Guide d'installation et d'utilisation
+- DOCUMENTATION_TECHNIQUE.md  Documentation technique complète
+- MANIFEST.txt                Ce fichier (liste du contenu)
+- replit.md                   Architecture et préférences
+
+## Scripts d'installation et de démarrage
+- setup.sh                    Script d'installation automatique
+- start.sh                    Script de démarrage avec menu
+- package.json                Dépendances et scripts npm
+- package-lock.json           Versions exactes des dépendances
+
+## Configuration
+- .env.example                Variables d'environnement à configurer
+- .replit                     Configuration Replit
+- tsconfig.json               Configuration TypeScript
+- vite.config.ts              Configuration Vite
+- tailwind.config.ts          Configuration Tailwind CSS
+- drizzle.config.ts           Configuration Drizzle ORM
+- postcss.config.js           Configuration PostCSS
+- components.json             Configuration Shadcn/ui
+
+## Code source - Frontend (client/)
+- client/index.html           Page HTML de base
+- client/src/main.tsx         Point d'entrée React
+- client/src/App.tsx          Composant principal avec routing
+- client/src/index.css        Styles globaux
+
+### Pages (client/src/pages/)
+- Landing.tsx                 Page d'accueil publique
+- Home.tsx                    Dashboard principal
+- Feed.tsx                    Flux de signalements
+- Carte.tsx                   Carte interactive
+- SignalementDetail.tsx       Page de détail d'un signalement
+- Publier.tsx                 Formulaire de publication
+- SOSPublier.tsx              Formulaire SOS
+- SOS.tsx                     Page SOS
+- Profil.tsx                  Profil utilisateur
+- ProfilPublic.tsx            Profil public
+- Notifications.tsx           Notifications
+- APropos.tsx                 Page À propos
+- Conditions.tsx              Conditions d'utilisation
+- Contribuer.tsx              Page de contribution
+- Admin.tsx                   Page administration
+- not-found.tsx               Page 404
+
+### Composants (client/src/components/)
+- Header.tsx                  En-tête de navigation
+- SignalementCard.tsx         Carte de signalement
+- CommentDialog.tsx           Dialogue de commentaires
+- EmergencyPanel.tsx          Panneau d'urgences
+- GoogleMap.tsx               Composant carte Google Maps
+- HamburgerMenu.tsx           Menu hamburger
+- BottomNav.tsx               Navigation mobile
+- CategoryBadge.tsx           Badge de catégorie
+- EditSignalementDialog.tsx   Dialogue d'édition
+- FilterChips.tsx             Filtres par chips
+- LanguageSelector.tsx        Sélecteur de langue
+- MapPlaceholder.tsx          Placeholder carte
+- MessageDuJour.tsx           Message du jour
+- PanicButton.tsx             Bouton panique
+- StatCard.tsx                Carte statistique
+- StatutBadge.tsx             Badge de statut
+- StealthModeProvider.tsx     Mode furtif
+- ThemeProvider.tsx           Provider de thème
+- ui/                         Composants Shadcn/ui
+
+### Hooks et utilitaires (client/src/)
+- hooks/use-toast.ts          Hook pour les notifications toast
+- hooks/useAuth.ts            Hook pour l'authentification
+- hooks/use-mobile.tsx        Hook pour la détection mobile
+- lib/queryClient.ts          Configuration TanStack Query
+- lib/utils.ts                Fonctions utilitaires
+- lib/authUtils.ts            Utilitaires d'authentification
+- lib/messagesDuJour.ts       Messages du jour
+
+## Code source - Backend (server/)
+- server/index.ts             Point d'entrée serveur Express
+- server/routes.ts            Routes API REST
+- server/storage.ts           Interface d'accès aux données
+- server/replitAuth.ts        Configuration Replit Auth (OIDC)
+- server/vite.ts              Middleware Vite pour développement
+- server/resend.ts            Service email (Resend)
+- server/geocoding.ts         Service de géocodage
+- server/aiVerification.ts    Vérification AI
+- server/db.ts                Configuration base de données
+- server/migrate.ts           Utilitaire de migration
+
+## Code partagé (shared/)
+- shared/schema.ts            Schémas Drizzle ORM + Zod
+                             (users, signalements, likes, commentaires, 
+                              notifications, tracking, emergency_contacts)
+
+## Assets (attached_assets/)
+- burkina_watch_logo.png      Logo de l'application
+- Citizens_collaborating...   Image d'illustration
+- Autres assets statiques
+
+## Build de production (dist/)
+- dist/public/                Frontend compilé (HTML, CSS, JS)
+- dist/public/assets/         Assets optimisés
+- dist/index.js               Backend compilé
+
+## Fichiers système
+- .gitignore                  Fichiers à ignorer par Git
+
+## TOTAL : ~7 MB (compressé, 180 fichiers)
+
+## Installation rapide
+1. Extraire l'archive : tar -xzf burkina-watch-portable.tar.gz
+2. Installer les dépendances : ./setup.sh
+3. Configurer .env avec vos variables
+4. Lancer l'application : ./start.sh
+
+## Prérequis
+- Node.js 18+
+- PostgreSQL 14+
+- npm 9+
+
+Pour plus de détails, consultez README_PORTABLE.md

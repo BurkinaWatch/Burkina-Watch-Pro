@@ -1,0 +1,174 @@
+
+{
+  "app": {
+    "name": "Burkina Watch",
+    "tagline": "Yiyde. Waɗa. Ndeenka.",
+    "description": "Laawol yiiltingol jamaa e jaabawol"
+  },
+  "nav": {
+    "home": "Suudu",
+    "map": "Nder doole",
+    "publish": "Winndita",
+    "sos": "SOS",
+    "profile": "Humpito",
+    "feed": "Kabaruuji",
+    "notifications": "Jaabawol",
+    "about": "Baɗte",
+    "contribute": "Wallita",
+    "settings": "Teeminannde"
+  },
+  "common": {
+    "save": "Mooftu",
+    "cancel": "Haaytin",
+    "delete": "Momtu",
+    "edit": "Taƴto",
+    "confirm": "Teeŋtin",
+    "close": "Uddu",
+    "loading": "Nana rokkaa...",
+    "error": "Juumre",
+    "success": "Moƴƴi",
+    "warning": "Jiytingol",
+    "all": "Fof"
+  },
+  "auth": {
+    "login": "Naata",
+    "logout": "Yalta",
+    "loginRequired": "Naatgol waɗi",
+    "loginMessage": "Aɗa foti naata ngam yiyde ndee hello"
+  },
+  "home": {
+    "newReport": "Jaabawol hesere",
+    "viewMap": "Yiyde nder doole",
+    "activeReports": "Jaabawol golle",
+    "sosAlerts": "SOS jiytinɗe",
+    "activeCitizens": "Yimɓe golle",
+    "recentReports": "Jaabawol keso",
+    "viewAll": "Yiyde fof",
+    "protectTogether": "Nden e nden, en ndeenka leyɗe amen",
+    "contributeNow": "Wallita jooni"
+  },
+  "report": {
+    "title": "Innde",
+    "description": "Tafsirgol",
+    "category": "Fedde",
+    "location": "Nokku",
+    "urgency": "Ɓandu gaadangol",
+    "image": "Natal",
+    "submit": "Neldu",
+    "status": {
+      "pending": "Nana rokkaa",
+      "inProgress": "Nana golle",
+      "resolved": "Gasii",
+      "rejected": "Ñaawaa"
+    },
+    "categories": {
+      "urgence": "Gaadangol",
+      "securite": "Kisal",
+      "sante": "Cellal",
+      "environnement": "Ɗaɗol",
+      "corruption": "Yoɓangol",
+      "infrastructure": "Geɗe",
+      "personne_recherchee": "Neɗɗo yiiltaa"
+    },
+    "urgencyLevels": {
+      "faible": "Keɓal",
+      "moyen": "Hakkunde",
+      "critique": "Mawngol"
+    }
+  },
+  "sos": {
+    "emergency": "Gaadangol",
+    "sendAlert": "Neldu SOS jiytingol",
+    "panicButton": "Buttonkaaku kulol",
+    "pressToActivate": "Ñiiɓo ngam hurma",
+    "alertSent": "Jiytingol neldaama",
+    "locationShared": "Nokku maa jaɓaama"
+  },
+  "profile": {
+    "myProfile": "Humpito am",
+    "editProfile": "Taƴto humpito",
+    "firstName": "Innde arandeeje",
+    "lastName": "Innde gootol",
+    "phone": "Telefon",
+    "city": "Wuro",
+    "profession": "Golle",
+    "bio": "Tafsirgol",
+    "myPublications": "Winnditaaji am",
+    "gpsTracking": "GPS yiiltingol",
+    "emergencyContacts": "Jeyaaɓe gaadangol",
+    "points": "ngoñɗe",
+    "badges": {
+      "activeCitizen": "Neɗɗo golle",
+      "regionalWatcher": "Yiiltotoowo leyɗe",
+      "reliableReporter": "Jaabotoowo goongɗiniiɗo",
+      "localAmbassador": "Ambassad nokku"
+    }
+  },
+  "tracking": {
+    "liveTracking": "Yiiltingol nokku jooni",
+    "trackingActive": "Yiiltingol golle",
+    "trackingInactive": "Yiiltingol haɗaani",
+    "pointsRecorded": "ngoñɗe winndaama",
+    "start": "Fuɗɗo",
+    "stop": "Haɗa",
+    "history": "Taariika waktuuji",
+    "duration": "Ɓanndu waktu"
+  },
+  "emergency": {
+    "contacts": "Jeyaaɓe gaadangol",
+    "addContact": "Ɓeydu jeyɗo",
+    "name": "Innde",
+    "noContacts": "Jeyɗo gaadangol alaa",
+    "panicDescription": "Ɓee jeyaaɓe njaɓa GPS nokku maa so buttonkaaku kulol ñiiɓaama"
+  },
+  "settings": {
+    "language": "Ɗemngal",
+    "theme": "Toowde",
+    "notifications": "Jaabawol",
+    "privacy": "Sutura",
+    "selectLanguage": "Suɓo ɗemngal",
+    "languages": {
+      "fr": "Farayse",
+      "en": "Engele",
+      "dioula": "Jula",
+      "moore": "Mooré",
+      "fulfulde": "Fulfuldé"
+    }
+  },
+  "notifications": {
+    "title": "Jaabawol",
+    "noNotifications": "Jaabawol alaa",
+    "markAsRead": "Timmino ko taraama",
+    "newSOS": "SOS jaabawol hesere",
+    "reportResolved": "Jaabawol gasii",
+    "systemUpdate": "Hesɗitingol geɗel"
+  },
+  "messageDuJour": {
+    "proverbe": "Darol ñalnde",
+    "conseil": "Nasiiha ñalnde",
+    "encouragement": "Haala ñalnde"
+  },
+  "messages": {
+    "languageChanged": "Ɗemngal wayliima",
+    "reportSuccess": "Jaabawol sosaa no haani",
+    "reportDeleted": "Jaabawol momtaama",
+    "profileUpdated": "Humpito hesɗitinaama",
+    "trackingStarted": "Yiiltingol fuɗɗii",
+    "trackingStopped": "Yiiltingol haɗii",
+    "contactAdded": "Jeyɗo ɓeydaama",
+    "contactDeleted": "Jeyɗo momtaama",
+    "locationError": "Horiima heɓde nokku maa",
+    "languageChanged": "Ɗemngal waylaama"
+  },
+  "moderation": {
+    "title": "Filter jammu",
+    "warningTitle": "Haala ɓooyɗo njiytaa",
+    "warningMessage": "Haala maa ena waawi ena ɓooyɗo. Aɗa yiɗi taƴtaade hade a jaɓa?",
+    "blockedTitle": "Winnditaare daaƴaama",
+    "blockedMessage": "Amen Filter jammu ena ndeenka yurmeende e ballal hakkunde neɗɓe.",
+    "suggestion": "Taƴtinal hakilantaangal",
+    "tryAgain": "Taƴto kadi",
+    "cancel": "Haaytin",
+    "reason": "Sabaabu"
+  }
+}

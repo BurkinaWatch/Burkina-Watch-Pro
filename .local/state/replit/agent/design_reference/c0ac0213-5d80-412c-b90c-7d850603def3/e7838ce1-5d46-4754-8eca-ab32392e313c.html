@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WagaRaaga - L'app des prix et trocs du marché</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-orange': '#E67E22',
+                        'good-deal': '#27AE60',
+                        'high-price': '#E74C3C',
+                        'amber': '#F39C12',
+                        'purple-accent': '#8E44AD',
+                        'dark-text': '#2C3E50',
+                        'light-gray': '#ECF0F1'
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    borderRadius: {
+                        'xl': '12px',
+                        '2xl': '16px'
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #E67E22 0%, #F39C12 100%);
+        }
+        .pattern-overlay {
+            background-image: 
+                radial-gradient(circle at 25% 25%, #ffffff10 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, #ffffff10 2px, transparent 2px);
+            background-size: 24px 24px;
+        }
+        .price-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .7; }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-50 text-dark-text">
+
+<!-- @COMPONENT: AppContainer [Main mobile container] -->
+<div class="max-w-sm mx-auto bg-white min-h-screen shadow-xl overflow-hidden">
+    
+    <!-- @COMPONENT: StatusBar [Mobile status bar] -->
+    <div class="gradient-bg pattern-overlay px-4 py-2 text-white text-sm flex justify-between items-center">
+        <div class="flex items-center gap-1">
+            <i class="fas fa-signal text-xs"></i>
+            <span class="text-xs">Orange</span>
+        </div>
+        <div class="text-xs font-medium">9:47</div>
+        <div class="flex items-center gap-1">
+            <span class="text-xs">85%</span>
+            <i class="fas fa-battery-three-quarters text-xs"></i>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: StatusBar -->
+
+    <!-- @COMPONENT: Header [App header with logo and user actions] -->
+    <div class="gradient-bg pattern-overlay px-4 py-6 text-white">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
+                    <i class="fas fa-store text-primary-orange text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold">WagaRaaga</h1>
+                    <p class="text-sm opacity-90" data-mock="true">Marché Sandaga, Dakar</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button class="w-10 h-10 bg-white bg-opacity-20 rounded-xl flex items-center justify-center" data-event="click:toggleVoiceMode">
+                    <i class="fas fa-microphone text-lg"></i>
+                </button>
+                <button class="w-10 h-10 bg-white bg-opacity-20 rounded-xl flex items-center justify-center relative">
+                    <i class="fas fa-bell text-lg"></i>
+                    <span class="absolute -top-1 -right-1 w-4 h-4 bg-high-price text-white text-xs rounded-full flex items-center justify-center">3</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- @COMPONENT: SearchBar [Main search functionality] -->
+        <div class="relative">
+            <input type="text" placeholder="Rechercher manioc, poisson, tissus..." 
+                   class="w-full bg-white bg-opacity-20 backdrop-blur-sm text-white placeholder-white placeholder-opacity-75 
+                          px-4 py-3 rounded-xl border border-white border-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                   data-mock="true">
+            <button class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <i class="fas fa-search text-white opacity-75"></i>
+            </button>
+        </div>
+        <!-- @END_COMPONENT: SearchBar -->
+    </div>
+    <!-- @END_COMPONENT: Header -->
+
+    <!-- @COMPONENT: MainContent [Scrollable main content area] -->
+    <div class="flex-1 overflow-y-auto pb-20">
+        
+        <!-- @COMPONENT: DailyDeals [Morning deals section] -->
+        <div class="px-4 py-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    <i class="fas fa-sun text-amber"></i>
+                    Bons Plans du Matin
+                </h2>
+                <span class="text-sm text-gray-500" data-bind="currentTime">9:47</span>
+            </div>
+            
+            <!-- @MAP: dailyDeals.map(deal => ( -->
+            <div class="bg-gradient-to-r from-good-deal to-green-400 rounded-2xl p-4 mb-3 text-white relative overflow-hidden">
+                <div class="pattern-overlay absolute inset-0 opacity-30"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-semibold" data-bind="deal.product">Manioc frais</h3>
+                        <span class="bg-white bg-opacity-30 px-2 py-1 rounded-lg text-sm font-medium">-25%</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm opacity-90" data-bind="deal.vendor">Chez Fatou</p>
+                            <p class="text-lg font-bold" data-bind="deal.price">1500 CFA/kg</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-map-marker-alt text-sm opacity-75"></i>
+                            <span class="text-sm" data-bind="deal.distance">500m</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white border border-gray-200 rounded-2xl p-4 mb-3 relative">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <!-- Fresh fish from the Atlantic Ocean near Dakar -->
+                        <img src="https://images.unsplash.com/photo-1544943910-4c1dc44aab44?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100" 
+                             alt="Fresh fish" class="w-12 h-12 rounded-xl object-cover" data-mock-image="true">
+                        <div>
+                            <h3 class="font-semibold text-dark-text" data-bind="deal.product">Poisson Thiof</h3>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-gray-500" data-bind="deal.vendor">Marché au poisson</span>
+                                <div class="flex items-center">
+                                    <i class="fas fa-star text-amber text-xs"></i>
+                                    <span class="text-xs text-gray-500 ml-1">4.8</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-bold text-dark-text" data-bind="deal.price">2800 CFA/kg</p>
+                        <p class="text-sm text-good-deal font-medium">Prix stable</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 justify-between">
+                    <button class="flex-1 bg-primary-orange text-white py-2 px-4 rounded-xl font-medium text-sm" 
+                            data-event="click:openBartering">
+                        <i class="fas fa-exchange-alt mr-2"></i>Troquer
+                    </button>
+                    <button class="flex-1 bg-gray-100 text-dark-text py-2 px-4 rounded-xl font-medium text-sm ml-2"
+                            data-event="click:openChat">
+                        <i class="fas fa-comments mr-2"></i>Négocier
+                    </button>
+                </div>
+            </div>
+            <!-- @END_MAP )) -->
+        </div>
+        <!-- @END_COMPONENT: DailyDeals -->
+
+        <!-- @COMPONENT: Categories [Product categories section] -->
+        <div class="px-4 py-2">
+            <h2 class="text-lg font-semibold mb-4">Catégories Populaires</h2>
+            <div class="grid grid-cols-4 gap-3 mb-6">
+                <!-- @MAP: categories.map(category => ( -->
+                <div class="text-center" data-event="click:selectCategory">
+                    <div class="w-16 h-16 bg-gradient-to-br from-primary-orange to-amber rounded-2xl flex items-center justify-center mb-2 mx-auto shadow-sm">
+                        <i class="fas fa-seedling text-white text-xl"></i>
+                    </div>
+                    <span class="text-xs text-gray-600" data-bind="category.name">Légumes</span>
+                </div>
+                
+                <div class="text-center" data-event="click:selectCategory">
+                    <div class="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mb-2 mx-auto shadow-sm">
+                        <i class="fas fa-fish text-white text-xl"></i>
+                    </div>
+                    <span class="text-xs text-gray-600" data-bind="category.name">Poissons</span>
+                </div>
+                
+                <div class="text-center" data-event="click:selectCategory">
+                    <div class="w-16 h-16 bg-gradient-to-br from-purple-accent to-purple-600 rounded-2xl flex items-center justify-center mb-2 mx-auto shadow-sm">
+                        <i class="fas fa-cut text-white text-xl"></i>
+                    </div>
+                    <span class="text-xs text-gray-600" data-bind="category.name">Tissus</span>
+                </div>
+                
+                <div class="text-center" data-event="click:selectCategory">
+                    <div class="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mb-2 mx-auto shadow-sm">
+                        <i class="fas fa-apple-alt text-white text-xl"></i>
+                    </div>
+                    <span class="text-xs text-gray-600" data-bind="category.name">Fruits</span>
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+        </div>
+        <!-- @END_COMPONENT: Categories -->
+
+        <!-- @COMPONENT: ProductGrid [Main product listings] -->
+        <div class="px-4">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold">Produits Près de Vous</h2>
+                <button class="text-primary-orange text-sm font-medium" data-event="click:showAllProducts">Tout voir</button>
+            </div>
+            
+            <!-- @MAP: nearbyProducts.map(product => ( -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
+                <div class="relative">
+                    <!-- Fresh cassava roots from a West African market -->
+                    <img src="https://pixabay.com/get/g76f4cb83b6f671484cdce92634e769fea5e1b5588b16938a281758c2ae5534e581cddfa2158f3e6adcf966cbb9d5b323e626141aca0baa9ccedecb19ba106fd8_1280.jpg" 
+                         alt="Fresh cassava" class="w-full h-40 object-cover" data-mock-image="true">
+                    <div class="absolute top-3 left-3">
+                        <span class="bg-good-deal text-white px-2 py-1 rounded-lg text-xs font-medium price-pulse">
+                            Bon prix
+                        </span>
+                    </div>
+                    <div class="absolute top-3 right-3">
+                        <button class="w-8 h-8 bg-white bg-opacity-90 rounded-full flex items-center justify-center">
+                            <i class="far fa-heart text-gray-600"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="p-4">
+                    <div class="flex items-start justify-between mb-2">
+                        <div>
+                            <h3 class="font-semibold text-dark-text" data-bind="product.name">Manioc Bio</h3>
+                            <p class="text-sm text-gray-500" data-bind="product.vendor">Ferme de Mbour</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-lg font-bold text-dark-text" data-bind="product.price">1200 CFA/kg</p>
+                            <p class="text-xs text-good-deal">↓ 200 CFA</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 mb-3">
+                        <div class="flex items-center">
+                            <i class="fas fa-map-marker-alt text-gray-400 text-xs mr-1"></i>
+                            <span class="text-xs text-gray-500" data-bind="product.distance">1.2 km</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-clock text-gray-400 text-xs mr-1"></i>
+                            <span class="text-xs text-gray-500" data-bind="product.updated">il y a 15 min</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-star text-amber text-xs mr-1"></i>
+                            <span class="text-xs text-gray-500" data-bind="product.rating">4.6 (12)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button class="flex-1 bg-primary-orange text-white py-2 px-3 rounded-xl font-medium text-sm"
+                                data-event="click:initiateBartering">
+                            <i class="fas fa-exchange-alt mr-2"></i>Échanger
+                        </button>
+                        <button class="bg-gray-100 text-dark-text py-2 px-3 rounded-xl"
+                                data-event="click:startVoiceChat">
+                            <i class="fas fa-microphone text-lg"></i>
+                        </button>
+                        <button class="bg-gray-100 text-dark-text py-2 px-3 rounded-xl"
+                                data-event="click:shareProduct">
+                            <i class="fas fa-share-alt text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
+                <div class="relative">
+                    <!-- Colorful traditional African wax print fabrics -->
+                    <img src="https://images.unsplash.com/photo-1582582621959-48d27397dc69?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200" 
+                         alt="African wax print fabrics" class="w-full h-40 object-cover" data-mock-image="true">
+                    <div class="absolute top-3 left-3">
+                        <span class="bg-amber text-white px-2 py-1 rounded-lg text-xs font-medium">
+                            Prix moyen
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="p-4">
+                    <div class="flex items-start justify-between mb-2">
+                        <div>
+                            <h3 class="font-semibold text-dark-text" data-bind="product.name">Wax Premium</h3>
+                            <p class="text-sm text-gray-500" data-bind="product.vendor">Atelier Khadija</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-lg font-bold text-dark-text" data-bind="product.price">8500 CFA/m</p>
+                            <p class="text-xs text-gray-500">Prix stable</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 mb-3">
+                        <div class="flex items-center">
+                            <i class="fas fa-map-marker-alt text-gray-400 text-xs mr-1"></i>
+                            <span class="text-xs text-gray-500" data-bind="product.distance">800 m</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-palette text-gray-400 text-xs mr-1"></i>
+                            <span class="text-xs text-gray-500">12 motifs</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-star text-amber text-xs mr-1"></i>
+                            <span class="text-xs text-gray-500" data-bind="product.rating">4.9 (28)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button class="flex-1 bg-primary-orange text-white py-2 px-3 rounded-xl font-medium text-sm"
+                                data-event="click:viewDetails">
+                            <i class="fas fa-eye mr-2"></i>Voir détails
+                        </button>
+                        <button class="bg-gray-100 text-dark-text py-2 px-3 rounded-xl"
+                                data-event="click:startVoiceChat">
+                            <i class="fas fa-microphone text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_MAP )) -->
+        </div>
+        <!-- @END_COMPONENT: ProductGrid -->
+
+        <!-- @COMPONENT: BarteringSection [Virtual bartering showcase] -->
+        <div class="px-4 py-6 bg-gradient-to-r from-purple-50 to-blue-50 mx-4 rounded-2xl mb-6">
+            <div class="text-center mb-4">
+                <div class="w-16 h-16 bg-gradient-to-br from-purple-accent to-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-exchange-alt text-white text-2xl"></i>
+                </div>
+                <h2 class="text-lg font-semibold text-dark-text mb-2">Système de Troc Virtuel</h2>
+                <p class="text-sm text-gray-600 mb-4">Échangez vos produits sans utiliser d'argent</p>
+            </div>
+            
+            <div class="bg-white rounded-xl p-4 mb-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-seedling text-good-deal"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-sm" data-mock="true">Votre riz (2kg)</p>
+                            <p class="text-xs text-gray-500">Évalué à 3000 CFA</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-arrow-right text-primary-orange"></i>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-fish text-blue-500"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-sm" data-mock="true">Poisson (1kg)</p>
+                            <p class="text-xs text-gray-500">Valeur équivalente</p>
+                        </div>
+                    </div>
+                </div>
+                <button class="w-full bg-primary-orange text-white py-2 rounded-lg font-medium text-sm mt-3"
+                        data-event="click:confirmBarter">
+                    <i class="fas fa-handshake mr-2"></i>Confirmer l'échange
+                </button>
+            </div>
+            
+            <button class="w-full bg-white border-2 border-primary-orange text-primary-orange py-2 rounded-lg font-medium text-sm"
+                    data-event="click:openBarteringHub">
+                <i class="fas fa-plus mr-2"></i>Proposer un nouveau troc
+            </button>
+        </div>
+        <!-- @END_COMPONENT: BarteringSection -->
+
+    </div>
+    <!-- @END_COMPONENT: MainContent -->
+
+    <!-- @COMPONENT: BottomNavigation [Main app navigation] -->
+    <div class="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-white border-t border-gray-200 px-4 py-2">
+        <div class="flex items-center justify-around">
+            <button class="flex flex-col items-center gap-1 py-2 text-primary-orange" data-event="click:navigateHome">
+                <i class="fas fa-home text-lg"></i>
+                <span class="text-xs font-medium">Accueil</span>
+            </button>
+            
+            <button class="flex flex-col items-center gap-1 py-2 text-gray-400" data-event="click:navigateSearch">
+                <i class="fas fa-search text-lg"></i>
+                <span class="text-xs">Chercher</span>
+            </button>
+            
+            <button class="flex flex-col items-center gap-1 py-2 text-gray-400 relative" data-event="click:navigateBartering">
+                <i class="fas fa-exchange-alt text-lg"></i>
+                <span class="text-xs">Troquer</span>
+                <span class="absolute -top-1 -right-1 w-4 h-4 bg-good-deal text-white text-xs rounded-full flex items-center justify-center">2</span>
+            </button>
+            
+            <button class="flex flex-col items-center gap-1 py-2 text-gray-400" data-event="click:navigateChat">
+                <i class="fas fa-comments text-lg"></i>
+                <span class="text-xs">Messages</span>
+            </button>
+            
+            <button class="flex flex-col items-center gap-1 py-2 text-gray-400" data-event="click:navigateProfile">
+                <i class="fas fa-user text-lg"></i>
+                <span class="text-xs">Profil</span>
+            </button>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: BottomNavigation -->
+
+</div>
+<!-- @END_COMPONENT: AppContainer -->
+
+<!-- @COMPONENT: VoiceModal [Voice recognition interface - initially hidden] -->
+<div id="voiceModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" data-modal="voice">
+    <div class="bg-white rounded-2xl p-6 m-4 w-full max-w-sm text-center">
+        <div class="w-20 h-20 bg-gradient-to-br from-primary-orange to-amber rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <i class="fas fa-microphone text-white text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">Écoute en cours...</h3>
+        <p class="text-sm text-gray-500 mb-4" data-mock="true">"Je cherche du manioc pas cher"</p>
+        <button class="w-full bg-high-price text-white py-2 rounded-xl font-medium" data-event="click:stopVoiceRecording">
+            <i class="fas fa-stop mr-2"></i>Arrêter
+        </button>
+    </div>
+</div>
+<!-- @END_COMPONENT: VoiceModal -->
+
+<!-- @COMPONENT: FloatingActionButton [Quick voice access] -->
+<div class="fixed bottom-24 right-4 z-40">
+    <button class="w-14 h-14 bg-primary-orange text-white rounded-full shadow-lg flex items-center justify-center"
+            data-event="click:quickVoiceSearch">
+        <i class="fas fa-microphone text-xl"></i>
+    </button>
+</div>
+<!-- @END_COMPONENT: FloatingActionButton -->
+
+<script>
+(function() {
+    // TODO: Implement voice recognition functionality
+    // TODO: Implement real-time price updates via WebSocket
+    // TODO: Implement geolocation-based product filtering
+    // TODO: Implement bartering matching algorithm
+    // TODO: Implement push notification handling
+    // TODO: Implement offline data caching for low-connectivity areas
+    
+    // Simple UI interactions for demo
+    const voiceButtons = document.querySelectorAll('[data-event*="Voice"], [data-event*="voice"]');
+    const voiceModal = document.getElementById('voiceModal');
+    
+    voiceButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            if (voiceModal) {
+                voiceModal.classList.remove('hidden');
+                setTimeout(() => {
+                    voiceModal.classList.add('hidden');
+                }, 3000); // Auto-hide after 3 seconds for demo
+            }
+        });
+    });
+    
+    // Close modal when clicking outside
+    if (voiceModal) {
+        voiceModal.addEventListener('click', function(e) {
+            if (e.target === voiceModal) {
+                voiceModal.classList.add('hidden');
+            }
+        });
+    }
+    
+    // Simulate real-time price updates
+    const priceElements = document.querySelectorAll('[data-bind*="price"]');
+    function simulatePriceUpdates() {
+        // TODO: Replace with real WebSocket price updates
+        console.log('Price updates would be handled here');
+    }
+    
+    // Initialize app
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('WagaRaaga app initialized');
+        // TODO: Initialize geolocation
+        // TODO: Load cached data for offline mode
+        // TODO: Register service worker for PWA functionality
+    });
+})();
+</script>
+
+</body>
+</html>
