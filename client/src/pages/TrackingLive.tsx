@@ -33,18 +33,8 @@ export default function TrackingLive() {
         throw new Error("La géolocalisation n'est pas supportée par votre navigateur");
       }
 
-      // Vérifier les permissions
-      try {
-        const permission = await navigator.permissions.query({ name: 'geolocation' });
-        if (permission.state === 'denied') {
-          throw new Error("L'accès à la localisation a été refusé. Veuillez autoriser la géolocalisation dans les paramètres de votre navigateur.");
-        }
-      } catch (permError) {
-        console.warn("Impossible de vérifier les permissions:", permError);
-      }
-
       // Tester la géolocalisation avant de démarrer la session
-      await new Promise((resolve, reject) => {
+      await new Promise<GeolocationPosition>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
           reject(new Error("La demande de localisation a pris trop de temps. Réessayez."));
         }, 15000);
@@ -188,7 +178,7 @@ export default function TrackingLive() {
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [isTracking, activeSession]);
+  }, [isTracking, activeSession, toast]);
 
   const shareCurrentPosition = () => {
     if (!currentPosition) {
