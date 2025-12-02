@@ -1,14 +1,14 @@
 
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, StopCircle, Loader2, Share2, ArrowLeft } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
 import type { TrackingSession } from "@shared/schema";
 
 export default function TrackingLive() {
@@ -28,12 +28,10 @@ export default function TrackingLive() {
 
   const startTrackingMutation = useMutation({
     mutationFn: async () => {
-      // Vérifier d'abord que la géolocalisation est disponible
       if (!navigator.geolocation) {
         throw new Error("La géolocalisation n'est pas supportée par votre navigateur");
       }
 
-      // Tester la géolocalisation avant de démarrer la session
       await new Promise<GeolocationPosition>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
           reject(new Error("La demande de localisation a pris trop de temps. Réessayez."));
@@ -99,7 +97,6 @@ export default function TrackingLive() {
       queryClient.invalidateQueries({ queryKey: ["/api/tracking/session"] });
       queryClient.invalidateQueries({ queryKey: ["/api/tracking/sessions"] });
       
-      // Ouvrir les URLs WhatsApp si disponibles
       if (data.whatsappUrls && data.whatsappUrls.length > 0) {
         data.whatsappUrls.forEach((url: string, index: number) => {
           setTimeout(() => {
@@ -132,7 +129,7 @@ export default function TrackingLive() {
   });
 
   useEffect(() => {
-    if (activeSession) {
+    if (activeSession?.isActive) {
       setIsTracking(true);
     } else {
       setIsTracking(false);
@@ -142,7 +139,7 @@ export default function TrackingLive() {
   useEffect(() => {
     let watchId: number | null = null;
 
-    if (isTracking && activeSession) {
+    if (isTracking && activeSession?.isActive) {
       watchId = navigator.geolocation.watchPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
