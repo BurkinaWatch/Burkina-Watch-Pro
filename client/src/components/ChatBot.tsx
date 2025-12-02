@@ -66,7 +66,8 @@ export default function ChatBot() {
       return res.json();
     },
     onSuccess: (data) => {
-      setMessages(prev => [...prev, { role: "assistant", content: data.message }]);
+      const engineInfo = data.engine === "gemini" ? " 🟢" : data.engine === "groq" ? " 🔵" : "";
+      setMessages(prev => [...prev, { role: "assistant", content: data.message + engineInfo }]);
     },
     onError: (error: any) => {
       console.error("Chat error:", error);
@@ -210,6 +211,14 @@ export default function ChatBot() {
                   <li>• Comment fonctionne l'anonymat</li>
                   <li>• Les numéros d'urgence</li>
                 </ul>
+                <p className="text-xs text-muted-foreground mt-3 flex items-center gap-2">
+                  <span>Propulsé par:</span>
+                  <span className="flex items-center gap-1">
+                    <span>🟢 Gemini</span>
+                    <span className="text-muted-foreground/50">|</span>
+                    <span>🔵 Groq</span>
+                  </span>
+                </p>
               </div>
             </div>
           ) : null}

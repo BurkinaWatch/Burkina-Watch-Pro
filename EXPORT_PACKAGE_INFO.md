@@ -123,8 +123,11 @@ Configurez dans `.env`:
    node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
    ```
 
-3. **OPENAI_API_KEY** - Pour le chatbot IA
-   - Obtenir sur: https://platform.openai.com/api-keys
+3. **GEMINI_API_KEY** - Pour le chatbot IA (moteur principal)
+   - Obtenir sur: https://aistudio.google.com/app/apikey
+
+4. **GROQ_API_KEY** - Pour le chatbot IA (moteur de secours)
+   - Obtenir sur: https://console.groq.com/keys
 
 4. **RESEND_API_KEY** - Pour l'envoi d'emails
    - Obtenir sur: https://resend.com/api-keys

@@ -9,10 +9,10 @@ import { fromZodError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { reverseGeocode } from "./geocoding";
 import { sendLocationEmail } from "./resend";
-import OpenAI from "openai";
 import { verifySignalement } from "./aiVerification";
 import { moderateContent, logModerationAction } from "./contentModeration";
 import { signalementMutationLimiter } from "./securityHardening";
+import { generateChatResponse, isAIAvailable } from "./aiService";
 
 // ============================================
 // ENREGISTREMENT DES ROUTES
@@ -1071,45 +1071,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   // ROUTES CHATBOT
   // ----------------------------------------
-  const hasOpenAIKey = !!(process.env.OPENAI_API_KEY || process.env.REPLIT_AI_API_KEY);
-  const openai = hasOpenAIKey ? new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || process.env.REPLIT_AI_API_KEY,
-    baseURL: process.env.REPLIT_AI_API_KEY ? "https://api.replit.ai/v1beta1" : undefined,
-  }) : null;
-
-  const SYSTEM_PROMPT = `Tu es "Assistance Burkina Watch", un assistant intelligent et bienveillant qui aide les citoyens du Burkina Faso à utiliser la plateforme de veille citoyenne Burkina Watch.
-
-Ton rôle :
-
-1. **Guider la création de signalements** :
-   - Pose des questions claires et simples : "Que voulez-vous signaler ?", "Où cela s'est-il produit ?", "Quand cela s'est-il passé ?"
-   - Aide à choisir la bonne catégorie : urgence, sécurité, santé, environnement, corruption, infrastructure, personne recherchée
-   - Guide sur le niveau d'urgence : faible, moyen, critique
-   - Rappelle l'importance de fournir des détails précis et des photos si possible
-
-2. **Fournir des conseils de sécurité** :
-   - En cas de danger immédiat : "Restez à distance. Mettez-vous en sécurité. Appelez le 17 (police) ou le 18 (pompiers) immédiatement."
-   - Pour les signalements SOS : "Activez votre localisation. Vos contacts d'urgence seront alertés."
-   - Rappelle les numéros d'urgence au Burkina Faso : Police 17, Pompiers 18, SAMU 112
-
-3. **Répondre aux questions fréquentes** :
-   - Comment fonctionne l'anonymat ? "Vos signalements peuvent être anonymes. Votre identité ne sera pas révélée publiquement."
-   - Qui reçoit les alertes ? "Les alertes SOS sont envoyées à vos contacts d'urgence configurés dans votre profil."
-   - Comment suivre un signalement ? "Vous pouvez voir le statut de vos signalements dans votre profil."
-
-4. **Ton style de communication** :
-   - Français simple et accessible
-   - Empathique et rassurant
-   - Concis mais complet
-   - Adapté au contexte burkinabé
-
-Important : Si l'utilisateur est en danger immédiat, privilégie toujours la sécurité et recommande d'appeler les services d'urgence (17, 18, 112).`;
-
   app.post("/api/chat", async (req: any, res) => {
     try {
-      if (!hasOpenAIKey || !openai) {
+      if (!isAIAvailable()) {
         return res.status(503).json({
-          error: "L'assistant IA n'est pas disponible. La clé API OpenAI n'est pas configurée.",
+          error: "L'assistant IA n'est pas disponible. Veuillez configurer GEMINI_API_KEY ou GROQ_API_KEY.",
           unavailable: true
         });
       }
@@ -1134,24 +1100,10 @@ Important : Si l'utilisateur est en danger immédiat, privilégie toujours la s�
       // Récupérer l'historique de la conversation
       const history = await storage.getChatHistory(sessionId);
 
-      // Préparer les messages pour OpenAI
-      const messages = [
-        { role: "system" as const, content: SYSTEM_PROMPT },
-        ...history.map(msg => ({
-          role: msg.role as "user" | "assistant",
-          content: msg.content,
-        }))
-      ];
+      // Appeler le service IA (Gemini avec fallback Groq)
+      const { message: assistantMessage, engine } = await generateChatResponse(history);
 
-      // Appeler OpenAI
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages,
-        temperature: 0.7,
-        max_tokens: 500,
-      });
-
-      const assistantMessage = completion.choices[0]?.message?.content || "Désolé, je n'ai pas pu générer une réponse.";
+      console.log(`✅ Réponse générée par ${engine === "gemini" ? "Google Gemini" : "Groq LLaMA3"}`);
 
       // Sauvegarder la réponse de l'assistant
       await storage.saveChatMessage({
@@ -1161,27 +1113,22 @@ Important : Si l'utilisateur est en danger immédiat, privilégie toujours la s�
         content: assistantMessage,
       });
 
-      res.json({ message: assistantMessage });
+      res.json({ message: assistantMessage, engine });
     } catch (error: any) {
       console.error("Error in chat:", error);
 
-      // Détection spécifique des erreurs de quota OpenAI
-      if (error?.status === 429 || error?.code === 'insufficient_quota' || error?.type === 'insufficient_quota') {
+      // Erreur de quota ou service indisponible
+      if (error?.message?.includes("quota") || error?.message?.includes("rate limit")) {
         return res.status(503).json({
-          error: "Le quota d'utilisation de l'assistant IA est temporairement épuisé. Veuillez réessayer dans quelques instants ou contacter l'administrateur.",
+          error: "Le quota d'utilisation de l'assistant IA est temporairement épuisé. Veuillez réessayer dans quelques instants.",
           quotaExceeded: true
         });
       }
 
-      // Autres erreurs OpenAI
-      if (error?.status || error?.code) {
-        return res.status(500).json({
-          error: "L'assistant IA rencontre des difficultés techniques. Veuillez réessayer dans quelques instants.",
-        });
-      }
-
       // Erreur générique
-      res.status(500).json({ error: "Erreur lors du traitement de votre message" });
+      res.status(500).json({ 
+        error: error?.message || "Erreur lors du traitement de votre message"
+      });
     }
   });
 
