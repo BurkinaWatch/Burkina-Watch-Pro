@@ -1071,16 +1071,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   // ROUTES CHATBOT
   // ----------------------------------------
+  const chatRequestSchema = insertChatMessageSchema.omit({ role: true });
+
   app.post("/api/chat", async (req: any, res) => {
     try {
       if (!isAIAvailable()) {
         return res.status(503).json({
-          error: "L'assistant IA n'est pas disponible. Veuillez configurer GEMINI_API_KEY ou GROQ_API_KEY.",
+          error: "L'assistant IA n'est pas disponible. Veuillez configurer GOOGLE_API_KEY ou GROQ_API_KEY.",
           unavailable: true
         });
       }
 
-      const validationResult = insertChatMessageSchema.safeParse(req.body);
+      const validationResult = chatRequestSchema.safeParse(req.body);
 
       if (!validationResult.success) {
         const errorMessage = fromZodError(validationResult.error).toString();

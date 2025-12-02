@@ -35,9 +35,10 @@ interface ChatMessage {
   content: string;
 }
 
-// Initialize Gemini
-const geminiClient = process.env.GEMINI_API_KEY 
-  ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+// Initialize Gemini (supports both GOOGLE_API_KEY and GEMINI_API_KEY)
+const geminiApiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+const geminiClient = geminiApiKey 
+  ? new GoogleGenerativeAI(geminiApiKey)
   : null;
 
 // Initialize Groq
@@ -52,7 +53,7 @@ export async function generateChatResponse(
   if (geminiClient) {
     try {
       const model = geminiClient.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
+        model: "gemini-2.0-flash",
         systemInstruction: SYSTEM_PROMPT
       });
 
@@ -112,7 +113,7 @@ export async function generateChatResponse(
   }
 
   // If both fail or are not configured
-  throw new Error("Les services d'IA ne sont pas disponibles. Veuillez configurer GEMINI_API_KEY ou GROQ_API_KEY.");
+  throw new Error("Les services d'IA ne sont pas disponibles. Veuillez configurer GOOGLE_API_KEY ou GROQ_API_KEY.");
 }
 
 export function isAIAvailable(): boolean {
