@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, StopCircle, Loader2, Share2, ArrowLeft } from "lucide-react";
-import type { TrackingSession } from "@shared/schema";
+import type { TrackingSession, EmergencyContact } from "@shared/schema";
 
 export default function TrackingLive() {
   const { toast } = useToast();
@@ -22,7 +22,7 @@ export default function TrackingLive() {
     retry: false,
   });
 
-  const { data: contacts } = useQuery({
+  const { data: contacts } = useQuery<EmergencyContact[]>({
     queryKey: ["/api/emergency-contacts"],
   });
 
@@ -156,11 +156,6 @@ export default function TrackingLive() {
         },
         (error) => {
           console.error("Geolocation error:", error);
-          toast({
-            title: "Erreur de localisation",
-            description: "Impossible d'obtenir votre position",
-            variant: "destructive",
-          });
         },
         {
           enableHighAccuracy: true,
@@ -175,7 +170,7 @@ export default function TrackingLive() {
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [isTracking, activeSession, toast]);
+  }, [isTracking, activeSession]);
 
   const shareCurrentPosition = () => {
     if (!currentPosition) {
@@ -199,7 +194,7 @@ export default function TrackingLive() {
     const mapsUrl = `https://www.google.com/maps?q=${currentPosition.lat},${currentPosition.lng}`;
     const message = `📍 Ma position actuelle:\n\n${mapsUrl}\n\nTracking en cours...`;
 
-    contacts.forEach((contact: any, index: number) => {
+    contacts.forEach((contact, index) => {
       const cleanPhone = contact.phone.replace(/[^\d+]/g, '');
       const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
       
