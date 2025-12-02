@@ -57,7 +57,7 @@ npx tsx server/migrate.ts
 - **SOS** : Système d'alerte d'urgence
 - **Tracking GPS** : Suivi de localisation en temps réel
 - **Commentaires** : Discussion sur les signalements
-- **Carte interactive** : Visualisation géographique (OpenStreetMap + Leaflet)
+- **Carte interactive** : Visualisation géographique
 - **Statistiques** : Tableaux de bord
 
 ## 🔐 Authentification

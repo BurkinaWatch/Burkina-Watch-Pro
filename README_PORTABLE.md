@@ -287,8 +287,11 @@ npm run db:push --force
 
 ## 🌐 APIs externes (Optionnelles)
 
-### Cartographie
-Le projet utilise OpenStreetMap avec Leaflet - aucune clé API n'est requise.
+### Google Maps
+Pour la carte interactive et la géolocalisation :
+1. Créez un projet sur [Google Cloud Console](https://console.cloud.google.com)
+2. Activez Google Maps JavaScript API
+3. Ajoutez la clé dans `.env` : `VITE_GOOGLE_MAPS_API_KEY`
 
 ### Resend (Email)
 Pour l'envoi d'emails :
@@ -316,10 +319,10 @@ Technologies utilisées :
 - Express.js
 - PostgreSQL + Drizzle ORM
 - Tailwind CSS + Shadcn/ui
-- OpenStreetMap + Leaflet
+- Google Maps API
 - Replit Auth (OIDC)
 
 ---
 
-**Version** : 1.0.0
+**Version** : 1.0.0  
 **Dernière mise à jour** : Novembre 2025
