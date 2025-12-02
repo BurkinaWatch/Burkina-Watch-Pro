@@ -1,7 +1,7 @@
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import EmergencyPanel from "@/components/EmergencyPanel";
-import GoogleMap from "@/components/GoogleMap";
+import LeafletMap from "@/components/LeafletMap";
 import FilterChips from "@/components/FilterChips";
 import { Card } from "@/components/ui/card";
 import { useState } from "react";
@@ -67,7 +67,7 @@ export default function Carte() {
           </Card>
         </div>
 
-        <GoogleMap 
+        <LeafletMap 
           markers={filteredMarkers} 
           className="h-full"
           highlightMarkerId={highlightId}

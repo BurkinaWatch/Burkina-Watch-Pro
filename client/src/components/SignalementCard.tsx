@@ -170,11 +170,11 @@ export default function SignalementCard({
   const canEdit = userId === "demo-user" || (user && userId && user.id === userId);
 
   const handleOpenGoogleMaps = () => {
-    if (localisation) {
-      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(localisation)}`;
+    if (latitude && longitude) {
+      const mapsUrl = `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}&zoom=15`;
       window.open(mapsUrl, '_blank', 'noopener,noreferrer');
-    } else if (latitude && longitude) {
-      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+    } else if (localisation) {
+      const mapsUrl = `https://www.openstreetmap.org/search?query=${encodeURIComponent(localisation)}`;
       window.open(mapsUrl, '_blank', 'noopener,noreferrer');
     }
   };
