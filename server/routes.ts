@@ -704,7 +704,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activeSession = await storage.getActiveTrackingSession(userId);
 
       if (!activeSession) {
-        return res.status(404).json({ error: "Aucune session de tracking active trouvée" });
+        console.log(`⚠️ Tentative d'arrêt de tracking sans session active pour l'utilisateur ${userId}`);
+        return res.status(404).json({ error: "Aucune session de tracking active" });
       }
 
       // Arrêter la session en utilisant l'ID de la session

@@ -256,7 +256,12 @@ export default function Profil() {
   });
 
   const stopTrackingMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/tracking/stop"),
+    mutationFn: () => {
+      if (!activeSession?.id) {
+        throw new Error("Aucune session active à arrêter");
+      }
+      return apiRequest("POST", "/api/tracking/stop");
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tracking/session"] });
       queryClient.invalidateQueries({ queryKey: ["/api/tracking/sessions"] });
@@ -270,9 +275,12 @@ export default function Profil() {
     onError: (error: any) => {
       toast({
         title: "Erreur",
-        description: error?.error || "Impossible d'arrêter le tracking.",
+        description: error?.error || error?.message || "Impossible d'arrêter le tracking.",
         variant: "destructive",
       });
+      // Réinitialiser l'état local si la session n'existe plus côté serveur
+      setTrackingActive(false);
+      stopLocationTracking();
     },
   });
 
@@ -872,7 +880,7 @@ export default function Profil() {
                       <Button
                         variant="destructive"
                         onClick={() => stopTrackingMutation.mutate()}
-                        disabled={stopTrackingMutation.isPending}
+                        disabled={stopTrackingMutation.isPending || !activeSession?.id}
                         data-testid="button-stop-tracking"
                       >
                         {stopTrackingMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
