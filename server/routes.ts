@@ -717,18 +717,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Récupérer les points de localisation de cette session
       const locations = await storage.getLocationPointsBySession(session.id);
 
+      let geocodedAddress = "Adresse non disponible";
+      let lastLocation: any = null;
+
       // Send email with location address and GPX file
       if (locations.length > 0) {
         // Get the last location point for address
-        const lastLocation = locations[locations.length - 1];
+        lastLocation = locations[locations.length - 1];
 
         // Get user info for email
         const user = await storage.getUser(userId);
 
-        if (user?.email) {
-          // Reverse geocode the last location to get address
-          const geocodeResult = await reverseGeocode(lastLocation.latitude, lastLocation.longitude);
+        // Reverse geocode the last location to get address
+        const geocodeResult = await reverseGeocode(lastLocation.latitude, lastLocation.longitude);
+        geocodedAddress = geocodeResult.address;
 
+        if (user?.email) {
           // Générer le fichier GPX
           const gpxContent = generateGPX(locations);
 
@@ -737,12 +741,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await sendLocationEmail(
               user.email,
               `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Utilisateur',
-              geocodeResult.address,
+              geocodedAddress,
               locations.length,
               gpxContent,
               session.id
             );
-            console.log(`✅ Email envoyé à ${user.email} avec l'adresse: ${geocodeResult.address} et le fichier GPX`);
+            console.log(`✅ Email envoyé à ${user.email} avec l'adresse: ${geocodedAddress} et le fichier GPX`);
           } catch (emailError) {
             console.error('❌ Échec de l\'envoi de l\'email:', emailError);
             // Don't fail the request if email fails
@@ -755,27 +759,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Récupérer les contacts d'urgence
       const contacts = await storage.getEmergencyContacts(userId);
 
-      // Si des contacts existent, créer les URLs WhatsApp
-      if (contacts && contacts.length > 0) {
-        // Récupérer les points de localisation de cette session
-        const locationPoints = await storage.getSessionLocationPoints(session.id);
+      // Si des contacts existent, créer les URLs WhatsApp avec l'adresse géocodée
+      if (contacts && contacts.length > 0 && lastLocation) {
+        const mapsUrl = `https://www.google.com/maps?q=${lastLocation.latitude},${lastLocation.longitude}`;
 
-        if (locationPoints && locationPoints.length > 0) {
-          const lastPoint = locationPoints[locationPoints.length - 1];
-          const mapsUrl = `https://www.google.com/maps?q=${lastPoint.latitude},${lastPoint.longitude}`;
+        const user = await storage.getUser(userId);
+        const userName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Un utilisateur';
 
-          const user = await storage.getUser(userId);
-          const userName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Un utilisateur';
+        // Message avec l'adresse géocodée
+        const message = `🚨 ${userName} a terminé son suivi de localisation.\n\n📍 Position finale:\n${geocodedAddress}\n\n🗺️ Voir sur la carte:\n${mapsUrl}\n\n${locations.length} points enregistrés.`;
 
-          const message = `🚨 ${userName} a terminé son suivi de localisation.\n\n📍 Position finale:\n${mapsUrl}\n\nSuivi terminé avec succès.`;
+        const whatsappUrls = contacts.map(contact => {
+          const cleanPhone = contact.phone.replace(/[^\d+]/g, '');
+          return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+        });
 
-          const whatsappUrls = contacts.map(contact => {
-            const cleanPhone = contact.phone.replace(/[^\d+]/g, '');
-            return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-          });
-
-          return res.json({ ...session, whatsappUrls });
-        }
+        console.log(`✅ ${whatsappUrls.length} URLs WhatsApp générées avec l'adresse: ${geocodedAddress}`);
+        return res.json({ ...session, whatsappUrls, address: geocodedAddress });
       }
 
       res.json(session);

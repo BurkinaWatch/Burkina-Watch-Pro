@@ -104,9 +104,11 @@ export default function TrackingLive() {
           }, index * 500);
         });
         
+        const addressInfo = data.address ? `\n📍 ${data.address}` : "";
         toast({
           title: "Tracking arrêté",
-          description: "Position finale partagée avec vos contacts d'urgence via WhatsApp",
+          description: `Position finale partagée avec ${data.whatsappUrls.length} contact(s) d'urgence via WhatsApp${addressInfo}`,
+          duration: 6000,
         });
       } else {
         toast({
