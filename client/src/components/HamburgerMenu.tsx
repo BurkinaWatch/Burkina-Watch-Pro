@@ -4,7 +4,7 @@ import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
-import logo from "@assets/burkina_watch_logo.png";
+import logo from "/burkina_watch_logo.png";
 
 interface HamburgerMenuProps {
   open: boolean;
