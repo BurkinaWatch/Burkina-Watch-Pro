@@ -25,6 +25,7 @@ import Leaderboard from "@/pages/Leaderboard";
 import TrackingLive from "@/pages/TrackingLive";
 import Notifications from "@/pages/Notifications";
 import Contribuer from "@/pages/Contribuer";
+import Pharmacies from "@/pages/Pharmacies";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
@@ -45,6 +46,7 @@ function Router() {
       <Route path="/classement" component={Leaderboard} />
       <Route path="/tracking-live" component={TrackingLive} />
       <Route path="/contribuer" component={Contribuer} />
+      <Route path="/pharmacies" component={Pharmacies} />
       <Route path="/a-propos" component={APropos} />
       <Route path="/conditions" component={Conditions} />
       <Route path="/notifications" component={Notifications} />
