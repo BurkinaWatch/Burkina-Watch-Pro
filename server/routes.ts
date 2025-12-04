@@ -1111,8 +1111,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content: msg.content
       }));
 
-      // Appeler le service IA (Gemini avec fallback Groq)
-      const { message: assistantMessage, engine } = await generateChatResponse(chatMessages);
+      // Récupérer le contexte de l'application pour enrichir la réponse
+      const appContext: any = {};
+      
+      try {
+        // Récupérer les données pertinentes de l'application
+        const [stats, recentSignalements] = await Promise.all([
+          storage.getStats(),
+          storage.getSignalements({ limit: 5 })
+        ]);
+        
+        appContext.stats = stats;
+        appContext.signalements = recentSignalements;
+        
+        // Importer les données statiques
+        const { PHARMACIES_DATA } = await import('../client/src/pages/Pharmacies');
+        const { urgencesData } = await import('../client/src/pages/Urgences');
+        
+        appContext.pharmacies = PHARMACIES_DATA;
+        appContext.urgences = urgencesData;
+      } catch (contextError) {
+        console.error("Erreur récupération contexte:", contextError);
+        // Continuer même si le contexte n'est pas disponible
+      }
+
+      // Appeler le service IA (Gemini avec fallback Groq) avec le contexte
+      const { message: assistantMessage, engine } = await generateChatResponse(chatMessages, appContext);
 
       console.log(`✅ Réponse générée par ${engine === "gemini" ? "Google Gemini" : "Groq LLaMA3"}`);
 

@@ -25,7 +25,7 @@ interface Pharmacie {
 }
 
 // Données des pharmacies de garde du Burkina Faso
-const PHARMACIES_DATA: Pharmacie[] = [
+export const PHARMACIES_DATA: Pharmacie[] = [
   {
     id: "1",
     nom: "Pharmacie Centrale de Ouagadougou",

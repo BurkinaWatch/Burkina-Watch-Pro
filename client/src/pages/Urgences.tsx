@@ -27,7 +27,7 @@ interface EmergencyService {
 }
 
 // Base de données complète des urgences du Burkina Faso
-const urgencesData: EmergencyService[] = [
+export const urgencesData: EmergencyService[] = [
   // Police Nationale
   { id: "1", name: "Police Nationale - Numéro d'urgence", type: "Police", city: "National", phone: "17", latitude: 12.3714, longitude: -1.5197 },
   { id: "2", name: "Commissariat Central de Ouagadougou", type: "Police", city: "Ouagadougou", address: "Avenue Kwame Nkrumah", phone: "25306024", latitude: 12.3714, longitude: -1.5197 },

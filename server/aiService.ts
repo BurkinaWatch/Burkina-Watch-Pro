@@ -22,7 +22,12 @@ Ton rôle :
    - Qui reçoit les alertes ? "Les alertes SOS sont envoyées à vos contacts d'urgence configurés dans votre profil."
    - Comment suivre un signalement ? "Vous pouvez voir le statut de vos signalements dans votre profil."
 
-4. **Ton style de communication** :
+4. **Fournir des informations contextuelles** :
+   - Tu as accès aux données de l'application (pharmacies, urgences, signalements récents)
+   - Utilise ces informations pour répondre précisément aux questions
+   - Si on te demande une pharmacie de garde, un commissariat, un numéro d'urgence, consulte le contexte fourni
+
+5. **Ton style de communication** :
    - Français simple et accessible
    - Empathique et rassurant
    - Concis mais complet
@@ -33,6 +38,13 @@ Important : Si l'utilisateur est en danger immédiat, privilégie toujours la s�
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+}
+
+interface AppContext {
+  pharmacies?: any[];
+  urgences?: any[];
+  signalements?: any[];
+  stats?: any;
 }
 
 // Initialize Gemini (supports both GOOGLE_API_KEY and GEMINI_API_KEY)
@@ -47,14 +59,46 @@ const groqClient = process.env.GROQ_API_KEY
   : null;
 
 export async function generateChatResponse(
-  messages: ChatMessage[]
+  messages: ChatMessage[],
+  appContext?: AppContext
 ): Promise<{ message: string; engine: "gemini" | "groq" | "unavailable" }> {
+  // Construire un contexte enrichi si disponible
+  let contextMessage = "";
+  if (appContext) {
+    const contextParts: string[] = [];
+    
+    if (appContext.pharmacies && appContext.pharmacies.length > 0) {
+      contextParts.push(`\n**Pharmacies de garde disponibles (${appContext.pharmacies.length}):**\n${appContext.pharmacies.slice(0, 5).map(p => 
+        `- ${p.nom} à ${p.ville} (${p.quartier}) - ${p.typeGarde} - Tél: ${p.telephone}`
+      ).join('\n')}`);
+    }
+    
+    if (appContext.urgences && appContext.urgences.length > 0) {
+      contextParts.push(`\n**Services d'urgence disponibles (${appContext.urgences.length}):**\n${appContext.urgences.slice(0, 10).map(u => 
+        `- ${u.name} (${u.type}) à ${u.city} - Tél: ${u.phone}${u.address ? ` - ${u.address}` : ''}`
+      ).join('\n')}`);
+    }
+    
+    if (appContext.signalements && appContext.signalements.length > 0) {
+      contextParts.push(`\n**Signalements récents (${appContext.signalements.length}):**\n${appContext.signalements.slice(0, 3).map(s => 
+        `- ${s.titre} (${s.categorie}) à ${s.commune || s.ville || 'localisation non précisée'}`
+      ).join('\n')}`);
+    }
+    
+    if (appContext.stats) {
+      contextParts.push(`\n**Statistiques de l'application:**\n- Total signalements: ${appContext.stats.totalSignalements}\n- SOS actifs: ${appContext.stats.sosCount}\n- Utilisateurs: ${appContext.stats.totalUsers}`);
+    }
+    
+    if (contextParts.length > 0) {
+      contextMessage = `\n\n=== CONTEXTE DE L'APPLICATION ===\n${contextParts.join('\n\n')}\n=== FIN DU CONTEXTE ===\n\nUtilise ces informations pour répondre précisément aux questions de l'utilisateur.`;
+    }
+  }
   // Try Gemini first (primary engine)
   if (geminiClient) {
     try {
       const model = geminiClient.getGenerativeModel({ 
         model: "gemini-2.0-flash",
-        systemInstruction: SYSTEM_PROMPT
+        systemInstruction: SYSTEM_PROMPT + contextMessage
       });
 
       // Convert messages to Gemini format
@@ -89,7 +133,7 @@ export async function generateChatResponse(
   if (groqClient) {
     try {
       const groqMessages = [
-        { role: "system" as const, content: SYSTEM_PROMPT },
+        { role: "system" as const, content: SYSTEM_PROMPT + contextMessage },
         ...messages.map(msg => ({
           role: msg.role as "user" | "assistant",
           content: msg.content,
