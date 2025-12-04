@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent } from "./ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "./ui/dialog";
 import { getLevelInfo } from "@shared/pointsSystem";
 import { useTranslation } from "react-i18next";
 import confetti from "canvas-confetti";
@@ -57,7 +57,13 @@ export function LevelUpCelebration({ newLevel, onClose }: LevelUpCelebrationProp
       setOpen(isOpen);
       if (!isOpen) onClose();
     }}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" aria-describedby="level-up-description">
+        <div className="sr-only">
+          <DialogTitle>{t('levels.congratulations')}</DialogTitle>
+          <DialogDescription id="level-up-description">
+            {t('levels.newRank')}: {t(levelInfo.titleKey)}
+          </DialogDescription>
+        </div>
         <div className="flex flex-col items-center justify-center py-8 space-y-6">
           <div className="text-6xl animate-bounce">{levelInfo.icon}</div>
           <div className="text-center space-y-2">
