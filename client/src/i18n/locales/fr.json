@@ -5,6 +5,14 @@
     "tagline": "Voir. Agir. Protéger.",
     "subtitle": "Canal de Veille Citoyenne et d'Alerte Sociale"
   },
+  "header": {
+    "title": "Burkina Watch",
+    "slogan": {
+      "see": "Voir.",
+      "act": "Agir.",
+      "protect": "Protéger."
+    }
+  },
   "levels": {
     "sentinelle": {
       "title": "Sentinelle de la Paix",

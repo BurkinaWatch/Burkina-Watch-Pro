@@ -5,6 +5,14 @@
     "tagline": "See. Act. Protect.",
     "subtitle": "Citizen Monitoring and Social Alert Channel"
   },
+  "header": {
+    "title": "Burkina Watch",
+    "slogan": {
+      "see": "See.",
+      "act": "Act.",
+      "protect": "Protect."
+    }
+  },
   "levels": {
     "sentinelle": {
       "title": "Peace Sentinel",
