@@ -13,6 +13,7 @@ import { verifySignalement } from "./aiVerification";
 import { moderateContent, logModerationAction } from "./contentModeration";
 import { signalementMutationLimiter } from "./securityHardening";
 import { generateChatResponse, isAIAvailable } from "./aiService";
+import { fetchBulletins, clearCache } from "./rssService";
 
 // ============================================
 // ENREGISTREMENT DES ROUTES
@@ -1149,6 +1150,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Route de santé
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  // ----------------------------------------
+  // ROUTES BULLETIN CITOYEN (RSS)
+  // ----------------------------------------
+  app.get("/api/bulletin-citoyen", async (req, res) => {
+    try {
+      const bulletins = await fetchBulletins();
+      res.json(bulletins);
+    } catch (error) {
+      console.error("Erreur bulletin citoyen:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des bulletins" });
+    }
+  });
+
+  app.post("/api/bulletin-citoyen/refresh", async (req, res) => {
+    try {
+      clearCache();
+      const bulletins = await fetchBulletins();
+      res.json({ message: "Cache actualisé", count: bulletins.length });
+    } catch (error) {
+      console.error("Erreur actualisation bulletin:", error);
+      res.status(500).json({ error: "Erreur lors de l'actualisation" });
+    }
   });
 
   // Marquer un utilisateur comme en ligne

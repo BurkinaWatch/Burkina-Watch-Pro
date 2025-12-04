@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Link } from "wouter";
-import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Trophy, Cross } from "lucide-react";
+import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Trophy, Cross, Newspaper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,6 +26,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
   ];
 
   const infoItems = [
+    { href: "/bulletin", icon: Newspaper, label: "Bulletin Citoyen" },
     { href: "/pharmacies", icon: Cross, label: "Pharmacies de Garde" },
     { href: "/urgences", icon: AlertCircle, label: "Urgences Burkina" },
     { href: "/a-propos", icon: Info, label: "À propos de nous" },

@@ -27,6 +27,7 @@ import Notifications from "@/pages/Notifications";
 import Contribuer from "@/pages/Contribuer";
 import Pharmacies from "@/pages/Pharmacies";
 import Urgences from "@/pages/Urgences";
+import Bulletin from "@/pages/Bulletin";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
@@ -49,6 +50,7 @@ function Router() {
       <Route path="/contribuer" component={Contribuer} />
       <Route path="/pharmacies" component={Pharmacies} />
       <Route path="/urgences" component={Urgences} />
+      <Route path="/bulletin" component={Bulletin} />
       <Route path="/a-propos" component={APropos} />
       <Route path="/conditions" component={Conditions} />
       <Route path="/notifications" component={Notifications} />
