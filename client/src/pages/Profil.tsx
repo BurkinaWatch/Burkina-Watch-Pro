@@ -37,6 +37,7 @@ import { LevelProgress } from "@/components/LevelProgress";
 import { useTranslation } from "react-i18next";
 import { getLevelInfo } from "@shared/pointsSystem";
 import { useRef } from "react";
+import Link from "next/link";
 
 
 export default function Profil() {
@@ -71,7 +72,7 @@ export default function Profil() {
       canvas.height = 1920;
 
       // Couleurs selon le style
-      const colors = lockscreenStyle === "light" 
+      const colors = lockscreenStyle === "light"
         ? {
             bg: '#FFFFFF',
             primary: '#DC2626',
@@ -122,7 +123,7 @@ export default function Profil() {
       ctx.font = 'bold 64px Arial';
       const contactName = selectedContact.name.toUpperCase();
       const maxWidth = canvas.width - 100;
-      
+
       const words = contactName.split(' ');
       let line = '';
       let y = 680;
@@ -131,7 +132,7 @@ export default function Profil() {
       for (let i = 0; i < words.length; i++) {
         const testLine = line + words[i] + ' ';
         const metrics = ctx.measureText(testLine);
-        
+
         if (metrics.width > maxWidth && i > 0) {
           ctx.fillText(line, canvas.width / 2, y);
           line = words[i] + ' ';
@@ -145,12 +146,12 @@ export default function Profil() {
       // Numéro (ajusté pour rentrer dans le cadre)
       y += 150;
       ctx.fillStyle = colors.primary;
-      
+
       // Calculer la taille de police optimal pour que le numéro rentre
       let fontSize = 140;
       const padding = 80; // Padding gauche-droite
       const maxPhoneWidth = canvas.width - padding;
-      
+
       // Vérifier et réduire la police si nécessaire
       while (fontSize > 60) {
         ctx.font = `bold ${fontSize}px Arial`;
@@ -160,7 +161,7 @@ export default function Profil() {
         }
         fontSize -= 10;
       }
-      
+
       ctx.fillText(selectedContact.phone, canvas.width / 2, y);
 
       // Instructions en bas
@@ -655,6 +656,12 @@ export default function Profil() {
 
   const { points, badge } = calculateUserStats();
 
+  // Get current level and next level info for LevelProgress component
+  const currentLevel = getLevelInfo(user?.userPoints || 0);
+  const nextLevel = getLevelInfo(user?.userPoints || 0, true); // Pass true to get the next level
+  const pointsToNext = nextLevel ? nextLevel.pointsNeeded - (user?.userPoints || 0) : 0;
+
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <Header />
@@ -987,24 +994,27 @@ export default function Profil() {
               <CardContent className="pt-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <LevelBadge level={user?.userLevel || 'sentinelle'} size="md" showTitle={true} />
+                    <LevelBadge level={currentLevel} />
+                    <span className="text-sm text-muted-foreground">{t(`profile.${currentLevel.name.toLowerCase().replace(/\s+/g, '')}`, currentLevel.name)}</span>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-primary">{user?.userPoints || 0}</div>
-                    <div className="text-xs text-muted-foreground">{t('profile.points')}</div>
+                    <div className="text-xs text-muted-foreground">{t('common.points', 'points')}</div>
                   </div>
                 </div>
                 <div className="mt-4">
                   <LevelProgress points={user?.userPoints || 0} />
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full mt-3"
-                  onClick={() => window.location.href = '/leaderboard'}
-                >
-                  {t('leaderboard.viewRanking')}
-                </Button>
+                <Link href='/leaderboard'>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-3"
+                  >
+                    <Trophy className="w-4 h-4 mr-2" />
+                    {t('profile.viewRanking')}
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </TabsContent>

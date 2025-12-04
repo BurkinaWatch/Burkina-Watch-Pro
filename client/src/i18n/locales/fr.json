@@ -241,7 +241,17 @@
     "filter": "Filtrer",
     "sort": "Trier",
     "reset": "Réinitialiser",
-    "new": "Nouveau"
+    "new": "Nouveau",
+    "points": "points"
+  },
+  "profile": {
+    "citizenRank": "Rang Citoyen",
+    "peaceGuardian": "Sentinelle de la Paix",
+    "sentinelledelapaix": "Sentinelle de la Paix",
+    "progressionToPeaceWatcher": "Progression vers {{level}}",
+    "remainingPoints": "pts restants",
+    "viewRanking": "Voir le classement",
+    "points": "points"
   },
   "footer": {
     "phone": "Tel: +226 65511323",
