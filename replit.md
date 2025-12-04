@@ -67,9 +67,12 @@ Preferred communication style: Simple, everyday language.
 ### Build and Deployment
 
 *   **Development**: `npm run dev` (Express with Vite middleware, HMR).
-*   **Production**: Vite for frontend, esbuild for Node.js server.
+*   **Production**: Vite for frontend, esbuild for Node.js server. Configured for autoscale deployment.
+*   **Build Command**: `npm run build` (Vite build + esbuild server bundle).
+*   **Start Command**: `npm run start` (Production Node.js server).
 *   **Type Checking**: `npm run check`.
 *   **Database Migrations**: `npm run db:push`.
+*   **Deployment Status**: Ready for deployment. All i18n translations complete for 5 languages (French, English, Dioula, Moore, Fulfulde).
 
 ## External Dependencies
 
