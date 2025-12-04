@@ -6,3 +6,6 @@
 Additional completed tasks:
 [x] 5. Configured GROQ_API_KEY as secure secret
 [x] 6. Updated Groq model from llama3-70b-8192 (deprecated) to llama-3.3-70b-versatile
+[x] 7. Fixed TypeScript error in chat service
+[x] 8. Added lockscreen image generation feature to Emergency Contacts page (Profil.tsx)
+[x] 9. Added "Mettre sur écran de veille" button for each emergency contact

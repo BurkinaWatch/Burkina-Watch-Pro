@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { User, LogOut, Loader2, Save, Camera, Trash2, MapPin, Calendar, Navigation, PlayCircle, StopCircle, Clock, Activity, Copy, ExternalLink, Briefcase, Mail, Shield, Plus, Trophy } from "lucide-react";
+import { User, LogOut, Loader2, Save, Camera, Trash2, MapPin, Calendar, Navigation, PlayCircle, StopCircle, Clock, Activity, Copy, ExternalLink, Briefcase, Mail, Shield, Plus, Trophy, Smartphone, Download } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -30,10 +30,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LevelBadge } from "@/components/LevelBadge";
 import { LevelProgress } from "@/components/LevelProgress";
 import { useTranslation } from "react-i18next";
 import { getLevelInfo } from "@shared/pointsSystem";
+import { useRef } from "react";
 
 
 export default function Profil() {
@@ -48,6 +51,155 @@ export default function Profil() {
   const [locationPointsCount, setLocationPointsCount] = useState(0);
   const [newContact, setNewContact] = useState({ name: "", phone: "", email: "" });
   const [fileInputRef, setFileInputRef] = useState<HTMLInputElement | null>(null);
+  const [selectedContact, setSelectedContact] = useState<EmergencyContact | null>(null);
+  const [lockscreenStyle, setLockscreenStyle] = useState<"light" | "dark">("light");
+  const [isGeneratingLockscreen, setIsGeneratingLockscreen] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const generateLockscreenImage = async () => {
+    if (!selectedContact || !canvasRef.current) return;
+
+    setIsGeneratingLockscreen(true);
+
+    try {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Dimensions pour mobile (9:16 ratio)
+      canvas.width = 1080;
+      canvas.height = 1920;
+
+      // Couleurs selon le style
+      const colors = lockscreenStyle === "light" 
+        ? {
+            bg: '#FFFFFF',
+            primary: '#DC2626',
+            secondary: '#FBBF24',
+            accent: '#10B981',
+            text: '#1F2937',
+            textSecondary: '#6B7280'
+          }
+        : {
+            bg: '#1F2937',
+            primary: '#DC2626',
+            secondary: '#FBBF24',
+            accent: '#10B981',
+            text: '#FFFFFF',
+            textSecondary: '#D1D5DB'
+          };
+
+      // Fond
+      ctx.fillStyle = colors.bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Bande tricolore en haut
+      const bandHeight = 40;
+      ctx.fillStyle = colors.primary;
+      ctx.fillRect(0, 0, canvas.width / 3, bandHeight);
+      ctx.fillStyle = colors.secondary;
+      ctx.fillRect(canvas.width / 3, 0, canvas.width / 3, bandHeight);
+      ctx.fillStyle = colors.accent;
+      ctx.fillRect((canvas.width / 3) * 2, 0, canvas.width / 3, bandHeight);
+
+      // Logo BurkinaWatch
+      ctx.fillStyle = colors.text;
+      ctx.font = 'bold 48px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('🇧🇫 BURKINA WATCH', canvas.width / 2, 140);
+
+      // Titre "URGENCE"
+      ctx.fillStyle = colors.primary;
+      ctx.font = 'bold 80px Arial';
+      ctx.fillText('URGENCE', canvas.width / 2, 280);
+
+      // Icône d'urgence
+      ctx.font = '200px Arial';
+      ctx.fillText('🚨', canvas.width / 2, 520);
+
+      // Nom du contact
+      ctx.fillStyle = colors.text;
+      ctx.font = 'bold 64px Arial';
+      const contactName = selectedContact.name.toUpperCase();
+      const maxWidth = canvas.width - 100;
+      
+      const words = contactName.split(' ');
+      let line = '';
+      let y = 680;
+      const lineHeight = 75;
+
+      for (let i = 0; i < words.length; i++) {
+        const testLine = line + words[i] + ' ';
+        const metrics = ctx.measureText(testLine);
+        
+        if (metrics.width > maxWidth && i > 0) {
+          ctx.fillText(line, canvas.width / 2, y);
+          line = words[i] + ' ';
+          y += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, canvas.width / 2, y);
+
+      // Numéro (très gros)
+      y += 150;
+      ctx.fillStyle = colors.primary;
+      ctx.font = 'bold 180px Arial';
+      ctx.fillText(selectedContact.phone, canvas.width / 2, y);
+
+      // Instructions en bas
+      y = canvas.height - 200;
+      ctx.fillStyle = colors.accent;
+      ctx.font = 'bold 42px Arial';
+      ctx.fillText('APPELER IMMÉDIATEMENT', canvas.width / 2, y);
+
+      // Footer
+      y = canvas.height - 100;
+      ctx.fillStyle = colors.textSecondary;
+      ctx.font = '32px Arial';
+      ctx.fillText('Généré par BurkinaWatch • Burkina Faso', canvas.width / 2, y);
+
+      // Bande tricolore en bas
+      ctx.fillStyle = colors.primary;
+      ctx.fillRect(0, canvas.height - bandHeight, canvas.width / 3, bandHeight);
+      ctx.fillStyle = colors.secondary;
+      ctx.fillRect(canvas.width / 3, canvas.height - bandHeight, canvas.width / 3, bandHeight);
+      ctx.fillStyle = colors.accent;
+      ctx.fillRect((canvas.width / 3) * 2, canvas.height - bandHeight, canvas.width / 3, bandHeight);
+
+      // Télécharger l'image
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `contact-urgence-${selectedContact.phone}-lockscreen.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+
+          toast({
+            title: "Image générée !",
+            description: "L'image a été téléchargée. Définissez-la comme fond d'écran de verrouillage dans les paramètres de votre téléphone.",
+          });
+
+          setSelectedContact(null);
+        }
+      }, 'image/png');
+
+    } catch (error) {
+      console.error('Erreur génération image:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de générer l'image",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingLockscreen(false);
+    }
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1092,23 +1244,34 @@ export default function Profil() {
                   {emergencyContacts?.map((contact) => (
                     <div
                       key={contact.id}
-                      className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                      className="flex items-center justify-between p-3 bg-muted rounded-lg gap-2"
                     >
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium">{contact.name}</p>
                         <p className="text-sm text-muted-foreground">{contact.phone}</p>
                         {contact.email && (
                           <p className="text-xs text-muted-foreground">{contact.email}</p>
                         )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteContactMutation.mutate(contact.id)}
-                        disabled={deleteContactMutation.isPending}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedContact(contact)}
+                          title="Créer une image pour l'écran de verrouillage"
+                          data-testid="button-lockscreen-contact"
+                        >
+                          <Smartphone className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteContactMutation.mutate(contact.id)}
+                          disabled={deleteContactMutation.isPending}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                   {(!emergencyContacts || emergencyContacts.length === 0) && (
@@ -1156,6 +1319,69 @@ export default function Profil() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal de génération d'image écran de veille */}
+      <Dialog open={!!selectedContact} onOpenChange={(open) => !open && setSelectedContact(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Smartphone className="w-5 h-5" />
+              Générer image d'urgence
+            </DialogTitle>
+            <DialogDescription>
+              Créez une image pour votre écran de verrouillage avec ce contact d'urgence
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedContact && (
+            <div className="space-y-4 py-4">
+              <div className="bg-muted p-4 rounded-lg">
+                <p className="font-semibold">{selectedContact.name}</p>
+                <p className="text-2xl font-bold text-primary mt-2">{selectedContact.phone}</p>
+              </div>
+
+              <div className="space-y-3">
+                <Label>Style de l'image</Label>
+                <RadioGroup value={lockscreenStyle} onValueChange={(value) => setLockscreenStyle(value as "light" | "dark")}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="light" id="light-contact" />
+                    <Label htmlFor="light-contact" className="cursor-pointer">Clair (fond blanc)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="dark" id="dark-contact" />
+                    <Label htmlFor="dark-contact" className="cursor-pointer">Sombre (fond noir)</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3 rounded-lg">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>Comment l'utiliser :</strong> Après téléchargement, allez dans les paramètres de votre téléphone → Fond d'écran → Écran de verrouillage → Sélectionnez l'image téléchargée.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedContact(null)}>
+              Annuler
+            </Button>
+            <Button onClick={generateLockscreenImage} disabled={isGeneratingLockscreen}>
+              {isGeneratingLockscreen ? (
+                <>Génération...</>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Générer et télécharger
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Canvas caché pour la génération d'image */}
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
 
       <BottomNav />
     </div>
