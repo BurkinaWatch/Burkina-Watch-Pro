@@ -6,13 +6,39 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import logo from "@assets/burkina_watch_logo.png";
+import { useLocation, navigate } from "wouter"; // Import navigate
+import { PlusCircle, List, FileText as FileTextIcon, Calendar as CalendarIcon, Trophy, Pill } from "lucide-react"; // Importing icons
 
 interface HamburgerMenuProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+// Helper component for menu items
+const MenuItem = ({ icon: Icon, label, onClick, active, badge, badgeColor }: any) => (
+  <Link href={location}>
+    <Button
+      variant="ghost"
+      className={`w-full justify-start gap-3 h-11 rounded-xl hover:bg-accent/80 hover:scale-[1.02] transition-all duration-200 group relative overflow-hidden ${active ? "bg-accent" : ""}`}
+      onClick={() => {
+        onClick();
+        onOpenChange(false); // Close the menu on item click
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Icon className={`w-5 h-5 ${active ? "text-primary" : "text-foreground"} group-hover:scale-110 transition-transform`} />
+      <span className={`font-medium ${active ? "text-primary" : "text-foreground"}`}>{label}</span>
+      {badge && (
+        <Badge className={`ml-auto text-[10px] px-1.5 py-0 ${badgeColor || "bg-yellow-500"} text-white border-0`}>
+          {badge}
+        </Badge>
+      )}
+    </Button>
+  </Link>
+);
+
 export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps) {
+  const [location, setLocation] = useLocation();
   const { isAuthenticated, user } = useAuth();
 
   const handleLogout = () => {
