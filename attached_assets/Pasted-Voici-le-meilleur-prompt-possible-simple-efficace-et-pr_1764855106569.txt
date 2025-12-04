@@ -1,0 +1,193 @@
+Voici **le meilleur prompt possible**, simple, efficace et prêt à coller dans **Replit AI Agent**, pour rendre *toute* ton application BurkinaWatch **100% multilingue** (Français, Anglais, Mooré, Dioula, Fulfuldé), **sans abonnement**, **sans API payante**, **sans service externe**.
+
+Ce prompt utilise uniquement des **outils gratuits**, **locales**, **open source**, totalement adaptés à Replit :
+🟩 JSON de traductions locales
+🟩 i18next (gratuit et professionnel)
+🟩 Script JS pour remplacer automatiquement tous les textes sur toutes les pages
+
+---
+
+# ⭐ **PROMPT REPLIT – Mise en place de la traduction complète (FR · EN · MOORÉ · DIOULA · FULFULDÉ)**
+
+Mets à jour l’application **BurkinaWatch** pour que **toutes les pages**, **tous les textes**, **menus**, **boutons**, **labels**, **placeholders**, **messages d’erreur**, **cartes**, **modales**, **alertes** et **formulaires** changent automatiquement de langue lorsque l’utilisateur sélectionne une langue dans le sélecteur.
+
+Actuellement seul le titre et le slogan changent : il faut rendre **toute l’application entièrement traduite**.
+
+Suis les instructions ci-dessous :
+
+---
+
+# **1. Installer un système de traduction gratuit : i18next**
+
+Utiliser **i18next** + **i18next-browser-languageDetector**.
+Aucune API payante, aucune connexion Internet nécessaire.
+
+---
+
+# **2. Créer un dossier de langues local**
+
+Créer le dossier :
+
+```
+/locales/
+```
+
+Puis ajouter les 5 fichiers suivants :
+
+```
+/locales/fr.json
+/locales/en.json
+/locales/moore.json
+/locales/dioula.json
+/locales/fulfulde.json
+```
+
+Chaque fichier contient toutes les traductions de l’application :
+
+Exemple minimal :
+
+```json
+{
+  "app_title": "BurkinaWatch",
+  "menu_home": "Accueil",
+  "menu_events": "Évènements Burkina",
+  "menu_bulletin": "Bulletin Citoyen",
+  "menu_urgences": "Urgences Burkina",
+  "menu_sos": "SOS",
+  "search_placeholder": "Rechercher...",
+  "no_results": "Aucun résultat"
+}
+```
+
+Ensuite, migrer **tous les textes existants** des pages HTML vers ces fichiers.
+
+---
+
+# **3. Intégrer i18next dans toutes les pages HTML**
+
+Dans chaque page (index.html, events.html, urgences.html, sos.html etc.), importer i18next :
+
+```html
+<script src="https://unpkg.com/i18next/dist/umd/i18next.min.js"></script>
+<script src="https://unpkg.com/i18next-http-backend/i18nextHttpBackend.min.js"></script>
+<script src="https://unpkg.com/i18next-browser-languagedetector/i18nextBrowserLanguageDetector.min.js"></script>
+```
+
+---
+
+# **4. Ajouter un script global de gestion de langue**
+
+Créer :
+
+```
+/js/i18n.js
+```
+
+Avec :
+
+```js
+i18next
+  .use(i18nextHttpBackend)
+  .use(i18nextBrowserLanguageDetector)
+  .init({
+    fallbackLng: "fr",
+    debug: false,
+    backend: {
+      loadPath: "/locales/{{lng}}.json"
+    }
+  }, (err, t) => {
+    translatePage();
+  });
+
+function translatePage() {
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    el.innerHTML = i18next.t(key);
+  });
+
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-placeholder");
+    el.placeholder = i18next.t(key);
+  });
+}
+
+function changeLanguage(lng) {
+  i18next.changeLanguage(lng, translatePage);
+}
+```
+
+---
+
+# **5. Modifier TOUT le HTML pour supporter la traduction**
+
+Exemples :
+
+```html
+<h1 data-i18n="app_title"></h1>
+
+<input data-i18n-placeholder="search_placeholder">
+
+<button data-i18n="menu_events"></button>
+```
+
+Remplacer **tout texte visible** par une clé `data-i18n`.
+
+---
+
+# **6. Lier le sélecteur de langue existant**
+
+Lorsque l'utilisateur choisit une langue :
+
+```js
+changeLanguage(selectedLanguage)
+```
+
+Cela doit rappeler automatiquement **translatePage()**.
+
+---
+
+# **7. Vérifier que tout est traduit**
+
+Assurer que :
+
+* la page d'accueil
+* le menu
+* le SOS
+* les évènements
+* les urgences
+* le bulletin citoyen
+* les messages système
+* les boutons
+* les placeholders
+* les cartes
+* les modales
+* les notifications
+
+… changent de langue immédiatement **sans recharger l'application**.
+
+---
+
+# **8. Aucun service payant**
+
+Ne pas utiliser :
+
+* Google Translate API
+* DeepL
+* OpenAI
+* Gemini
+* Azure translator
+
+Tout doit être **100% local**, gratuit, basé sur les fichiers JSON.
+
+---
+
+# 👉 **Applique l’intégration complète maintenant.**
+
+---
+
+## 💬 Si tu veux :
+
+Je peux **te générer automatiquement les 5 fichiers JSON complets** contenant *toutes les traductions* des pages de ton app.
+Il te suffit de dire :
+
+➡️ **“Génère les fichiers de traduction complets.”**
