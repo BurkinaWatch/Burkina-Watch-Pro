@@ -1,4 +1,3 @@
-
 /**
  * GoogleMap Component - Version améliorée avec données géographiques complètes du Burkina Faso
  * 
@@ -36,6 +35,7 @@ interface GoogleMapProps {
   highlightMarkerId?: string | null;
   centerLat?: number | null;
   centerLng?: number | null;
+  heatmapMode?: boolean;
 }
 
 const BURKINA_FASO_CENTER = {
@@ -255,7 +255,7 @@ const BURKINA_REGIONS = [
 
 function CustomMarker({ color, isSOS, niveauUrgence }: { color: string; isSOS: boolean; niveauUrgence?: string | null }) {
   const urgencyColor = niveauUrgence ? urgencyColors[niveauUrgence] || urgencyColors.moyen : urgencyColors.moyen;
-  
+
   return (
     <div style={{ position: 'relative' }}>
       {isSOS && (
@@ -426,7 +426,7 @@ function ClusteredMarkers({ markers, onMarkerClick, showMarkers }: ClusteredMark
 
   useEffect(() => {
     if (!map || !showMarkers) return;
-    
+
     if (!clusterer.current) {
       clusterer.current = new MarkerClusterer({ 
         map,
@@ -462,7 +462,7 @@ function ClusteredMarkers({ markers, onMarkerClick, showMarkers }: ClusteredMark
 
   useEffect(() => {
     if (!clusterer.current) return;
-    
+
     clusterer.current.clearMarkers();
     if (showMarkers) {
       clusterer.current.addMarkers(Object.values(markerRefs));
@@ -520,11 +520,11 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c;
 }
 
-export default function GoogleMap({ markers, className = '', highlightMarkerId = null, centerLat = null, centerLng = null }: GoogleMapProps) {
+export default function GoogleMap({ markers, className = '', highlightMarkerId = null, centerLat = null, centerLng = null, heatmapMode = false }: GoogleMapProps) {
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
   const [mapError, setMapError] = useState<boolean>(false);
   const [mapLoaded, setMapLoaded] = useState<boolean>(false);
-  const [showHeatmap, setShowHeatmap] = useState<boolean>(false);
+  const [showHeatmap, setShowHeatmap] = useState<boolean>(heatmapMode);
   const [radiusFilter, setRadiusFilter] = useState<number | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
@@ -533,7 +533,7 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
   const [showSearchResults, setShowSearchResults] = useState<boolean>(false);
   const [mapCenter, setMapCenter] = useState<{lat: number; lng: number}>(BURKINA_FASO_CENTER);
   const [mapZoom, setMapZoom] = useState<number>(6.5);
-  
+
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   // Centrer sur le marqueur recherché
@@ -541,7 +541,7 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
     if (highlightMarkerId && centerLat && centerLng) {
       setMapCenter({ lat: parseFloat(centerLat.toString()), lng: parseFloat(centerLng.toString()) });
       setMapZoom(15);
-      
+
       // Ouvrir automatiquement l'info window du marqueur
       const marker = markers.find(m => m.id === highlightMarkerId);
       if (marker) {
@@ -656,7 +656,7 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
     const checkInterval = setInterval(() => {
       const errorElement = document.querySelector('.gm-err-message, .gm-err-content, .gm-err-title');
       const errorDialog = document.querySelector('[role="dialog"]');
-      
+
       if (errorElement || (errorDialog && errorDialog.textContent?.includes('Google Maps'))) {
         console.error('Google Maps error detected in DOM');
         setMapError(true);
@@ -738,7 +738,7 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
             <div className="drag-handle p-2 flex items-center justify-center border-b cursor-grab active:cursor-grabbing">
               <GripVertical className="w-4 h-4 text-muted-foreground" />
             </div>
-            
+
             {/* Filtre par rayon */}
             {userLocation && (
               <div className="p-2 border-b">
@@ -815,7 +815,7 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
           mapId="burkina-watch-map"
         >
           <HeatmapLayer markers={filteredMarkers} showHeatmap={showHeatmap} />
-          
+
           <ClusteredMarkers 
             markers={filteredMarkers} 
             onMarkerClick={setSelectedMarker}
