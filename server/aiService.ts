@@ -153,11 +153,19 @@ export async function generateChatResponse(
       };
     } catch (error: any) {
       console.error("❌ Groq API error:", error?.message || error);
+      
+      // If it's a rate limit error, re-throw it so the caller knows
+      if (error?.status === 429 || error?.message?.includes("rate limit") || error?.message?.includes("Rate limit")) {
+        throw error; // Re-throw rate limit errors for proper handling
+      }
     }
   }
 
   // If both fail or are not configured
-  throw new Error("Les services d'IA ne sont pas disponibles. Veuillez configurer GOOGLE_API_KEY ou GROQ_API_KEY.");
+  const errorMessage = geminiClient && groqClient 
+    ? "Les services d'IA ne sont pas disponibles." 
+    : "Services d'IA non configurés. Veuillez contacter l'administrateur.";
+  throw new Error(errorMessage);
 }
 
 export function isAIAvailable(): boolean {

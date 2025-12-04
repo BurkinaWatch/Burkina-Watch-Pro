@@ -6,7 +6,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import HamburgerMenu from "./HamburgerMenu";
 import LanguageSelector from "./LanguageSelector";
-import logo from "@assets/burkina_watch_logo.png";
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -80,7 +79,6 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
               <Menu className="w-5 h-5" />
             </Button>
           <Link href="/" className="flex items-center gap-3" data-testid="link-home">
-            <img src={logo} alt="Burkina Watch" className="w-10 h-10" />
             <div className="hidden md:block">
               <h1 className="text-xl font-extrabold text-red-600 dark:text-red-400 tracking-tight">{t("header.title")}</h1>
               <p className="text-sm font-semibold">

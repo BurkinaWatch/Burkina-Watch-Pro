@@ -1152,8 +1152,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error in chat:", error);
 
-      // Erreur de quota ou service indisponible
-      if (error?.message?.includes("quota") || error?.message?.includes("rate limit")) {
+      // Erreur de quota ou service indisponible (case-insensitive)
+      const errorMsg = error?.message?.toLowerCase() || "";
+      if (errorMsg.includes("quota") || errorMsg.includes("rate limit") || error?.status === 429) {
         return res.status(503).json({
           error: "Le quota d'utilisation de l'assistant IA est temporairement épuisé. Veuillez réessayer dans quelques instants.",
           quotaExceeded: true
