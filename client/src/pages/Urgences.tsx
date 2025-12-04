@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, AlertTriangle, Shield, Activity, Heart, Users } from "lucide-react";
+import { Search, MapPin, Phone, AlertTriangle, Shield, Activity, Heart, Users, ArrowLeft, RefreshCw } from "lucide-react";
+import { useLocation } from "wouter";
 
 interface EmergencyService {
   id: string;
@@ -65,6 +66,7 @@ const urgencesData: EmergencyService[] = [
 export default function Urgences() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
+  const [, setLocation] = useLocation();
 
   const filteredServices = useMemo(() => {
     return urgencesData.filter(service => {
@@ -132,6 +134,29 @@ export default function Urgences() {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Boutons Retour et Actualiser */}
+        <div className="mb-4 flex items-center gap-2">
+          <Button
+            variant="ghost"
+            onClick={() => setLocation("/")}
+            className="gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Retour
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearchTerm("");
+              setSelectedType("all");
+            }}
+            className="gap-2 ml-auto"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Réinitialiser
+          </Button>
+        </div>
+
         {/* En-tête */}
         <Card className="mb-6 bg-gradient-to-r from-red-500/10 to-yellow-500/10 border-red-500/20">
           <CardContent className="p-6">

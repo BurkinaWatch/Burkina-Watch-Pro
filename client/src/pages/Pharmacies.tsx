@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, Clock, Navigation } from "lucide-react";
+import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw } from "lucide-react";
+import { useLocation } from "wouter";
 
 interface Pharmacie {
   id: string;
@@ -180,6 +181,7 @@ const REGIONS = [
 export default function Pharmacies() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
+  const [, setLocation] = useLocation();
 
   const filteredPharmacies = useMemo(() => {
     let filtered = PHARMACIES_DATA;
@@ -245,6 +247,29 @@ export default function Pharmacies() {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Boutons Retour et Actualiser */}
+        <div className="mb-4 flex items-center gap-2">
+          <Button
+            variant="ghost"
+            onClick={() => setLocation("/")}
+            className="gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Retour
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearchQuery("");
+              setSelectedRegion("all");
+            }}
+            className="gap-2 ml-auto"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Réinitialiser
+          </Button>
+        </div>
+
         {/* En-tête */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">

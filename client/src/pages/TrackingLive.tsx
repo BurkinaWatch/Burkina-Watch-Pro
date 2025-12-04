@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, StopCircle, Loader2, Share2, ArrowLeft } from "lucide-react";
+import { MapPin, StopCircle, Loader2, Share2, ArrowLeft, RefreshCw } from "lucide-react";
 import type { TrackingSession, EmergencyContact } from "@shared/schema";
 
 export default function TrackingLive() {
@@ -216,7 +216,7 @@ export default function TrackingLive() {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="mb-4">
+        <div className="mb-4 flex items-center gap-2">
           <Button
             variant="ghost"
             onClick={() => setLocation("/profil")}
@@ -224,6 +224,17 @@ export default function TrackingLive() {
           >
             <ArrowLeft className="w-4 h-4" />
             Retour
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              queryClient.invalidateQueries({ queryKey: ["/api/tracking/session"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/tracking/sessions"] });
+            }}
+            className="gap-2 ml-auto"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Actualiser
           </Button>
         </div>
         

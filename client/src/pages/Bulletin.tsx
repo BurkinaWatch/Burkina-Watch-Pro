@@ -6,9 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
-import { Loader2, ExternalLink, RefreshCw, Search, Filter, Calendar, FileText } from "lucide-react";
+import { Loader2, ExternalLink, RefreshCw, Search, Filter, Calendar, FileText, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { useLocation } from "wouter";
 
 interface BulletinItem {
   id: string;
@@ -38,6 +39,7 @@ export default function Bulletin() {
   const [selectedSource, setSelectedSource] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const fetchBulletins = async () => {
     setLoading(true);
@@ -104,6 +106,18 @@ export default function Bulletin() {
       <Header />
 
       <main className="max-w-7xl mx-auto px-4 py-8 pb-24">
+        {/* Bouton Retour */}
+        <div className="mb-4">
+          <Button
+            variant="ghost"
+            onClick={() => setLocation("/")}
+            className="gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Retour
+          </Button>
+        </div>
+
         {/* En-tête */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-2 flex items-center gap-3">
