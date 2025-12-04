@@ -26,7 +26,7 @@ export default function LanguageSelector() {
     localStorage.setItem('burkina-watch-language', languageCode);
 
     toast({
-      title: t('messages.languageChanged'),
+      title: "Langue changée",
       description: languages.find(l => l.code === languageCode)?.name,
     });
   };

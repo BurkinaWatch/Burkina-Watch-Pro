@@ -10,7 +10,6 @@ import logo from "@assets/burkina_watch_logo.png";
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -37,7 +36,6 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
   const { isStealthMode, toggleStealthMode } = useStealthMode();
   const { isAuthenticated, user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-  const { t } = useTranslation();
   const [location, setLocation] = useLocation();
 
   const { data: unreadCount } = useQuery<{ count: number }>({
@@ -122,10 +120,9 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
               onClick={handleLogin}
               data-testid="button-login"
               className="bg-yellow-600 hover:bg-yellow-700 text-white gap-2"
-              aria-label={t('auth.login')}
             >
               <LogIn className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('auth.login')}</span>
+              <span className="hidden sm:inline">Connexion</span>
             </Button>
           )}
           <LanguageSelector />
@@ -134,7 +131,7 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
             size="icon"
             onClick={toggleStealthMode}
             data-testid="button-stealth-toggle"
-            title={isStealthMode ? t('settings.stealthOff') : t('settings.stealthOn')}
+            title={isStealthMode ? "Désactiver le mode furtif" : "Activer le mode furtif"}
           >
             {isStealthMode ? (
               <EyeOff className="w-5 h-5 text-gray-500" />
