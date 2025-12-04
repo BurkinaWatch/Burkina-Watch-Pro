@@ -1,42 +1,16 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Link } from "wouter";
-import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Cross, Newspaper, Calendar, Navigation, Sparkles, Bell } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Cross, Newspaper, Calendar, Navigation, Sparkles, Bell, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import logo from "@assets/burkina_watch_logo.png";
-import { useLocation, navigate } from "wouter";
-import { PlusCircle, List, FileText as FileTextIcon, Calendar as CalendarIcon, Trophy, Pill } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface HamburgerMenuProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-// Helper component for menu items
-const MenuItem = ({ icon: Icon, label, onClick, active, badge, badgeColor }: any) => (
-  <Link href={location}>
-    <Button
-      variant="ghost"
-      className={`w-full justify-start gap-3 h-11 rounded-xl hover:bg-accent/80 hover:scale-[1.02] transition-all duration-200 group relative overflow-hidden ${active ? "bg-accent" : ""}`}
-      onClick={() => {
-        onClick();
-        onOpenChange(false); // Close the menu on item click
-      }}
-    >
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-      <Icon className={`w-5 h-5 ${active ? "text-primary" : "text-foreground"} group-hover:scale-110 transition-transform`} />
-      <span className={`font-medium ${active ? "text-primary" : "text-foreground"}`}>{label}</span>
-      {badge && (
-        <Badge className={`ml-auto text-[10px] px-1.5 py-0 ${badgeColor || "bg-yellow-500"} text-white border-0`}>
-          {badge}
-        </Badge>
-      )}
-    </Button>
-  </Link>
-);
 
 export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps) {
   const [location, setLocation] = useLocation();
@@ -81,10 +55,12 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-80 p-0 bg-gradient-to-b from-background via-background to-muted/20">
         <div className="flex flex-col h-full">
-          {/* En-tête amélioré avec logo */}
+          {/* En-tête amélioré avec icône */}
           <SheetHeader className="p-6 pb-4 border-b bg-gradient-to-r from-green-50 to-yellow-50 dark:from-green-950/20 dark:to-yellow-950/20">
             <div className="flex items-center gap-3 mb-2">
-              <img src={logo} alt="Logo" className="w-12 h-12 rounded-xl shadow-md" />
+              <div className="w-12 h-12 rounded-xl shadow-md bg-gradient-to-br from-red-500 via-yellow-500 to-green-500 flex items-center justify-center">
+                <Shield className="w-7 h-7 text-white" />
+              </div>
               <div>
                 <SheetTitle className="text-left">
                   <span className="text-red-600 dark:text-red-500 font-bold text-xl">Burkina Watch</span>
