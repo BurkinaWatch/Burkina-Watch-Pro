@@ -59,16 +59,12 @@ export default function Carte() {
         <div className="absolute top-2 left-2 right-2 md:top-4 md:left-4 md:right-4 z-30 max-w-md">
           <Card className="p-3 md:p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90 shadow-lg border-2">
             <h2 className="text-base md:text-lg font-semibold mb-3">Carte Interactive</h2>
-            <FilterChips onFilterChange={setFilter} />
-            <p className="text-xs text-muted-foreground mt-3 flex items-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse" />
-              {filteredMarkers.length} signalement{filteredMarkers.length > 1 ? "s" : ""} affiché{filteredMarkers.length > 1 ? "s" : ""}
-            </p>
+            {/* FilterChips and report count removed as per the user's request */}
           </Card>
         </div>
 
-        <GoogleMap 
-          markers={filteredMarkers} 
+        <GoogleMap
+          markers={filteredMarkers}
           className="h-full"
           highlightMarkerId={highlightId}
           centerLat={targetLat ? parseFloat(targetLat) : null}
