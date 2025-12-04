@@ -997,7 +997,7 @@ export default function Profil() {
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <LevelBadge level={currentLevelName} />
-                    <span className="text-sm text-muted-foreground">{t(`profile.${currentLevelName.toLowerCase().replace(/\s+/g, '')}`, currentLevelName)}</span>
+                    <span className="text-sm text-muted-foreground">{t(`levels.${currentLevelName}.title`)}</span>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-primary">{user?.userPoints || 0}</div>
