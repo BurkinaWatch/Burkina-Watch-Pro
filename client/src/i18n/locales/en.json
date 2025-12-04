@@ -13,6 +13,12 @@
       "protect": "Protect."
     }
   },
+  "leaderboard": {
+    "title": "Engaged Citizens Ranking",
+    "subtitle": "The most active citizens in our community watch",
+    "national": "National Ranking",
+    "points": "points"
+  },
   "levels": {
     "sentinelle": {
       "title": "Peace Sentinel",

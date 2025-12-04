@@ -13,6 +13,12 @@
       "protect": "Kanw."
     }
   },
+  "leaderboard": {
+    "title": "Jamana-mɔgɔw ka jatɛ",
+    "subtitle": "Jamana-mɔgɔw minw bɛ baara kɛ kosɛbɛ",
+    "national": "Jamana Jatɛ",
+    "points": "warijɛw"
+  },
   "levels": {
     "sentinelle": {
       "title": "Hɛɛrɛ Kɔlɔsibaga",

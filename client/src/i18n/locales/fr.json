@@ -13,6 +13,12 @@
       "protect": "Protéger."
     }
   },
+  "leaderboard": {
+    "title": "Classement des citoyens engagés",
+    "subtitle": "Les citoyens les plus actifs de notre communauté de veille",
+    "national": "Classement National",
+    "points": "points"
+  },
   "levels": {
     "sentinelle": {
       "title": "Sentinelle de la Paix",
