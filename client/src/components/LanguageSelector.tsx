@@ -1,4 +1,3 @@
-
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +24,7 @@ export default function LanguageSelector() {
   const changeLanguage = (languageCode: string) => {
     i18n.changeLanguage(languageCode);
     localStorage.setItem('burkina-watch-language', languageCode);
-    
+
     toast({
       title: t('messages.languageChanged'),
       description: languages.find(l => l.code === languageCode)?.name,

@@ -1,211 +1,116 @@
 {
-  "app": {
-    "name": "Burkina Watch",
-    "tagline": "Voir. Agir. Protéger.",
-    "description": "Canal de Veille Citoyenne et d'Alerte Sociale"
-  },
-  "nav": {
-    "home": "Accueil",
-    "map": "Carte",
-    "publish": "Publier",
-    "sos": "SOS",
-    "profile": "Profil",
-    "feed": "Fil d'actualité",
-    "notifications": "Notifications",
-    "about": "À propos",
-    "contribute": "Contribuer",
-    "settings": "Paramètres"
-  },
-  "common": {
-    "loading": "Chargement...",
-    "error": "Une erreur est survenue",
-    "success": "Opération réussie",
-    "cancel": "Annuler",
-    "confirm": "Confirmer",
-    "save": "Enregistrer",
-    "delete": "Supprimer",
-    "edit": "Modifier",
-    "back": "Retour",
-    "next": "Suivant",
-    "previous": "Précédent",
-    "search": "Rechercher",
-    "filter": "Filtrer",
-    "sort": "Trier",
-    "close": "Fermer",
-    "open": "Ouvrir",
-    "viewMore": "Voir plus",
-    "viewLess": "Voir moins",
-    "noResults": "Aucun résultat",
-    "anonymous": "Anonyme"
-  },
-  "auth": {
-    "login": "Se connecter",
-    "logout": "Se déconnecter",
-    "loginRequired": "Connexion requise",
-    "loginMessage": "Vous devez vous connecter pour accéder à cette page"
-  },
-  "home": {
-    "newReport": "Nouveau signalement",
-    "viewMap": "Voir la carte",
-    "activeReports": "Signalements actifs",
-    "sosAlerts": "Alertes SOS",
-    "activeCitizens": "Citoyens engagés",
-    "recentReports": "Signalements récents",
-    "viewAll": "Voir tout",
-    "protectTogether": "Ensemble, protégeons notre pays",
-    "contributeNow": "Contribuer maintenant"
-  },
-  "report": {
-    "title": "Titre",
-    "description": "Description",
-    "category": "Catégorie",
-    "location": "Localisation",
-    "urgency": "Niveau d'urgence",
-    "image": "Image",
-    "submit": "Publier",
-    "status": {
-      "pending": "En attente",
-      "inProgress": "En cours",
-      "resolved": "Résolu",
-      "rejected": "Rejeté"
-    },
-    "categories": {
-      "urgence": "Urgence",
-      "securite": "Sécurité",
-      "sante": "Santé",
-      "environnement": "Environnement",
-      "corruption": "Corruption",
-      "infrastructure": "Infrastructure",
-      "personne_recherchee": "Personne recherchée"
-    },
-    "urgencyLevels": {
-      "faible": "Faible",
-      "moyen": "Moyen",
-      "critique": "Critique"
-    }
-  },
-  "sos": {
-    "emergency": "Urgence",
-    "sendAlert": "Envoyer une alerte SOS",
-    "panicButton": "Bouton Panique",
-    "pressToActivate": "Appuyez pour activer",
-    "alertSent": "Alerte envoyée",
-    "locationShared": "Votre position a été partagée"
-  },
-  "profile": {
-    "myProfile": "Mon profil",
-    "editProfile": "Modifier le profil",
-    "firstName": "Prénom",
-    "lastName": "Nom",
-    "phone": "Téléphone",
-    "city": "Ville",
-    "profession": "Métier",
-    "bio": "Bio",
-    "myPublications": "Mes Publications",
-    "gpsTracking": "Suivi GPS",
-    "emergencyContacts": "Contacts d'urgence",
-    "points": "points",
-    "badges": {
-      "activeCitizen": "Citoyen Actif",
-      "regionalWatcher": "Veilleur Régional",
-      "reliableReporter": "Reporter Fiable",
-      "localAmbassador": "Ambassadeur Local"
-    },
-    "citizenRank": "Rang Citoyen",
-    "totalPoints": "Points totaux",
-    "personalInfo": "Informations personnelles"
-  },
-  "tracking": {
-    "liveTracking": "Suivi de Localisation en Direct",
-    "trackingActive": "Tracking actif",
-    "trackingInactive": "Tracking inactif",
-    "pointsRecorded": "points enregistrés",
-    "start": "Démarrer",
-    "stop": "Arrêter",
-    "history": "Historique des sessions",
-    "duration": "Durée"
-  },
-  "emergency": {
-    "contacts": "Contacts d'Urgence",
-    "addContact": "Ajouter un contact",
-    "name": "Nom",
-    "noContacts": "Aucun contact d'urgence configuré",
-    "panicDescription": "Ces contacts recevront votre position GPS en cas d'activation du bouton panique"
-  },
-  "settings": {
-    "language": "Langue",
-    "theme": "Thème",
-    "notifications": "Notifications",
-    "privacy": "Confidentialité",
-    "selectLanguage": "Sélectionner la langue",
-    "languages": {
-      "fr": "Français",
-      "en": "English",
-      "dioula": "Dioula",
-      "moore": "Mooré",
-      "fulfulde": "Fulfuldé"
-    }
-  },
-  "notifications": {
-    "title": "Notifications",
-    "noNotifications": "Aucune notification",
-    "markAsRead": "Marquer comme lu",
-    "newSOS": "Nouveau signalement SOS",
-    "reportResolved": "Signalement résolu",
-    "systemUpdate": "Mise à jour du système"
-  },
-  "messageDuJour": {
-    "proverbe": "Proverbe du jour",
-    "conseil": "Conseil du jour",
-    "encouragement": "Message du jour"
-  },
-  "messages": {
-    "reportSuccess": "Signalement créé avec succès",
-    "reportDeleted": "Signalement supprimé",
-    "profileUpdated": "Profil mis à jour",
-    "trackingStarted": "Tracking démarré",
-    "trackingStopped": "Tracking arrêté",
-    "contactAdded": "Contact ajouté",
-    "contactDeleted": "Contact supprimé",
-    "languageChanged": "Langue changée",
-    "locationError": "Impossible d'obtenir votre position",
-    "languageChanged": "Langue modifiée"
-  },
-  "moderation": {
-    "title": "Filtre de la Paix",
-    "warningTitle": "Message sensible détecté",
-    "warningMessage": "Ton message semble contenir des mots sensibles. Veux-tu reformuler avant de partager ?",
-    "blockedTitle": "Publication bloquée",
-    "blockedMessage": "Notre Filtre de la Paix veille à préserver le respect et la solidarité entre citoyens.",
-    "suggestion": "Suggestion de reformulation",
-    "tryAgain": "Reformuler",
-    "cancel": "Annuler",
-    "reason": "Raison"
-  },
-  "levels": {
-    "sentinelle": {
-      "title": "Sentinelle de la Paix",
-      "description": "Tu fais partie de ceux qui veillent sur la communauté. Tes premiers pas vers la paix et la vigilance citoyenne commencent ici."
-    },
-    "vdp": {
-      "title": "VDP de la Paix",
-      "description": "Tu agis activement pour ton peuple. Tu défends la paix et la solidarité au sein du Faso."
-    },
-    "fds": {
-      "title": "FDS de la Paix",
-      "description": "Tu incarnes la bravoure et la vigilance. Le Burkina compte sur ton sens du devoir et de la justice."
-    },
-    "congratulations": "🎉 Félicitations !",
-    "newRank": "Nouveau Rang",
-    "maxLevel": "Niveau maximum atteint",
-    "progressTo": "Progression vers",
-    "remaining": "restants"
-  },
-  "leaderboard": {
-    "title": "Classement National",
-    "subtitle": "Les citoyens les plus engagés du Burkina Faso",
-    "national": "Top Citoyens",
-    "points": "points",
-    "viewRanking": "Voir le classement"
-  }
+  "app_title": "BurkinaWatch",
+  "app_slogan": "Veille Citoyenne · Alerte · Sécurité",
+
+  "menu_home": "Accueil",
+  "menu_feed": "Signalements",
+  "menu_map": "Carte",
+  "menu_events": "Évènements Burkina",
+  "menu_bulletin": "Bulletin Citoyen",
+  "menu_urgences": "Urgences Burkina",
+  "menu_pharmacies": "Pharmacies",
+  "menu_sos": "SOS",
+  "menu_profile": "Profil",
+  "menu_about": "À propos",
+  "menu_conditions": "Conditions",
+  "menu_admin": "Admin",
+  "menu_leaderboard": "Classement",
+  "menu_notifications": "Notifications",
+
+  "search_placeholder": "Rechercher...",
+  "no_results": "Aucun résultat",
+  "loading": "Chargement...",
+  "error": "Erreur",
+  "success": "Succès",
+  "cancel": "Annuler",
+  "confirm": "Confirmer",
+  "close": "Fermer",
+  "save": "Enregistrer",
+  "delete": "Supprimer",
+  "edit": "Modifier",
+  "view": "Voir",
+  "back": "Retour",
+  "next": "Suivant",
+  "previous": "Précédent",
+  "submit": "Soumettre",
+  "send": "Envoyer",
+
+  "create_report": "Créer un signalement",
+  "create_sos": "Déclencher SOS",
+  "report_title": "Titre du signalement",
+  "report_description": "Description",
+  "report_location": "Localisation",
+  "report_category": "Catégorie",
+  "report_urgency": "Niveau d'urgence",
+  "report_anonymous": "Signalement anonyme",
+  "report_submit": "Publier le signalement",
+
+  "category_urgence": "Urgence",
+  "category_securite": "Sécurité",
+  "category_sante": "Santé",
+  "category_environnement": "Environnement",
+  "category_corruption": "Corruption",
+  "category_infrastructure": "Infrastructure",
+  "category_personne_recherchee": "Personne recherchée",
+  "category_sos": "SOS",
+
+  "urgency_faible": "Faible",
+  "urgency_moyen": "Moyen",
+  "urgency_critique": "Critique",
+
+  "status_en_attente": "En attente",
+  "status_en_cours": "En cours",
+  "status_resolu": "Résolu",
+  "status_rejete": "Rejeté",
+
+  "login": "Connexion",
+  "logout": "Déconnexion",
+  "register": "Inscription",
+  "email": "Email",
+  "password": "Mot de passe",
+  "username": "Nom d'utilisateur",
+
+  "comments": "Commentaires",
+  "add_comment": "Ajouter un commentaire",
+  "likes": "J'aime",
+  "shares": "Partages",
+
+  "emergency_contacts": "Contacts d'urgence",
+  "add_emergency_contact": "Ajouter un contact",
+  "emergency_name": "Nom du contact",
+  "emergency_phone": "Téléphone",
+  "emergency_relationship": "Relation",
+
+  "tracking_active": "Suivi GPS actif",
+  "tracking_start": "Démarrer le suivi",
+  "tracking_stop": "Arrêter le suivi",
+  "tracking_history": "Historique des suivis",
+
+  "points": "Points",
+  "level": "Niveau",
+  "rank": "Rang",
+  "contributions": "Contributions",
+
+  "filter_all": "Tous",
+  "filter_category": "Par catégorie",
+  "filter_urgency": "Par urgence",
+  "filter_status": "Par statut",
+  "filter_date": "Par date",
+
+  "no_reports": "Aucun signalement pour le moment",
+  "no_events": "Aucun événement pour le moment",
+  "no_notifications": "Aucune notification",
+
+  "stealth_mode": "Mode furtif",
+  "stealth_mode_active": "Mode furtif activé",
+  "stealth_mode_description": "Masquer l'application en cas de danger",
+
+  "ai_assistant": "Assistant IA",
+  "ai_placeholder": "Posez votre question...",
+  "ai_greeting": "Bonjour ! Comment puis-je vous aider ?",
+
+  "welcome": "Bienvenue",
+  "citizen_watch": "Veille Citoyenne",
+  "alert_platform": "Plateforme d'Alerte",
+  "security_network": "Réseau de Sécurité"
 }

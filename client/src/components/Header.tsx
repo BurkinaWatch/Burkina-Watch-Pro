@@ -125,7 +125,7 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
               aria-label={t('auth.login')}
             >
               <LogIn className="w-4 h-4" />
-              <span className="hidden sm:inline">Se connecter</span>
+              <span className="hidden sm:inline">{t('auth.login')}</span>
             </Button>
           )}
           <LanguageSelector />

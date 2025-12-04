@@ -1,174 +1,117 @@
 
 {
-  "app": {
-    "name": "Burkina Watch",
-    "tagline": "Ye. Kɛ. Tanga.",
-    "description": "Sigida filɛlikɛ ni kɔnɔntanaw laɲini sira"
-  },
-  "nav": {
-    "home": "So",
-    "map": "Kalan",
-    "publish": "Bila",
-    "sos": "SOS",
-    "profile": "Jago",
-    "feed": "Kunnabɔ",
-    "notifications": "Laɲinniw",
-    "about": "Ko min ye",
-    "contribute": "Dɛmɛ",
-    "settings": "Labɛncogo"
-  },
-  "common": {
-    "save": "Mara",
-    "cancel": "Ban",
-    "delete": "Bɔ",
-    "edit": "Yɛlɛma",
-    "confirm": "Dafali",
-    "close": "Datugu",
-    "loading": "Ka don...",
-    "error": "Fili",
-    "success": "Ɲɛtaa",
-    "warning": "Lasigilikɛ",
-    "all": "Bɛɛ"
-  },
-  "auth": {
-    "login": "Don",
-    "logout": "Bɔ",
-    "loginRequired": "Don ka kan",
-    "loginMessage": "I ka kan ka don walasa ka se nin ɲɛ ma"
-  },
-  "home": {
-    "newReport": "Kunnafoni kura",
-    "viewMap": "Kalan lajɛ",
-    "activeReports": "Kunnafoniw minw bɛ baara la",
-    "sosAlerts": "SOS lasigilikɛw",
-    "activeCitizens": "Sigidamɔgɔw minw bɛ baara la",
-    "recentReports": "Kunnafoni kokorɔw",
-    "viewAll": "Lajɛ bɛɛ",
-    "protectTogether": "Ɲɔgɔn fɛ, an ka an ka jamana tanga",
-    "contributeNow": "Dɛmɛ sisan"
-  },
-  "report": {
-    "title": "Tɔgɔ",
-    "description": "Ɲɛfɔli",
-    "category": "Kulu",
-    "location": "Yɔrɔ",
-    "urgency": "Teliya hakɛ",
-    "image": "Ja",
-    "submit": "Bila",
-    "status": {
-      "pending": "Makɔnɔ",
-      "inProgress": "Baara kɛcogo la",
-      "resolved": "Fura",
-      "rejected": "Banna"
-    },
-    "categories": {
-      "urgence": "Teliya",
-      "securite": "Lakanali",
-      "sante": "Kɛnɛya",
-      "environnement": "Sigida yɔrɔ",
-      "corruption": "Girinya",
-      "infrastructure": "Jɔyɔrɔw",
-      "personne_recherchee": "Mɔgɔ ɲinina"
-    },
-    "urgencyLevels": {
-      "faible": "Dɔɔni",
-      "moyen": "Cɛma",
-      "critique": "Gɛlɛya"
-    }
-  },
-  "sos": {
-    "emergency": "Teliya",
-    "sendAlert": "SOS lasigilikɛ ci",
-    "panicButton": "Siran butɔni",
-    "pressToActivate": "Digi walasa ka bɔlɔ",
-    "alertSent": "Lasigilikɛ citta",
-    "locationShared": "I ka yɔrɔ tilata"
-  },
-  "profile": {
-    "myProfile": "N ka jago",
-    "editProfile": "Jago yɛlɛma",
-    "firstName": "Tɔgɔ fɔlɔ",
-    "lastName": "Jamuw tɔgɔ",
-    "phone": "Telefɔni",
-    "city": "Dugu",
-    "profession": "Baara",
-    "bio": "Ɲɛfɔli",
-    "myPublications": "N ka bilaw",
-    "gpsTracking": "GPS ɲininikɛ",
-    "emergencyContacts": "Teliya kumakanw",
-    "points": "dɔw",
-    "badges": {
-      "activeCitizen": "Sigidamɔgɔ kɛnɛman",
-      "regionalWatcher": "Maraci filɛlikɛla",
-      "reliableReporter": "Kunnafoni bilala min bɛ se ka da a la",
-      "localAmbassador": "Sigida ambasa"
-    }
-  },
-  "tracking": {
-    "liveTracking": "Yɔrɔ ɲinininkɛ kɛnɛman",
-    "trackingActive": "Ɲinininkɛ bɛ baara la",
-    "trackingInactive": "Ɲinininkɛ tɛ baara la",
-    "pointsRecorded": "dɔw marala",
-    "start": "Daminɛ",
-    "stop": "Dabila",
-    "history": "Waati tɛmɛnenw",
-    "duration": "Waati jan"
-  },
-  "emergency": {
-    "contacts": "Teliya kumakanw",
-    "addContact": "Kumakan fara a kan",
-    "name": "Tɔgɔ",
-    "noContacts": "Teliya kumakan si tɛ labɛn",
-    "panicDescription": "Nin kumakanw bɛna i ka yɔrɔ GPS sɔrɔ ni siran butɔni bɔlɔla"
-  },
-  "settings": {
-    "language": "Kan",
-    "theme": "Cogoya",
-    "notifications": "Laɲinniw",
-    "privacy": "Kunnafoni dogoya",
-    "selectLanguage": "Kan sugandi",
-    "languages": {
-      "fr": "Faransi kan",
-      "en": "Angilɛ kan",
-      "dioula": "Jula kan",
-      "moore": "Mooré kan",
-      "fulfulde": "Fulfuldé kan"
-    }
-  },
-  "notifications": {
-    "title": "Laɲinniw",
-    "noNotifications": "Laɲini si tɛ",
-    "markAsRead": "Marka kalan kɛra cogo la",
-    "newSOS": "SOS kunnafoni kura",
-    "reportResolved": "Kunnafoni furala",
-    "systemUpdate": "Porogaramu kura"
-  },
-  "messageDuJour": {
-    "proverbe": "Tile fɔlɔ",
-    "conseil": "Hakilijagabɔ fɔlɔ",
-    "encouragement": "Kuma fɔlɔ"
-  },
-  "messages": {
-    "languageChanged": "Kan yɛlɛmana",
-    "reportSuccess": "Kunnafoni dabɔra ka ɲɛ",
-    "reportDeleted": "Kunnafoni bɔra",
-    "profileUpdated": "Jago kura kɛra",
-    "trackingStarted": "Ɲinininkɛ daminɛna",
-    "trackingStopped": "Ɲinininkɛ dabanna",
-    "contactAdded": "Kumakan farala a kan",
-    "contactDeleted": "Kumakan bɔra",
-    "locationError": "A ma se ka i ka yɔrɔ sɔrɔ",
-    "languageChanged": "Kan yɛlɛmara"
-  },
-  "moderation": {
-    "title": "Hɛrɛ filter",
-    "warningTitle": "Kuma gɛlɛn ye",
-    "warningMessage": "I ka kuma bɛ ɲɔgɔn kuma gɛlɛya ye. I b'a fɛ ka a yɛlɛma sani i k'a tila?",
-    "blockedTitle": "Bila dabanna",
-    "blockedMessage": "An ka Hɛrɛ filter bɛ lakanali ni ɲɔgɔn sɔrɔ tanga.",
-    "suggestion": "Yɛlɛmali hakilina",
-    "tryAgain": "Yɛlɛma kokura",
-    "cancel": "Ban",
-    "reason": "Kunnafoni"
-  }
+  "app_title": "BurkinaWatch",
+  "app_slogan": "Sitiyenw ka kɔlɔsi · Lasɔmini · Lakana",
+  
+  "menu_home": "So",
+  "menu_feed": "Kunnafoniw",
+  "menu_map": "Karti",
+  "menu_events": "Burkina kow",
+  "menu_bulletin": "Sitiyenw ka bulletin",
+  "menu_urgences": "Burkina kabakow",
+  "menu_pharmacies": "Furakɛɛso",
+  "menu_sos": "SOS",
+  "menu_profile": "N ka kunnafoni",
+  "menu_about": "Kunnafoni",
+  "menu_conditions": "Sariyaw",
+  "menu_admin": "Kunnafoni",
+  "menu_leaderboard": "Jatebɔ",
+  "menu_notifications": "Lasɔminiw",
+  
+  "search_placeholder": "Ɲini...",
+  "no_results": "Fɛɛn si te yen",
+  "loading": "Ka ɲini...",
+  "error": "Fili",
+  "success": "A banna",
+  "cancel": "A bɔ",
+  "confirm": "A sɛgɛsɛgɛ",
+  "close": "A datugu",
+  "save": "A mara",
+  "delete": "A bɔ",
+  "edit": "A yɛlɛma",
+  "view": "A lajɛ",
+  "back": "Ka segin",
+  "next": "Ka taa ɲɔgɔn na",
+  "previous": "Fɔlɔ",
+  "submit": "Ka ci",
+  "send": "Ka ci",
+  
+  "create_report": "Kunnafoni dɔ labɛn",
+  "create_sos": "SOS daminɛ",
+  "report_title": "Kunnafoni tɔgɔ",
+  "report_description": "Ɲɛfɔli",
+  "report_location": "Yɔrɔ",
+  "report_category": "Jɛɲɔgɔnya",
+  "report_urgency": "Kabako",
+  "report_anonymous": "Kunnafoni dogolen",
+  "report_submit": "Kunnafoni bila",
+  
+  "category_urgence": "Kabako",
+  "category_securite": "Lakana",
+  "category_sante": "Kɛnɛya",
+  "category_environnement": "Sigida",
+  "category_corruption": "Tiɲɛni",
+  "category_infrastructure": "Sɔrɔli",
+  "category_personne_recherchee": "Mɔgɔ ɲinina",
+  "category_sos": "SOS",
+  
+  "urgency_faible": "Dɔgɔya",
+  "urgency_moyen": "Cɛma",
+  "urgency_critique": "Kabako kosɔbɛ",
+  
+  "status_en_attente": "Ka makɔnɔ",
+  "status_en_cours": "Ka kɛ",
+  "status_resolu": "A banna",
+  "status_rejete": "A bɔra",
+  
+  "login": "Don",
+  "logout": "Bɔ",
+  "register": "I tɔgɔ sɛbɛn",
+  "email": "Email",
+  "password": "Daɲɛgafe",
+  "username": "Tɔgɔ",
+  
+  "comments": "Kunnafoniw",
+  "add_comment": "Kunnafoni dɔ fara",
+  "likes": "Ka di",
+  "shares": "Ka tila",
+  
+  "emergency_contacts": "Kabako jɔyɔrɔw",
+  "add_emergency_contact": "Jɔyɔrɔ dɔ fara",
+  "emergency_name": "Tɔgɔ",
+  "emergency_phone": "Telefɔni",
+  "emergency_relationship": "Jɛɲɔgɔnya",
+  
+  "tracking_active": "GPS sɔrɔ",
+  "tracking_start": "Ka daminɛ",
+  "tracking_stop": "Ka dabila",
+  "tracking_history": "Tariku",
+  
+  "points": "Points",
+  "level": "Jate",
+  "rank": "Yɔrɔ",
+  "contributions": "Dɛmɛw",
+  
+  "filter_all": "Bɛɛ",
+  "filter_category": "Ka kɛ jɛɲɔgɔnya la",
+  "filter_urgency": "Ka kɛ kabako la",
+  "filter_status": "Ka kɛ status la",
+  "filter_date": "Ka kɛ tile la",
+  
+  "no_reports": "Kunnafoni si te yen",
+  "no_events": "Ko si te yen",
+  "no_notifications": "Lasɔmini si te yen",
+  
+  "stealth_mode": "Dogolen mode",
+  "stealth_mode_active": "Dogolen mode bɛ yen",
+  "stealth_mode_description": "Ka app dogoya kabako la",
+  
+  "ai_assistant": "IA dɛmɛbaga",
+  "ai_placeholder": "I ka ɲininkali kɛ...",
+  "ai_greeting": "I ni ce! N bɛ se ka i dɛmɛ cogo di?",
+  
+  "welcome": "I ni ce",
+  "citizen_watch": "Sitiyenw ka kɔlɔsi",
+  "alert_platform": "Lasɔmini yɔrɔ",
+  "security_network": "Lakana network"
 }

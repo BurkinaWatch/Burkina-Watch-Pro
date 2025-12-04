@@ -1,174 +1,117 @@
 
 {
-  "app": {
-    "name": "Burkina Watch",
-    "tagline": "Yiyde. Waɗa. Ndeenka.",
-    "description": "Laawol yiiltingol jamaa e jaabawol"
-  },
-  "nav": {
-    "home": "Suudu",
-    "map": "Nder doole",
-    "publish": "Winndita",
-    "sos": "SOS",
-    "profile": "Humpito",
-    "feed": "Kabaruuji",
-    "notifications": "Jaabawol",
-    "about": "Baɗte",
-    "contribute": "Wallita",
-    "settings": "Teeminannde"
-  },
-  "common": {
-    "save": "Mooftu",
-    "cancel": "Haaytin",
-    "delete": "Momtu",
-    "edit": "Taƴto",
-    "confirm": "Teeŋtin",
-    "close": "Uddu",
-    "loading": "Nana rokkaa...",
-    "error": "Juumre",
-    "success": "Moƴƴi",
-    "warning": "Jiytingol",
-    "all": "Fof"
-  },
-  "auth": {
-    "login": "Naata",
-    "logout": "Yalta",
-    "loginRequired": "Naatgol waɗi",
-    "loginMessage": "Aɗa foti naata ngam yiyde ndee hello"
-  },
-  "home": {
-    "newReport": "Jaabawol hesere",
-    "viewMap": "Yiyde nder doole",
-    "activeReports": "Jaabawol golle",
-    "sosAlerts": "SOS jiytinɗe",
-    "activeCitizens": "Yimɓe golle",
-    "recentReports": "Jaabawol keso",
-    "viewAll": "Yiyde fof",
-    "protectTogether": "Nden e nden, en ndeenka leyɗe amen",
-    "contributeNow": "Wallita jooni"
-  },
-  "report": {
-    "title": "Innde",
-    "description": "Tafsirgol",
-    "category": "Fedde",
-    "location": "Nokku",
-    "urgency": "Ɓandu gaadangol",
-    "image": "Natal",
-    "submit": "Neldu",
-    "status": {
-      "pending": "Nana rokkaa",
-      "inProgress": "Nana golle",
-      "resolved": "Gasii",
-      "rejected": "Ñaawaa"
-    },
-    "categories": {
-      "urgence": "Gaadangol",
-      "securite": "Kisal",
-      "sante": "Cellal",
-      "environnement": "Ɗaɗol",
-      "corruption": "Yoɓangol",
-      "infrastructure": "Geɗe",
-      "personne_recherchee": "Neɗɗo yiiltaa"
-    },
-    "urgencyLevels": {
-      "faible": "Keɓal",
-      "moyen": "Hakkunde",
-      "critique": "Mawngol"
-    }
-  },
-  "sos": {
-    "emergency": "Gaadangol",
-    "sendAlert": "Neldu SOS jiytingol",
-    "panicButton": "Buttonkaaku kulol",
-    "pressToActivate": "Ñiiɓo ngam hurma",
-    "alertSent": "Jiytingol neldaama",
-    "locationShared": "Nokku maa jaɓaama"
-  },
-  "profile": {
-    "myProfile": "Humpito am",
-    "editProfile": "Taƴto humpito",
-    "firstName": "Innde arandeeje",
-    "lastName": "Innde gootol",
-    "phone": "Telefon",
-    "city": "Wuro",
-    "profession": "Golle",
-    "bio": "Tafsirgol",
-    "myPublications": "Winnditaaji am",
-    "gpsTracking": "GPS yiiltingol",
-    "emergencyContacts": "Jeyaaɓe gaadangol",
-    "points": "ngoñɗe",
-    "badges": {
-      "activeCitizen": "Neɗɗo golle",
-      "regionalWatcher": "Yiiltotoowo leyɗe",
-      "reliableReporter": "Jaabotoowo goongɗiniiɗo",
-      "localAmbassador": "Ambassad nokku"
-    }
-  },
-  "tracking": {
-    "liveTracking": "Yiiltingol nokku jooni",
-    "trackingActive": "Yiiltingol golle",
-    "trackingInactive": "Yiiltingol haɗaani",
-    "pointsRecorded": "ngoñɗe winndaama",
-    "start": "Fuɗɗo",
-    "stop": "Haɗa",
-    "history": "Taariika waktuuji",
-    "duration": "Ɓanndu waktu"
-  },
-  "emergency": {
-    "contacts": "Jeyaaɓe gaadangol",
-    "addContact": "Ɓeydu jeyɗo",
-    "name": "Innde",
-    "noContacts": "Jeyɗo gaadangol alaa",
-    "panicDescription": "Ɓee jeyaaɓe njaɓa GPS nokku maa so buttonkaaku kulol ñiiɓaama"
-  },
-  "settings": {
-    "language": "Ɗemngal",
-    "theme": "Toowde",
-    "notifications": "Jaabawol",
-    "privacy": "Sutura",
-    "selectLanguage": "Suɓo ɗemngal",
-    "languages": {
-      "fr": "Farayse",
-      "en": "Engele",
-      "dioula": "Jula",
-      "moore": "Mooré",
-      "fulfulde": "Fulfuldé"
-    }
-  },
-  "notifications": {
-    "title": "Jaabawol",
-    "noNotifications": "Jaabawol alaa",
-    "markAsRead": "Timmino ko taraama",
-    "newSOS": "SOS jaabawol hesere",
-    "reportResolved": "Jaabawol gasii",
-    "systemUpdate": "Hesɗitingol geɗel"
-  },
-  "messageDuJour": {
-    "proverbe": "Darol ñalnde",
-    "conseil": "Nasiiha ñalnde",
-    "encouragement": "Haala ñalnde"
-  },
-  "messages": {
-    "languageChanged": "Ɗemngal wayliima",
-    "reportSuccess": "Jaabawol sosaa no haani",
-    "reportDeleted": "Jaabawol momtaama",
-    "profileUpdated": "Humpito hesɗitinaama",
-    "trackingStarted": "Yiiltingol fuɗɗii",
-    "trackingStopped": "Yiiltingol haɗii",
-    "contactAdded": "Jeyɗo ɓeydaama",
-    "contactDeleted": "Jeyɗo momtaama",
-    "locationError": "Horiima heɓde nokku maa",
-    "languageChanged": "Ɗemngal waylaama"
-  },
-  "moderation": {
-    "title": "Filter jammu",
-    "warningTitle": "Haala ɓooyɗo njiytaa",
-    "warningMessage": "Haala maa ena waawi ena ɓooyɗo. Aɗa yiɗi taƴtaade hade a jaɓa?",
-    "blockedTitle": "Winnditaare daaƴaama",
-    "blockedMessage": "Amen Filter jammu ena ndeenka yurmeende e ballal hakkunde neɗɓe.",
-    "suggestion": "Taƴtinal hakilantaangal",
-    "tryAgain": "Taƴto kadi",
-    "cancel": "Haaytin",
-    "reason": "Sabaabu"
-  }
+  "app_title": "BurkinaWatch",
+  "app_slogan": "Yimɓe ɓeydagol · Jaabawol · Kisal",
+  
+  "menu_home": "Galle",
+  "menu_feed": "Kabaruuji",
+  "menu_map": "Kaart",
+  "menu_events": "Burkina ko waɗi",
+  "menu_bulletin": "Yimɓe bulletin",
+  "menu_urgences": "Burkina haaɗe",
+  "menu_pharmacies": "Lekki suudu",
+  "menu_sos": "SOS",
+  "menu_profile": "Hol am",
+  "menu_about": "Hol ngol",
+  "menu_conditions": "Saraaji",
+  "menu_admin": "Jokkondirgal",
+  "menu_leaderboard": "Dokkitorgol",
+  "menu_notifications": "Jaabawolɓe",
+  
+  "search_placeholder": "Yuurto...",
+  "no_results": "Alaa ko waɗi",
+  "loading": "Ɗon yuurto...",
+  "error": "Juumre",
+  "success": "Ko waɗi",
+  "cancel": "Haɗ",
+  "confirm": "Teeŋtin",
+  "close": "Uddit",
+  "save": "Mooftu",
+  "delete": "Momtu",
+  "edit": "Waylu",
+  "view": "Yiy",
+  "back": "Rutto",
+  "next": "Yeeso",
+  "previous": "Ɓennuɗo",
+  "submit": "Neldu",
+  "send": "Neldu",
+  
+  "create_report": "Tagi kabaruuji",
+  "create_sos": "Hurmin SOS",
+  "report_title": "Innde kabaruuji",
+  "report_description": "Cifagol",
+  "report_location": "Nokkuure",
+  "report_category": "Jokkondirgal",
+  "report_urgency": "Haaɗe",
+  "report_anonymous": "Kabaruuji suuɗiiɗo",
+  "report_submit": "Waɗtu kabaruuji",
+  
+  "category_urgence": "Haaɗe",
+  "category_securite": "Kisal",
+  "category_sante": "Cellal",
+  "category_environnement": "Winndannde",
+  "category_corruption": "Bonannde",
+  "category_infrastructure": "Golle",
+  "category_personne_recherchee": "Neɗɗo yuurteede",
+  "category_sos": "SOS",
+  
+  "urgency_faible": "Famɗi",
+  "urgency_moyen": "Cakki",
+  "urgency_critique": "Haaɗe mawnde",
+  
+  "status_en_attente": "Ɗon jaɓɓa",
+  "status_en_cours": "Ɗon waɗa",
+  "status_resolu": "Ko waɗi",
+  "status_rejete": "Ko haɗaa",
+  
+  "login": "Naata",
+  "logout": "Yalta",
+  "register": "Winndito",
+  "email": "Email",
+  "password": "Ɓamtaare",
+  "username": "Innde",
+  
+  "comments": "Kabaruuji",
+  "add_comment": "Ɓeydu kabaruuji",
+  "likes": "Yaajɗe",
+  "shares": "Waɗɗe",
+  
+  "emergency_contacts": "Haaɗe jokkondiɓɓe",
+  "add_emergency_contact": "Ɓeydu jokkondirgal",
+  "emergency_name": "Innde",
+  "emergency_phone": "Teleefooni",
+  "emergency_relationship": "Jokkondirgal",
+  
+  "tracking_active": "GPS ɗon goonga",
+  "tracking_start": "Fuɗɗo",
+  "tracking_stop": "Dartin",
+  "tracking_history": "Aadee",
+  
+  "points": "Points",
+  "level": "Jokkondirgal",
+  "rank": "Nokkuure",
+  "contributions": "Ballal",
+  
+  "filter_all": "Fof",
+  "filter_category": "Jokkondirgal",
+  "filter_urgency": "Haaɗe",
+  "filter_status": "Status",
+  "filter_date": "Ñalawma",
+  
+  "no_reports": "Alaa kabaruuji",
+  "no_events": "Alaa ko waɗi",
+  "no_notifications": "Alaa jaabawol",
+  
+  "stealth_mode": "Suuɗo mode",
+  "stealth_mode_active": "Suuɗo mode goonga",
+  "stealth_mode_description": "Suuɗ app haaɗe",
+  
+  "ai_assistant": "IA ballal",
+  "ai_placeholder": "Naamno maa...",
+  "ai_greeting": "Jam! Hol mbaɗ ballaa ma?",
+  
+  "welcome": "Jam",
+  "citizen_watch": "Yimɓe ɓeydagol",
+  "alert_platform": "Jaabawol nokkuure",
+  "security_network": "Kisal network"
 }
