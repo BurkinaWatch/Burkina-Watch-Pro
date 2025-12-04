@@ -5,6 +5,23 @@
     "tagline": "Voir. Agir. Protéger.",
     "subtitle": "Canal de Veille Citoyenne et d'Alerte Sociale"
   },
+  "levels": {
+    "sentinelle": {
+      "title": "Sentinelle de la Paix",
+      "description": "Citoyen vigilant qui commence son engagement"
+    },
+    "vdp": {
+      "title": "VDP de la Paix",
+      "description": "Volontaire pour la Défense de la Patrie"
+    },
+    "fds": {
+      "title": "Défenseur de la Paix",
+      "description": "Défenseur exemplaire de la communauté"
+    },
+    "progressTo": "Progression vers",
+    "remaining": "restants",
+    "maxLevel": "Niveau maximum atteint"
+  },
   "nav": {
     "home": "Accueil",
     "map": "Carte Interactive",

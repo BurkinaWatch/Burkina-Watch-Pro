@@ -656,7 +656,12 @@ export default function Profil() {
   const { points, badge } = calculateUserStats();
 
   // Get current level info for LevelProgress component
-  const currentLevelName = getLevelInfo(String(user?.userPoints || 0))?.name || 'sentinelle';
+  const currentLevelName = (() => {
+    const pts = user?.userPoints || 0;
+    if (pts >= 225) return 'fds';
+    if (pts >= 100) return 'vdp';
+    return 'sentinelle';
+  })();
 
 
   return (

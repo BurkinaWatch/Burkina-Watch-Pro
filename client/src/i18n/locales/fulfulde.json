@@ -5,6 +5,23 @@
     "tagline": "Yiy. Waɗ. Nder.",
     "subtitle": "Laawol yimɓe e seedantaagal jamaa"
   },
+  "levels": {
+    "sentinelle": {
+      "title": "Deeriiɗo Jam",
+      "description": "Neɗɗo mo fuɗɗi wallitde"
+    },
+    "vdp": {
+      "title": "VDP Jam",
+      "description": "Gadduɗo leydi nder"
+    },
+    "fds": {
+      "title": "Ndeeriingo Jam",
+      "description": "Gadduɗo leydi mawɗo"
+    },
+    "progressTo": "Yahdu to",
+    "remaining": "heddii",
+    "maxLevel": "Tumbere dow yottii"
+  },
   "nav": {
     "home": "Jaɓɓorgo",
     "map": "Karte",

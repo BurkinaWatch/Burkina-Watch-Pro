@@ -37,7 +37,7 @@ export function LevelProgress({ points }: LevelProgressProps) {
       </div>
       <Progress value={progress.percentage} className="h-2" />
       <div className="text-xs text-muted-foreground text-right">
-        {Math.min(points, nextLevelInfo.maxPoints)} / {nextLevelInfo.maxPoints} pts
+        {points} / {nextLevelInfo.minPoints} pts
       </div>
     </div>
   );

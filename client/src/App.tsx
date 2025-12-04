@@ -8,6 +8,7 @@ import { StealthModeProvider } from "@/components/StealthModeProvider";
 import { HelmetProvider } from "react-helmet-async";
 import { useAuth } from "@/hooks/useAuth";
 import ChatBot from "@/components/ChatBot";
+import "./i18n/config";
 import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 import Feed from "@/pages/Feed";

@@ -5,6 +5,23 @@
     "tagline": "See. Act. Protect.",
     "subtitle": "Citizen Monitoring and Social Alert Channel"
   },
+  "levels": {
+    "sentinelle": {
+      "title": "Peace Sentinel",
+      "description": "Vigilant citizen who starts their engagement"
+    },
+    "vdp": {
+      "title": "Peace VDP",
+      "description": "Volunteer for the Defense of the Homeland"
+    },
+    "fds": {
+      "title": "Peace Defender",
+      "description": "Exemplary defender of the community"
+    },
+    "progressTo": "Progress to",
+    "remaining": "remaining",
+    "maxLevel": "Maximum level reached"
+  },
   "nav": {
     "home": "Home",
     "map": "Interactive Map",

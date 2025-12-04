@@ -5,6 +5,23 @@
     "tagline": "Yé. Kè. Kanw.",
     "subtitle": "Jamana-mɔgɔw ka kɔlɔsi-kàn ani kɔɔnkow"
   },
+  "levels": {
+    "sentinelle": {
+      "title": "Hɛɛrɛ Kɔlɔsibaga",
+      "description": "Jamana-mɔgɔ min bɛ a ka baara daminɛ"
+    },
+    "vdp": {
+      "title": "Hɛɛrɛ VDP",
+      "description": "Jamana-kɔlɔsibaga"
+    },
+    "fds": {
+      "title": "Hɛɛrɛ Kanw-baga",
+      "description": "Jamana-mɔgɔ kɛnɛ-kɛnɛ"
+    },
+    "progressTo": "Taa fɛ",
+    "remaining": "tun bɛ",
+    "maxLevel": "Yɔrɔ laban sɔrɔla"
+  },
   "nav": {
     "home": "So",
     "map": "Kàrta",

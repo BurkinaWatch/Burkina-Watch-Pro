@@ -5,6 +5,23 @@
     "tagline": "Yɩɩl. Kɛɛd. Yʋʋm.",
     "subtitle": "Neb-koɛɛga ne soaba sõor-vɩɩm"
   },
+  "levels": {
+    "sentinelle": {
+      "title": "Gũud sõngd laafi yĩnga",
+      "description": "Neb-nĩng n maand yẽeneg"
+    },
+    "vdp": {
+      "title": "VDP laafi yĩnga",
+      "description": "Sõngt tẽnga koɛɛg yĩnga"
+    },
+    "fds": {
+      "title": "Koɛɛg laafi yĩnga",
+      "description": "Neb-nĩng n maand koɛɛga sõngo"
+    },
+    "progressTo": "Kẽnd n dees",
+    "remaining": "paoong",
+    "maxLevel": "Kẽng-n-kõta tɩ zĩ"
+  },
   "nav": {
     "home": "Yiib sɩda",
     "map": "Kãng-wẽndã",
