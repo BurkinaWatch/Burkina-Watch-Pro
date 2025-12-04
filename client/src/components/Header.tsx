@@ -10,6 +10,7 @@ import logo from "@assets/burkina_watch_logo.png";
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -37,6 +38,7 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
   const { isAuthenticated, user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [location, setLocation] = useLocation();
+  const { t } = useTranslation();
 
   const { data: unreadCount } = useQuery<{ count: number }>({
     queryKey: ["/api/notifications/unread-count"],
@@ -80,11 +82,11 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
           <Link href="/" className="flex items-center gap-3" data-testid="link-home">
             <img src={logo} alt="Burkina Watch" className="w-10 h-10" />
             <div className="hidden md:block">
-              <h1 className="text-xl font-extrabold text-red-600 dark:text-red-400 tracking-tight">Burkina Watch</h1>
+              <h1 className="text-xl font-extrabold text-red-600 dark:text-red-400 tracking-tight">{t("header.title")}</h1>
               <p className="text-sm font-semibold">
-                <span className="text-red-500 dark:text-red-400">Voir.</span>{" "}
-                <span className="text-yellow-500 dark:text-yellow-300">Agir.</span>{" "}
-                <span className="text-green-500 dark:text-green-400">Protéger.</span>
+                <span className="text-red-500 dark:text-red-400">{t("header.slogan.see")}</span>{" "}
+                <span className="text-yellow-500 dark:text-yellow-300">{t("header.slogan.act")}</span>{" "}
+                <span className="text-green-500 dark:text-green-400">{t("header.slogan.protect")}</span>
               </p>
             </div>
           </Link>
@@ -122,7 +124,7 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
               className="bg-yellow-600 hover:bg-yellow-700 text-white gap-2"
             >
               <LogIn className="w-4 h-4" />
-              <span className="hidden sm:inline">Connexion</span>
+              <span className="hidden sm:inline">{t("header.loginButton")}</span>
             </Button>
           )}
           <LanguageSelector />
@@ -131,7 +133,7 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
             size="icon"
             onClick={toggleStealthMode}
             data-testid="button-stealth-toggle"
-            title={isStealthMode ? "Désactiver le mode furtif" : "Activer le mode furtif"}
+            title={isStealthMode ? t("header.stealthMode.off") : t("header.stealthMode.on")}
           >
             {isStealthMode ? (
               <EyeOff className="w-5 h-5 text-gray-500" />

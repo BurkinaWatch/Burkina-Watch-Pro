@@ -6,8 +6,9 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import logo from "@assets/burkina_watch_logo.png";
-import { useLocation, navigate } from "wouter"; // Import navigate
-import { PlusCircle, List, FileText as FileTextIcon, Calendar as CalendarIcon, Trophy, Pill } from "lucide-react"; // Importing icons
+import { useLocation, navigate } from "wouter";
+import { PlusCircle, List, FileText as FileTextIcon, Calendar as CalendarIcon, Trophy, Pill } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface HamburgerMenuProps {
   open: boolean;
@@ -40,6 +41,7 @@ const MenuItem = ({ icon: Icon, label, onClick, active, badge, badgeColor }: any
 export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps) {
   const [location, setLocation] = useLocation();
   const { isAuthenticated, user } = useAuth();
+  const { t } = useTranslation();
 
   const handleLogout = () => {
     window.location.href = "/api/logout";
@@ -47,30 +49,30 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
 
   // Navigation principale - Actions principales
   const mainMenuItems = [
-    { href: "/", icon: Home, label: "Accueil", color: "text-primary" },
-    { href: "/carte", icon: MapPin, label: "Carte Interactive", color: "text-green-600 dark:text-green-500" },
-    { href: "/feed", icon: FileText, label: "Signalements", color: "text-blue-600 dark:text-blue-500" },
-    { href: "/sos", icon: AlertCircle, label: "Alerte SOS", color: "text-red-600 dark:text-red-500", badge: "Urgence" },
+    { href: "/", icon: Home, label: t("nav.home"), color: "text-primary" },
+    { href: "/carte", icon: MapPin, label: t("nav.map"), color: "text-green-600 dark:text-green-500" },
+    { href: "/feed", icon: FileText, label: t("nav.feed"), color: "text-blue-600 dark:text-blue-500" },
+    { href: "/sos", icon: AlertCircle, label: t("nav.sos"), color: "text-red-600 dark:text-red-500", badge: t("common.new") },
   ];
 
   // Services & Actualités - Nouvelles fonctionnalités en avant
   const servicesItems = [
-    { href: "/bulletin", icon: Newspaper, label: "Bulletin Citoyen", color: "text-yellow-700 dark:text-yellow-500", badge: "Nouveau", badgeColor: "bg-yellow-500" },
-    { href: "/events", icon: Calendar, label: "Événements", color: "text-purple-600 dark:text-purple-500", badge: "Nouveau", badgeColor: "bg-purple-500" },
-    { href: "/tracking-live", icon: Navigation, label: "Suivi en Direct", color: "text-cyan-600 dark:text-cyan-500" },
+    { href: "/bulletin", icon: Newspaper, label: t("nav.bulletin"), color: "text-yellow-700 dark:text-yellow-500", badge: t("common.new"), badgeColor: "bg-yellow-500" },
+    { href: "/events", icon: Calendar, label: t("nav.events"), color: "text-purple-600 dark:text-purple-500", badge: t("common.new"), badgeColor: "bg-purple-500" },
+    { href: "/tracking-live", icon: Navigation, label: t("nav.tracking"), color: "text-cyan-600 dark:text-cyan-500" },
   ];
 
   // Services d'urgence - Groupés logiquement
   const urgenceItems = [
-    { href: "/urgences", icon: AlertCircle, label: "Numéros d'Urgence", color: "text-orange-600 dark:text-orange-500" },
-    { href: "/pharmacies", icon: Cross, label: "Pharmacies de Garde", color: "text-red-500 dark:text-red-400" },
+    { href: "/urgences", icon: AlertCircle, label: t("nav.urgences"), color: "text-orange-600 dark:text-orange-500" },
+    { href: "/pharmacies", icon: Cross, label: t("nav.pharmacies"), color: "text-red-500 dark:text-red-400" },
   ];
 
   // Informations & Engagement
   const infoItems = [
-    { href: "/a-propos", icon: Info, label: "À propos", color: "text-slate-600 dark:text-slate-400" },
-    { href: "/contribuer", icon: Heart, label: "Contribuer", color: "text-pink-600 dark:text-pink-500" },
-    { href: "/conditions", icon: Scale, label: "Conditions", color: "text-gray-600 dark:text-gray-400" },
+    { href: "/a-propos", icon: Info, label: t("nav.about"), color: "text-slate-600 dark:text-slate-400" },
+    { href: "/contribuer", icon: Heart, label: t("nav.contribute"), color: "text-pink-600 dark:text-pink-500" },
+    { href: "/conditions", icon: Scale, label: t("nav.conditions"), color: "text-gray-600 dark:text-gray-400" },
   ];
 
   const onClose = () => onOpenChange(false);
@@ -102,7 +104,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
               <div className="flex items-center gap-2 mb-3 px-2">
                 <div className="w-1 h-5 bg-gradient-to-b from-red-500 via-yellow-500 to-green-500 rounded-full"></div>
                 <p className="text-xs font-bold text-foreground uppercase tracking-wider">
-                  Navigation
+                  {t("nav.navigation")}
                 </p>
               </div>
               <nav className="space-y-1.5">
@@ -135,7 +137,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
               <div className="flex items-center gap-2 mb-3 px-2">
                 <Sparkles className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
                 <p className="text-xs font-bold text-foreground uppercase tracking-wider">
-                  Services & Actualités
+                  {t("nav.services")}
                 </p>
               </div>
               <nav className="space-y-1.5">
@@ -168,7 +170,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
               <div className="flex items-center gap-2 mb-3 px-2">
                 <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-500" />
                 <p className="text-xs font-bold text-foreground uppercase tracking-wider">
-                  Urgences & Santé
+                  {t("nav.emergency")}
                 </p>
               </div>
               <nav className="space-y-1.5">
@@ -196,7 +198,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
               <div className="flex items-center gap-2 mb-3 px-2">
                 <Info className="w-4 h-4 text-blue-600 dark:text-blue-500" />
                 <p className="text-xs font-bold text-foreground uppercase tracking-wider">
-                  Informations
+                  {t("nav.info")}
                 </p>
               </div>
               <nav className="space-y-1.5">
@@ -225,7 +227,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
                   <div className="flex items-center gap-2 mb-3 px-2">
                     <User className="w-4 h-4 text-primary" />
                     <p className="text-xs font-bold text-foreground uppercase tracking-wider">
-                      Mon Compte
+                      {t("nav.account")}
                     </p>
                   </div>
                   <nav className="space-y-1.5">
@@ -237,7 +239,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
                         data-testid="menu-profil"
                       >
                         <User className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-                        <span className="font-medium">Mon Profil</span>
+                        <span className="font-medium">{t("nav.profile")}</span>
                       </Button>
                     </Link>
                     <Button
@@ -250,7 +252,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
                       data-testid="menu-logout"
                     >
                       <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                      <span className="font-medium">Se déconnecter</span>
+                      <span className="font-medium">{t("nav.logout")}</span>
                     </Button>
                   </nav>
                 </div>
