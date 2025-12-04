@@ -37,7 +37,6 @@ import { LevelProgress } from "@/components/LevelProgress";
 import { useTranslation } from "react-i18next";
 import { getLevelInfo } from "@shared/pointsSystem";
 import { useRef } from "react";
-import Link from "next/link";
 
 
 export default function Profil() {
@@ -656,10 +655,8 @@ export default function Profil() {
 
   const { points, badge } = calculateUserStats();
 
-  // Get current level and next level info for LevelProgress component
-  const currentLevel = getLevelInfo(user?.userPoints || 0);
-  const nextLevel = getLevelInfo(user?.userPoints || 0, true); // Pass true to get the next level
-  const pointsToNext = nextLevel ? nextLevel.pointsNeeded - (user?.userPoints || 0) : 0;
+  // Get current level info for LevelProgress component
+  const currentLevelName = getLevelInfo(String(user?.userPoints || 0))?.name || 'sentinelle';
 
 
   return (
@@ -994,8 +991,8 @@ export default function Profil() {
               <CardContent className="pt-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <LevelBadge level={currentLevel} />
-                    <span className="text-sm text-muted-foreground">{t(`profile.${currentLevel.name.toLowerCase().replace(/\s+/g, '')}`, currentLevel.name)}</span>
+                    <LevelBadge level={currentLevelName} />
+                    <span className="text-sm text-muted-foreground">{t(`profile.${currentLevelName.toLowerCase().replace(/\s+/g, '')}`, currentLevelName)}</span>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-primary">{user?.userPoints || 0}</div>
@@ -1005,16 +1002,15 @@ export default function Profil() {
                 <div className="mt-4">
                   <LevelProgress points={user?.userPoints || 0} />
                 </div>
-                <Link href='/leaderboard'>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full mt-3"
-                  >
-                    <Trophy className="w-4 h-4 mr-2" />
-                    {t('profile.viewRanking')}
-                  </Button>
-                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-3"
+                  onClick={() => setLocation('/leaderboard')}
+                >
+                  <Trophy className="w-4 h-4 mr-2" />
+                  {t('profile.viewRanking')}
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
