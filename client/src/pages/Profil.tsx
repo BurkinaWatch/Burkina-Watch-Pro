@@ -1253,15 +1253,16 @@ export default function Profil() {
                           <p className="text-xs text-muted-foreground">{contact.email}</p>
                         )}
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex gap-2">
                         <Button
-                          variant="outline"
+                          variant="default"
                           size="sm"
                           onClick={() => setSelectedContact(contact)}
-                          title="Créer une image pour l'écran de verrouillage"
+                          className="gap-2"
                           data-testid="button-lockscreen-contact"
                         >
                           <Smartphone className="w-4 h-4" />
+                          Écran de veille
                         </Button>
                         <Button
                           variant="ghost"
