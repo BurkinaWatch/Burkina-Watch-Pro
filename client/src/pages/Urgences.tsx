@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import EmergencyPanel from "@/components/EmergencyPanel";
@@ -8,8 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, AlertTriangle, Shield, Activity, Heart, Users, ArrowLeft, RefreshCw } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Search, MapPin, Phone, AlertTriangle, Shield, Activity, Heart, Users, ArrowLeft, RefreshCw, Download, Smartphone } from "lucide-react";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 interface EmergencyService {
   id: string;
@@ -67,6 +71,11 @@ export default function Urgences() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [, setLocation] = useLocation();
+  const [selectedService, setSelectedService] = useState<EmergencyService | null>(null);
+  const [imageStyle, setImageStyle] = useState<"light" | "dark">("light");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { toast } = useToast();
 
   const filteredServices = useMemo(() => {
     return urgencesData.filter(service => {
@@ -126,6 +135,165 @@ export default function Urgences() {
     if (service.latitude && service.longitude) {
       const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${service.latitude},${service.longitude}`;
       window.open(mapsUrl, '_blank');
+    }
+  };
+
+  const generateLockscreenImage = async () => {
+    if (!selectedService || !canvasRef.current) return;
+
+    setIsGenerating(true);
+
+    try {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Dimensions pour mobile (9:16 ratio)
+      canvas.width = 1080;
+      canvas.height = 1920;
+
+      // Couleurs selon le style
+      const colors = imageStyle === "light" 
+        ? {
+            bg: '#FFFFFF',
+            primary: '#DC2626', // Rouge
+            secondary: '#FBBF24', // Jaune
+            accent: '#10B981', // Vert
+            text: '#1F2937',
+            textSecondary: '#6B7280'
+          }
+        : {
+            bg: '#1F2937',
+            primary: '#DC2626',
+            secondary: '#FBBF24',
+            accent: '#10B981',
+            text: '#FFFFFF',
+            textSecondary: '#D1D5DB'
+          };
+
+      // Fond
+      ctx.fillStyle = colors.bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Bande tricolore en haut
+      const bandHeight = 40;
+      ctx.fillStyle = colors.primary;
+      ctx.fillRect(0, 0, canvas.width / 3, bandHeight);
+      ctx.fillStyle = colors.secondary;
+      ctx.fillRect(canvas.width / 3, 0, canvas.width / 3, bandHeight);
+      ctx.fillStyle = colors.accent;
+      ctx.fillRect((canvas.width / 3) * 2, 0, canvas.width / 3, bandHeight);
+
+      // Logo BurkinaWatch
+      ctx.fillStyle = colors.text;
+      ctx.font = 'bold 48px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('🇧🇫 BURKINA WATCH', canvas.width / 2, 140);
+
+      // Titre "URGENCE"
+      ctx.fillStyle = colors.primary;
+      ctx.font = 'bold 80px Arial';
+      ctx.fillText('URGENCE', canvas.width / 2, 280);
+
+      // Icône d'urgence
+      ctx.font = '200px Arial';
+      ctx.fillText('🚨', canvas.width / 2, 520);
+
+      // Nom du service
+      ctx.fillStyle = colors.text;
+      ctx.font = 'bold 64px Arial';
+      const serviceName = selectedService.name.toUpperCase();
+      const maxWidth = canvas.width - 100;
+      
+      // Découper le texte si trop long
+      const words = serviceName.split(' ');
+      let line = '';
+      let y = 680;
+      const lineHeight = 75;
+
+      for (let i = 0; i < words.length; i++) {
+        const testLine = line + words[i] + ' ';
+        const metrics = ctx.measureText(testLine);
+        
+        if (metrics.width > maxWidth && i > 0) {
+          ctx.fillText(line, canvas.width / 2, y);
+          line = words[i] + ' ';
+          y += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, canvas.width / 2, y);
+
+      // Numéro d'urgence (très gros)
+      y += 150;
+      ctx.fillStyle = colors.primary;
+      ctx.font = 'bold 180px Arial';
+      ctx.fillText(selectedService.phone, canvas.width / 2, y);
+
+      // Ville
+      y += 120;
+      ctx.fillStyle = colors.textSecondary;
+      ctx.font = '48px Arial';
+      ctx.fillText(selectedService.city, canvas.width / 2, y);
+
+      // Adresse si disponible
+      if (selectedService.address) {
+        y += 70;
+        ctx.font = '36px Arial';
+        ctx.fillText(selectedService.address, canvas.width / 2, y);
+      }
+
+      // Instructions en bas
+      y = canvas.height - 200;
+      ctx.fillStyle = colors.accent;
+      ctx.font = 'bold 42px Arial';
+      ctx.fillText('APPELER EN CAS D\'URGENCE', canvas.width / 2, y);
+
+      // Footer
+      y = canvas.height - 100;
+      ctx.fillStyle = colors.textSecondary;
+      ctx.font = '32px Arial';
+      ctx.fillText('Généré par BurkinaWatch • Burkina Faso', canvas.width / 2, y);
+
+      // Bande tricolore en bas
+      ctx.fillStyle = colors.primary;
+      ctx.fillRect(0, canvas.height - bandHeight, canvas.width / 3, bandHeight);
+      ctx.fillStyle = colors.secondary;
+      ctx.fillRect(canvas.width / 3, canvas.height - bandHeight, canvas.width / 3, bandHeight);
+      ctx.fillStyle = colors.accent;
+      ctx.fillRect((canvas.width / 3) * 2, canvas.height - bandHeight, canvas.width / 3, bandHeight);
+
+      // Télécharger l'image
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `urgence-${selectedService.phone}-lockscreen.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+
+          toast({
+            title: "Image générée !",
+            description: "L'image a été téléchargée. Définissez-la comme fond d'écran de verrouillage dans les paramètres de votre téléphone.",
+          });
+
+          setSelectedService(null);
+        }
+      }, 'image/png');
+
+    } catch (error) {
+      console.error('Erreur génération image:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de générer l'image",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -265,6 +433,15 @@ export default function Urgences() {
                     </Button>
                   )}
                 </div>
+
+                <Button
+                  onClick={() => setSelectedService(service)}
+                  variant="outline"
+                  className="w-full mt-2 gap-2"
+                >
+                  <Smartphone className="w-4 h-4" />
+                  Mettre sur écran de veille
+                </Button>
               </CardContent>
             </Card>
           ))}
@@ -292,6 +469,70 @@ export default function Urgences() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal de génération d'image */}
+      <Dialog open={!!selectedService} onOpenChange={(open) => !open && setSelectedService(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Smartphone className="w-5 h-5" />
+              Générer image d'urgence
+            </DialogTitle>
+            <DialogDescription>
+              Créez une image pour votre écran de verrouillage avec ce numéro d'urgence
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedService && (
+            <div className="space-y-4 py-4">
+              <div className="bg-muted p-4 rounded-lg">
+                <p className="font-semibold">{selectedService.name}</p>
+                <p className="text-2xl font-bold text-primary mt-2">{selectedService.phone}</p>
+                <p className="text-sm text-muted-foreground mt-1">{selectedService.city}</p>
+              </div>
+
+              <div className="space-y-3">
+                <Label>Style de l'image</Label>
+                <RadioGroup value={imageStyle} onValueChange={(value) => setImageStyle(value as "light" | "dark")}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="light" id="light" />
+                    <Label htmlFor="light" className="cursor-pointer">Clair (fond blanc)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="dark" id="dark" />
+                    <Label htmlFor="dark" className="cursor-pointer">Sombre (fond noir)</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3 rounded-lg">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>Comment l'utiliser :</strong> Après téléchargement, allez dans les paramètres de votre téléphone → Fond d'écran → Écran de verrouillage → Sélectionnez l'image téléchargée.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedService(null)}>
+              Annuler
+            </Button>
+            <Button onClick={generateLockscreenImage} disabled={isGenerating}>
+              {isGenerating ? (
+                <>Génération...</>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Générer et télécharger
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Canvas caché pour la génération d'image */}
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
 
       <EmergencyPanel />
       <BottomNav />
