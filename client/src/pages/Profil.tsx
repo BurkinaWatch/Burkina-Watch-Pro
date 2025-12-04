@@ -142,10 +142,25 @@ export default function Profil() {
       }
       ctx.fillText(line, canvas.width / 2, y);
 
-      // Numéro (très gros)
+      // Numéro (ajusté pour rentrer dans le cadre)
       y += 150;
       ctx.fillStyle = colors.primary;
-      ctx.font = 'bold 180px Arial';
+      
+      // Calculer la taille de police optimal pour que le numéro rentre
+      let fontSize = 140;
+      const padding = 80; // Padding gauche-droite
+      const maxPhoneWidth = canvas.width - padding;
+      
+      // Vérifier et réduire la police si nécessaire
+      while (fontSize > 60) {
+        ctx.font = `bold ${fontSize}px Arial`;
+        const phoneMetrics = ctx.measureText(selectedContact.phone);
+        if (phoneMetrics.width <= maxPhoneWidth) {
+          break;
+        }
+        fontSize -= 10;
+      }
+      
       ctx.fillText(selectedContact.phone, canvas.width / 2, y);
 
       // Instructions en bas
