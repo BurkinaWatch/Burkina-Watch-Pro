@@ -1176,6 +1176,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ----------------------------------------
+  // ROUTES BULLETIN IA AVANCÉ
+  // ----------------------------------------
+  app.get("/api/bulletin-citoyen/ai", async (req, res) => {
+    try {
+      const { fetchAndAnalyzeArticles } = await import("./aiMediaAnalyzer");
+      const articles = await fetchAndAnalyzeArticles();
+      res.json(articles);
+    } catch (error) {
+      console.error("Erreur analyse IA bulletin:", error);
+      res.status(500).json({ error: "Erreur lors de l'analyse des articles" });
+    }
+  });
+
+  app.post("/api/bulletin-citoyen/ai/refresh", async (req, res) => {
+    try {
+      const { clearAnalysisCache, fetchAndAnalyzeArticles } = await import("./aiMediaAnalyzer");
+      clearAnalysisCache();
+      const articles = await fetchAndAnalyzeArticles();
+      res.json({ message: "Analyse actualisée", count: articles.length });
+    } catch (error) {
+      console.error("Erreur actualisation analyse IA:", error);
+      res.status(500).json({ error: "Erreur lors de l'actualisation" });
+    }
+  });
+
+  app.get("/api/bulletin-citoyen/ai/status", async (req, res) => {
+    try {
+      const { isAIAnalysisAvailable } = await import("./aiMediaAnalyzer");
+      res.json({ available: isAIAnalysisAvailable() });
+    } catch (error) {
+      res.json({ available: false });
+    }
+  });
+
   // Marquer un utilisateur comme en ligne
   app.post("/api/user/online", isAuthenticated, async (req: any, res) => {
     try {
