@@ -27,6 +27,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
 
   const infoItems = [
     { href: "/pharmacies", icon: Cross, label: "Pharmacies de Garde" },
+    { href: "/urgences", icon: AlertCircle, label: "Urgences Burkina" },
     { href: "/a-propos", icon: Info, label: "À propos de nous" },
     { href: "/conditions", icon: Scale, label: "Conditions d'utilisation" },
     { href: "/contribuer", icon: Heart, label: "Contribuer" },
