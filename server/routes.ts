@@ -1105,8 +1105,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Récupérer l'historique de la conversation
       const history = await storage.getChatHistory(sessionId);
 
+      // Mapper l'historique au format attendu par le service IA
+      const chatMessages = history.map(msg => ({
+        role: msg.role as "user" | "assistant",
+        content: msg.content
+      }));
+
       // Appeler le service IA (Gemini avec fallback Groq)
-      const { message: assistantMessage, engine } = await generateChatResponse(history);
+      const { message: assistantMessage, engine } = await generateChatResponse(chatMessages);
 
       console.log(`✅ Réponse générée par ${engine === "gemini" ? "Google Gemini" : "Groq LLaMA3"}`);
 
