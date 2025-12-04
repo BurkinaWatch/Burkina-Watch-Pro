@@ -179,13 +179,13 @@ const BURKINA_REGIONS = [
 export default function Home() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
-  
+
   // Images pour le carrousel
   const heroImages = [
     heroImage,
     heroImage, // Vous pouvez ajouter d'autres images ici
   ];
-  
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -200,7 +200,7 @@ export default function Home() {
   }>({});
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
-  
+
   // Récupérer les signalements
   const { data: signalements = [], isLoading } = useQuery<Signalement[]>({
     queryKey: ["/api/signalements"],
@@ -238,10 +238,10 @@ export default function Home() {
       const localisation = signalement.localisation?.toLowerCase() || '';
       const titre = signalement.titre?.toLowerCase() || '';
       const description = signalement.description?.toLowerCase() || '';
-      
+
       // Vérifier si le signalement correspond aux critères
       let matches = true;
-      
+
       // Filtre par texte de recherche
       if (query) {
         const matchesSearch = localisation.includes(query) || 
@@ -249,12 +249,12 @@ export default function Home() {
                             description.includes(query);
         if (!matchesSearch) matches = false;
       }
-      
+
       // Filtre par catégorie
       if (selectedSearchFilters.categorie && signalement.categorie !== selectedSearchFilters.categorie) {
         matches = false;
       }
-      
+
       // Filtre par région
       if (selectedSearchFilters.region) {
         const regionMatch = BURKINA_REGIONS.find(r => r.name === selectedSearchFilters.region);
@@ -264,34 +264,34 @@ export default function Home() {
           if (!inRegion) matches = false;
         }
       }
-      
+
       // Filtre par province
       if (selectedSearchFilters.province) {
         if (!localisation.includes(selectedSearchFilters.province.toLowerCase())) {
           matches = false;
         }
       }
-      
+
       // Filtre par date
       if (selectedSearchFilters.dateDebut) {
         const signalementDate = new Date(signalement.createdAt!);
         const dateDebut = new Date(selectedSearchFilters.dateDebut);
         if (signalementDate < dateDebut) matches = false;
       }
-      
+
       if (selectedSearchFilters.dateFin) {
         const signalementDate = new Date(signalement.createdAt!);
         const dateFin = new Date(selectedSearchFilters.dateFin);
         if (signalementDate > dateFin) matches = false;
       }
-      
+
       // Filtre par statut
       if (selectedSearchFilters.statut) {
         if (selectedSearchFilters.statut === 'sos' && !signalement.isSOS) matches = false;
         if (selectedSearchFilters.statut === 'resolu' && signalement.statut !== 'resolu') matches = false;
         if (selectedSearchFilters.statut === 'en_cours' && signalement.statut !== 'en_cours') matches = false;
       }
-      
+
       if (matches) {
         results.push({
           type: 'signalement',
@@ -400,18 +400,18 @@ export default function Home() {
             <span className="text-green-500 dark:text-green-400">Protéger.</span>
           </p>
           <p className="text-base sm:text-xl md:text-2xl mb-6 sm:mb-8 max-w-3xl mx-auto font-medium text-green-100 drop-shadow-md px-2">
-            {t('app.description')}
+            Canal de Veille Citoyenne et d'Alerte Sociale
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
             <Link href="/publier">
               <Button size="lg" className="w-full sm:w-auto backdrop-blur-sm bg-red-600 hover:bg-red-700 text-white border-red-700" data-testid="button-new-report">
                 <AlertCircle className="w-5 h-5 mr-2" />
-                {t('home.newReport')}
+                Nouveau signalement
               </Button>
             </Link>
             <Link href="/carte">
               <Button size="lg" variant="outline" className="w-full sm:w-auto backdrop-blur-sm bg-background/10 border-white text-white hover:bg-background/20" data-testid="button-view-map">
-                {t('home.viewMap')}
+                Voir la carte
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
@@ -432,7 +432,7 @@ export default function Home() {
             </p>
           </div>
 
-          
+
 
           {/* Filtres rapides */}
           <div className="flex gap-2 mb-3 flex-wrap">
@@ -450,7 +450,7 @@ export default function Home() {
                 </span>
               )}
             </Button>
-            
+
             {Object.keys(selectedSearchFilters).length > 0 && (
               <Button
                 variant="ghost"
@@ -595,7 +595,7 @@ export default function Home() {
                   }
                 </p>
               </div>
-              
+
               {/* Signalements */}
               {searchResults.filter(r => r.type === 'signalement').length > 0 && (
                 <div className="border-b">
