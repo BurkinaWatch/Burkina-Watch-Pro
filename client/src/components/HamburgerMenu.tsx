@@ -63,12 +63,12 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
               </div>
               <div>
                 <SheetTitle className="text-left">
-                  <span className="text-red-600 dark:text-red-500 font-bold text-xl">Burkina Watch</span>
+                  <span className="text-red-600 dark:text-red-500 font-bold text-xl">{t("header.title")}</span>
                 </SheetTitle>
                 <p className="text-xs text-left font-medium">
-                  <span className="text-red-600 dark:text-red-500">Voir.</span>{" "}
-                  <span className="text-yellow-700 dark:text-yellow-400">Agir.</span>{" "}
-                  <span className="text-green-700 dark:text-green-500">Protéger.</span>
+                  <span className="text-red-600 dark:text-red-500">{t("header.slogan.see")}</span>{" "}
+                  <span className="text-yellow-700 dark:text-yellow-400">{t("header.slogan.act")}</span>{" "}
+                  <span className="text-green-700 dark:text-green-500">{t("header.slogan.protect")}</span>
                 </p>
               </div>
             </div>

@@ -57,13 +57,11 @@ export function LevelUpCelebration({ newLevel, onClose }: LevelUpCelebrationProp
       setOpen(isOpen);
       if (!isOpen) onClose();
     }}>
-      <DialogContent className="max-w-md" aria-describedby="level-up-description">
-        <div className="sr-only">
-          <DialogTitle>{t('levels.congratulations')}</DialogTitle>
-          <DialogDescription id="level-up-description">
-            {t('levels.newRank')}: {t(levelInfo.titleKey)}
-          </DialogDescription>
-        </div>
+      <DialogContent className="max-w-md">
+        <DialogTitle className="sr-only">{t('levels.congratulations')}</DialogTitle>
+        <DialogDescription className="sr-only">
+          {t('levels.newRank')}: {t(levelInfo.titleKey)}
+        </DialogDescription>
         <div className="flex flex-col items-center justify-center py-8 space-y-6">
           <div className="text-6xl animate-bounce">{levelInfo.icon}</div>
           <div className="text-center space-y-2">

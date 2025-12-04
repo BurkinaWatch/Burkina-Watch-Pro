@@ -11,7 +11,8 @@
       "see": "See.",
       "act": "Act.",
       "protect": "Protect."
-    }
+    },
+    "loginButton": "Login"
   },
   "leaderboard": {
     "title": "Engaged Citizens Ranking",

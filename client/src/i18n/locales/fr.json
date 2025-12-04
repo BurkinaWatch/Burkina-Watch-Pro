@@ -11,7 +11,8 @@
       "see": "Voir.",
       "act": "Agir.",
       "protect": "Protéger."
-    }
+    },
+    "loginButton": "Se connecter"
   },
   "leaderboard": {
     "title": "Classement des citoyens engagés",
