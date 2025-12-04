@@ -14,6 +14,7 @@ import { moderateContent, logModerationAction } from "./contentModeration";
 import { signalementMutationLimiter } from "./securityHardening";
 import { generateChatResponse, isAIAvailable } from "./aiService";
 import { fetchBulletins, clearCache } from "./rssService";
+import { fetchEvents, clearEventsCache } from "./eventsService";
 
 // ============================================
 // ENREGISTREMENT DES ROUTES
@@ -1172,6 +1173,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Cache actualisé", count: bulletins.length });
     } catch (error) {
       console.error("Erreur actualisation bulletin:", error);
+      res.status(500).json({ error: "Erreur lors de l'actualisation" });
+    }
+  });
+
+  // ----------------------------------------
+  // ROUTES BURKINA EVENTS
+  // ----------------------------------------
+  app.get("/api/events-burkina", async (req, res) => {
+    try {
+      const events = await fetchEvents();
+      res.json(events);
+    } catch (error) {
+      console.error("Erreur events:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des événements" });
+    }
+  });
+
+  app.post("/api/events-burkina/refresh", async (req, res) => {
+    try {
+      clearEventsCache();
+      const events = await fetchEvents();
+      res.json({ message: "Cache actualisé", count: events.length });
+    } catch (error) {
+      console.error("Erreur actualisation events:", error);
       res.status(500).json({ error: "Erreur lors de l'actualisation" });
     }
   });
