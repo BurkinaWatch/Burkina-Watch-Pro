@@ -274,6 +274,16 @@
     "reset": "Fo dɔkr",
     "new": "Fo"
   },
+  "profile": {
+    "personalInfo": "Yãmb koɛɛga",
+    "citizenRank": "Neb kãseng",
+    "peaceGuardian": "Gũud sõngd laafi yĩnga",
+    "sentinelledelapaix": "Gũud sõngd laafi yĩnga",
+    "progressionToPeaceWatcher": "Kɛɛd n na {{level}}",
+    "remainingPoints": "paoong sẽn ket",
+    "viewRanking": "Yãab kãseng",
+    "points": "paoong"
+  },
   "footer": {
     "phone": "Tel: +226 65511323",
     "whatsapp": "WhatsApp: +226 70019540",

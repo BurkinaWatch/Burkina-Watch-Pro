@@ -274,6 +274,16 @@
     "reset": "Daminɛ kura",
     "new": "Kura"
   },
+  "profile": {
+    "personalInfo": "Mɔgɔ kunnafoni",
+    "citizenRank": "Jamana-mɔgɔ jatɛ",
+    "peaceGuardian": "Hɛɛrɛ Kɔlɔsibaga",
+    "sentinelledelapaix": "Hɛɛrɛ Kɔlɔsibaga",
+    "progressionToPeaceWatcher": "Taama na {{level}}",
+    "remainingPoints": "warijɛw tora",
+    "viewRanking": "Jatɛ lajɛ",
+    "points": "warijɛw"
+  },
   "footer": {
     "phone": "Tel: +226 65511323",
     "whatsapp": "WhatsApp: +226 70019540",

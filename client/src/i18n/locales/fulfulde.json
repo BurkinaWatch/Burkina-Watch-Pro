@@ -274,6 +274,16 @@
     "reset": "Fuɗɗo keso",
     "new": "Hesere"
   },
+  "profile": {
+    "personalInfo": "Humpito neɗɗo",
+    "citizenRank": "Limtol neɗɗo",
+    "peaceGuardian": "Deeriiɗo Jam",
+    "sentinelledelapaix": "Deeriiɗo Jam",
+    "progressionToPeaceWatcher": "Yahde to {{level}}",
+    "remainingPoints": "poyntiiji heddi",
+    "viewRanking": "Limtol yiy",
+    "points": "poyntiiji"
+  },
   "footer": {
     "phone": "Tel: +226 65511323",
     "whatsapp": "WhatsApp: +226 70019540",
