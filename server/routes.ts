@@ -1370,6 +1370,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ROUTES STREETVIEW (Mode Anonyme)
   // ----------------------------------------
 
+  // Récupérer le token Mapillary pour le frontend
+  app.get("/api/config/mapillary-token", (req, res) => {
+    const token = process.env.MAPILLARY_ACCESS_TOKEN;
+    if (!token) {
+      return res.status(500).json({ error: "Token Mapillary non configuré" });
+    }
+    res.json({ token });
+  });
+
   // Récupérer tous les points streetview pour la carte
   app.get("/api/streetview/map-points", async (req, res) => {
     try {

@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
+import { Viewer } from "mapillary-js";
+import "mapillary-js/dist/mapillary.css";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -18,9 +21,12 @@ import {
   Square,
   Image as ImageIcon,
   X,
-  ChevronLeft,
-  ChevronRight,
-  Eye
+  Eye,
+  Navigation,
+  Globe,
+  Loader2,
+  Info,
+  RefreshCw
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import "leaflet/dist/leaflet.css";
@@ -121,10 +127,203 @@ function MapCenterUpdater({ center }: { center: [number, number] }) {
   return null;
 }
 
+async function findNearestMapillaryImage(lat: number, lng: number, token: string): Promise<string | null> {
+  const bbox = 0.05;
+  const url = `https://graph.mapillary.com/images?access_token=${token}&fields=id&bbox=${lng - bbox},${lat - bbox},${lng + bbox},${lat + bbox}&limit=1`;
+  
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (data.error) {
+      console.error("Mapillary API error:", data.error.message);
+      return null;
+    }
+    
+    if (!response.ok) {
+      console.error("Mapillary API error:", response.status);
+      return null;
+    }
+    
+    if (data.data && data.data.length > 0) {
+      return data.data[0].id;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching Mapillary images:", error);
+    return null;
+  }
+}
+
+function MapillaryViewer({ 
+  latitude, 
+  longitude, 
+  token,
+  onError 
+}: { 
+  latitude: number; 
+  longitude: number;
+  token: string;
+  onError: (message: string) => void;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const viewerRef = useRef<Viewer | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasImages, setHasImages] = useState(true);
+  const [currentLocation, setCurrentLocation] = useState({ lat: latitude, lng: longitude });
+
+  const initViewer = useCallback(async () => {
+    if (!containerRef.current || !token) {
+      if (!token) {
+        onError("Token Mapillary non configuré");
+      }
+      return;
+    }
+
+    setIsLoading(true);
+    setHasImages(true);
+
+    if (viewerRef.current) {
+      viewerRef.current.remove();
+      viewerRef.current = null;
+    }
+
+    try {
+      const imageId = await findNearestMapillaryImage(latitude, longitude, token);
+      
+      if (!imageId) {
+        setIsLoading(false);
+        setHasImages(false);
+        return;
+      }
+
+      const viewer = new Viewer({
+        accessToken: token,
+        container: containerRef.current,
+        imageId: imageId,
+        component: {
+          cover: false,
+          direction: true,
+          sequence: true,
+          zoom: true,
+        },
+      });
+
+      viewerRef.current = viewer;
+
+      viewer.on("image", (event: any) => {
+        setIsLoading(false);
+        setHasImages(true);
+        if (event.image && event.image.lngLat) {
+          setCurrentLocation({
+            lat: event.image.lngLat.lat,
+            lng: event.image.lngLat.lng,
+          });
+        }
+      });
+
+    } catch (error) {
+      console.error("Erreur initialisation Mapillary:", error);
+      setIsLoading(false);
+      setHasImages(false);
+      onError("Erreur d'initialisation du viewer");
+    }
+  }, [latitude, longitude, token, onError]);
+
+  useEffect(() => {
+    initViewer();
+
+    return () => {
+      if (viewerRef.current) {
+        viewerRef.current.remove();
+        viewerRef.current = null;
+      }
+    };
+  }, [initViewer]);
+
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    
+    try {
+      const imageId = await findNearestMapillaryImage(latitude, longitude, token);
+      
+      if (!imageId) {
+        setIsLoading(false);
+        setHasImages(false);
+        return;
+      }
+
+      if (viewerRef.current) {
+        viewerRef.current.moveTo(imageId).catch(() => {
+          setIsLoading(false);
+          setHasImages(false);
+        });
+      }
+    } catch {
+      setIsLoading(false);
+      setHasImages(false);
+    }
+  };
+
+  if (!token) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-muted/50 rounded-lg">
+        <div className="text-center p-4">
+          <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-3" />
+          <p className="text-muted-foreground">Token Mapillary non configuré</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Contactez l'administrateur pour activer cette fonctionnalité
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative w-full h-full">
+      <div ref={containerRef} className="w-full h-full rounded-lg overflow-hidden" />
+      
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-lg">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 text-white animate-spin mx-auto mb-2" />
+            <p className="text-white text-sm">Chargement des images...</p>
+          </div>
+        </div>
+      )}
+      
+      {!isLoading && !hasImages && (
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/90 rounded-lg">
+          <div className="text-center p-6">
+            <Globe className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="font-semibold text-lg mb-2">Aucune image disponible</h3>
+            <p className="text-muted-foreground text-sm mb-4">
+              Pas d'images panoramiques dans cette zone.<br />
+              Utilisez la capture citoyenne pour contribuer!
+            </p>
+            <Button onClick={handleRefresh} variant="outline" size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Réessayer
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {hasImages && !isLoading && (
+        <div className="absolute bottom-3 left-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
+          <Navigation className="h-3 w-3 inline mr-1" />
+          {currentLocation.lat.toFixed(4)}, {currentLocation.lng.toFixed(4)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function StreetView() {
   const { t } = useTranslation();
   const { toast } = useToast();
   
+  const [activeTab, setActiveTab] = useState<string>("explore");
   const [isCapturing, setIsCapturing] = useState(false);
   const [currentPosition, setCurrentPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -132,10 +331,17 @@ export default function StreetView() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isPageVisible, setIsPageVisible] = useState(true);
   const [captureCount, setCaptureCount] = useState(0);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const captureIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const { data: mapillaryConfig, isLoading: isLoadingToken } = useQuery<{ token: string }>({
+    queryKey: ["/api/config/mapillary-token"],
+    retry: 1,
+    staleTime: Infinity,
+  });
 
   const { data: mapPoints = [], isLoading: isLoadingPoints } = useQuery<StreetviewPoint[]>({
     queryKey: ["/api/streetview/map-points"],
@@ -151,6 +357,24 @@ export default function StreetView() {
       setCaptureCount(prev => prev + 1);
     },
   });
+
+  const stopCapture = useCallback(() => {
+    if (captureIntervalRef.current) {
+      clearInterval(captureIntervalRef.current);
+      captureIntervalRef.current = null;
+    }
+
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+
+    setIsCapturing(false);
+  }, []);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -179,7 +403,7 @@ export default function StreetView() {
       window.removeEventListener("beforeunload", handleBeforeUnload);
       stopCapture();
     };
-  }, [isCapturing]);
+  }, [isCapturing, stopCapture, toast]);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -195,116 +419,9 @@ export default function StreetView() {
           setCurrentPosition({ lat: 12.3714, lng: -1.5197 });
         }
       );
+    } else {
+      setCurrentPosition({ lat: 12.3714, lng: -1.5197 });
     }
-  }, []);
-
-  const startCapture = useCallback(async () => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      toast({
-        title: "Non supporté",
-        description: "Votre navigateur ne supporte pas la capture de photos. Veuillez utiliser un navigateur moderne (Chrome, Firefox, Safari).",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Vérifier si on est en HTTPS (requis pour getUserMedia)
-    if (window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
-      toast({
-        title: "Connexion non sécurisée",
-        description: "La caméra nécessite une connexion HTTPS sécurisée.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // D'abord essayer avec la caméra arrière
-      let stream: MediaStream | null = null;
-      
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: "environment" },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
-          audio: false,
-        });
-      } catch (backCameraError) {
-        console.warn("Caméra arrière non disponible, tentative avec n'importe quelle caméra:", backCameraError);
-        // Fallback: essayer avec n'importe quelle caméra
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: false,
-        });
-      }
-
-      streamRef.current = stream;
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.muted = true;
-        await videoRef.current.play();
-      }
-
-      setIsCapturing(true);
-      setCaptureCount(0);
-
-      captureIntervalRef.current = setInterval(() => {
-        capturePhoto();
-      }, 5000);
-
-      toast({
-        title: "Capture démarrée",
-        description: "Les photos sont capturées automatiquement toutes les 5 secondes.",
-      });
-
-    } catch (error: any) {
-      console.error("Erreur accès caméra - nom:", error?.name, "message:", error?.message, "erreur complète:", error);
-      
-      let errorMessage = "Impossible d'accéder à la caméra.";
-      
-      if (error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError") {
-        errorMessage = "Veuillez autoriser l'accès à la caméra dans les paramètres de votre navigateur.";
-      } else if (error?.name === "NotFoundError" || error?.name === "DevicesNotFoundError") {
-        errorMessage = "Aucune caméra détectée sur cet appareil.";
-      } else if (error?.name === "NotReadableError" || error?.name === "TrackStartError") {
-        errorMessage = "La caméra est déjà utilisée par une autre application.";
-      } else if (error?.name === "OverconstrainedError") {
-        errorMessage = "La caméra ne supporte pas les paramètres demandés.";
-      } else if (error?.name === "TypeError") {
-        errorMessage = "Erreur de configuration de la caméra.";
-      } else if (error?.name === "AbortError") {
-        errorMessage = "L'accès à la caméra a été interrompu.";
-      } else if (error?.name === "SecurityError") {
-        errorMessage = "Accès à la caméra bloqué pour des raisons de sécurité. Vérifiez les permissions du site.";
-      }
-      
-      toast({
-        title: "Erreur caméra",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    }
-  }, [toast]);
-
-  const stopCapture = useCallback(() => {
-    if (captureIntervalRef.current) {
-      clearInterval(captureIntervalRef.current);
-      captureIntervalRef.current = null;
-    }
-
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-
-    setIsCapturing(false);
   }, []);
 
   const capturePhoto = useCallback(async () => {
@@ -340,19 +457,119 @@ export default function StreetView() {
       latitude: currentPosition.lat,
       longitude: currentPosition.lng,
     });
-
   }, [currentPosition, isPageVisible, uploadMutation]);
 
-  const handleDeleteHistory = () => {
+  const startCapture = useCallback(async () => {
+    setCameraError(null);
+    
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      const error = "Votre navigateur ne supporte pas la capture de photos. Veuillez utiliser un navigateur moderne (Chrome, Firefox, Safari).";
+      setCameraError(error);
+      toast({
+        title: "Non supporté",
+        description: error,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (window.location.protocol !== "https:" && window.location.hostname !== "localhost" && !window.location.hostname.includes("replit")) {
+      const error = "La caméra nécessite une connexion HTTPS sécurisée.";
+      setCameraError(error);
+      toast({
+        title: "Connexion non sécurisée",
+        description: error,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsCapturing(true);
+    setCaptureCount(0);
+
+    try {
+      let stream: MediaStream | null = null;
+      
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        });
+      } catch (backCameraError) {
+        console.warn("Caméra arrière non disponible, tentative avec n'importe quelle caméra:", backCameraError);
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      }
+
+      streamRef.current = stream;
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.muted = true;
+        await videoRef.current.play();
+      }
+
+      captureIntervalRef.current = setInterval(() => {
+        capturePhoto();
+      }, 5000);
+
+      toast({
+        title: "Capture démarrée",
+        description: "Les photos sont capturées automatiquement toutes les 5 secondes.",
+      });
+
+    } catch (error: any) {
+      console.error("Erreur accès caméra - nom:", error?.name, "message:", error?.message, "erreur complète:", error);
+      
+      setIsCapturing(false);
+      
+      let errorMessage = "Impossible d'accéder à la caméra.";
+      
+      if (error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError") {
+        errorMessage = "Veuillez autoriser l'accès à la caméra dans les paramètres de votre navigateur.";
+      } else if (error?.name === "NotFoundError" || error?.name === "DevicesNotFoundError") {
+        errorMessage = "Aucune caméra détectée sur cet appareil.";
+      } else if (error?.name === "NotReadableError" || error?.name === "TrackStartError") {
+        errorMessage = "La caméra est déjà utilisée par une autre application.";
+      } else if (error?.name === "OverconstrainedError") {
+        errorMessage = "La caméra ne supporte pas les paramètres demandés.";
+      } else if (error?.name === "TypeError") {
+        errorMessage = "Erreur de configuration de la caméra.";
+      } else if (error?.name === "AbortError") {
+        errorMessage = "L'accès à la caméra a été interrompu.";
+      } else if (error?.name === "SecurityError") {
+        errorMessage = "Accès à la caméra bloqué pour des raisons de sécurité. Vérifiez les permissions du site.";
+      }
+      
+      setCameraError(errorMessage);
+      toast({
+        title: "Erreur caméra",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  }, [toast, capturePhoto]);
+
+  const handleDeleteHistory = useCallback(() => {
     clearLocalHistory();
     setLocalHistory([]);
     toast({
       title: "Historique supprimé",
       description: "Toutes les images locales ont été supprimées.",
     });
-  };
+  }, [toast]);
 
-  const defaultCenter: [number, number] = currentPosition 
+  const handleMapillaryError = useCallback((message: string) => {
+    console.error("Mapillary error:", message);
+  }, []);
+
+  const mapCenter: [number, number] = currentPosition 
     ? [currentPosition.lat, currentPosition.lng] 
     : [12.3714, -1.5197];
 
@@ -360,234 +577,317 @@ export default function StreetView() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <div className="container mx-auto px-4 py-6 space-y-6">
-        <Card className="border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/20">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-6 w-6 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">
-                  Avertissement de sécurité
-                </h3>
-                <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                  Ne pas utiliser en conduisant — laissez le téléphone fixé. 
-                  Toutes les images sont anonymisées automatiquement.
-                </p>
-              </div>
+      <div className="container mx-auto px-4 py-6 space-y-4">
+        <Card className="border-yellow-500/50 bg-yellow-500/10">
+          <CardContent className="py-3 px-4 flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-yellow-600 dark:text-yellow-400">
+                Avertissement de sécurité
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Ne pas utiliser en conduisant — laissez le téléphone fixé. Toutes les images sont anonymisées automatiquement.
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-primary" />
-                  Carte StreetView
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[400px] rounded-lg overflow-hidden border">
-                  {currentPosition && (
-                    <MapContainer
-                      center={defaultCenter}
-                      zoom={14}
-                      className="h-full w-full"
-                      scrollWheelZoom={true}
-                    >
-                      <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      />
-                      <MapCenterUpdater center={defaultCenter} />
-                      
-                      {mapPoints.map((point) => (
-                        <Marker
-                          key={point.id}
-                          position={[parseFloat(point.latitude), parseFloat(point.longitude)]}
-                          icon={cameraIcon}
-                        >
-                          <Popup>
-                            <div className="w-48">
-                              <img 
-                                src={point.thumbnailData || point.imageData} 
-                                alt="StreetView"
-                                className="w-full h-32 object-cover rounded cursor-pointer"
-                                onClick={() => setSelectedImage(point.imageData)}
-                              />
-                              <p className="text-xs text-muted-foreground mt-2">
-                                {new Date(point.capturedAt).toLocaleString("fr-FR")}
-                              </p>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-full mt-2"
-                                onClick={() => setSelectedImage(point.imageData)}
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                Voir en grand
-                              </Button>
-                            </div>
-                          </Popup>
-                        </Marker>
-                      ))}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="explore" className="flex items-center gap-2" data-testid="tab-explore">
+              <Globe className="h-4 w-4" />
+              Explorer (3D)
+            </TabsTrigger>
+            <TabsTrigger value="capture" className="flex items-center gap-2" data-testid="tab-capture">
+              <Camera className="h-4 w-4" />
+              Capture citoyenne
+            </TabsTrigger>
+          </TabsList>
 
-                      {currentPosition && (
-                        <Marker position={[currentPosition.lat, currentPosition.lng]}>
-                          <Popup>Votre position actuelle</Popup>
-                        </Marker>
-                      )}
-                    </MapContainer>
-                  )}
-                  {!currentPosition && (
-                    <div className="h-full flex items-center justify-center bg-muted">
-                      <p className="text-muted-foreground">Chargement de la carte...</p>
-                    </div>
-                  )}
-                </div>
-
-                {isLoadingPoints && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Chargement des points...
-                  </p>
-                )}
-                <p className="text-sm text-muted-foreground mt-2">
-                  {mapPoints.length} point(s) sur la carte
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="space-y-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
-                  <Camera className="h-5 w-5 text-primary" />
-                  Capture
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="aspect-video bg-black rounded-lg overflow-hidden relative">
-                  <video
-                    ref={videoRef}
-                    className="w-full h-full object-cover"
-                    playsInline
-                    muted
-                  />
-                  {!isCapturing && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                      <Camera className="h-12 w-12 text-white/50" />
-                    </div>
-                  )}
-                  {isCapturing && (
-                    <Badge className="absolute top-2 right-2 bg-red-500 animate-pulse">
-                      REC • {captureCount} photos
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="flex gap-2">
-                  {!isCapturing ? (
-                    <Button 
-                      onClick={startCapture} 
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                      disabled={!currentPosition}
-                    >
-                      <Play className="h-4 w-4 mr-2" />
-                      Démarrer
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={stopCapture} 
-                      variant="destructive"
-                      className="flex-1"
-                    >
-                      <Square className="h-4 w-4 mr-2" />
-                      Arrêter
-                    </Button>
-                  )}
-                </div>
-
-                <p className="text-xs text-muted-foreground text-center">
-                  Mode anonyme activé • Aucune donnée personnelle
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <History className="h-5 w-5 text-primary" />
-                    Historique local
-                  </CardTitle>
-                  <Badge variant="outline">{localHistory.length}/{MAX_HISTORY_ITEMS}</Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setShowHistory(!showHistory)}
-                >
-                  <ImageIcon className="h-4 w-4 mr-2" />
-                  {showHistory ? "Masquer" : "Afficher"} la galerie
-                </Button>
-
-                {showHistory && (
-                  <div className="space-y-3">
-                    {localHistory.length === 0 ? (
-                      <p className="text-sm text-muted-foreground text-center py-4">
-                        Aucune image dans l'historique
-                      </p>
-                    ) : (
-                      <>
-                        <div className="grid grid-cols-3 gap-2">
-                          {localHistory.map((item) => (
-                            <div
-                              key={item.id}
-                              className="aspect-square rounded-md overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all"
-                              onClick={() => setSelectedImage(item.imageData)}
-                            >
-                              <img
-                                src={item.thumbnailData}
-                                alt="Historique"
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          ))}
+          <TabsContent value="explore" className="mt-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2">
+                      <Eye className="h-5 w-5 text-primary" />
+                      Vue panoramique 3D
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="aspect-video rounded-lg overflow-hidden bg-muted">
+                      {isLoadingToken ? (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                          <span className="ml-2 text-muted-foreground">Chargement...</span>
                         </div>
-                        
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="w-full"
-                          onClick={handleDeleteHistory}
+                      ) : !mapillaryConfig?.token ? (
+                        <div className="w-full h-full flex items-center justify-center bg-muted/50">
+                          <div className="text-center p-6">
+                            <Globe className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                            <h3 className="font-semibold text-lg mb-2">Service non disponible</h3>
+                            <p className="text-muted-foreground text-sm mb-4">
+                              La vue panoramique 3D n'est pas encore configurée.<br />
+                              Utilisez l'onglet "Capture citoyenne" pour contribuer!
+                            </p>
+                          </div>
+                        </div>
+                      ) : currentPosition ? (
+                        <MapillaryViewer 
+                          latitude={currentPosition.lat} 
+                          longitude={currentPosition.lng}
+                          token={mapillaryConfig.token}
+                          onError={handleMapillaryError}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                      <Info className="h-4 w-4" />
+                      <span>Utilisez la souris pour naviguer dans la vue 3D. Cliquez sur les flèches pour avancer.</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2">
+                      <MapPin className="h-5 w-5 text-primary" />
+                      Carte des contributions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="aspect-square rounded-lg overflow-hidden">
+                      {currentPosition && (
+                        <MapContainer
+                          center={mapCenter}
+                          zoom={14}
+                          className="w-full h-full"
+                          scrollWheelZoom={true}
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Supprimer l'historique
-                        </Button>
-                      </>
+                          <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          />
+                          <MapCenterUpdater center={mapCenter} />
+                          
+                          <Marker position={mapCenter}>
+                            <Popup>Votre position</Popup>
+                          </Marker>
+
+                          {mapPoints.map((point) => (
+                            <Marker
+                              key={point.id}
+                              position={[parseFloat(point.latitude), parseFloat(point.longitude)]}
+                              icon={cameraIcon}
+                            >
+                              <Popup>
+                                <div className="w-48">
+                                  <img 
+                                    src={point.thumbnailData || point.imageData} 
+                                    alt="Capture"
+                                    className="w-full rounded mb-2"
+                                  />
+                                  <p className="text-xs text-gray-500">
+                                    {new Date(point.capturedAt).toLocaleString("fr-FR")}
+                                  </p>
+                                </div>
+                              </Popup>
+                            </Marker>
+                          ))}
+                        </MapContainer>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2 text-center">
+                      {mapPoints.length} contribution(s) citoyenne(s)
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="capture" className="mt-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2">
+                    <Camera className="h-5 w-5 text-primary" />
+                    Capture en direct
+                    {isCapturing && (
+                      <Badge className="ml-auto bg-red-500 animate-pulse">
+                        REC • {captureCount} photos
+                      </Badge>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="aspect-video bg-black rounded-lg overflow-hidden relative">
+                    <video
+                      ref={videoRef}
+                      className="w-full h-full object-cover"
+                      playsInline
+                      muted
+                      data-testid="video-capture"
+                    />
+                    {!isCapturing && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                        <div className="text-center">
+                          <Camera className="h-12 w-12 text-white/50 mx-auto mb-2" />
+                          {cameraError && (
+                            <p className="text-red-400 text-sm px-4">{cameraError}</p>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+
+                  <div className="flex gap-2">
+                    {!isCapturing ? (
+                      <Button 
+                        onClick={startCapture} 
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                        disabled={!currentPosition}
+                        data-testid="button-start-capture"
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        Démarrer la capture
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={stopCapture} 
+                        variant="destructive"
+                        className="flex-1"
+                        data-testid="button-stop-capture"
+                      >
+                        <Square className="h-4 w-4 mr-2" />
+                        Arrêter la capture
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="bg-muted/50 rounded-lg p-3 text-center">
+                    <p className="text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1">
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        Mode anonyme activé
+                      </span>
+                      <span className="mx-2">•</span>
+                      Aucune donnée personnelle collectée
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <History className="h-5 w-5 text-primary" />
+                      Historique local
+                    </CardTitle>
+                    <Badge variant="outline">{localHistory.length}/{MAX_HISTORY_ITEMS}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setShowHistory(!showHistory)}
+                    data-testid="button-toggle-gallery"
+                  >
+                    <ImageIcon className="h-4 w-4 mr-2" />
+                    {showHistory ? "Masquer" : "Afficher"} la galerie
+                  </Button>
+
+                  {showHistory && (
+                    <div className="space-y-3">
+                      {localHistory.length === 0 ? (
+                        <div className="text-center py-8 bg-muted/30 rounded-lg">
+                          <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                          <p className="text-sm text-muted-foreground">
+                            Aucune image dans l'historique
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Démarrez une capture pour ajouter des images
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto">
+                            {localHistory.map((item) => (
+                              <div
+                                key={item.id}
+                                className="aspect-square rounded-md overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+                                onClick={() => setSelectedImage(item.imageData)}
+                                data-testid={`gallery-item-${item.id}`}
+                              >
+                                <img
+                                  src={item.thumbnailData}
+                                  alt="Historique"
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="w-full"
+                            onClick={handleDeleteHistory}
+                            data-testid="button-delete-history"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Supprimer l'historique
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  <Card className="bg-blue-500/10 border-blue-500/30">
+                    <CardContent className="py-3 px-4">
+                      <div className="flex items-start gap-3">
+                        <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                        <div className="text-sm">
+                          <p className="font-medium text-blue-600 dark:text-blue-400">
+                            Comment ça marche?
+                          </p>
+                          <ul className="text-muted-foreground mt-1 space-y-1 text-xs">
+                            <li>• Les photos sont prises toutes les 5 secondes</li>
+                            <li>• Elles sont géolocalisées automatiquement</li>
+                            <li>• Stockées localement (max {MAX_HISTORY_ITEMS})</li>
+                            <li>• Uploadées anonymement sur la carte</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {selectedImage && (
         <div 
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
           onClick={() => setSelectedImage(null)}
+          data-testid="image-modal"
         >
           <Button
             variant="ghost"
             size="icon"
             className="absolute top-4 right-4 text-white hover:bg-white/20"
             onClick={() => setSelectedImage(null)}
+            data-testid="button-close-modal"
           >
             <X className="h-6 w-6" />
           </Button>
