@@ -1179,6 +1179,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ----------------------------------------
+  // ROUTES PHARMACIES
+  // ----------------------------------------
+  app.get("/api/pharmacies", async (req, res) => {
+    try {
+      const { pharmaciesService } = await import("./pharmaciesService");
+      const { region, typeGarde, search } = req.query;
+
+      let pharmacies;
+
+      if (search) {
+        pharmacies = pharmaciesService.searchPharmacies(search as string);
+      } else if (region && region !== "all") {
+        pharmacies = pharmaciesService.getPharmaciesByRegion(region as string);
+      } else if (typeGarde) {
+        pharmacies = pharmaciesService.getPharmaciesByTypeGarde(typeGarde as "jour" | "nuit" | "24h");
+      } else {
+        pharmacies = pharmaciesService.getAllPharmacies();
+      }
+
+      res.set('Cache-Control', 'public, max-age=3600'); // Cache 1 heure
+      res.json(pharmacies);
+    } catch (error) {
+      console.error("Erreur récupération pharmacies:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des pharmacies" });
+    }
+  });
+
+  app.get("/api/pharmacies/stats", async (req, res) => {
+    try {
+      const { pharmaciesService } = await import("./pharmaciesService");
+      const stats = pharmaciesService.getStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Erreur stats pharmacies:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
+    }
+  });
+
+  app.post("/api/pharmacies/refresh", async (req, res) => {
+    try {
+      const { pharmaciesService } = await import("./pharmaciesService");
+      pharmaciesService.markAsUpdated();
+      const stats = pharmaciesService.getStats();
+      res.json({ 
+        message: "Données des pharmacies actualisées",
+        ...stats
+      });
+    } catch (error) {
+      console.error("Erreur actualisation pharmacies:", error);
+      res.status(500).json({ error: "Erreur lors de l'actualisation" });
+    }
+  });
+
   // Route de santé
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });

@@ -1,7 +1,10 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { applySecurityMiddlewares } from "./securityHardening";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
+import compression from "compression";
+import { pharmaciesService } from "./pharmaciesService";
 
 const app = express();
 
@@ -70,6 +73,9 @@ app.use((req, res, next) => {
   } else {
     serveStatic(app);
   }
+
+  // Démarrer la mise à jour automatique des pharmacies
+  pharmaciesService.scheduleAutoUpdate();
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.

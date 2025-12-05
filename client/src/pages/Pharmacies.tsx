@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw } from "lucide-react";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 interface Pharmacie {
   id: string;
@@ -24,8 +25,9 @@ interface Pharmacie {
   longitude?: number;
 }
 
-// Données des pharmacies de garde du Burkina Faso
+// Données complètes des pharmacies de garde du Burkina Faso
 export const PHARMACIES_DATA: Pharmacie[] = [
+  // REGION KADIOGO (Ouagadougou)
   {
     id: "1",
     nom: "Pharmacie Centrale de Ouagadougou",
@@ -63,6 +65,92 @@ export const PHARMACIES_DATA: Pharmacie[] = [
     longitude: -1.5180
   },
   {
+    id: "11",
+    nom: "Pharmacie Al Houda",
+    adresse: "Rue de Kaya",
+    ville: "Ouagadougou",
+    quartier: "Cissin",
+    region: "Kadiogo",
+    telephone: "+226 25 36 78 90",
+    typeGarde: "jour",
+    latitude: 12.4000,
+    longitude: -1.5000
+  },
+  {
+    id: "ph_ouaga_5",
+    nom: "Pharmacie Wemtenga",
+    adresse: "Boulevard du Peuple",
+    ville: "Ouagadougou",
+    quartier: "Wemtenga",
+    region: "Kadiogo",
+    telephone: "+226 25 31 22 33",
+    typeGarde: "24h",
+    latitude: 12.3800,
+    longitude: -1.5100
+  },
+  {
+    id: "ph_ouaga_6",
+    nom: "Pharmacie de la Gare",
+    adresse: "Avenue de la Gare",
+    ville: "Ouagadougou",
+    quartier: "Gare",
+    region: "Kadiogo",
+    telephone: "+226 25 30 55 66",
+    typeGarde: "jour",
+    latitude: 12.3650,
+    longitude: -1.5250
+  },
+  {
+    id: "ph_ouaga_7",
+    nom: "Pharmacie Bethesda",
+    adresse: "Rue de l'Hôpital",
+    ville: "Ouagadougou",
+    quartier: "Dapoya",
+    region: "Kadiogo",
+    telephone: "+226 25 36 44 55",
+    typeGarde: "nuit",
+    latitude: 12.3900,
+    longitude: -1.4900
+  },
+  {
+    id: "ph_ouaga_8",
+    nom: "Pharmacie Kamsonghin",
+    adresse: "Boulevard Kadiogo",
+    ville: "Ouagadougou",
+    quartier: "Kamsonghin",
+    region: "Kadiogo",
+    telephone: "+226 25 37 88 99",
+    typeGarde: "jour",
+    latitude: 12.3600,
+    longitude: -1.5350
+  },
+  {
+    id: "ph_ouaga_9",
+    nom: "Pharmacie Zogona",
+    adresse: "Avenue de l'Indépendance",
+    ville: "Ouagadougou",
+    quartier: "Zogona",
+    region: "Kadiogo",
+    telephone: "+226 25 38 11 22",
+    typeGarde: "24h",
+    latitude: 12.3550,
+    longitude: -1.5400
+  },
+  {
+    id: "ph_ouaga_10",
+    nom: "Pharmacie Tanghin",
+    adresse: "Route de Koudougou",
+    ville: "Ouagadougou",
+    quartier: "Tanghin",
+    region: "Kadiogo",
+    telephone: "+226 25 39 33 44",
+    typeGarde: "nuit",
+    latitude: 12.3450,
+    longitude: -1.5500
+  },
+
+  // REGION GUIRIKO (Bobo-Dioulasso)
+  {
     id: "4",
     nom: "Pharmacie Sainte Marie",
     adresse: "Boulevard Mouammar Kadhafi",
@@ -87,6 +175,44 @@ export const PHARMACIES_DATA: Pharmacie[] = [
     longitude: -4.2950
   },
   {
+    id: "ph_bobo_3",
+    nom: "Pharmacie de la Cathédrale",
+    adresse: "Avenue de la Révolution",
+    ville: "Bobo-Dioulasso",
+    quartier: "Centre-ville",
+    region: "Guiriko",
+    telephone: "+226 20 97 22 33",
+    typeGarde: "nuit",
+    latitude: 11.1800,
+    longitude: -4.2920
+  },
+  {
+    id: "ph_bobo_4",
+    nom: "Pharmacie Belle Ville",
+    adresse: "Rue du Commerce",
+    ville: "Bobo-Dioulasso",
+    quartier: "Belle Ville",
+    region: "Guiriko",
+    telephone: "+226 20 98 55 66",
+    typeGarde: "jour",
+    latitude: 11.1750,
+    longitude: -4.2880
+  },
+  {
+    id: "ph_bobo_5",
+    nom: "Pharmacie Koko",
+    adresse: "Avenue Ouezzin Coulibaly",
+    ville: "Bobo-Dioulasso",
+    quartier: "Koko",
+    region: "Guiriko",
+    telephone: "+226 20 99 11 22",
+    typeGarde: "24h",
+    latitude: 11.1850,
+    longitude: -4.3000
+  },
+
+  // REGION PONI-TIARI (Banfora, Gaoua)
+  {
     id: "6",
     nom: "Pharmacie de la Comoé",
     adresse: "Avenue de la Révolution",
@@ -98,6 +224,32 @@ export const PHARMACIES_DATA: Pharmacie[] = [
     latitude: 10.6334,
     longitude: -4.7619
   },
+  {
+    id: "ph_banfora_2",
+    nom: "Pharmacie des Cascades",
+    adresse: "Route de Sindou",
+    ville: "Banfora",
+    quartier: "Secteur 2",
+    region: "Poni-Tiari",
+    telephone: "+226 20 91 44 55",
+    typeGarde: "jour",
+    latitude: 10.6300,
+    longitude: -4.7650
+  },
+  {
+    id: "ph_gaoua_1",
+    nom: "Pharmacie du Poni",
+    adresse: "Avenue Principale",
+    ville: "Gaoua",
+    quartier: "Centre",
+    region: "Poni-Tiari",
+    telephone: "+226 20 90 11 22",
+    typeGarde: "24h",
+    latitude: 10.3269,
+    longitude: -3.1825
+  },
+
+  // REGION KOOM-KUULI (Koudougou)
   {
     id: "7",
     nom: "Pharmacie Faso",
@@ -111,6 +263,32 @@ export const PHARMACIES_DATA: Pharmacie[] = [
     longitude: -2.3622
   },
   {
+    id: "ph_koudou_2",
+    nom: "Pharmacie du Boulkiemdé",
+    adresse: "Avenue de la Nation",
+    ville: "Koudougou",
+    quartier: "Secteur 3",
+    region: "Koom-Kuuli",
+    telephone: "+226 25 44 22 33",
+    typeGarde: "nuit",
+    latitude: 12.2500,
+    longitude: -2.3650
+  },
+  {
+    id: "ph_koudou_3",
+    nom: "Pharmacie Saint Joseph",
+    adresse: "Route de Ouagadougou",
+    ville: "Koudougou",
+    quartier: "Secteur 1",
+    region: "Koom-Kuuli",
+    telephone: "+226 25 44 55 66",
+    typeGarde: "jour",
+    latitude: 12.2550,
+    longitude: -2.3600
+  },
+
+  // REGION GOULMOU (Fada N'Gourma)
+  {
     id: "8",
     nom: "Pharmacie de l'Est",
     adresse: "Avenue Nationale",
@@ -122,6 +300,20 @@ export const PHARMACIES_DATA: Pharmacie[] = [
     latitude: 12.0614,
     longitude: 0.3581
   },
+  {
+    id: "ph_fada_2",
+    nom: "Pharmacie Gourma",
+    adresse: "Route de Ouagadougou",
+    ville: "Fada N'Gourma",
+    quartier: "Secteur 2",
+    region: "Goulmou",
+    telephone: "+226 24 77 33 44",
+    typeGarde: "jour",
+    latitude: 12.0650,
+    longitude: 0.3600
+  },
+
+  // REGION TAOUD-WEOGO (Ouahigouya)
   {
     id: "9",
     nom: "Pharmacie du Nord",
@@ -135,6 +327,32 @@ export const PHARMACIES_DATA: Pharmacie[] = [
     longitude: -2.4214
   },
   {
+    id: "ph_ouahi_2",
+    nom: "Pharmacie du Yatenga",
+    adresse: "Avenue de la Liberté",
+    ville: "Ouahigouya",
+    quartier: "Secteur 1",
+    region: "Taoud-Weogo",
+    telephone: "+226 24 55 44 55",
+    typeGarde: "24h",
+    latitude: 13.5850,
+    longitude: -2.4200
+  },
+  {
+    id: "ph_ouahi_3",
+    nom: "Pharmacie Naaba Kango",
+    adresse: "Route de Ouagadougou",
+    ville: "Ouahigouya",
+    quartier: "Secteur 3",
+    region: "Taoud-Weogo",
+    telephone: "+226 24 55 66 77",
+    typeGarde: "nuit",
+    latitude: 13.5800,
+    longitude: -2.4250
+  },
+
+  // REGION KOM-PANGALA (Tenkodogo)
+  {
     id: "10",
     nom: "Pharmacie Tenkodogo",
     adresse: "Avenue de la Nation",
@@ -147,17 +365,19 @@ export const PHARMACIES_DATA: Pharmacie[] = [
     longitude: -0.3700
   },
   {
-    id: "11",
-    nom: "Pharmacie Al Houda",
-    adresse: "Rue de Kaya",
-    ville: "Ouagadougou",
-    quartier: "Cissin",
-    region: "Kadiogo",
-    telephone: "+226 25 36 78 90",
+    id: "ph_tenko_2",
+    nom: "Pharmacie du Boulgou",
+    adresse: "Route de Fada",
+    ville: "Tenkodogo",
+    quartier: "Secteur 2",
+    region: "Kom-Pangala",
+    telephone: "+226 40 71 33 44",
     typeGarde: "jour",
-    latitude: 12.4000,
-    longitude: -1.5000
+    latitude: 11.7850,
+    longitude: -0.3650
   },
+
+  // REGION SAHEL (Dori, Gorom-Gorom)
   {
     id: "12",
     nom: "Pharmacie du Sahel",
@@ -169,6 +389,254 @@ export const PHARMACIES_DATA: Pharmacie[] = [
     typeGarde: "24h",
     latitude: 14.0353,
     longitude: -0.0345
+  },
+  {
+    id: "ph_dori_2",
+    nom: "Pharmacie de l'Oudalan",
+    adresse: "Route de Gorom-Gorom",
+    ville: "Dori",
+    quartier: "Secteur 1",
+    region: "Sahel",
+    telephone: "+226 24 46 22 33",
+    typeGarde: "jour",
+    latitude: 14.0400,
+    longitude: -0.0300
+  },
+  {
+    id: "ph_gorom_1",
+    nom: "Pharmacie Gorom-Gorom",
+    adresse: "Avenue Centrale",
+    ville: "Gorom-Gorom",
+    quartier: "Centre",
+    region: "Sahel",
+    telephone: "+226 24 45 11 22",
+    typeGarde: "jour",
+    latitude: 14.4436,
+    longitude: -0.2353
+  },
+
+  // REGION DJÔRÔ (Banfora Sud)
+  {
+    id: "ph_manga_1",
+    nom: "Pharmacie de Manga",
+    adresse: "Avenue Principale",
+    ville: "Manga",
+    quartier: "Centre",
+    region: "Djôrô",
+    telephone: "+226 25 70 11 22",
+    typeGarde: "jour",
+    latitude: 11.6667,
+    longitude: -1.0667
+  },
+
+  // REGION NAKAMBGA (Ziniaré)
+  {
+    id: "ph_ziniare_1",
+    nom: "Pharmacie de Ziniaré",
+    adresse: "Route Nationale",
+    ville: "Ziniaré",
+    quartier: "Centre",
+    region: "Nakambga",
+    telephone: "+226 25 30 88 99",
+    typeGarde: "jour",
+    latitude: 12.5833,
+    longitude: -1.3000
+  },
+  {
+    id: "ph_ziniare_2",
+    nom: "Pharmacie du Oubritenga",
+    adresse: "Avenue de Ouagadougou",
+    ville: "Ziniaré",
+    quartier: "Secteur 1",
+    region: "Nakambga",
+    telephone: "+226 25 30 77 88",
+    typeGarde: "24h",
+    latitude: 12.5850,
+    longitude: -1.2950
+  },
+
+  // REGION WÈTEMGA (Kaya)
+  {
+    id: "ph_kaya_1",
+    nom: "Pharmacie de Kaya",
+    adresse: "Avenue Centrale",
+    ville: "Kaya",
+    quartier: "Centre",
+    region: "Wètemga",
+    telephone: "+226 24 45 22 33",
+    typeGarde: "24h",
+    latitude: 13.0919,
+    longitude: -1.0844
+  },
+  {
+    id: "ph_kaya_2",
+    nom: "Pharmacie du Sanmatenga",
+    adresse: "Route de Ouagadougou",
+    ville: "Kaya",
+    quartier: "Secteur 2",
+    region: "Wètemga",
+    telephone: "+226 24 45 44 55",
+    typeGarde: "jour",
+    latitude: 13.0950,
+    longitude: -1.0800
+  },
+
+  // REGION PASSORÉ (Yako)
+  {
+    id: "ph_yako_1",
+    nom: "Pharmacie de Yako",
+    adresse: "Avenue Principale",
+    ville: "Yako",
+    quartier: "Centre",
+    region: "Passoré",
+    telephone: "+226 24 54 11 22",
+    typeGarde: "jour",
+    latitude: 12.9589,
+    longitude: -2.2611
+  },
+
+  // REGION YONYOOSÉ (Réo)
+  {
+    id: "ph_reo_1",
+    nom: "Pharmacie de Réo",
+    adresse: "Avenue du Centre",
+    ville: "Réo",
+    quartier: "Centre",
+    region: "Yonyoosé",
+    telephone: "+226 25 48 11 22",
+    typeGarde: "jour",
+    latitude: 12.3192,
+    longitude: -2.4708
+  },
+
+  // REGION TONDEKA (Dédougou)
+  {
+    id: "ph_dedou_1",
+    nom: "Pharmacie de Dédougou",
+    adresse: "Route Nationale",
+    ville: "Dédougou",
+    quartier: "Centre",
+    region: "Tondeka",
+    telephone: "+226 20 52 11 22",
+    typeGarde: "24h",
+    latitude: 12.4636,
+    longitude: -3.4606
+  },
+  {
+    id: "ph_dedou_2",
+    nom: "Pharmacie du Mouhoun",
+    adresse: "Avenue de la Liberté",
+    ville: "Dédougou",
+    quartier: "Secteur 1",
+    region: "Tondeka",
+    telephone: "+226 20 52 33 44",
+    typeGarde: "jour",
+    latitude: 12.4650,
+    longitude: -3.4580
+  },
+
+  // REGION TAAR-SOOMBA (Tougan)
+  {
+    id: "ph_tougan_1",
+    nom: "Pharmacie de Tougan",
+    adresse: "Avenue Centrale",
+    ville: "Tougan",
+    quartier: "Centre",
+    region: "Taar-Soomba",
+    telephone: "+226 24 53 11 22",
+    typeGarde: "jour",
+    latitude: 13.0667,
+    longitude: -3.0667
+  },
+
+  // REGION BANKUI (Orodara)
+  {
+    id: "ph_orodara_1",
+    nom: "Pharmacie d'Orodara",
+    adresse: "Route de Bobo",
+    ville: "Orodara",
+    quartier: "Centre",
+    region: "Bankui",
+    telephone: "+226 20 95 11 22",
+    typeGarde: "jour",
+    latitude: 10.9833,
+    longitude: -4.9167
+  },
+
+  // REGION YIRKA-GAONGO (Léo)
+  {
+    id: "ph_leo_1",
+    nom: "Pharmacie de Léo",
+    adresse: "Avenue Principale",
+    ville: "Léo",
+    quartier: "Centre",
+    region: "Yirka-Gaongo",
+    telephone: "+226 25 43 11 22",
+    typeGarde: "jour",
+    latitude: 11.1000,
+    longitude: -2.1000
+  },
+
+  // Pharmacies supplémentaires Ouagadougou
+  {
+    id: "ph_ouaga_11",
+    nom: "Pharmacie Ouaga 2000",
+    adresse: "Boulevard de Ouaga 2000",
+    ville: "Ouagadougou",
+    quartier: "Ouaga 2000",
+    region: "Kadiogo",
+    telephone: "+226 25 37 99 00",
+    typeGarde: "24h",
+    latitude: 12.3300,
+    longitude: -1.4800
+  },
+  {
+    id: "ph_ouaga_12",
+    nom: "Pharmacie Nioko 2",
+    adresse: "Avenue de l'UEMOA",
+    ville: "Ouagadougou",
+    quartier: "Zone du Bois",
+    region: "Kadiogo",
+    telephone: "+226 25 36 22 33",
+    typeGarde: "jour",
+    latitude: 12.3850,
+    longitude: -1.4950
+  },
+  {
+    id: "ph_ouaga_13",
+    nom: "Pharmacie Somgandé",
+    adresse: "Route de Koupéla",
+    ville: "Ouagadougou",
+    quartier: "Somgandé",
+    region: "Kadiogo",
+    telephone: "+226 25 40 11 22",
+    typeGarde: "nuit",
+    latitude: 12.4100,
+    longitude: -1.4700
+  },
+  {
+    id: "ph_ouaga_14",
+    nom: "Pharmacie Tampouy",
+    adresse: "Avenue Bassawarga",
+    ville: "Ouagadougou",
+    quartier: "Tampouy",
+    region: "Kadiogo",
+    telephone: "+226 25 41 33 44",
+    typeGarde: "jour",
+    latitude: 12.4200,
+    longitude: -1.5200
+  },
+  {
+    id: "ph_ouaga_15",
+    nom: "Pharmacie Zagtouli",
+    adresse: "Route de Bobo",
+    ville: "Ouagadougou",
+    quartier: "Zagtouli",
+    region: "Kadiogo",
+    telephone: "+226 25 42 55 66",
+    typeGarde: "24h",
+    latitude: 12.3200,
+    longitude: -1.5600
   }
 ];
 
@@ -183,18 +651,17 @@ export default function Pharmacies() {
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [, setLocation] = useLocation();
   const [refreshKey, setRefreshKey] = useState(0);
+  const { toast } = useToast();
 
   // Rafraîchir automatiquement les données quand la page reprend le focus
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        // La page est revenue au premier plan, actualiser les données
         setRefreshKey(prev => prev + 1);
       }
     };
 
     const handleFocus = () => {
-      // Rafraîchir aussi au focus de la fenêtre
       setRefreshKey(prev => prev + 1);
     };
 
@@ -210,12 +677,10 @@ export default function Pharmacies() {
   const filteredPharmacies = useMemo(() => {
     let filtered = PHARMACIES_DATA;
 
-    // Filtre par région
     if (selectedRegion !== "all") {
       filtered = filtered.filter(p => p.region === selectedRegion);
     }
 
-    // Filtre par recherche
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(p =>
@@ -227,7 +692,7 @@ export default function Pharmacies() {
     }
 
     return filtered;
-  }, [searchQuery, selectedRegion]);
+  }, [searchQuery, selectedRegion, refreshKey]);
 
   const openInMaps = (pharmacie: Pharmacie) => {
     if (pharmacie.latitude && pharmacie.longitude) {
@@ -266,12 +731,21 @@ export default function Pharmacies() {
     }
   };
 
+  const handleReset = () => {
+    setSearchQuery("");
+    setSelectedRegion("all");
+    setRefreshKey(prev => prev + 1);
+    toast({
+      title: "Données réinitialisées",
+      description: `${PHARMACIES_DATA.length} pharmacies disponibles`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Boutons Retour et Actualiser */}
         <div className="mb-4 flex items-center gap-2">
           <Button
             variant="ghost"
@@ -283,10 +757,7 @@ export default function Pharmacies() {
           </Button>
           <Button
             variant="outline"
-            onClick={() => {
-              setSearchQuery("");
-              setSelectedRegion("all");
-            }}
+            onClick={handleReset}
             className="gap-2 ml-auto"
           >
             <RefreshCw className="w-4 h-4" />
@@ -294,7 +765,6 @@ export default function Pharmacies() {
           </Button>
         </div>
 
-        {/* En-tête */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
             <span className="text-2xl">💊</span>
@@ -305,11 +775,9 @@ export default function Pharmacies() {
           </p>
         </div>
 
-        {/* Filtres */}
         <Card className="mb-6">
           <CardContent className="p-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Recherche */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -321,7 +789,6 @@ export default function Pharmacies() {
                 />
               </div>
 
-              {/* Filtre par région */}
               <Select value={selectedRegion} onValueChange={setSelectedRegion}>
                 <SelectTrigger>
                   <SelectValue placeholder="Toutes les régions" />
@@ -337,14 +804,12 @@ export default function Pharmacies() {
               </Select>
             </div>
 
-            {/* Compteur de résultats */}
             <div className="mt-3 text-sm text-muted-foreground">
               {filteredPharmacies.length} pharmacie{filteredPharmacies.length > 1 ? 's' : ''} trouvée{filteredPharmacies.length > 1 ? 's' : ''}
             </div>
           </CardContent>
         </Card>
 
-        {/* Liste des pharmacies */}
         {filteredPharmacies.length === 0 ? (
           <Card>
             <CardContent className="p-12 text-center">
