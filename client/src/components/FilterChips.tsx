@@ -12,14 +12,14 @@ const FilterChips = ({ onFilterChange }: FilterChipsProps) => {
   const [selected, setSelected] = useState<Categorie | "tous">("tous");
 
   const categories: { value: Categorie | "tous"; label: string }[] = [
-    { value: "tous", label: t('common.all') || "Tous" },
-    { value: "urgence", label: t('report.categories.urgence') || "Urgence" },
-    { value: "securite", label: t('report.categories.securite') || "Sécurité" },
-    { value: "sante", label: t('report.categories.sante') || "Santé" },
-    { value: "environnement", label: t('report.categories.environnement') || "Environnement" },
-    { value: "corruption", label: t('report.categories.corruption') || "Corruption" },
-    { value: "infrastructure", label: t('report.categories.infrastructure') || "Infrastructure" },
-    { value: "personne_recherchee", label: t('report.categories.personne_recherchee') || "Personne recherchée" },
+    { value: "tous", label: t('categories.all') || "Tous" },
+    { value: "urgence", label: t('categories.urgence') || "Urgence" },
+    { value: "securite", label: t('categories.securite') || "Sécurité" },
+    { value: "sante", label: t('categories.sante') || "Santé" },
+    { value: "environnement", label: t('categories.environnement') || "Environnement" },
+    { value: "corruption", label: t('categories.corruption') || "Corruption" },
+    { value: "infrastructure", label: t('categories.infrastructure') || "Infrastructure" },
+    { value: "personne_recherchee", label: t('categories.personne_recherchee') || "Personne recherchée" },
   ];
 
   const handleSelect = (value: Categorie | "tous") => {
