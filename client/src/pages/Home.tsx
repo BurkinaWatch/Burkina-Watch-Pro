@@ -391,10 +391,10 @@ Document généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().
     <Dialog>
       <DialogTrigger asChild>
         <Button 
-          size="lg" 
-          className="gap-2 bg-amber-600 hover:bg-amber-700 text-white border-2 border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 font-bold text-base px-8 animate-pulse hover:animate-none"
+          size="default"
+          className="gap-2 bg-amber-600 hover:bg-amber-700 text-white border-2 border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold text-sm sm:text-base px-4 sm:px-8 animate-pulse-slow hover:animate-none w-full sm:w-auto"
         >
-          <Shield className="w-5 h-5" />
+          <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
           📋 Notes de sécurité importantes
         </Button>
       </DialogTrigger>
