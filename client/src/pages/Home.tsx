@@ -392,10 +392,13 @@ Document généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().
       <DialogTrigger asChild>
         <Button 
           size="default"
-          className="gap-2 bg-amber-600 hover:bg-amber-700 text-white border-2 border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold text-sm sm:text-base px-4 sm:px-8 animate-pulse-slow hover:animate-none w-full sm:w-auto"
+          className="relative gap-2 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 hover:from-amber-600 hover:via-orange-600 hover:to-red-600 text-white border-2 border-amber-600 shadow-[0_0_20px_rgba(251,146,60,0.5)] hover:shadow-[0_0_30px_rgba(251,146,60,0.7)] transition-all duration-300 font-bold text-sm sm:text-base px-4 sm:px-8 animate-pulse-slow hover:animate-none w-full sm:w-auto hover:scale-105 group overflow-hidden"
         >
-          <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
-          📋 Notes de sécurité importantes
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+          <Shield className="w-5 h-5 sm:w-6 sm:h-6 drop-shadow-lg relative z-10 group-hover:rotate-12 transition-transform" />
+          <span className="relative z-10">📋 Notes de sécurité importantes</span>
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh]">
@@ -1284,10 +1287,17 @@ export default function Home() {
                 Contribuer maintenant
               </Button>
             </Link>
-            <div className="mt-6 pt-6 border-t border-border/50">
-              <div className="flex flex-col items-center gap-3">
-                <p className="text-sm text-muted-foreground font-medium text-center">
-                  ⚠️ Informations importantes pour votre sécurité
+            <div className="mt-6 pt-6 border-t-2 border-amber-200/50 dark:border-amber-800/50">
+              <div className="flex flex-col items-center gap-4 bg-gradient-to-b from-amber-50/50 to-transparent dark:from-amber-950/20 dark:to-transparent p-4 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
+                  <p className="text-sm text-foreground font-bold text-center uppercase tracking-wide">
+                    ⚠️ Informations cruciales pour votre sécurité
+                  </p>
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
+                </div>
+                <p className="text-xs text-muted-foreground text-center max-w-md">
+                  Consultez les conseils de sécurité avant de publier un signalement
                 </p>
                 <SecurityNotesDialog />
               </div>
