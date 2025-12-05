@@ -2,7 +2,6 @@ import { sql } from "drizzle-orm";
 import { pgTable, text, varchar, timestamp, boolean, integer, decimal, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
-import * as crypto from "crypto";
 
 export const sessions = pgTable(
   "sessions",
@@ -63,7 +62,7 @@ export const commentaires = pgTable("commentaires", {
 });
 
 export const trackingSessions = pgTable("tracking_sessions", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   startTime: timestamp("started_at").notNull().defaultNow(),
   endTime: timestamp("ended_at"),
@@ -71,7 +70,7 @@ export const trackingSessions = pgTable("tracking_sessions", {
 });
 
 export const onlineSessions = pgTable("online_sessions", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   connectedAt: timestamp("connected_at").notNull().defaultNow(),
   disconnectedAt: timestamp("disconnected_at"),
@@ -88,7 +87,7 @@ export const locationPoints = pgTable("location_points", {
 });
 
 export const notifications = pgTable("notifications", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   type: text("type").notNull(), // "urgence", "resolu", "info", "comment", "like"
   title: text("title").notNull(),
@@ -99,7 +98,7 @@ export const notifications = pgTable("notifications", {
 });
 
 export const emergencyContacts = pgTable("emergency_contacts", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   phone: text("phone").notNull(),
@@ -109,7 +108,7 @@ export const emergencyContacts = pgTable("emergency_contacts", {
 });
 
 export const panicAlerts = pgTable("panic_alerts", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   latitude: text("latitude").notNull(),
   longitude: text("longitude").notNull(),
@@ -119,7 +118,7 @@ export const panicAlerts = pgTable("panic_alerts", {
 });
 
 export const signalementLikes = pgTable("signalement_likes", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   signalementId: text("signalement_id").notNull().references(() => signalements.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -128,7 +127,7 @@ export const signalementLikes = pgTable("signalement_likes", {
 }));
 
 export const chatMessages = pgTable("chat_messages", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   sessionId: text("session_id").notNull(),
   userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
   role: text("role").notNull(), // "user" | "assistant"
@@ -161,7 +160,7 @@ export const moderationLogs = pgTable("moderation_logs", {
 });
 
 export const auditLogs = pgTable("audit_logs", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
   action: text("action").notNull(), // "CREATE_SIGNALEMENT", "UPDATE_STATUS", "DELETE", "LOGIN", "LOGOUT", "ADMIN_ACTION", etc.
   resourceType: text("resource_type"), // "signalement", "user", "comment", etc.
@@ -178,7 +177,7 @@ export const auditLogs = pgTable("audit_logs", {
 }));
 
 export const refreshTokens = pgTable("refresh_tokens", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   token: text("token").notNull().unique(),
   expiresAt: timestamp("expires_at").notNull(),

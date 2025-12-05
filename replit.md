@@ -72,7 +72,9 @@ Preferred communication style: Simple, everyday language.
 *   **Start Command**: `npm run start` (Production Node.js server).
 *   **Type Checking**: `npm run check`.
 *   **Database Migrations**: `npm run db:push`.
-*   **Deployment Status**: Ready for deployment. All i18n translations complete for 5 languages (French, English, Dioula, Moore, Fulfulde).
+*   **UUID Generation**: PostgreSQL native `gen_random_uuid()` function used for all ID generation in database schema to ensure browser compatibility during Vite build (crypto module removed from shared/schema.ts).
+*   **Content Refresh**: Pages for Pharmacies, Bulletin Citoyen, and Urgences services now automatically refresh content when users open them via visibility and focus event listeners.
+*   **Deployment Status**: Ready for deployment. All i18n translations complete for 5 languages (French, English, Dioula, Moore, Fulfulde). Resend integration configured for transactional emails.
 
 ## External Dependencies
 
