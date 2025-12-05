@@ -350,3 +350,24 @@ export const niveauxUrgence = ["faible", "moyen", "critique"] as const;
 export type Categorie = typeof categories[number];
 export type Statut = typeof statuts[number];
 export type NiveauUrgence = typeof niveauxUrgence[number];
+
+// StreetView Points - photos capturées anonymement
+export const streetviewPoints = pgTable("streetview_points", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
+  imageData: text("image_data").notNull(), // Base64 encoded image
+  thumbnailData: text("thumbnail_data"), // Compressed thumbnail
+  heading: decimal("heading", { precision: 5, scale: 2 }), // Direction 0-360
+  pitch: decimal("pitch", { precision: 5, scale: 2 }), // Inclinaison -90 to 90
+  capturedAt: timestamp("captured_at").notNull().defaultNow(),
+  deviceInfo: text("device_info"), // Type d'appareil (anonymisé)
+});
+
+export const insertStreetviewPointSchema = createInsertSchema(streetviewPoints).omit({
+  id: true,
+  capturedAt: true,
+});
+
+export type InsertStreetviewPoint = z.infer<typeof insertStreetviewPointSchema>;
+export type StreetviewPoint = typeof streetviewPoints.$inferSelect;

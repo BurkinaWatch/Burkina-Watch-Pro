@@ -23,6 +23,8 @@ import {
   type ChatMessage,
   type InsertAuditLog,
   type AuditLog,
+  type InsertStreetviewPoint,
+  type StreetviewPoint,
   users,
   signalements,
   commentaires,
@@ -34,13 +36,14 @@ import {
   signalementLikes,
   chatMessages,
   auditLogs,
+  streetviewPoints,
   insertSignalementSchema,
   insertCommentaireSchema,
   updateSignalementSchema,
   updateUserProfileSchema,
   insertLocationPointSchema,
   insertNotificationSchema,
-  onlineSessions, // Import onlineSessions
+  onlineSessions,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, isNull } from "drizzle-orm";
@@ -134,6 +137,10 @@ export interface IStorage {
   userConnected(userId: string): Promise<void>;
   userDisconnected(userId: string): Promise<void>;
   countOnlineUsers(): Promise<number>;
+
+  // --- StreetView Points ---
+  getStreetviewPoints(): Promise<StreetviewPoint[]>;
+  createStreetviewPoint(point: InsertStreetviewPoint): Promise<StreetviewPoint>;
 }
 
 export class DbStorage implements IStorage {
@@ -1080,8 +1087,26 @@ L'équipe Burkina Watch
     const result = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(onlineSessions)
-      .where(isNull(onlineSessions.disconnectedAt)); // Count sessions where disconnectedAt is null
+      .where(isNull(onlineSessions.disconnectedAt));
     return result[0]?.count || 0;
+  }
+
+  // --- StreetView Points ---
+  async getStreetviewPoints(): Promise<StreetviewPoint[]> {
+    const result = await db
+      .select()
+      .from(streetviewPoints)
+      .orderBy(desc(streetviewPoints.capturedAt))
+      .limit(500);
+    return result;
+  }
+
+  async createStreetviewPoint(point: InsertStreetviewPoint): Promise<StreetviewPoint> {
+    const [created] = await db
+      .insert(streetviewPoints)
+      .values(point)
+      .returning();
+    return created;
   }
 }
 

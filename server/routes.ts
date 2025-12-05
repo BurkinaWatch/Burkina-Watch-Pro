@@ -1366,6 +1366,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ----------------------------------------
+  // ROUTES STREETVIEW (Mode Anonyme)
+  // ----------------------------------------
+
+  // Récupérer tous les points streetview pour la carte
+  app.get("/api/streetview/map-points", async (req, res) => {
+    try {
+      const points = await storage.getStreetviewPoints();
+      // Ne renvoyer que les données nécessaires (sans imageData complète pour performance)
+      const mapPoints = points.map(p => ({
+        id: p.id,
+        latitude: p.latitude,
+        longitude: p.longitude,
+        thumbnailData: p.thumbnailData,
+        imageData: p.imageData,
+        heading: p.heading,
+        pitch: p.pitch,
+        capturedAt: p.capturedAt,
+      }));
+      res.json(mapPoints);
+    } catch (error) {
+      console.error("Erreur récupération points streetview:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des points" });
+    }
+  });
+
+  // Upload d'une image streetview (anonyme - pas d'auth requise)
+  app.post("/api/streetview/upload", async (req, res) => {
+    try {
+      const { imageData, thumbnailData, latitude, longitude, heading, pitch } = req.body;
+
+      if (!imageData || !latitude || !longitude) {
+        return res.status(400).json({ error: "Données manquantes (image, latitude, longitude)" });
+      }
+
+      // Validation des coordonnées
+      const lat = parseFloat(latitude);
+      const lng = parseFloat(longitude);
+      if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        return res.status(400).json({ error: "Coordonnées invalides" });
+      }
+
+      // Limite taille image (max 5MB en base64)
+      if (imageData.length > 7 * 1024 * 1024) {
+        return res.status(400).json({ error: "Image trop volumineuse (max 5MB)" });
+      }
+
+      const point = await storage.createStreetviewPoint({
+        imageData,
+        thumbnailData: thumbnailData || null,
+        latitude: latitude.toString(),
+        longitude: longitude.toString(),
+        heading: heading ? heading.toString() : null,
+        pitch: pitch ? pitch.toString() : null,
+        deviceInfo: null, // Aucune info device stockée pour anonymat
+      });
+
+      res.status(201).json({ success: true, id: point.id });
+    } catch (error) {
+      console.error("Erreur upload streetview:", error);
+      res.status(500).json({ error: "Erreur lors de l'upload" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
