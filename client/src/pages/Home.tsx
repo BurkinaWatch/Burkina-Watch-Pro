@@ -390,9 +390,12 @@ Document généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Shield className="w-4 h-4" />
-          Notes de sécurité
+        <Button 
+          size="lg" 
+          className="gap-2 bg-amber-600 hover:bg-amber-700 text-white border-2 border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 font-bold text-base px-8 animate-pulse hover:animate-none"
+        >
+          <Shield className="w-5 h-5" />
+          📋 Notes de sécurité importantes
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh]">
@@ -1281,8 +1284,13 @@ export default function Home() {
                 Contribuer maintenant
               </Button>
             </Link>
-            <div className="mt-4">
-              <SecurityNotesDialog />
+            <div className="mt-6 pt-6 border-t border-border/50">
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm text-muted-foreground font-medium text-center">
+                  ⚠️ Informations importantes pour votre sécurité
+                </p>
+                <SecurityNotesDialog />
+              </div>
             </div>
           </CardContent>
         </Card>
