@@ -127,7 +127,11 @@ function MapCenterUpdater({ center }: { center: [number, number] }) {
   return null;
 }
 
-async function findNearestMapillaryImage(lat: number, lng: number, token: string): Promise<string | null> {
+type MapillaryResult = 
+  | { success: true; imageId: string }
+  | { success: false; error: "invalid_token" | "no_images" | "network_error" };
+
+async function findNearestMapillaryImage(lat: number, lng: number, token: string): Promise<MapillaryResult> {
   const bbox = 0.05;
   const url = `https://graph.mapillary.com/images?access_token=${token}&fields=id&bbox=${lng - bbox},${lat - bbox},${lng + bbox},${lat + bbox}&limit=1`;
   
@@ -137,23 +141,28 @@ async function findNearestMapillaryImage(lat: number, lng: number, token: string
     
     if (data.error) {
       console.error("Mapillary API error:", data.error.message);
-      return null;
+      if (data.error.code === 190 || data.error.message?.includes("OAuth")) {
+        return { success: false, error: "invalid_token" };
+      }
+      return { success: false, error: "network_error" };
     }
     
     if (!response.ok) {
       console.error("Mapillary API error:", response.status);
-      return null;
+      return { success: false, error: "network_error" };
     }
     
     if (data.data && data.data.length > 0) {
-      return data.data[0].id;
+      return { success: true, imageId: data.data[0].id };
     }
-    return null;
+    return { success: false, error: "no_images" };
   } catch (error) {
     console.error("Error fetching Mapillary images:", error);
-    return null;
+    return { success: false, error: "network_error" };
   }
 }
+
+type ViewerState = "loading" | "ready" | "no_images" | "invalid_token" | "network_error";
 
 function MapillaryViewer({ 
   latitude, 
@@ -168,20 +177,19 @@ function MapillaryViewer({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasImages, setHasImages] = useState(true);
+  const [viewerState, setViewerState] = useState<ViewerState>("loading");
   const [currentLocation, setCurrentLocation] = useState({ lat: latitude, lng: longitude });
 
   const initViewer = useCallback(async () => {
     if (!containerRef.current || !token) {
       if (!token) {
+        setViewerState("invalid_token");
         onError("Token Mapillary non configuré");
       }
       return;
     }
 
-    setIsLoading(true);
-    setHasImages(true);
+    setViewerState("loading");
 
     if (viewerRef.current) {
       viewerRef.current.remove();
@@ -189,18 +197,17 @@ function MapillaryViewer({
     }
 
     try {
-      const imageId = await findNearestMapillaryImage(latitude, longitude, token);
+      const result = await findNearestMapillaryImage(latitude, longitude, token);
       
-      if (!imageId) {
-        setIsLoading(false);
-        setHasImages(false);
+      if (!result.success) {
+        setViewerState(result.error);
         return;
       }
 
       const viewer = new Viewer({
         accessToken: token,
         container: containerRef.current,
-        imageId: imageId,
+        imageId: result.imageId,
         component: {
           cover: false,
           direction: true,
@@ -212,8 +219,7 @@ function MapillaryViewer({
       viewerRef.current = viewer;
 
       viewer.on("image", (event: any) => {
-        setIsLoading(false);
-        setHasImages(true);
+        setViewerState("ready");
         if (event.image && event.image.lngLat) {
           setCurrentLocation({
             lat: event.image.lngLat.lat,
@@ -224,8 +230,7 @@ function MapillaryViewer({
 
     } catch (error) {
       console.error("Erreur initialisation Mapillary:", error);
-      setIsLoading(false);
-      setHasImages(false);
+      setViewerState("network_error");
       onError("Erreur d'initialisation du viewer");
     }
   }, [latitude, longitude, token, onError]);
@@ -242,26 +247,26 @@ function MapillaryViewer({
   }, [initViewer]);
 
   const handleRefresh = async () => {
-    setIsLoading(true);
+    if (!viewerRef.current) {
+      initViewer();
+      return;
+    }
+    
+    setViewerState("loading");
     
     try {
-      const imageId = await findNearestMapillaryImage(latitude, longitude, token);
+      const result = await findNearestMapillaryImage(latitude, longitude, token);
       
-      if (!imageId) {
-        setIsLoading(false);
-        setHasImages(false);
+      if (!result.success) {
+        setViewerState(result.error);
         return;
       }
 
-      if (viewerRef.current) {
-        viewerRef.current.moveTo(imageId).catch(() => {
-          setIsLoading(false);
-          setHasImages(false);
-        });
-      }
+      viewerRef.current.moveTo(result.imageId).catch(() => {
+        setViewerState("no_images");
+      });
     } catch {
-      setIsLoading(false);
-      setHasImages(false);
+      setViewerState("network_error");
     }
   };
 
@@ -279,42 +284,97 @@ function MapillaryViewer({
     );
   }
 
+  const renderOverlay = () => {
+    switch (viewerState) {
+      case "loading":
+        return (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-lg">
+            <div className="text-center">
+              <Loader2 className="h-10 w-10 text-white animate-spin mx-auto mb-2" />
+              <p className="text-white text-sm">Chargement des images...</p>
+            </div>
+          </div>
+        );
+      
+      case "invalid_token":
+        return (
+          <div className="absolute inset-0 flex items-center justify-center bg-muted/90 rounded-lg">
+            <div className="text-center p-6">
+              <AlertTriangle className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
+              <h3 className="font-semibold text-lg mb-2">Token Mapillary invalide</h3>
+              <p className="text-muted-foreground text-sm mb-4">
+                Le token d'accès à Mapillary est invalide ou expiré.<br />
+                Un token Client valide est requis depuis<br />
+                <a 
+                  href="https://www.mapillary.com/developer" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary underline"
+                >
+                  mapillary.com/developer
+                </a>
+              </p>
+              <Button onClick={handleRefresh} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Réessayer
+              </Button>
+            </div>
+          </div>
+        );
+      
+      case "no_images":
+        return (
+          <div className="absolute inset-0 flex items-center justify-center bg-muted/90 rounded-lg">
+            <div className="text-center p-6">
+              <Globe className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="font-semibold text-lg mb-2">Aucune image disponible</h3>
+              <p className="text-muted-foreground text-sm mb-4">
+                Pas d'images panoramiques dans cette zone.<br />
+                Utilisez la capture citoyenne pour contribuer!
+              </p>
+              <Button onClick={handleRefresh} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Réessayer
+              </Button>
+            </div>
+          </div>
+        );
+      
+      case "network_error":
+        return (
+          <div className="absolute inset-0 flex items-center justify-center bg-muted/90 rounded-lg">
+            <div className="text-center p-6">
+              <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+              <h3 className="font-semibold text-lg mb-2">Erreur de connexion</h3>
+              <p className="text-muted-foreground text-sm mb-4">
+                Impossible de se connecter au service Mapillary.<br />
+                Vérifiez votre connexion internet.
+              </p>
+              <Button onClick={handleRefresh} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Réessayer
+              </Button>
+            </div>
+          </div>
+        );
+      
+      case "ready":
+        return (
+          <div className="absolute bottom-3 left-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
+            <Navigation className="h-3 w-3 inline mr-1" />
+            {currentLocation.lat.toFixed(4)}, {currentLocation.lng.toFixed(4)}
+          </div>
+        );
+      
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="relative w-full h-full">
       <div ref={containerRef} className="w-full h-full rounded-lg overflow-hidden" />
-      
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-lg">
-          <div className="text-center">
-            <Loader2 className="h-10 w-10 text-white animate-spin mx-auto mb-2" />
-            <p className="text-white text-sm">Chargement des images...</p>
-          </div>
-        </div>
-      )}
-      
-      {!isLoading && !hasImages && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/90 rounded-lg">
-          <div className="text-center p-6">
-            <Globe className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-semibold text-lg mb-2">Aucune image disponible</h3>
-            <p className="text-muted-foreground text-sm mb-4">
-              Pas d'images panoramiques dans cette zone.<br />
-              Utilisez la capture citoyenne pour contribuer!
-            </p>
-            <Button onClick={handleRefresh} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Réessayer
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {hasImages && !isLoading && (
-        <div className="absolute bottom-3 left-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
-          <Navigation className="h-3 w-3 inline mr-1" />
-          {currentLocation.lat.toFixed(4)}, {currentLocation.lng.toFixed(4)}
-        </div>
-      )}
+      {renderOverlay()}
     </div>
   );
 }
