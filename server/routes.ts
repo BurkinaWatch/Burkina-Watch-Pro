@@ -1286,6 +1286,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ----------------------------------------
+  // ROUTES URGENCES
+  // ----------------------------------------
+  app.get("/api/urgences", async (req, res) => {
+    try {
+      const { urgenciesService } = await import("./urgenciesService");
+      const { type, city, region, search } = req.query;
+
+      let services;
+
+      if (search) {
+        services = urgenciesService.searchEmergencies(search as string);
+      } else if (type) {
+        services = urgenciesService.getEmergenciesByType(type as any);
+      } else if (city) {
+        services = urgenciesService.getEmergenciesByCity(city as string);
+      } else if (region) {
+        services = urgenciesService.getEmergenciesByRegion(region as string);
+      } else {
+        services = urgenciesService.getAllEmergencies();
+      }
+
+      res.set('Cache-Control', 'public, max-age=3600'); // Cache 1 heure
+      res.json(services);
+    } catch (error) {
+      console.error("Erreur récupération urgences:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des services d'urgence" });
+    }
+  });
+
+  app.get("/api/urgences/stats", async (req, res) => {
+    try {
+      const { urgenciesService } = await import("./urgenciesService");
+      const stats = urgenciesService.getStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Erreur stats urgences:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
+    }
+  });
+
+  app.post("/api/urgences/refresh", async (req, res) => {
+    try {
+      const { urgenciesService } = await import("./urgenciesService");
+      urgenciesService.markAsUpdated();
+      const stats = urgenciesService.getStats();
+      res.json({ 
+        message: "Données des urgences actualisées",
+        ...stats
+      });
+    } catch (error) {
+      console.error("Erreur actualisation urgences:", error);
+      res.status(500).json({ error: "Erreur lors de l'actualisation" });
+    }
+  });
+
   // Marquer un utilisateur comme en ligne
   app.post("/api/user/online", isAuthenticated, async (req: any, res) => {
     try {

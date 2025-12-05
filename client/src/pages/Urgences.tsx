@@ -1,5 +1,7 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import EmergencyPanel from "@/components/EmergencyPanel";
@@ -11,61 +13,24 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Search, MapPin, Phone, AlertTriangle, Shield, Activity, Heart, Users, ArrowLeft, RefreshCw, Download, Smartphone } from "lucide-react";
+import { Search, MapPin, Phone, AlertTriangle, Shield, Activity, Heart, Users, ArrowLeft, RefreshCw, Download, Smartphone, Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
 interface EmergencyService {
   id: string;
   name: string;
-  type: "Police" | "Gendarmerie" | "Pompiers" | "Hôpitaux" | "Services sociaux" | "ONG";
+  type: "Police" | "Gendarmerie" | "Pompiers" | "Hôpitaux" | "Services sociaux" | "ONG" | "Ambulance" | "Croix-Rouge";
   city: string;
+  region?: string;
   address?: string;
   phone: string;
+  email?: string;
   latitude?: number;
   longitude?: number;
+  available24h?: boolean;
+  services?: string[];
 }
-
-// Base de données complète des urgences du Burkina Faso
-export const urgencesData: EmergencyService[] = [
-  // Police Nationale
-  { id: "1", name: "Police Nationale - Numéro d'urgence", type: "Police", city: "National", phone: "17", latitude: 12.3714, longitude: -1.5197 },
-  { id: "2", name: "Commissariat Central de Ouagadougou", type: "Police", city: "Ouagadougou", address: "Avenue Kwame Nkrumah", phone: "25306024", latitude: 12.3714, longitude: -1.5197 },
-  { id: "3", name: "Commissariat de Police de Bobo-Dioulasso", type: "Police", city: "Bobo-Dioulasso", address: "Avenue de la République", phone: "20970017", latitude: 11.1770, longitude: -4.2979 },
-  { id: "4", name: "Commissariat de Koudougou", type: "Police", city: "Koudougou", address: "Centre-ville", phone: "25441010", latitude: 12.2529, longitude: -2.3622 },
-  { id: "5", name: "Commissariat de Ouahigouya", type: "Police", city: "Ouahigouya", address: "Rue principale", phone: "24550017", latitude: 13.5828, longitude: -2.4214 },
-  
-  // Gendarmerie
-  { id: "6", name: "Gendarmerie Nationale - Centre d'appel", type: "Gendarmerie", city: "National", phone: "50494949", latitude: 12.3714, longitude: -1.5197 },
-  { id: "7", name: "Brigade de Gendarmerie de Ouagadougou", type: "Gendarmerie", city: "Ouagadougou", address: "Route de Kaya", phone: "25308484", latitude: 12.3714, longitude: -1.5197 },
-  { id: "8", name: "Compagnie de Gendarmerie de Bobo-Dioulasso", type: "Gendarmerie", city: "Bobo-Dioulasso", address: "Quartier Sarfalao", phone: "20970100", latitude: 11.1770, longitude: -4.2979 },
-  { id: "9", name: "Brigade Laabal - Lutte contre criminalité", type: "Gendarmerie", city: "Ouagadougou", address: "Zone militaire", phone: "50400504", latitude: 12.3714, longitude: -1.5197 },
-  
-  // Pompiers
-  { id: "10", name: "Sapeurs-Pompiers - Urgence incendie", type: "Pompiers", city: "National", phone: "18", latitude: 12.3714, longitude: -1.5197 },
-  { id: "11", name: "Brigade des Sapeurs-Pompiers de Ouagadougou", type: "Pompiers", city: "Ouagadougou", address: "Avenue Charles De Gaulle", phone: "25306018", latitude: 12.3714, longitude: -1.5197 },
-  { id: "12", name: "Caserne des Pompiers de Bobo-Dioulasso", type: "Pompiers", city: "Bobo-Dioulasso", address: "Avenue Loudun", phone: "20970018", latitude: 11.1770, longitude: -4.2979 },
-  
-  // Hôpitaux et Services de Santé
-  { id: "13", name: "SAMU - Service d'Aide Médicale Urgente", type: "Hôpitaux", city: "Ouagadougou", phone: "25366824", latitude: 12.3714, longitude: -1.5197 },
-  { id: "14", name: "CHU Yalgado Ouédraogo", type: "Hôpitaux", city: "Ouagadougou", address: "Avenue Gamal Abdel Nasser", phone: "25306401", latitude: 12.3834, longitude: -1.5169 },
-  { id: "15", name: "CHU Tengandogo", type: "Hôpitaux", city: "Ouagadougou", address: "Quartier Tengandogo", phone: "25402424", latitude: 12.3422, longitude: -1.4819 },
-  { id: "16", name: "CHU Sourô Sanou", type: "Hôpitaux", city: "Bobo-Dioulasso", address: "Avenue de la Liberté", phone: "20970217", latitude: 11.1835, longitude: -4.2887 },
-  { id: "17", name: "Centre Médical avec Antenne Chirurgicale Schiphra", type: "Hôpitaux", city: "Ouagadougou", address: "Secteur 30", phone: "25375015", latitude: 12.4018, longitude: -1.4760 },
-  { id: "18", name: "Clinique Yeredon", type: "Hôpitaux", city: "Ouagadougou", address: "Avenue Kwame Nkrumah", phone: "25360088", latitude: 12.3714, longitude: -1.5197 },
-  { id: "19", name: "Centre Médical de Koudougou", type: "Hôpitaux", city: "Koudougou", phone: "25441215", latitude: 12.2529, longitude: -2.3622 },
-  { id: "20", name: "Centre Hospitalier Régional de Fada N'Gourma", type: "Hôpitaux", city: "Fada N'Gourma", phone: "24770017", latitude: 12.0614, longitude: 0.3581 },
-  
-  // Services Sociaux
-  { id: "21", name: "Action Sociale - Enfance en danger", type: "Services sociaux", city: "Ouagadougou", phone: "116", latitude: 12.3714, longitude: -1.5197 },
-  { id: "22", name: "Ministère de la Femme et de la Famille", type: "Services sociaux", city: "Ouagadougou", address: "Koulouba", phone: "25324901", latitude: 12.3714, longitude: -1.5197 },
-  { id: "23", name: "Centre d'Écoute pour Femmes Victimes de Violence", type: "Services sociaux", city: "Ouagadougou", phone: "25306767", latitude: 12.3714, longitude: -1.5197 },
-  
-  // ONG et Organisations
-  { id: "24", name: "Croix-Rouge Burkinabè", type: "ONG", city: "Ouagadougou", address: "Avenue Kwame Nkrumah", phone: "25306313", latitude: 12.3714, longitude: -1.5197 },
-  { id: "25", name: "Médecins Sans Frontières", type: "ONG", city: "Ouagadougou", phone: "25361424", latitude: 12.3714, longitude: -1.5197 },
-  { id: "26", name: "SOS Enfants Burkina", type: "ONG", city: "Ouagadougou", phone: "25361010", latitude: 12.3714, longitude: -1.5197 },
-];
 
 export default function Urgences() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -73,33 +38,36 @@ export default function Urgences() {
   const [, setLocation] = useLocation();
   const [selectedService, setSelectedService] = useState<EmergencyService | null>(null);
   const [imageStyle, setImageStyle] = useState<"light" | "dark">("light");
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  // Rafraîchir automatiquement les données quand la page reprend le focus
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        // La page est revenue au premier plan, actualiser les données
-        setRefreshKey(prev => prev + 1);
-      }
-    };
-
-    const handleFocus = () => {
-      // Rafraîchir aussi au focus de la fenêtre
-      setRefreshKey(prev => prev + 1);
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, []);
   const [isGenerating, setIsGenerating] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
+
+  // Charger les urgences depuis l'API
+  const { data: urgencesData = [], isLoading, refetch } = useQuery<EmergencyService[]>({
+    queryKey: ["/api/urgences"],
+  });
+
+  // Charger les statistiques
+  const { data: stats } = useQuery({
+    queryKey: ["/api/urgences/stats"],
+  });
+
+  const handleRefresh = async () => {
+    try {
+      await apiRequest("POST", "/api/urgences/refresh");
+      refetch();
+      toast({
+        title: "Données actualisées",
+        description: "Les services d'urgence ont été mis à jour",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'actualiser les données",
+        variant: "destructive",
+      });
+    }
+  };
 
   const filteredServices = useMemo(() => {
     return urgencesData.filter(service => {
@@ -107,13 +75,15 @@ export default function Urgences() {
         service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.phone.includes(searchTerm) ||
-        service.type.toLowerCase().includes(searchTerm.toLowerCase());
+        service.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        service.region?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        service.address?.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesType = selectedType === "all" || service.type === selectedType;
       
       return matchesSearch && matchesType;
     });
-  }, [searchTerm, selectedType]);
+  }, [urgencesData, searchTerm, selectedType]);
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -338,14 +308,11 @@ export default function Urgences() {
           </Button>
           <Button
             variant="outline"
-            onClick={() => {
-              setSearchTerm("");
-              setSelectedType("all");
-            }}
+            onClick={handleRefresh}
             className="gap-2 ml-auto"
           >
             <RefreshCw className="w-4 h-4" />
-            Réinitialiser
+            Actualiser
           </Button>
         </div>
 
@@ -400,9 +367,18 @@ export default function Urgences() {
           </CardContent>
         </Card>
 
+        {/* Loader */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <span className="ml-2 text-muted-foreground">Chargement des services d'urgence...</span>
+          </div>
+        )}
+
         {/* Liste des Services d'Urgence */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredServices.map((service) => (
+        {!isLoading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredServices.map((service) => (
             <Card key={service.id} className="hover-elevate transition-all">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">
@@ -469,10 +445,11 @@ export default function Urgences() {
               </CardContent>
             </Card>
           ))}
-        </div>
+          </div>
+        )}
 
         {/* Message si aucun résultat */}
-        {filteredServices.length === 0 && (
+        {!isLoading && filteredServices.length === 0 && (
           <Card className="p-12 text-center">
             <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
             <p className="text-muted-foreground text-lg font-medium">Aucun service trouvé</p>

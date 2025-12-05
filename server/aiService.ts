@@ -1,4 +1,3 @@
-
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Groq from "groq-sdk";
 
@@ -49,7 +48,7 @@ interface AppContext {
 
 // Initialize Gemini (supports both GOOGLE_API_KEY and GEMINI_API_KEY)
 const geminiApiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
-const geminiClient = geminiApiKey 
+const geminiClient = geminiApiKey
   ? new GoogleGenerativeAI(geminiApiKey)
   : null;
 
@@ -66,29 +65,29 @@ export async function generateChatResponse(
   let contextMessage = "";
   if (appContext) {
     const contextParts: string[] = [];
-    
+
     if (appContext.pharmacies && appContext.pharmacies.length > 0) {
-      contextParts.push(`\n**Pharmacies de garde disponibles (${appContext.pharmacies.length}):**\n${appContext.pharmacies.slice(0, 5).map(p => 
+      contextParts.push(`\n**Pharmacies de garde disponibles (${appContext.pharmacies.length}):**\n${appContext.pharmacies.slice(0, 5).map(p =>
         `- ${p.nom} à ${p.ville} (${p.quartier}) - ${p.typeGarde} - Tél: ${p.telephone}`
       ).join('\n')}`);
     }
-    
+
     if (appContext.urgences && appContext.urgences.length > 0) {
-      contextParts.push(`\n**Services d'urgence disponibles (${appContext.urgences.length}):**\n${appContext.urgences.slice(0, 10).map(u => 
+      contextParts.push(`\n**Services d'urgence disponibles (${appContext.urgences.length}):**\n${appContext.urgences.slice(0, 10).map(u =>
         `- ${u.name} (${u.type}) à ${u.city} - Tél: ${u.phone}${u.address ? ` - ${u.address}` : ''}`
       ).join('\n')}`);
     }
-    
+
     if (appContext.signalements && appContext.signalements.length > 0) {
-      contextParts.push(`\n**Signalements récents (${appContext.signalements.length}):**\n${appContext.signalements.slice(0, 3).map(s => 
+      contextParts.push(`\n**Signalements récents (${appContext.signalements.length}):**\n${appContext.signalements.slice(0, 3).map(s =>
         `- ${s.titre} (${s.categorie}) à ${s.commune || s.ville || 'localisation non précisée'}`
       ).join('\n')}`);
     }
-    
+
     if (appContext.stats) {
       contextParts.push(`\n**Statistiques de l'application:**\n- Total signalements: ${appContext.stats.totalSignalements}\n- SOS actifs: ${appContext.stats.sosCount}\n- Utilisateurs: ${appContext.stats.totalUsers}`);
     }
-    
+
     if (contextParts.length > 0) {
       contextMessage = `\n\n=== CONTEXTE DE L'APPLICATION ===\n${contextParts.join('\n\n')}\n=== FIN DU CONTEXTE ===\n\nUtilise ces informations pour répondre précisément aux questions de l'utilisateur.`;
     }
@@ -96,7 +95,7 @@ export async function generateChatResponse(
   // Try Gemini first (primary engine)
   if (geminiClient) {
     try {
-      const model = geminiClient.getGenerativeModel({ 
+      const model = geminiClient.getGenerativeModel({
         model: "gemini-2.0-flash",
         systemInstruction: SYSTEM_PROMPT + contextMessage
       });
@@ -114,14 +113,14 @@ export async function generateChatResponse(
       const lastMessage = messages[messages.length - 1];
       const result = await chat.sendMessage(lastMessage.content);
       const response = await result.response;
-      
+
       return {
         message: response.text(),
         engine: "gemini"
       };
     } catch (error: any) {
       console.error("❌ Gemini API error:", error?.message || error);
-      
+
       // If Gemini fails, try Groq as fallback
       if (groqClient) {
         console.log("⚠️ Falling back to Groq...");
@@ -153,7 +152,7 @@ export async function generateChatResponse(
       };
     } catch (error: any) {
       console.error("❌ Groq API error:", error?.message || error);
-      
+
       // If it's a rate limit error, re-throw it so the caller knows
       if (error?.status === 429 || error?.message?.includes("rate limit") || error?.message?.includes("Rate limit")) {
         throw error; // Re-throw rate limit errors for proper handling
@@ -162,8 +161,8 @@ export async function generateChatResponse(
   }
 
   // If both fail or are not configured
-  const errorMessage = geminiClient && groqClient 
-    ? "Les services d'IA ne sont pas disponibles." 
+  const errorMessage = geminiClient && groqClient
+    ? "Les services d'IA ne sont pas disponibles."
     : "Services d'IA non configurés. Veuillez contacter l'administrateur.";
   throw new Error(errorMessage);
 }
