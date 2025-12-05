@@ -5,6 +5,7 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import compression from "compression";
 import { pharmaciesService } from "./pharmaciesService";
+import { applySecurityMiddlewares } from "./securityHardening";
 
 const app = express();
 
