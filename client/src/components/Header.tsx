@@ -10,16 +10,6 @@ import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -80,29 +70,24 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-16 items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-3">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="md:hidden relative group hover:bg-gradient-to-r hover:from-primary/20 hover:to-destructive/20 transition-all duration-300 hover:scale-110 hover:shadow-lg border-2 border-transparent hover:border-primary/30"
-                >
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full animate-ping" />
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full" />
-                  <Menu className="h-6 w-6 group-hover:text-primary transition-colors" />
-                </Button>
-              </SheetTrigger>
-            </Sheet>
-            <Link href="/">
-              <div className="hidden md:block">
-                <h1 className="text-xl font-extrabold text-red-600 dark:text-red-400 tracking-tight">{t("header.title")}</h1>
-                <p className="text-sm font-semibold">
-                  <span className="text-red-500 dark:text-red-400">{t("header.slogan.see")}</span>{" "}
-                  <span className="text-yellow-500 dark:text-yellow-300">{t("header.slogan.act")}</span>{" "}
-                  <span className="text-green-500 dark:text-green-400">{t("header.slogan.protect")}</span>
-                </p>
-              </div>
-            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMenuOpen(true)}
+              data-testid="button-menu"
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+          <Link href="/" className="flex items-center gap-3" data-testid="link-home">
+            <div className="hidden md:block">
+              <h1 className="text-xl font-extrabold text-red-600 dark:text-red-400 tracking-tight">{t("header.title")}</h1>
+              <p className="text-sm font-semibold">
+                <span className="text-red-500 dark:text-red-400">{t("header.slogan.see")}</span>{" "}
+                <span className="text-yellow-500 dark:text-yellow-300">{t("header.slogan.act")}</span>{" "}
+                <span className="text-green-500 dark:text-green-400">{t("header.slogan.protect")}</span>
+              </p>
+            </div>
+          </Link>
         </div>
 
         <div className="flex items-center gap-2">
