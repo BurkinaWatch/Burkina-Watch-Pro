@@ -163,12 +163,12 @@ export default function ChatBot() {
   }
 
   return (
-    <Card className="fixed bottom-6 left-6 w-96 h-[600px] shadow-2xl flex flex-col z-50 border-2 border-primary/20">
-      <CardHeader className="bg-gradient-to-r from-primary to-green-600 text-white p-4 rounded-t-lg">
+    <Card className="fixed bottom-4 left-4 right-4 md:left-6 md:right-auto md:w-96 h-[500px] md:h-[600px] shadow-2xl flex flex-col z-50 border-2 border-primary/20">
+      <CardHeader className="bg-gradient-to-r from-primary to-green-600 text-white p-3 md:p-4 rounded-t-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5" />
-            <CardTitle className="text-lg font-bold" data-testid="text-chatbot-title">
+            <Shield className="w-4 h-4 md:w-5 md:h-5" />
+            <CardTitle className="text-sm md:text-lg font-bold" data-testid="text-chatbot-title">
               Assistance Burkina Watch
             </CardTitle>
           </div>
@@ -182,30 +182,30 @@ export default function ChatBot() {
             <X className="w-5 h-5" />
           </Button>
         </div>
-        <p className="text-xs text-white/90 mt-1">
+        <p className="text-[10px] md:text-xs text-white/90 mt-1">
           Votre assistant pour signaler et rester en sécurité
         </p>
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+        <ScrollArea className="flex-1 p-2 md:p-4" ref={scrollRef}>
           {historyLoading ? (
-            <div className="flex flex-col items-center justify-center h-full text-center p-6 space-y-4">
+            <div className="flex flex-col items-center justify-center h-full text-center p-3 md:p-6 space-y-2 md:space-y-4">
               <Loader2 className="w-8 h-8 text-primary animate-spin" />
               <p className="text-sm text-muted-foreground">Chargement de l'historique...</p>
             </div>
           ) : messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center p-6 space-y-4">
-              <Shield className="w-16 h-16 text-primary/30" />
+            <div className="flex flex-col items-center justify-center h-full text-center p-3 md:p-6 space-y-2 md:space-y-4">
+              <Shield className="w-12 h-12 md:w-16 md:h-16 text-primary/30" />
               <div>
-                <h3 className="font-semibold text-lg mb-2">Bonjour ! 👋</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-semibold text-base md:text-lg mb-1 md:mb-2">Bonjour ! 👋</h3>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Je suis là pour vous aider à utiliser Burkina Watch.
                 </p>
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="text-[10px] md:text-xs text-muted-foreground mt-1 md:mt-2">
                   Posez-moi des questions sur :
                 </p>
-                <ul className="text-xs text-muted-foreground mt-2 space-y-1">
+                <ul className="text-[10px] md:text-xs text-muted-foreground mt-1 md:mt-2 space-y-0.5 md:space-y-1">
                   <li>• Comment créer un signalement</li>
                   <li>• Les conseils de sécurité</li>
                   <li>• Comment fonctionne l'anonymat</li>
@@ -223,7 +223,7 @@ export default function ChatBot() {
             </div>
           ) : null}
 
-          <div className="space-y-4">
+          <div className="space-y-2 md:space-y-4">
             {messages.map((msg, idx) => (
               <div
                 key={idx}
@@ -231,13 +231,13 @@ export default function ChatBot() {
                 data-testid={`message-${msg.role}-${idx}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-lg px-4 py-2 ${
+                  className={`max-w-[85%] rounded-lg px-3 py-2 md:px-4 ${
                     msg.role === "user"
                       ? "bg-primary text-white"
                       : "bg-muted text-foreground"
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  <p className="text-xs md:text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                 </div>
               </div>
             ))}
@@ -252,32 +252,32 @@ export default function ChatBot() {
           </div>
         </ScrollArea>
 
-        <div className="border-t p-4 bg-background">
-          <div className="flex gap-2">
+        <div className="border-t p-2 md:p-4 bg-background">
+          <div className="flex gap-1.5 md:gap-2">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder={historyLoading ? "Chargement..." : "Tapez votre message..."}
               disabled={chatMutation.isPending || historyLoading}
-              className="flex-1"
+              className="flex-1 text-xs md:text-sm h-9 md:h-10"
               data-testid="input-chat-message"
             />
             <Button
               onClick={handleSend}
               disabled={!input.trim() || chatMutation.isPending || historyLoading}
               size="icon"
-              className="bg-primary hover:bg-primary/90"
+              className="bg-primary hover:bg-primary/90 h-9 w-9 md:h-10 md:w-10"
               data-testid="button-send-message"
             >
               {chatMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin" />
               ) : (
-                <Send className="w-4 h-4" />
+                <Send className="w-3.5 h-3.5 md:w-4 md:h-4" />
               )}
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground text-center mt-2">
+          <p className="text-[10px] md:text-xs text-muted-foreground text-center mt-1.5 md:mt-2">
             ⚠️ En cas d'urgence, appelez le 17 (Police) ou 18 (Pompiers)
           </p>
         </div>
