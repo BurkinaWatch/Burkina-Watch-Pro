@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import EmergencyPanel from "@/components/EmergencyPanel";
@@ -182,6 +182,30 @@ export default function Pharmacies() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [, setLocation] = useLocation();
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Rafraîchir automatiquement les données quand la page reprend le focus
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // La page est revenue au premier plan, actualiser les données
+        setRefreshKey(prev => prev + 1);
+      }
+    };
+
+    const handleFocus = () => {
+      // Rafraîchir aussi au focus de la fenêtre
+      setRefreshKey(prev => prev + 1);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, []);
 
   const filteredPharmacies = useMemo(() => {
     let filtered = PHARMACIES_DATA;

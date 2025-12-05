@@ -65,6 +65,29 @@ export default function Bulletin() {
     fetchBulletins();
   }, []);
 
+  // Rafraîchir automatiquement les données quand la page reprend le focus
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // La page est revenue au premier plan, actualiser les données
+        fetchBulletins();
+      }
+    };
+
+    const handleFocus = () => {
+      // Rafraîchir aussi au focus de la fenêtre
+      fetchBulletins();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, []);
+
   useEffect(() => {
     let filtered = bulletins;
 

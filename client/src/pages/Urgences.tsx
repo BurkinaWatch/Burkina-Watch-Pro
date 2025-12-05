@@ -1,5 +1,5 @@
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import EmergencyPanel from "@/components/EmergencyPanel";
@@ -73,6 +73,30 @@ export default function Urgences() {
   const [, setLocation] = useLocation();
   const [selectedService, setSelectedService] = useState<EmergencyService | null>(null);
   const [imageStyle, setImageStyle] = useState<"light" | "dark">("light");
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Rafraîchir automatiquement les données quand la page reprend le focus
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // La page est revenue au premier plan, actualiser les données
+        setRefreshKey(prev => prev + 1);
+      }
+    };
+
+    const handleFocus = () => {
+      // Rafraîchir aussi au focus de la fenêtre
+      setRefreshKey(prev => prev + 1);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, []);
   const [isGenerating, setIsGenerating] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
