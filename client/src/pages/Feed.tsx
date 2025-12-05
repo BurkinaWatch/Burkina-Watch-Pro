@@ -70,6 +70,7 @@ export default function Feed() {
                       key={report.id} 
                       {...report}
                       createdAt={new Date(report.createdAt!)}
+                      medias={report.medias}
                     />
                   ))}
                 </div>
@@ -87,6 +88,7 @@ export default function Feed() {
                       key={report.id} 
                       {...report}
                       createdAt={new Date(report.createdAt!)}
+                      medias={report.medias}
                     />
                   ))}
                 </div>
@@ -99,6 +101,7 @@ export default function Feed() {
                       key={report.id} 
                       {...report}
                       createdAt={new Date(report.createdAt!)}
+                      medias={report.medias}
                     />
                   ))}
                 </div>

@@ -26,6 +26,7 @@ interface SignalementCardProps {
   latitude: string;
   longitude: string;
   photo?: string | null;
+  medias?: string[] | null;
   isSOS?: boolean | null;
   isAnonymous?: boolean | null;
   niveauUrgence?: string | null;
@@ -59,6 +60,7 @@ export default function SignalementCard({
   userId,
   auteurFirstName,
   auteurLastName,
+  medias,
 }: SignalementCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(likes || 0);
@@ -72,6 +74,9 @@ export default function SignalementCard({
     : (auteurFirstName || auteurLastName)
       ? `${auteurFirstName || ""} ${auteurLastName || ""}`.trim()
       : "Anonyme";
+
+  // Utiliser medias en priorité, sinon photo pour la rétrocompatibilité
+  const displayMedias = medias && medias.length > 0 ? medias : (photo ? [photo] : []);
 
   const likeMutation = useMutation({
     mutationFn: async () => {
@@ -182,14 +187,45 @@ export default function SignalementCard({
   return (
     <Link href={`/signalement/${id}`} className="block">
       <Card className={`overflow-hidden ${isSOS ? "border-2 border-category-urgence" : ""} hover:shadow-lg transition-shadow cursor-pointer`}>
-        {photo && (
+        {displayMedias.length > 0 && (
           <div className="relative w-full h-48">
-            <img
-              src={photo}
-              alt={titre}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
+            {displayMedias.length === 1 ? (
+              displayMedias[0].startsWith('data:video/') ? (
+                <video
+                  src={displayMedias[0]}
+                  className="w-full h-full object-cover"
+                  controls
+                />
+              ) : (
+                <img
+                  src={displayMedias[0]}
+                  alt={titre}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              )
+            ) : (
+              <div className="relative w-full h-full overflow-x-auto flex gap-1 snap-x snap-mandatory">
+                {displayMedias.map((media, index) => (
+                  <div key={index} className="flex-shrink-0 w-full h-full snap-center">
+                    {media.startsWith('data:video/') ? (
+                      <video
+                        src={media}
+                        className="w-full h-full object-cover"
+                        controls
+                      />
+                    ) : (
+                      <img
+                        src={media}
+                        alt={`${titre} - ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="absolute top-2 right-2 flex gap-2">
               <CategoryBadge categorie={categorie as Categorie} />
               {isSOS && (
@@ -199,10 +235,15 @@ export default function SignalementCard({
                 </span>
               )}
             </div>
+            {displayMedias.length > 1 && (
+              <div className="absolute bottom-2 right-2 bg-black/60 text-white px-2 py-1 rounded-full text-xs">
+                {displayMedias.length} médias
+              </div>
+            )}
           </div>
         )}
         <CardContent className="p-4">
-        {!photo && (
+        {displayMedias.length === 0 && (
           <div className="flex flex-wrap gap-2 mb-3">
             <CategoryBadge categorie={categorie as Categorie} />
             {isSOS && (
