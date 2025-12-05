@@ -202,21 +202,43 @@ export default function StreetView() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       toast({
         title: "Non supporté",
-        description: "Votre navigateur ne supporte pas la capture de photos.",
+        description: "Votre navigateur ne supporte pas la capture de photos. Veuillez utiliser un navigateur moderne (Chrome, Firefox, Safari).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Vérifier si on est en HTTPS (requis pour getUserMedia)
+    if (window.location.protocol !== "https:" && window.location.hostname !== "localhost") {
+      toast({
+        title: "Connexion non sécurisée",
+        description: "La caméra nécessite une connexion HTTPS sécurisée.",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
-      });
+      // D'abord essayer avec la caméra arrière
+      let stream: MediaStream | null = null;
+      
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        });
+      } catch (backCameraError) {
+        console.warn("Caméra arrière non disponible, tentative avec n'importe quelle caméra:", backCameraError);
+        // Fallback: essayer avec n'importe quelle caméra
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      }
 
       streamRef.current = stream;
       
@@ -239,12 +261,29 @@ export default function StreetView() {
       });
 
     } catch (error: any) {
-      console.error("Erreur accès caméra:", error);
+      console.error("Erreur accès caméra - nom:", error?.name, "message:", error?.message, "erreur complète:", error);
+      
+      let errorMessage = "Impossible d'accéder à la caméra.";
+      
+      if (error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError") {
+        errorMessage = "Veuillez autoriser l'accès à la caméra dans les paramètres de votre navigateur.";
+      } else if (error?.name === "NotFoundError" || error?.name === "DevicesNotFoundError") {
+        errorMessage = "Aucune caméra détectée sur cet appareil.";
+      } else if (error?.name === "NotReadableError" || error?.name === "TrackStartError") {
+        errorMessage = "La caméra est déjà utilisée par une autre application.";
+      } else if (error?.name === "OverconstrainedError") {
+        errorMessage = "La caméra ne supporte pas les paramètres demandés.";
+      } else if (error?.name === "TypeError") {
+        errorMessage = "Erreur de configuration de la caméra.";
+      } else if (error?.name === "AbortError") {
+        errorMessage = "L'accès à la caméra a été interrompu.";
+      } else if (error?.name === "SecurityError") {
+        errorMessage = "Accès à la caméra bloqué pour des raisons de sécurité. Vérifiez les permissions du site.";
+      }
+      
       toast({
         title: "Erreur caméra",
-        description: error.name === "NotAllowedError" 
-          ? "Veuillez autoriser l'accès à la caméra." 
-          : "Impossible d'accéder à la caméra.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
