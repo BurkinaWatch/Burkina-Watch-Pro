@@ -18,12 +18,26 @@ interface EventItem {
 
 const parser = new Parser();
 
-// Sources pour les événements
+// Sources pour les événements - Flux RSS, médias locaux, etc.
 const EVENT_SOURCES = [
+  // Agences de presse et médias nationaux
   'https://www.aib.bf/feed/',
   'https://lefaso.net/spip.php?page=backend',
   'https://burkina24.com/feed/',
-  'https://www.sidwaya.info/feed/'
+  'https://www.sidwaya.info/feed/',
+  'https://fasonews.africa/feed/',
+  'https://www.fasozine.com/feed/',
+  
+  // Médias culturels et actualités
+  'https://www.libreinfo.net/feed/',
+  'https://www.wakat.bf/feed/',
+  
+  // Chaînes TV et radio (flux web si disponibles)
+  'https://www.rtb.bf/feed/',
+  
+  // Médias régionaux
+  'https://www.leconomistedufaso.bf/feed/',
+  'https://www.journaldufaso.com/feed/'
 ];
 
 // Cache en mémoire (1 heure)
@@ -59,17 +73,24 @@ export async function fetchEvents(): Promise<EventItem[]> {
     }
   }
 
+  // Date du jour (début de journée)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   // Analyser avec l'IA pour extraire les événements
   const events: EventItem[] = [];
 
   for (const article of allArticles) {
     try {
-      const prompt = `Analyse cet article et détermine s'il mentionne un événement au Burkina Faso (concert, fête, compétition, conférence, fermeture de route, etc.).
+      const prompt = `Analyse cet article et détermine s'il mentionne un événement FUTUR ou D'AUJOURD'HUI au Burkina Faso (concert, fête, compétition, conférence, fermeture de route, etc.).
+
+IMPORTANT: Ignore les événements passés. N'extrais que les événements qui se déroulent aujourd'hui ou dans le futur.
 
 Titre: ${article.title}
 Description: ${article.contentSnippet || article.description || ''}
+Date de publication: ${article.pubDate || ''}
 
-Si c'est un événement, réponds UNIQUEMENT au format JSON strict suivant (sans texte additionnel):
+Si c'est un événement FUTUR ou D'AUJOURD'HUI, réponds UNIQUEMENT au format JSON strict suivant (sans texte additionnel):
 {
   "isEvent": true,
   "nom": "nom de l'événement",
@@ -81,7 +102,7 @@ Si c'est un événement, réponds UNIQUEMENT au format JSON strict suivant (sans
   "description": "description courte"
 }
 
-Si ce n'est PAS un événement, réponds: {"isEvent": false}`;
+Si ce n'est PAS un événement ou si c'est un événement PASSÉ, réponds: {"isEvent": false}`;
 
       const response = await generateChatResponse([
         { role: "user", content: prompt }
@@ -92,18 +113,24 @@ Si ce n'est PAS un événement, réponds: {"isEvent": false}`;
 
       const analysis = JSON.parse(jsonMatch[0]);
 
-      if (analysis.isEvent) {
-        events.push({
-          id: `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          nom: analysis.nom,
-          type: analysis.type,
-          date: analysis.date,
-          lieu: analysis.lieu,
-          ville: analysis.ville,
-          heure: analysis.heure || undefined,
-          description: analysis.description,
-          lienOfficiel: article.link
-        });
+      if (analysis.isEvent && analysis.date) {
+        const eventDate = new Date(analysis.date);
+        eventDate.setHours(0, 0, 0, 0);
+        
+        // Filtrer les événements passés
+        if (eventDate >= today) {
+          events.push({
+            id: `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            nom: analysis.nom,
+            type: analysis.type,
+            date: analysis.date,
+            lieu: analysis.lieu,
+            ville: analysis.ville,
+            heure: analysis.heure || undefined,
+            description: analysis.description,
+            lienOfficiel: article.link
+          });
+        }
       }
     } catch (error) {
       // Ignorer les erreurs d'analyse individuelles
@@ -111,13 +138,13 @@ Si ce n'est PAS un événement, réponds: {"isEvent": false}`;
     }
   }
 
-  // Trier par date
+  // Trier par date (événements les plus proches en premier)
   events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   cachedEvents = events;
   lastFetchTime = now;
 
-  console.log(`✅ ${events.length} événements extraits`);
+  console.log(`✅ ${events.length} événements futurs extraits`);
   return events;
 }
 

@@ -200,10 +200,16 @@ export default function Events() {
           </Card>
           <Card className="col-span-2 md:col-span-1">
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {events.filter(e => new Date(e.date) >= new Date()).length}
+              <div className="text-2xl font-bold text-orange-600">
+                {events.filter(e => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const eventDate = new Date(e.date);
+                  eventDate.setHours(0, 0, 0, 0);
+                  return eventDate.getTime() === today.getTime();
+                }).length}
               </div>
-              <div className="text-sm text-muted-foreground">À venir</div>
+              <div className="text-sm text-muted-foreground">Aujourd'hui</div>
             </CardContent>
           </Card>
         </div>
@@ -231,10 +237,26 @@ export default function Events() {
               <Card key={event.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <Badge className={`${getTypeBadgeColor(event.type)} text-white`}>
-                      {event.type}
-                    </Badge>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <div className="flex flex-wrap gap-1">
+                      <Badge className={`${getTypeBadgeColor(event.type)} text-white`}>
+                        {event.type}
+                      </Badge>
+                      {(() => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const eventDate = new Date(event.date);
+                        eventDate.setHours(0, 0, 0, 0);
+                        if (eventDate.getTime() === today.getTime()) {
+                          return (
+                            <Badge className="bg-orange-500 text-white animate-pulse">
+                              Aujourd'hui
+                            </Badge>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground flex-shrink-0">
                       <Calendar className="w-3 h-3" />
                       {new Date(event.date).toLocaleDateString("fr-FR")}
                     </div>
