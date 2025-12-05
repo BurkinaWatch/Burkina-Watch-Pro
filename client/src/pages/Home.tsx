@@ -2,13 +2,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import EmergencyPanel from "@/components/EmergencyPanel";
 import SignalementCard from "@/components/SignalementCard";
 import StatCard from "@/components/StatCard";
 import MessageDuJour from "@/components/MessageDuJour";
-import { AlertCircle, Shield, Users, TrendingUp, ArrowRight, Loader2, Heart, AlertTriangle, Search, X, MapPin, Filter } from "lucide-react";
+import { AlertCircle, Shield, Users, TrendingUp, ArrowRight, Loader2, Heart, AlertTriangle, Search, X, MapPin, Filter, BookOpen } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { Signalement } from "@shared/schema";
@@ -175,6 +177,254 @@ const BURKINA_REGIONS = [
     ]
   }
 ];
+
+function SecurityNotesDialog() {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-2">
+          <Shield className="w-4 h-4" />
+          Notes de sécurité
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <Shield className="w-6 h-6 text-primary" />
+            Notes importantes — Conseils de sécurité pour utiliser BurkinaWatch
+          </DialogTitle>
+        </DialogHeader>
+        <ScrollArea className="h-[70vh] pr-4">
+          <div className="space-y-6 text-sm">
+            <p className="text-muted-foreground">
+              Cette page rassemble <strong>conseils pratiques, règles et bonnes pratiques</strong> pour utiliser BurkinaWatch en toute sécurité — protéger ta personne, tes proches et la crédibilité des signalements. Lis attentivement et applique ce qui correspond à ta situation.
+            </p>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-primary" />
+                1) Rappel : objectif de l'application
+              </h3>
+              <p>
+                BurkinaWatch permet de <strong>signaler</strong>, <strong>alerter</strong> et <strong>partager</strong> des faits d'intérêt public (danger, incivilités, urgences, etc.).
+                L'objectif est d'augmenter la sécurité collective — pas de remplacer les secours. Utilise toujours l'application de façon responsable.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
+                2) Avant de filmer / prendre une photo : évalue ta sécurité
+              </h3>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li><strong>Priorité : ta vie d'abord.</strong> Si la situation est dangereuse (violence, attaque, incendie), <strong>recule</strong> et appelle les secours (police, pompiers, SAMU) plutôt que d'intervenir.</li>
+                <li><strong>Ne provoque pas</strong> : ne t'expose pas physiquement pour obtenir une meilleure vidéo.</li>
+                <li>Si possible, <strong>filme depuis un endroit sûr</strong> (fenêtre, voiture, distance protégée).</li>
+                <li>Évite les confrontations verbales ou physiques avec des personnes en crise.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2">3) Protéger ton anonymat (si tu le souhaites)</h3>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li>Active l'option <strong>Anonyme</strong> lors de la publication si tu crains des représailles.</li>
+                <li>N'inclus <strong>jamais</strong> ton nom complet, adresse personnelle ou autres informations identifiantes dans la description si tu veux rester anonyme.</li>
+                <li>Si tu dois donner plus d'informations aux autorités, préfère le canal sécurisé prévu (escrow ou contact officiel), pas le fil public.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2">4) Lors de la capture d'images / vidéos — bonnes pratiques techniques</h3>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li><strong>Stabilise</strong> l'image au maximum (pose le téléphone si possible).</li>
+                <li><strong>Capture l'essentiel</strong> : personne(s) impliquée(s), lieu (repères visibles), date/heure si possible.</li>
+                <li><strong>Ne retouche pas</strong> l'image de façon à modifier la réalité (pas de filtres trompeurs).</li>
+                <li>Si tu veux protéger l'identité de tiers (enfants, victimes), utilise le <strong>floutage</strong> avant de publier.</li>
+                <li>Si tu veux préserver la preuve légale, <strong>conserve l'original</strong> (non compressé) en cas de demande des autorités.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2">5) Métadonnées et géolocalisation</h3>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li>Les photos/vidéos contiennent souvent des métadonnées (EXIF) — date, heure, coordonnées.</li>
+                <li>Si tu veux <strong>prouver</strong> un fait, conserve les métadonnées.</li>
+                <li>Si tu veux <strong>protéger un témoin</strong>, supprime/édites les métadonnées avant publication ou utilise l'option d'anonymat.</li>
+                <li>BurkinaWatch propose (ou proposera) une option "supprimer EXIF" — utilise-la selon ton besoin.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2">6) Rédiger un signalement utile (modèle)</h3>
+              <p className="mb-2">Fournis des informations claires et factuelles, sans dramatisation :</p>
+              <div className="bg-muted p-3 rounded-md space-y-1">
+                <p><strong>Titre</strong> : Éboulement sur la route Ziniaré – kilomètre 12</p>
+                <p><strong>Description</strong> : « Glissement de terrain bloquant la RN3, voitures immobilisées, risque d'accident. Localisation : intersection X (voir pin). Heure : 08:12. »</p>
+                <p><strong>Pièce jointe</strong> : 2 photos + courte vidéo 15s</p>
+                <p><strong>Anonymat</strong> : Oui / Non</p>
+              </div>
+              <p className="mt-2 italic">Exemple court prêt à envoyer : "Feu de brousse près du village Y, rive nord de la route, flammes visibles sur 50m. Demande intervention pompiers. Coordonnées : [pin]."</p>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2">7) Vérifier avant de publier — lutte contre la désinformation</h3>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li><strong>Ne publie pas</strong> une rumeur. Si tu n'es pas sûr, mentionne clairement : <em>"À vérifier — témoin sur place"</em>.</li>
+                <li>Vérifie la <strong>source</strong> et la <strong>date</strong> (évite de republier des vidéos anciennes comme si elles étaient actuelles).</li>
+                <li>Si tu trouves une information douteuse, utilises le <strong>signalement interne</strong> "vérifier" pour demander une revue modérateurs.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2">8) Si tu es victime ou témoin d'un crime</h3>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li><strong>Appelle immédiatement</strong> les forces de l'ordre si la situation est en cours.</li>
+                <li>Si tu filmes, fais-le depuis un endroit sûr, puis <strong>fournis la vidéo</strong> au service compétent via le canal sécurisé.</li>
+                <li>N'essaye pas de "juger" ou d'infliger la justice toi-même. BurkinaWatch n'encourage aucune action violente.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2">9) Protéger les mineurs et les personnes vulnérables</h3>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li>Ne publie <strong>jamais</strong> d'image d'un enfant sans le consentement des responsables légaux, sauf si c'est strictement nécessaire pour une urgence (disparition) — et alors masque le visage si possible.</li>
+                <li>Les signalements impliquant violences sexuelles ou exploitation doivent être envoyés via le canal <strong>SOS — catégorie protection enfant / femme</strong> pour priorisation et confidentialité.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2">10) Utilisation intelligente du bouton SOS</h3>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li>Réserve le SOS aux <strong>urgences réelles</strong> (danger immédiat, personne disparue, agression, incendie).</li>
+                <li>Pour incidents non urgents, préfère la rubrique Signalement normale.</li>
+                <li>L'abus du bouton SOS peut retarder les véritables interventions : <strong>n'en abuse pas</strong>.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2">11) Interaction avec d'autres utilisateurs</h3>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li>Respecte la charte citoyenne : pas d'insultes, pas de propos haineux, pas d'appels à la violence.</li>
+                <li>Si un utilisateur publie des propos abusifs, utilise le <strong>signalement</strong> intégré.</li>
+                <li>Ne diffuse pas des informations personnelles d'autrui sans consentement.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2">12) Réception d'une réponse / suivi d'un signalement</h3>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li>Suis le statut de ton signalement via la page de suivi : <em>Reçu → En revue → Pris en charge → Résolu</em>.</li>
+                <li>Si tu estimes que la réponse est insuffisante, utilise la fonction <strong>appel</strong> ou <strong>contacter le modérateur</strong> (prévoir délai raisonnable).</li>
+                <li>Conserve les preuves originales au cas où les autorités les demanderaient.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2">13) Sécurité numérique et mot de passe</h3>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li>Utilise un mot de passe fort et unique pour ton compte. Active 2FA si disponible.</li>
+                <li>Ne partage jamais ton identifiant et mot de passe.</li>
+                <li>Si tu utilises l'option "compte anonyme", sache que l'anonymat est géré par l'app : ne partage pas d'infos qui te identifient.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2">14) Que faire si quelqu'un te menace après une publication ?</h3>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li>Ne réponds pas aux menaces. Capture les messages (screenshots).</li>
+                <li>Utilise le signalement d'abus dans l'application.</li>
+                <li>Si la menace est grave, contacte immédiatement les forces de l'ordre et fournis les preuves.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2">15) Sécurité lors du téléchargement d'une image "écran de veille"</h3>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li>Si tu génères une carte d'urgence pour ton lockscreen : <strong>ne mets que le numéro essentiel</strong> (évite d'y mettre ton adresse personnelle).</li>
+                <li>Teste le téléchargement et l'affichage avant de l'utiliser en situation critique.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2">16) Protection des preuves (si nécessaire pour enquête)</h3>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li>Garde une <strong>copie non compressée</strong> (originale) des médias si l'affaire doit être utilisée par la justice.</li>
+                <li>Ne supprime pas les fichiers tant que l'enquête n'est pas terminée.</li>
+                <li>Utilise le canal sécurisé pour transmettre aux autorités (si disponible).</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2">17) Règles à respecter — résumé rapide (Do / Don't)</h3>
+              <div className="grid md:grid-cols-2 gap-4 mt-2">
+                <div className="bg-green-50 dark:bg-green-950/20 p-3 rounded-md">
+                  <h4 className="font-semibold text-green-700 dark:text-green-400 mb-2">Do ✓</h4>
+                  <ul className="list-disc list-inside space-y-1 text-sm">
+                    <li>Signaler rapidement et factuellement</li>
+                    <li>Protéger ta sécurité</li>
+                    <li>Masquer les visages si besoin</li>
+                    <li>Utiliser anonymat quand nécessaire</li>
+                    <li>Conserver originaux</li>
+                  </ul>
+                </div>
+                <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded-md">
+                  <h4 className="font-semibold text-red-700 dark:text-red-400 mb-2">Don't ✗</h4>
+                  <ul className="list-disc list-inside space-y-1 text-sm">
+                    <li>Ne pas prendre de risques physiques</li>
+                    <li>Ne pas diffuser des rumeurs</li>
+                    <li>Ne pas harceler d'autres utilisateurs</li>
+                    <li>Ne pas publier de données personnelles sans consentement</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2">18) Questions fréquentes (FAQ courte)</h3>
+              <div className="space-y-2">
+                <div>
+                  <p className="font-semibold">Q : Je veux rester anonyme, comment faire ?</p>
+                  <p className="text-muted-foreground ml-4">R : Active l'option "Publier anonymement" avant d'envoyer.</p>
+                </div>
+                <div>
+                  <p className="font-semibold">Q : Mes données peuvent-elles être fournies à la police ?</p>
+                  <p className="text-muted-foreground ml-4">R : Les données sont chiffrées ; un accès officiel peut être encadré par la procédure légale/escrow.</p>
+                </div>
+                <div>
+                  <p className="font-semibold">Q : Comment flouter un visage ?</p>
+                  <p className="text-muted-foreground ml-4">R : Utilise l'outil de floutage intégré avant publication ou recadre/masque la zone sensible.</p>
+                </div>
+                <div>
+                  <p className="font-semibold">Q : J'ai subi des menaces après un signalement — que faire ?</p>
+                  <p className="text-muted-foreground ml-4">R : Capture les preuves, signale dans l'app et contacte la police.</p>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h3 className="font-bold text-lg mb-2">19) Contacts & support</h3>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li><strong>Support BurkinaWatch</strong> : support@burkinawatch.bf</li>
+                <li><strong>Signalement d'abus technique</strong> : abuse@burkinawatch.bf</li>
+                <li><strong>Urgence réelle</strong> : appelle les numéros d'urgence locaux (liste disponible sur la page <em>Urgences Burkina</em>)</li>
+              </ul>
+            </section>
+
+            <section className="bg-primary/5 p-4 rounded-lg border-l-4 border-primary">
+              <h3 className="font-bold text-lg mb-2">20) Remarque finale</h3>
+              <p>
+                BurkinaWatch est un <strong>outil collectif</strong> : son efficacité dépend de la qualité et de la responsabilité des signalements. En respectant ces conseils, tu protèges ta sécurité, tu aides les autres et tu renforces la confiance entre citoyens et autorités.
+              </p>
+              <p className="mt-2 font-semibold text-primary">
+                Merci d'agir avec responsabilité — <strong>ta vigilance sauve des vies</strong>.
+              </p>
+            </section>
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function Home() {
   const { t } = useTranslation();
@@ -852,6 +1102,11 @@ export default function Home() {
                   Mentions légales
                 </span>
               </Link>
+            </div>
+
+            {/* Security Notes Button */}
+            <div className="pt-2">
+              <SecurityNotesDialog />
             </div>
 
             {/* Copyright */}
