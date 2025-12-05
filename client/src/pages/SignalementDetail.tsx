@@ -3,19 +3,23 @@ import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, MapPin, Calendar, User, ArrowLeft } from "lucide-react";
+import { Loader2, MapPin, Calendar, User, ArrowLeft, ZoomIn, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import CategoryBadge from "@/components/CategoryBadge";
 import StatutBadge from "@/components/StatutBadge";
 import CommentDialog from "@/components/CommentDialog";
 import type { Signalement, Categorie, Statut } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useState } from "react";
 
 export default function SignalementDetail() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
 
   const { data: signalement, isLoading } = useQuery<Signalement>({
     queryKey: [`/api/signalements/${id}`],
@@ -105,12 +109,21 @@ export default function SignalementDetail() {
                         controls
                       />
                     ) : (
-                      <img
-                        src={displayMedias[0]}
-                        alt={signalement.titre}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
+                      <div className="relative w-full h-full group cursor-pointer">
+                        <img
+                          src={displayMedias[0]}
+                          alt={signalement.titre}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          onClick={() => {
+                            setSelectedImageIndex(0);
+                            setIsImageDialogOpen(true);
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
+                          <ZoomIn className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </div>
                     )
                   ) : (
                     <div className="relative w-full h-full overflow-x-auto flex gap-1 snap-x snap-mandatory">
@@ -123,12 +136,21 @@ export default function SignalementDetail() {
                               controls
                             />
                           ) : (
-                            <img
-                              src={media}
-                              alt={`${signalement.titre} - ${index + 1}`}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                            />
+                            <div className="relative w-full h-full group cursor-pointer">
+                              <img
+                                src={media}
+                                alt={`${signalement.titre} - ${index + 1}`}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                                onClick={() => {
+                                  setSelectedImageIndex(index);
+                                  setIsImageDialogOpen(true);
+                                }}
+                              />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
+                                <ZoomIn className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                            </div>
                           )}
                         </div>
                       ))}
@@ -188,6 +210,82 @@ export default function SignalementDetail() {
 
       <BottomNav />
     </div>
+
+    {/* Dialogue de zoom d'image */}
+    <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
+      <DialogContent className="max-w-[95vw] max-h-[95vh] w-auto h-auto p-0 bg-black/95">
+        <div className="relative w-full h-full flex items-center justify-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 right-4 z-50 text-white hover:bg-white/20"
+            onClick={() => setIsImageDialogOpen(false)}
+          >
+            <X className="w-6 h-6" />
+          </Button>
+          
+          {selectedImageIndex !== null && (() => {
+            const displayMedias = signalement?.medias && signalement.medias.length > 0 
+              ? signalement.medias 
+              : (signalement?.photo ? [signalement.photo] : []);
+            
+            const selectedMedia = displayMedias[selectedImageIndex];
+            
+            if (!selectedMedia) return null;
+            
+            return selectedMedia.startsWith('data:video/') ? (
+              <video
+                src={selectedMedia}
+                className="max-w-full max-h-[90vh] object-contain"
+                controls
+                autoPlay
+              />
+            ) : (
+              <img
+                src={selectedMedia}
+                alt={`Image ${selectedImageIndex + 1}`}
+                className="max-w-full max-h-[90vh] object-contain cursor-zoom-in"
+                style={{ imageRendering: 'high-quality' }}
+                onClick={(e) => {
+                  const img = e.currentTarget;
+                  if (img.style.transform === 'scale(2)') {
+                    img.style.transform = 'scale(1)';
+                    img.style.cursor = 'zoom-in';
+                  } else {
+                    img.style.transform = 'scale(2)';
+                    img.style.cursor = 'zoom-out';
+                  }
+                }}
+              />
+            );
+          })()}
+          
+          {/* Navigation entre les images */}
+          {signalement && (() => {
+            const displayMedias = signalement.medias && signalement.medias.length > 0 
+              ? signalement.medias 
+              : (signalement.photo ? [signalement.photo] : []);
+            
+            if (displayMedias.length > 1) {
+              return (
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 bg-black/50 p-2 rounded-lg">
+                  {displayMedias.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={`w-3 h-3 rounded-full transition-all ${
+                        index === selectedImageIndex ? 'bg-white scale-125' : 'bg-white/50'
+                      }`}
+                    />
+                  ))}
+                </div>
+              );
+            }
+            return null;
+          })()}
+        </div>
+      </DialogContent>
+    </Dialog>
     </>
   );
 }
