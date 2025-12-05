@@ -553,7 +553,7 @@ export class DbStorage implements IStorage {
       .where(eq(signalements.isSOS, true));
 
     const [totalUsersResult] = await db
-      .select({ count: sql<number>`count(*)::int` })
+      .select({ count: sql<number>`count(distinct email)::int` })
       .from(users);
 
     // Compter les utilisateurs en ligne
