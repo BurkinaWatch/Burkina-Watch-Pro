@@ -132,11 +132,19 @@ type MapillaryResult =
   | { success: false; error: "invalid_token" | "no_images" | "network_error" };
 
 async function findNearestMapillaryImage(lat: number, lng: number, token: string): Promise<MapillaryResult> {
-  const bbox = 0.05;
-  const url = `https://graph.mapillary.com/images?access_token=${token}&fields=id&bbox=${lng - bbox},${lat - bbox},${lng + bbox},${lat + bbox}&limit=1`;
+  const bbox = 0.02;
+  const minLng = (lng - bbox).toFixed(3);
+  const minLat = (lat - bbox).toFixed(3);
+  const maxLng = (lng + bbox).toFixed(3);
+  const maxLat = (lat + bbox).toFixed(3);
+  const url = `https://graph.mapillary.com/images?fields=id&bbox=${minLng},${minLat},${maxLng},${maxLat}&limit=1`;
   
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        "Authorization": `OAuth ${token}`
+      }
+    });
     const data = await response.json();
     
     if (data.error) {
@@ -385,7 +393,7 @@ export default function StreetView() {
   
   const [activeTab, setActiveTab] = useState<string>("explore");
   const [isCapturing, setIsCapturing] = useState(false);
-  const [currentPosition, setCurrentPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const [currentPosition, setCurrentPosition] = useState<{ lat: number; lng: number }>({ lat: 12.3769, lng: -1.5160 });
   const [showHistory, setShowHistory] = useState(false);
   const [localHistory, setLocalHistory] = useState<LocalHistoryItem[]>(getLocalHistory());
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -476,16 +484,16 @@ export default function StreetView() {
         },
         (error) => {
           console.error("Erreur géolocalisation:", error);
-          setCurrentPosition({ lat: 12.3714, lng: -1.5197 });
+          setCurrentPosition({ lat: 12.3769, lng: -1.5160 });
         }
       );
     } else {
-      setCurrentPosition({ lat: 12.3714, lng: -1.5197 });
+      setCurrentPosition({ lat: 12.3769, lng: -1.5160 });
     }
   }, []);
 
   const capturePhoto = useCallback(async () => {
-    if (!videoRef.current || !currentPosition || !isPageVisible) return;
+    if (!videoRef.current || !isPageVisible) return;
 
     const canvas = document.createElement("canvas");
     canvas.width = videoRef.current.videoWidth;
@@ -517,7 +525,7 @@ export default function StreetView() {
       latitude: currentPosition.lat,
       longitude: currentPosition.lng,
     });
-  }, [currentPosition, isPageVisible, uploadMutation]);
+  }, [isPageVisible, uploadMutation, currentPosition]);
 
   const startCapture = useCallback(async () => {
     setCameraError(null);
@@ -629,9 +637,7 @@ export default function StreetView() {
     console.error("Mapillary error:", message);
   }, []);
 
-  const mapCenter: [number, number] = currentPosition 
-    ? [currentPosition.lat, currentPosition.lng] 
-    : [12.3714, -1.5197];
+  const mapCenter: [number, number] = [currentPosition.lat, currentPosition.lng];
 
   return (
     <div className="min-h-screen bg-background">
@@ -692,17 +698,13 @@ export default function StreetView() {
                             </p>
                           </div>
                         </div>
-                      ) : currentPosition ? (
+                      ) : (
                         <MapillaryViewer 
                           latitude={currentPosition.lat} 
                           longitude={currentPosition.lng}
                           token={mapillaryConfig.token}
                           onError={handleMapillaryError}
                         />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                        </div>
                       )}
                     </div>
                     <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
@@ -723,8 +725,7 @@ export default function StreetView() {
                   </CardHeader>
                   <CardContent>
                     <div className="aspect-square rounded-lg overflow-hidden">
-                      {currentPosition && (
-                        <MapContainer
+                      <MapContainer
                           center={mapCenter}
                           zoom={14}
                           className="w-full h-full"
@@ -761,7 +762,6 @@ export default function StreetView() {
                             </Marker>
                           ))}
                         </MapContainer>
-                      )}
                     </div>
                     <p className="text-sm text-muted-foreground mt-2 text-center">
                       {mapPoints.length} contribution(s) citoyenne(s)

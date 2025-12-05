@@ -38,6 +38,7 @@ export function applySecurityMiddlewares(app: Express) {
             "https://maps.googleapis.com",
             "https://maps.gstatic.com",
             "https://tiles.mapillary.com",
+            "https://*.fbcdn.net",
           ],
           connectSrc: [
             "'self'",
@@ -45,6 +46,7 @@ export function applySecurityMiddlewares(app: Express) {
             "https://api.openai.com",
             "https://graph.mapillary.com",
             "https://tiles.mapillary.com",
+            "https://*.fbcdn.net",
             "ws:",
             "wss:",
           ],
