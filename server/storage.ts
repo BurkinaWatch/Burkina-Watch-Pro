@@ -1034,28 +1034,31 @@ L'équipe Burkina Watch
   // --- New methods for online users ---
 
   async userConnected(userId: string): Promise<void> {
-    // Check if an active session already exists for this user
-    const [existingSession] = await db
-      .select()
-      .from(onlineSessions)
-      .where(and(eq(onlineSessions.userId, userId), isNull(onlineSessions.disconnectedAt)))
-      .limit(1);
+    try {
+      // Check if an active session already exists for this user
+      const [existingSession] = await db
+        .select()
+        .from(onlineSessions)
+        .where(and(eq(onlineSessions.userId, userId), isNull(onlineSessions.disconnectedAt)))
+        .limit(1);
 
-    if (existingSession) {
-      // If an active session exists, just update the connectedAt timestamp (optional, depending on desired behavior)
-      // Or do nothing if we only want to track the *first* connection time.
-      // For simplicity, we'll assume we don't need to re-insert.
-      console.log(`User ${userId} is already online.`);
-      return;
+      if (existingSession) {
+        console.log(`User ${userId} is already online.`);
+        return;
+      }
+
+      // Insert a new online session record with explicit ID generation
+      const sessionId = crypto.randomUUID();
+      await db.insert(onlineSessions).values({
+        id: sessionId,
+        userId: userId,
+        connectedAt: new Date(),
+      });
+      console.log(`User ${userId} connected with session ${sessionId}.`);
+    } catch (error) {
+      console.error(`Error connecting user ${userId}:`, error);
+      throw error;
     }
-
-    // Insert a new online session record
-    await db.insert(onlineSessions).values({
-      userId: userId,
-      connectedAt: new Date(),
-      // disconnectedAt is null by default
-    });
-    console.log(`User ${userId} connected.`);
   }
 
   async userDisconnected(userId: string): Promise<void> {

@@ -70,7 +70,7 @@ export const trackingSessions = pgTable("tracking_sessions", {
 });
 
 export const onlineSessions = pgTable("online_sessions", {
-  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   connectedAt: timestamp("connected_at").notNull().defaultNow(),
   disconnectedAt: timestamp("disconnected_at"),
