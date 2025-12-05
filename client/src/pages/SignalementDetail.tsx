@@ -89,16 +89,56 @@ export default function SignalementDetail() {
         </Button>
 
         <Card>
-          {signalement.photo && (
-            <div className="relative w-full h-96">
-              <img
-                src={signalement.photo}
-                alt={signalement.titre}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-            </div>
-          )}
+          {(() => {
+            const displayMedias = signalement.medias && signalement.medias.length > 0 
+              ? signalement.medias 
+              : (signalement.photo ? [signalement.photo] : []);
+            
+            if (displayMedias.length > 0) {
+              return (
+                <div className="relative w-full h-96">
+                  {displayMedias.length === 1 ? (
+                    displayMedias[0].startsWith('data:video/') ? (
+                      <video
+                        src={displayMedias[0]}
+                        className="w-full h-full object-cover"
+                        controls
+                      />
+                    ) : (
+                      <img
+                        src={displayMedias[0]}
+                        alt={signalement.titre}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    )
+                  ) : (
+                    <div className="relative w-full h-full overflow-x-auto flex gap-1 snap-x snap-mandatory">
+                      {displayMedias.map((media, index) => (
+                        <div key={index} className="flex-shrink-0 w-full h-full snap-center">
+                          {media.startsWith('data:video/') ? (
+                            <video
+                              src={media}
+                              className="w-full h-full object-cover"
+                              controls
+                            />
+                          ) : (
+                            <img
+                              src={media}
+                              alt={`${signalement.titre} - ${index + 1}`}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           <CardContent className="p-6">
             <div className="flex gap-2 mb-4">
