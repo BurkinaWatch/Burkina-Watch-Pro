@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
+import BurkinaWatchLogo from "./BurkinaWatchLogo";
 
 interface HamburgerMenuProps {
   open: boolean;
@@ -59,8 +60,8 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
           {/* En-tête amélioré avec icône */}
           <SheetHeader className="p-6 pb-4 border-b bg-gradient-to-r from-green-50 to-yellow-50 dark:from-green-950/20 dark:to-yellow-950/20">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 rounded-xl shadow-md bg-gradient-to-br from-red-500 via-yellow-500 to-green-500 flex items-center justify-center">
-                <Shield className="w-7 h-7 text-white" />
+              <div className="w-12 h-12 rounded-xl shadow-md flex items-center justify-center">
+                <BurkinaWatchLogo className="w-10 h-10" />
               </div>
               <div>
                 <SheetTitle className="text-left">
