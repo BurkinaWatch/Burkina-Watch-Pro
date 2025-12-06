@@ -555,7 +555,6 @@ export default function StreetView() {
       return;
     }
 
-    setIsCapturing(true);
     setCaptureCount(0);
 
     try {
@@ -585,6 +584,9 @@ export default function StreetView() {
         videoRef.current.muted = true;
         await videoRef.current.play();
       }
+
+      // Ne mettre isCapturing à true qu'après avoir réussi à obtenir la caméra
+      setIsCapturing(true);
 
       captureIntervalRef.current = setInterval(() => {
         capturePhoto();
