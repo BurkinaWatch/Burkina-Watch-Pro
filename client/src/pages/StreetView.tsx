@@ -601,22 +601,34 @@ export default function StreetView() {
       setIsCapturing(false);
       
       let errorMessage = "Impossible d'accéder à la caméra.";
+      let errorInstructions = "";
       
       if (error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError") {
-        errorMessage = "Veuillez autoriser l'accès à la caméra dans les paramètres de votre navigateur.";
+        errorMessage = "Accès à la caméra refusé";
+        errorInstructions = "1. Cliquez sur l'icône 🔒 dans la barre d'adresse\n2. Cherchez 'Caméra' dans les permissions\n3. Changez de 'Bloqué' à 'Autoriser'\n4. Rechargez la page";
       } else if (error?.name === "NotFoundError" || error?.name === "DevicesNotFoundError") {
         errorMessage = "Aucune caméra détectée sur cet appareil.";
+        errorInstructions = "Vérifiez qu'une caméra est connectée et fonctionnelle.";
       } else if (error?.name === "NotReadableError" || error?.name === "TrackStartError") {
         errorMessage = "La caméra est déjà utilisée par une autre application.";
+        errorInstructions = "Fermez les autres applications utilisant la caméra (Zoom, Teams, etc.) et réessayez.";
       } else if (error?.name === "OverconstrainedError") {
         errorMessage = "La caméra ne supporte pas les paramètres demandés.";
+        errorInstructions = "Votre caméra ne supporte pas la résolution demandée. Essayez avec une autre caméra.";
       } else if (error?.name === "TypeError") {
         errorMessage = "Erreur de configuration de la caméra.";
+        errorInstructions = "Rechargez la page et réessayez.";
       } else if (error?.name === "AbortError") {
         errorMessage = "L'accès à la caméra a été interrompu.";
+        errorInstructions = "Réessayez de démarrer la capture.";
       } else if (error?.name === "SecurityError") {
-        errorMessage = "Accès à la caméra bloqué pour des raisons de sécurité. Vérifiez les permissions du site.";
+        errorMessage = "Accès à la caméra bloqué pour des raisons de sécurité.";
+        errorInstructions = "Vérifiez les permissions de votre navigateur pour ce site.";
+      } else {
+        errorInstructions = "Vérifiez les permissions de la caméra dans les paramètres de votre navigateur.";
       }
+      
+      setCameraError(errorMessage + (errorInstructions ? "\n\n" + errorInstructions : ""));
       
       setCameraError(errorMessage);
       toast({
@@ -814,10 +826,22 @@ export default function StreetView() {
                     />
                     {!isCapturing && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                        <div className="text-center">
+                        <div className="text-center px-4 max-w-md">
                           <Camera className="h-12 w-12 text-white/50 mx-auto mb-2" />
-                          {cameraError && (
-                            <p className="text-red-400 text-sm px-4">{cameraError}</p>
+                          {cameraError ? (
+                            <div className="bg-red-900/80 rounded-lg p-4 text-left">
+                              <p className="text-red-200 text-sm font-semibold mb-2 whitespace-pre-line">{cameraError}</p>
+                              <Button
+                                onClick={startCapture}
+                                variant="outline"
+                                size="sm"
+                                className="mt-2 w-full"
+                              >
+                                Réessayer
+                              </Button>
+                            </div>
+                          ) : (
+                            <p className="text-white/70 text-sm">Prêt à démarrer la capture</p>
                           )}
                         </div>
                       </div>
