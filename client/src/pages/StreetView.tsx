@@ -560,7 +560,6 @@ export default function StreetView() {
       return;
     }
 
-    setIsCapturing(true);
     setCaptureCount(0);
 
     try {
@@ -591,6 +590,9 @@ export default function StreetView() {
         await videoRef.current.play();
       }
 
+      // Mettre isCapturing à true SEULEMENT après succès de l'accès caméra
+      setIsCapturing(true);
+
       captureIntervalRef.current = setInterval(() => {
         capturePhoto();
       }, 5000);
@@ -602,8 +604,6 @@ export default function StreetView() {
 
     } catch (error: any) {
       console.error("Erreur accès caméra - nom:", error?.name, "message:", error?.message, "erreur complète:", error);
-      
-      setIsCapturing(false);
       
       let errorMessage = "Impossible d'accéder à la caméra.";
       let errorInstructions = "";
