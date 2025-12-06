@@ -82,16 +82,12 @@ export async function setupAuth(app: Express) {
   const ensureStrategy = (domain: string) => {
     const strategyName = `replitauth:${domain}`;
     if (!registeredStrategies.has(strategyName)) {
-      // Utiliser REPL_URL si disponible (Replit), sinon construire l'URL manuellement
-      const baseUrl = process.env.REPL_URL || `http://${domain}`;
-      const callbackURL = `${baseUrl}/api/callback`;
-      
       const strategy = new Strategy(
         {
           name: strategyName,
           config,
           scope: "openid email profile offline_access",
-          callbackURL,
+          callbackURL: `https://${domain}/api/callback`,
         },
         verify,
       );
@@ -106,8 +102,10 @@ export async function setupAuth(app: Express) {
   app.get("/api/login", (req, res, next) => {
     ensureStrategy(req.hostname);
     passport.authenticate(`replitauth:${req.hostname}`, {
+      prompt: "select_account consent",
       scope: ["openid", "email", "profile", "offline_access"],
-    } as any)(req, res, next);
+      ui_locales: "fr",
+    })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
