@@ -223,11 +223,12 @@ export const insertSignalementSchema = createInsertSchema(signalements, {
 });
 
 export const updateSignalementSchema = createInsertSchema(signalements, {
-  latitude: z.union([z.string(), z.number()]).transform(val => String(val)),
-  longitude: z.union([z.string(), z.number()]).transform(val => String(val)),
+  latitude: z.union([z.string(), z.number()]).transform(val => String(val)).optional(),
+  longitude: z.union([z.string(), z.number()]).transform(val => String(val)).optional(),
   localisation: z.string().optional(),
   niveauUrgence: z.string().optional(),
   statut: z.enum(["en_attente", "en_cours", "resolu", "rejete"]).optional(),
+  medias: z.array(z.string()).optional(),
 }).omit({
   id: true,
   createdAt: true,

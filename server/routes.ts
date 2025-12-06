@@ -264,9 +264,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/signalements/:id", signalementMutationLimiter, async (req: any, res) => {
     try {
+      console.log("📝 PATCH /api/signalements/:id - Données reçues:", req.body);
+      
       const signalement = await storage.getSignalement(req.params.id);
 
       if (!signalement) {
+        console.log("❌ Signalement non trouvé:", req.params.id);
         return res.status(404).json({ error: "Signalement non trouvé" });
       }
 
@@ -281,11 +284,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isOwner = signalement.userId === userId;
 
       if (!isDemoSignalement && !isOwner) {
+        console.log("❌ Non autorisé - userId:", userId, "signalement.userId:", signalement.userId);
         return res.status(403).json({ error: "Vous n'êtes pas autorisé à modifier ce signalement" });
       }
 
       // If signalement is not a demo signalement, require authentication
       if (!isDemoSignalement && !req.user) {
+        console.log("❌ Authentification requise");
         return res.status(401).json({ error: "Authentification requise" });
       }
 
@@ -293,10 +298,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!validationResult.success) {
         const errorMessage = fromZodError(validationResult.error).toString();
+        console.log("❌ Erreur validation:", errorMessage);
+        console.log("Erreurs détaillées:", validationResult.error.errors);
         return res.status(400).json({ error: errorMessage });
       }
 
+      console.log("✅ Données validées:", validationResult.data);
+
       const updatedSignalement = await storage.updateSignalement(req.params.id, validationResult.data);
+
+      console.log("✅ Signalement mis à jour:", updatedSignalement);
 
       // 🔒 Audit logging (non-bloquant)
       if (updatedSignalement) {
@@ -327,7 +338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(updatedSignalement);
     } catch (error) {
-      console.error("Error updating signalement:", error);
+      console.error("❌ Error updating signalement:", error);
       res.status(500).json({ error: "Erreur lors de la mise à jour du signalement" });
     }
   });
