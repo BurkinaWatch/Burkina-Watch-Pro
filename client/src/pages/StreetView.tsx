@@ -445,7 +445,12 @@ export default function StreetView() {
     }
 
     setIsCapturing(false);
-  }, []);
+    
+    toast({
+      title: "Capture arrêtée",
+      description: `${captureCount} photo(s) capturée(s) et enregistrée(s).`,
+    });
+  }, [captureCount, toast]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
