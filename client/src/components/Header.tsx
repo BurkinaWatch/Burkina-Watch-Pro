@@ -83,12 +83,14 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
             </Button>
             <button
               onClick={() => setLocation("/")}
-              className="flex flex-col cursor-pointer hover:opacity-80 transition-opacity"
+              className="flex flex-col cursor-pointer hover:opacity-80 transition-opacity min-w-0"
             >
-              <h1 className="text-xl font-extrabold text-red-600 dark:text-red-400 tracking-tight">{t("header.title")}</h1>
-              <p className="text-sm font-semibold">
-                <span className="text-red-500 dark:text-red-400">{t("header.slogan.see")}</span>{" "}
-                <span className="text-yellow-500 dark:text-yellow-300">{t("header.slogan.act")}</span>{" "}
+              <h1 className="text-sm sm:text-base md:text-xl font-extrabold text-red-600 dark:text-red-400 tracking-tight">{t("header.title")}</h1>
+              <p className="text-xs sm:text-sm font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                <span className="text-red-500 dark:text-red-400">{t("header.slogan.see")}</span>
+                <span className="hidden sm:inline"> </span>
+                <span className="text-yellow-500 dark:text-yellow-300">{t("header.slogan.act")}</span>
+                <span className="hidden sm:inline"> </span>
                 <span className="text-green-500 dark:text-green-400">{t("header.slogan.protect")}</span>
               </p>
             </button>
