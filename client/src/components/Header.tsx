@@ -81,19 +81,20 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
               <div className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full" />
               <Menu className="h-6 w-6 group-hover:text-primary transition-colors" />
             </Button>
-            <button
-              onClick={() => setLocation("/")}
-              className="flex flex-col cursor-pointer hover:opacity-80 transition-opacity min-w-0"
-            >
-              <h1 className="text-sm sm:text-base md:text-xl font-extrabold text-red-600 dark:text-red-400 tracking-tight">{t("header.title")}</h1>
-              <p className="text-xs sm:text-sm font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                <span className="text-red-500 dark:text-red-400">{t("header.slogan.see")}</span>
-                <span className="hidden sm:inline"> </span>
-                <span className="text-yellow-500 dark:text-yellow-300">{t("header.slogan.act")}</span>
-                <span className="hidden sm:inline"> </span>
-                <span className="text-green-500 dark:text-green-400">{t("header.slogan.protect")}</span>
-              </p>
-            </button>
+            <Link href="/">
+              <button
+                className="flex flex-col cursor-pointer hover:opacity-80 transition-opacity min-w-0"
+              >
+                <h1 className="text-sm sm:text-base md:text-xl font-extrabold text-red-600 dark:text-red-400 tracking-tight">{t("header.title")}</h1>
+                <p className="text-xs sm:text-sm font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                  <span className="text-red-500 dark:text-red-400">{t("header.slogan.see")}</span>
+                  <span className="hidden sm:inline"> </span>
+                  <span className="text-yellow-500 dark:text-yellow-300">{t("header.slogan.act")}</span>
+                  <span className="hidden sm:inline"> </span>
+                  <span className="text-green-500 dark:text-green-400">{t("header.slogan.protect")}</span>
+                </p>
+              </button>
+            </Link>
           </div>
 
         <div className="flex items-center gap-2">
