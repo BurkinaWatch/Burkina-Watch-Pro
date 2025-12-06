@@ -23,8 +23,9 @@ export default function Feed() {
       if (!response.ok) throw new Error("Erreur lors du chargement");
       return response.json();
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes avant de considérer les données comme obsolètes
-    gcTime: 10 * 60 * 1000, // 10 minutes avant de supprimer du cache
+    staleTime: 30 * 1000, // 30 secondes - données toujours fraîches pour tous les utilisateurs
+    gcTime: 60 * 1000, // 1 minute avant de supprimer du cache
+    refetchInterval: 60 * 1000, // Rafraîchir automatiquement toutes les 60 secondes
   });
 
   const filteredReports = filter === "tous" 

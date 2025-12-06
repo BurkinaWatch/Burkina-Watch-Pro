@@ -24,7 +24,8 @@ export default function SignalementDetail() {
       if (!res.ok) throw new Error("Signalement non trouvé");
       return res.json();
     },
-    staleTime: 2 * 60 * 1000,
+    staleTime: 30 * 1000, // 30 secondes - données fraîches pour tous les utilisateurs
+    refetchInterval: 60 * 1000, // Rafraîchir automatiquement toutes les 60 secondes
     enabled: !!id,
   });
 
