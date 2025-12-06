@@ -30,7 +30,7 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import "leaflet/dist/leaflet.css";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -392,7 +392,7 @@ function MapillaryViewer({
 export default function StreetView() {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [, navigate] = useNavigate();
+  const [, navigate] = useLocation();
   
   const [activeTab, setActiveTab] = useState<string>("explore");
   const [isCapturing, setIsCapturing] = useState(false);
