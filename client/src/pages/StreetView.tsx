@@ -26,9 +26,11 @@ import {
   Globe,
   Loader2,
   Info,
-  RefreshCw
+  RefreshCw,
+  ArrowLeft
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "wouter";
 import "leaflet/dist/leaflet.css";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -390,6 +392,7 @@ function MapillaryViewer({
 export default function StreetView() {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const [, navigate] = useNavigate();
   
   const [activeTab, setActiveTab] = useState<string>("explore");
   const [isCapturing, setIsCapturing] = useState(false);
@@ -641,7 +644,21 @@ export default function StreetView() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 items-center justify-between px-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/")}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Quitter
+          </Button>
+          <h1 className="text-lg font-semibold">Vue Street 360°</h1>
+          <div className="w-20"></div>
+        </div>
+      </header>
       
       <div className="container mx-auto px-4 py-6 space-y-4">
         <Card className="border-yellow-500/50 bg-yellow-500/10">
@@ -808,24 +825,26 @@ export default function StreetView() {
                   </div>
 
                   <div className="flex gap-2">
-                    <Button 
-                      onClick={isCapturing ? stopCapture : startCapture}
-                      className={isCapturing ? "flex-1 bg-red-600 hover:bg-red-700" : "flex-1 bg-green-600 hover:bg-green-700"}
-                      disabled={!isCapturing && !currentPosition}
-                      data-testid={isCapturing ? "button-stop-capture" : "button-start-capture"}
-                    >
-                      {isCapturing ? (
-                        <>
-                          <Square className="h-4 w-4 mr-2" />
-                          Arrêter la capture
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-4 w-4 mr-2" />
-                          Démarrer la capture
-                        </>
-                      )}
-                    </Button>
+                    {!isCapturing ? (
+                      <Button 
+                        onClick={startCapture}
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                        disabled={!currentPosition}
+                        data-testid="button-start-capture"
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        Démarrer la capture
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={stopCapture}
+                        className="flex-1 bg-red-600 hover:bg-red-700"
+                        data-testid="button-stop-capture"
+                      >
+                        <Square className="h-4 w-4 mr-2" />
+                        Arrêter la capture
+                      </Button>
+                    )}
                   </div>
 
                   <div className="bg-muted/50 rounded-lg p-3 text-center">
