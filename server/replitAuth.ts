@@ -82,12 +82,16 @@ export async function setupAuth(app: Express) {
   const ensureStrategy = (domain: string) => {
     const strategyName = `replitauth:${domain}`;
     if (!registeredStrategies.has(strategyName)) {
+      // Utiliser REPL_URL si disponible (Replit), sinon construire l'URL manuellement
+      const baseUrl = process.env.REPL_URL || `http://${domain}`;
+      const callbackURL = `${baseUrl}/api/callback`;
+      
       const strategy = new Strategy(
         {
           name: strategyName,
           config,
           scope: "openid email profile offline_access",
-          callbackURL: `https://${domain}/api/callback`,
+          callbackURL,
         },
         verify,
       );
