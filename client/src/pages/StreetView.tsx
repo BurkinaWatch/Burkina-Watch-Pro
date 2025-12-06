@@ -808,27 +808,24 @@ export default function StreetView() {
                   </div>
 
                   <div className="flex gap-2">
-                    {!isCapturing ? (
-                      <Button 
-                        onClick={startCapture} 
-                        className="flex-1 bg-green-600 hover:bg-green-700"
-                        disabled={!currentPosition}
-                        data-testid="button-start-capture"
-                      >
-                        <Play className="h-4 w-4 mr-2" />
-                        Démarrer la capture
-                      </Button>
-                    ) : (
-                      <Button 
-                        onClick={stopCapture} 
-                        variant="destructive"
-                        className="flex-1"
-                        data-testid="button-stop-capture"
-                      >
-                        <Square className="h-4 w-4 mr-2" />
-                        Arrêter la capture
-                      </Button>
-                    )}
+                    <Button 
+                      onClick={isCapturing ? stopCapture : startCapture}
+                      className={isCapturing ? "flex-1 bg-red-600 hover:bg-red-700" : "flex-1 bg-green-600 hover:bg-green-700"}
+                      disabled={!isCapturing && !currentPosition}
+                      data-testid={isCapturing ? "button-stop-capture" : "button-start-capture"}
+                    >
+                      {isCapturing ? (
+                        <>
+                          <Square className="h-4 w-4 mr-2" />
+                          Arrêter la capture
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4 mr-2" />
+                          Démarrer la capture
+                        </>
+                      )}
+                    </Button>
                   </div>
 
                   <div className="bg-muted/50 rounded-lg p-3 text-center">
