@@ -76,6 +76,8 @@ export default function EditSignalementDialog({ signalement }: EditSignalementDi
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/signalements"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/signalements/${signalement.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user/signalements"] });
       toast({
         title: "Signalement modifié",
         description: "Vos modifications ont été enregistrées.",
