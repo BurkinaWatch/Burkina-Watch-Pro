@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -44,8 +44,17 @@ export default function Events() {
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const lastFetchRef = useRef<number>(0);
 
-  const fetchEvents = async () => {
+  // Fonction pour récupérer les événements (avec debounce de 5 secondes)
+  const fetchEvents = useCallback(async () => {
+    const now = Date.now();
+    // Éviter les appels multiples rapides (debounce 5 secondes)
+    if (now - lastFetchRef.current < 5000) {
+      return;
+    }
+    lastFetchRef.current = now;
+    
     setLoading(true);
     try {
       const response = await fetch("/api/events-burkina");
@@ -63,11 +72,32 @@ export default function Events() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+  }, [fetchEvents]);
+
+  // Rafraîchir automatiquement les données quand la page reprend le focus
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchEvents();
+      }
+    };
+
+    const handleFocus = () => {
+      fetchEvents();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [fetchEvents]);
 
   useEffect(() => {
     let filtered = events;

@@ -1,5 +1,5 @@
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import EmergencyPanel from "@/components/EmergencyPanel";
@@ -650,19 +650,52 @@ export default function Pharmacies() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [, setLocation] = useLocation();
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [pharmacies, setPharmacies] = useState<Pharmacie[]>(PHARMACIES_DATA);
+  const [loading, setLoading] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const { toast } = useToast();
+  const lastFetchRef = useRef<number>(0);
+
+  // Fonction pour récupérer les pharmacies depuis l'API (avec debounce de 5 secondes)
+  const fetchPharmacies = useCallback(async () => {
+    const now = Date.now();
+    // Éviter les appels multiples rapides (debounce 5 secondes)
+    if (now - lastFetchRef.current < 5000) {
+      return;
+    }
+    lastFetchRef.current = now;
+    
+    setLoading(true);
+    try {
+      const response = await fetch("/api/pharmacies");
+      if (!response.ok) throw new Error("Erreur lors du chargement");
+      const data = await response.json();
+      setPharmacies(data);
+      setLastUpdate(new Date());
+    } catch (error) {
+      console.error("Erreur:", error);
+      // Utiliser les données locales en cas d'erreur
+      setPharmacies(PHARMACIES_DATA);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Chargement initial
+  useEffect(() => {
+    fetchPharmacies();
+  }, [fetchPharmacies]);
 
   // Rafraîchir automatiquement les données quand la page reprend le focus
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        setRefreshKey(prev => prev + 1);
+        fetchPharmacies();
       }
     };
 
     const handleFocus = () => {
-      setRefreshKey(prev => prev + 1);
+      fetchPharmacies();
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -672,10 +705,10 @@ export default function Pharmacies() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleFocus);
     };
-  }, []);
+  }, [fetchPharmacies]);
 
   const filteredPharmacies = useMemo(() => {
-    let filtered = PHARMACIES_DATA;
+    let filtered = pharmacies;
 
     if (selectedRegion !== "all") {
       filtered = filtered.filter(p => p.region === selectedRegion);
@@ -692,7 +725,7 @@ export default function Pharmacies() {
     }
 
     return filtered;
-  }, [searchQuery, selectedRegion, refreshKey]);
+  }, [searchQuery, selectedRegion, pharmacies]);
 
   const openInMaps = (pharmacie: Pharmacie) => {
     if (pharmacie.latitude && pharmacie.longitude) {
@@ -734,10 +767,10 @@ export default function Pharmacies() {
   const handleReset = () => {
     setSearchQuery("");
     setSelectedRegion("all");
-    setRefreshKey(prev => prev + 1);
+    fetchPharmacies();
     toast({
-      title: "Données réinitialisées",
-      description: `${PHARMACIES_DATA.length} pharmacies disponibles`,
+      title: "Données actualisées",
+      description: `${pharmacies.length} pharmacies disponibles`,
     });
   };
 
