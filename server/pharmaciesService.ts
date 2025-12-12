@@ -75,19 +75,33 @@ export class PharmaciesService {
     console.log(`✅ Données des pharmacies mises à jour: ${PHARMACIES_DATA.length} pharmacies`);
   }
 
-  // Planifier une mise à jour quotidienne automatique
+  // Planifier une mise à jour quotidienne automatique (à minuit)
   scheduleAutoUpdate() {
-    // Mise à jour toutes les 24 heures
-    const updateInterval = 24 * 60 * 60 * 1000; // 24 heures en millisecondes
-
-    setInterval(() => {
-      this.markAsUpdated();
-      console.log(`🔄 Mise à jour automatique des pharmacies effectuée`);
-    }, updateInterval);
-
     // Mise à jour initiale
     this.markAsUpdated();
-    console.log(`⏰ Mise à jour automatique programmée toutes les 24h`);
+    console.log(`✅ Données des pharmacies initialisées`);
+
+    // Calculer le temps jusqu'à minuit
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    const timeUntilMidnight = tomorrow.getTime() - now.getTime();
+
+    // Planifier la première mise à jour à minuit
+    setTimeout(() => {
+      this.markAsUpdated();
+      console.log(`🔄 Mise à jour quotidienne automatique des pharmacies (minuit)`);
+
+      // Puis répéter toutes les 24h
+      setInterval(() => {
+        this.markAsUpdated();
+        console.log(`🔄 Mise à jour quotidienne automatique des pharmacies (minuit)`);
+      }, 24 * 60 * 60 * 1000);
+    }, timeUntilMidnight);
+
+    console.log(`⏰ Mise à jour automatique programmée tous les jours à minuit`);
+    console.log(`⏰ Prochaine mise à jour dans ${Math.round(timeUntilMidnight / 1000 / 60)} minutes`);
   }
 }
 

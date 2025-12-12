@@ -40,10 +40,46 @@ const EVENT_SOURCES = [
   'https://www.journaldufaso.com/feed/'
 ];
 
-// Cache en mémoire (1 heure)
+// Cache en mémoire (6 heures pour réduire les appels API)
 let cachedEvents: EventItem[] = [];
 let lastFetchTime = 0;
-const CACHE_DURATION = 60 * 60 * 1000; // 1 heure
+const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 heures
+
+// Fonction pour planifier les mises à jour automatiques
+export function scheduleAutoUpdate() {
+  // Mise à jour initiale
+  console.log(`✅ Service Events initialisé`);
+
+  // Calculer le temps jusqu'à minuit
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+  const timeUntilMidnight = tomorrow.getTime() - now.getTime();
+
+  // Planifier la première mise à jour à minuit
+  setTimeout(() => {
+    clearEventsCache();
+    fetchEvents().then(events => {
+      console.log(`🔄 Mise à jour quotidienne automatique des événements (minuit) - ${events.length} événements`);
+    }).catch(err => {
+      console.error(`❌ Erreur mise à jour automatique des événements:`, err);
+    });
+
+    // Puis répéter toutes les 24h
+    setInterval(() => {
+      clearEventsCache();
+      fetchEvents().then(events => {
+        console.log(`🔄 Mise à jour quotidienne automatique des événements (minuit) - ${events.length} événements`);
+      }).catch(err => {
+        console.error(`❌ Erreur mise à jour automatique des événements:`, err);
+      });
+    }, 24 * 60 * 60 * 1000);
+  }, timeUntilMidnight);
+
+  console.log(`⏰ Mise à jour automatique des événements programmée tous les jours à minuit`);
+  console.log(`⏰ Prochaine mise à jour dans ${Math.round(timeUntilMidnight / 1000 / 60)} minutes`);
+}
 
 export async function fetchEvents(): Promise<EventItem[]> {
   const now = Date.now();

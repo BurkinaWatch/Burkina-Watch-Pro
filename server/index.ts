@@ -75,8 +75,16 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Démarrer la mise à jour automatique des pharmacies
+  // Démarrer les mises à jour automatiques
   pharmaciesService.scheduleAutoUpdate();
+  
+  // Importer et démarrer la mise à jour automatique des événements
+  const { scheduleAutoUpdate: scheduleEventsUpdate } = await import("./eventsService");
+  scheduleEventsUpdate();
+  
+  // Importer et démarrer la mise à jour automatique des urgences
+  const { scheduleAutoUpdate: scheduleUrgenciesUpdate } = await import("./urgenciesService");
+  scheduleUrgenciesUpdate();
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.
