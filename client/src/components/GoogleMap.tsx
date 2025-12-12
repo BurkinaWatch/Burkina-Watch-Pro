@@ -255,39 +255,61 @@ const BURKINA_REGIONS = [
 
 function CustomMarker({ color, isSOS, niveauUrgence }: { color: string; isSOS: boolean; niveauUrgence?: string | null }) {
   const urgencyColor = niveauUrgence ? urgencyColors[niveauUrgence] || urgencyColors.moyen : urgencyColors.moyen;
+  
+  // Intensité du glow basée sur l'urgence
+  const glowIntensity = niveauUrgence === 'critique' ? 0.8 : niveauUrgence === 'moyen' ? 0.6 : 0.4;
+  const glowSize = niveauUrgence === 'critique' ? '70px' : niveauUrgence === 'moyen' ? '60px' : '50px';
 
   return (
     <div style={{ position: 'relative' }}>
+      {/* Halo externe permanent pour TOUS les signalements */}
+      <div 
+        className="absolute inset-0 rounded-full"
+        style={{
+          width: glowSize,
+          height: glowSize,
+          background: `radial-gradient(circle, ${color}${Math.round(glowIntensity * 255).toString(16)} 0%, transparent 70%)`,
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          filter: 'blur(8px)',
+          pointerEvents: 'none'
+        }}
+      />
+      
+      {/* Animation pulsante pour tous les signalements */}
+      <div 
+        className="absolute inset-0 rounded-full animate-pulse"
+        style={{
+          width: '48px',
+          height: '48px',
+          backgroundColor: color,
+          opacity: 0.4,
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          animationDuration: isSOS ? '1s' : '2s'
+        }}
+      />
+      
+      {/* Animation supplémentaire pour SOS */}
       {isSOS && (
-        <>
-          <div 
-            className="absolute inset-0 rounded-full animate-ping"
-            style={{
-              width: '60px',
-              height: '60px',
-              backgroundColor: color,
-              opacity: 0.4,
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              animationDuration: '2s'
-            }}
-          />
-          <div 
-            className="absolute inset-0 rounded-full animate-pulse"
-            style={{
-              width: '48px',
-              height: '48px',
-              backgroundColor: color,
-              opacity: 0.3,
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              animationDuration: '1.5s'
-            }}
-          />
-        </>
+        <div 
+          className="absolute inset-0 rounded-full animate-ping"
+          style={{
+            width: '60px',
+            height: '60px',
+            backgroundColor: color,
+            opacity: 0.5,
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            animationDuration: '1.5s'
+          }}
+        />
       )}
+      
+      {/* Marker principal avec effet de brillance */}
       <div 
         style={{
           width: isSOS ? '36px' : '30px',
@@ -295,41 +317,61 @@ function CustomMarker({ color, isSOS, niveauUrgence }: { color: string; isSOS: b
           backgroundColor: color,
           borderRadius: '50% 50% 50% 0',
           transform: 'rotate(-45deg)',
-          border: '2px solid white',
-          boxShadow: isSOS ? '0 4px 12px rgba(227, 6, 19, 0.5)' : '0 2px 4px rgba(0,0,0,0.3)',
+          border: '3px solid white',
+          boxShadow: `
+            0 0 15px ${color}${Math.round(glowIntensity * 255).toString(16)},
+            0 0 30px ${color}${Math.round(glowIntensity * 128).toString(16)},
+            0 4px 12px rgba(0,0,0,0.4)
+          `,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          transition: 'all 0.3s ease'
+          transition: 'all 0.3s ease',
+          position: 'relative',
+          zIndex: 5
         }}
       >
         {isSOS ? (
           <AlertTriangle 
             size={16} 
             color="white" 
-            style={{ transform: 'rotate(45deg)' }}
+            style={{ 
+              transform: 'rotate(45deg)',
+              filter: 'drop-shadow(0 0 2px rgba(255,255,255,0.8))'
+            }}
           />
         ) : (
           <MapPin 
             size={14} 
             color="white" 
-            style={{ transform: 'rotate(45deg)' }}
+            style={{ 
+              transform: 'rotate(45deg)',
+              filter: 'drop-shadow(0 0 1px rgba(255,255,255,0.6))'
+            }}
           />
         )}
       </div>
+      
+      {/* Voyant d'urgence avec effet lumineux */}
       <div 
+        className="animate-pulse"
         style={{
           position: 'absolute',
           top: '-4px',
           right: '-4px',
-          width: '12px',
-          height: '12px',
+          width: '14px',
+          height: '14px',
           backgroundColor: urgencyColor,
           borderRadius: '50%',
           border: '2px solid white',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
-          zIndex: 10
+          boxShadow: `
+            0 0 8px ${urgencyColor},
+            0 0 15px ${urgencyColor}80,
+            0 2px 6px rgba(0,0,0,0.4)
+          `,
+          zIndex: 10,
+          animationDuration: niveauUrgence === 'critique' ? '0.8s' : '1.5s'
         }}
         title={`Niveau d'urgence: ${niveauUrgence || 'moyen'}`}
       />
