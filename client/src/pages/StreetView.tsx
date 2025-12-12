@@ -19,7 +19,7 @@ import {
   AlertTriangle, 
   Play, 
   Square,
-  Image as ImageIcon,
+  ImageIcon,
   X,
   Eye,
   Navigation,
@@ -140,7 +140,7 @@ async function findNearestMapillaryImage(lat: number, lng: number, token: string
   const maxLng = (lng + bbox).toFixed(3);
   const maxLat = (lat + bbox).toFixed(3);
   const url = `https://graph.mapillary.com/images?fields=id&bbox=${minLng},${minLat},${maxLng},${maxLat}&limit=1`;
-  
+
   try {
     const response = await fetch(url, {
       headers: {
@@ -148,7 +148,7 @@ async function findNearestMapillaryImage(lat: number, lng: number, token: string
       }
     });
     const data = await response.json();
-    
+
     if (data.error) {
       console.error("Mapillary API error:", data.error.message);
       if (data.error.code === 190 || data.error.message?.includes("OAuth")) {
@@ -156,12 +156,12 @@ async function findNearestMapillaryImage(lat: number, lng: number, token: string
       }
       return { success: false, error: "network_error" };
     }
-    
+
     if (!response.ok) {
       console.error("Mapillary API error:", response.status);
       return { success: false, error: "network_error" };
     }
-    
+
     if (data.data && data.data.length > 0) {
       return { success: true, imageId: data.data[0].id };
     }
@@ -208,7 +208,7 @@ function MapillaryViewer({
 
     try {
       const result = await findNearestMapillaryImage(latitude, longitude, token);
-      
+
       if (!result.success) {
         setViewerState(result.error);
         return;
@@ -241,7 +241,7 @@ function MapillaryViewer({
     } catch (error) {
       console.error("Erreur initialisation Mapillary:", error);
       setViewerState("network_error");
-      onError("Erreur d'initialisation du viewer");
+      onError("Erreur initialisation du viewer");
     }
   }, [latitude, longitude, token, onError]);
 
@@ -261,12 +261,12 @@ function MapillaryViewer({
       initViewer();
       return;
     }
-    
+
     setViewerState("loading");
-    
+
     try {
       const result = await findNearestMapillaryImage(latitude, longitude, token);
-      
+
       if (!result.success) {
         setViewerState(result.error);
         return;
@@ -305,7 +305,7 @@ function MapillaryViewer({
             </div>
           </div>
         );
-      
+
       case "invalid_token":
         return (
           <div className="absolute inset-0 flex items-center justify-center bg-muted/90 rounded-lg">
@@ -331,7 +331,7 @@ function MapillaryViewer({
             </div>
           </div>
         );
-      
+
       case "no_images":
         return (
           <div className="absolute inset-0 flex items-center justify-center bg-muted/90 rounded-lg">
@@ -349,7 +349,7 @@ function MapillaryViewer({
             </div>
           </div>
         );
-      
+
       case "network_error":
         return (
           <div className="absolute inset-0 flex items-center justify-center bg-muted/90 rounded-lg">
@@ -367,7 +367,7 @@ function MapillaryViewer({
             </div>
           </div>
         );
-      
+
       case "ready":
         return (
           <div className="absolute bottom-3 left-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
@@ -375,7 +375,7 @@ function MapillaryViewer({
             {currentLocation.lat.toFixed(4)}, {currentLocation.lng.toFixed(4)}
           </div>
         );
-      
+
       default:
         return null;
     }
@@ -393,7 +393,7 @@ export default function StreetView() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [, navigate] = useLocation();
-  
+
   const [activeTab, setActiveTab] = useState<string>("explore");
   const [isCapturing, setIsCapturing] = useState(false);
   const [currentPosition, setCurrentPosition] = useState<{ lat: number; lng: number }>({ lat: 12.3769, lng: -1.5160 });
@@ -403,7 +403,7 @@ export default function StreetView() {
   const [isPageVisible, setIsPageVisible] = useState(true);
   const [captureCount, setCaptureCount] = useState(0);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const captureIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -445,7 +445,7 @@ export default function StreetView() {
     }
 
     setIsCapturing(false);
-    
+
     toast({
       title: "Capture arrêtée",
       description: `${captureCount} photo(s) capturée(s) et enregistrée(s).`,
@@ -456,7 +456,7 @@ export default function StreetView() {
     const handleVisibilityChange = () => {
       const visible = document.visibilityState === "visible";
       setIsPageVisible(visible);
-      
+
       if (!visible && isCapturing) {
         stopCapture();
         toast({
@@ -473,7 +473,7 @@ export default function StreetView() {
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
-    
+
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("beforeunload", handleBeforeUnload);
@@ -506,12 +506,12 @@ export default function StreetView() {
     const canvas = document.createElement("canvas");
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
-    
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     ctx.drawImage(videoRef.current, 0, 0);
-    
+
     const imageData = canvas.toDataURL("image/jpeg", 0.8);
     const thumbnailData = await createThumbnail(imageData);
 
@@ -537,7 +537,7 @@ export default function StreetView() {
 
   const startCapture = useCallback(async () => {
     setCameraError(null);
-    
+
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       const error = "Votre navigateur ne supporte pas la capture de photos. Veuillez utiliser un navigateur moderne (Chrome, Firefox, Safari).";
       setCameraError(error);
@@ -564,7 +564,7 @@ export default function StreetView() {
 
     try {
       let stream: MediaStream | null = null;
-      
+
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
@@ -583,7 +583,7 @@ export default function StreetView() {
       }
 
       streamRef.current = stream;
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.muted = true;
@@ -604,10 +604,10 @@ export default function StreetView() {
 
     } catch (error: any) {
       console.error("Erreur accès caméra - nom:", error?.name, "message:", error?.message, "erreur complète:", error);
-      
+
       let errorMessage = "Impossible d'accéder à la caméra.";
       let errorInstructions = "";
-      
+
       if (error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError") {
         errorMessage = "Accès à la caméra refusé";
         errorInstructions = "1. Cliquez sur l'icône 🔒 dans la barre d'adresse\n2. Cherchez 'Caméra' dans les permissions\n3. Changez de 'Bloqué' à 'Autoriser'\n4. Rechargez la page";
@@ -628,13 +628,13 @@ export default function StreetView() {
         errorInstructions = "Réessayez de démarrer la capture.";
       } else if (error?.name === "SecurityError") {
         errorMessage = "Accès à la caméra bloqué pour des raisons de sécurité.";
-        errorInstructions = "Vérifiez les permissions de votre navigateur pour ce site.";
+        errorInstructions = "Vérifiez les permissions de la caméra dans les paramètres de votre navigateur.";
       } else {
         errorInstructions = "Vérifiez les permissions de la caméra dans les paramètres de votre navigateur.";
       }
-      
+
       setCameraError(errorMessage + (errorInstructions ? "\n\n" + errorInstructions : ""));
-      
+
       setCameraError(errorMessage);
       toast({
         title: "Erreur caméra",
@@ -676,7 +676,7 @@ export default function StreetView() {
           <div className="w-20"></div>
         </div>
       </header>
-      
+
       <div className="container mx-auto px-4 py-6 space-y-4">
         <Card className="border-yellow-500/50 bg-yellow-500/10">
           <CardContent className="py-3 px-4 flex items-start gap-3">
@@ -770,7 +770,7 @@ export default function StreetView() {
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                           />
                           <MapCenterUpdater center={mapCenter} />
-                          
+
                           <Marker position={mapCenter}>
                             <Popup>Votre position</Popup>
                           </Marker>
@@ -896,7 +896,13 @@ export default function StreetView() {
                       <History className="h-5 w-5 text-primary" />
                       Historique local
                     </CardTitle>
-                    <Badge variant="outline">{localHistory.length}/{MAX_HISTORY_ITEMS}</Badge>
+                    <div className="flex gap-2">
+                      <Badge variant="outline">{localHistory.length}/{MAX_HISTORY_ITEMS}</Badge>
+                      <Badge variant="secondary" className="gap-1">
+                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        {((localHistory.reduce((acc, item) => acc + item.imageData.length, 0)) / 1024 / 1024).toFixed(1)} MB
+                      </Badge>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -940,7 +946,7 @@ export default function StreetView() {
                               </div>
                             ))}
                           </div>
-                          
+
                           <Button
                             variant="destructive"
                             size="sm"

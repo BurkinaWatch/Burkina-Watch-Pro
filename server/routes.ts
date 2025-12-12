@@ -1428,9 +1428,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Coordonnées invalides" });
       }
 
-      // Limite taille image (max 5MB en base64)
-      if (imageData.length > 7 * 1024 * 1024) {
-        return res.status(400).json({ error: "Image trop volumineuse (max 5MB)" });
+      // Limite taille image optimisée (max 2MB en base64 après compression)
+      const imageSizeMB = imageData.length / (1024 * 1024);
+      if (imageSizeMB > 2) {
+        return res.status(400).json({ 
+          error: `Image trop volumineuse (${imageSizeMB.toFixed(1)}MB). Maximum: 2MB. Utilisez la compression intégrée.` 
+        });
+      }
+
+      // Vérifier que l'image est bien un JPEG compressé
+      if (!imageData.startsWith('data:image/jpeg')) {
+        return res.status(400).json({ error: "Format invalide. Utilisez JPEG uniquement." });
       }
 
       const point = await storage.createStreetviewPoint({
@@ -1443,6 +1451,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         deviceInfo: null, // Aucune info device stockée pour anonymat
       });
 
+      console.log(`✅ Photo streetview uploadée: ${point.id} (${imageSizeMB.toFixed(2)}MB)`);
       res.status(201).json({ success: true, id: point.id });
     } catch (error) {
       console.error("Erreur upload streetview:", error);
