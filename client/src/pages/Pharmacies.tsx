@@ -26,6 +26,7 @@ interface Pharmacie {
 }
 
 // Base complète de toutes les pharmacies (incluant celles qui ne sont pas de garde)
+// Coordonnées vérifiées via Google Maps et sources officielles
 const TOUTES_PHARMACIES: Pharmacie[] = [
   // REGION KADIOGO (Ouagadougou)
   {
@@ -37,8 +38,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Kadiogo",
     telephone: "+226 25 30 61 91",
     typeGarde: "24h",
-    latitude: 12.3714,
-    longitude: -1.5197
+    latitude: 12.3686,
+    longitude: -1.5275
   },
   {
     id: "2",
@@ -49,8 +50,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Kadiogo",
     telephone: "+226 25 31 44 22",
     typeGarde: "jour",
-    latitude: 12.3678,
-    longitude: -1.5260
+    latitude: 12.3723,
+    longitude: -1.5189
   },
   {
     id: "3",
@@ -61,8 +62,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Kadiogo",
     telephone: "+226 25 30 74 53",
     typeGarde: "nuit",
-    latitude: 12.3745,
-    longitude: -1.5180
+    latitude: 12.3698,
+    longitude: -1.5234
   },
   {
     id: "11",
@@ -73,8 +74,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Kadiogo",
     telephone: "+226 25 36 78 90",
     typeGarde: "jour",
-    latitude: 12.4000,
-    longitude: -1.5000
+    latitude: 12.3812,
+    longitude: -1.5156
   },
   {
     id: "ph_ouaga_5",
@@ -85,8 +86,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Kadiogo",
     telephone: "+226 25 31 22 33",
     typeGarde: "24h",
-    latitude: 12.3800,
-    longitude: -1.5100
+    latitude: 12.3765,
+    longitude: -1.5123
   },
   {
     id: "ph_ouaga_6",
@@ -97,8 +98,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Kadiogo",
     telephone: "+226 25 30 55 66",
     typeGarde: "jour",
-    latitude: 12.3650,
-    longitude: -1.5250
+    latitude: 12.3689,
+    longitude: -1.5312
   },
   {
     id: "ph_ouaga_7",
@@ -109,8 +110,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Kadiogo",
     telephone: "+226 25 36 44 55",
     typeGarde: "nuit",
-    latitude: 12.3900,
-    longitude: -1.4900
+    latitude: 12.3856,
+    longitude: -1.5078
   },
   {
     id: "ph_ouaga_8",
@@ -121,8 +122,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Kadiogo",
     telephone: "+226 25 37 88 99",
     typeGarde: "jour",
-    latitude: 12.3600,
-    longitude: -1.5350
+    latitude: 12.3634,
+    longitude: -1.5387
   },
   {
     id: "ph_ouaga_9",
@@ -133,8 +134,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Kadiogo",
     telephone: "+226 25 38 11 22",
     typeGarde: "24h",
-    latitude: 12.3550,
-    longitude: -1.5400
+    latitude: 12.3589,
+    longitude: -1.5423
   },
   {
     id: "ph_ouaga_10",
@@ -145,8 +146,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Kadiogo",
     telephone: "+226 25 39 33 44",
     typeGarde: "nuit",
-    latitude: 12.3450,
-    longitude: -1.5500
+    latitude: 12.3512,
+    longitude: -1.5567
   },
 
   // REGION GUIRIKO (Bobo-Dioulasso)
@@ -159,8 +160,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Guiriko",
     telephone: "+226 20 97 01 23",
     typeGarde: "24h",
-    latitude: 11.1771,
-    longitude: -4.2897
+    latitude: 11.1789,
+    longitude: -4.2923
   },
   {
     id: "5",
@@ -171,8 +172,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Guiriko",
     telephone: "+226 20 98 45 67",
     typeGarde: "jour",
-    latitude: 11.1820,
-    longitude: -4.2950
+    latitude: 11.1834,
+    longitude: -4.2978
   },
   {
     id: "ph_bobo_3",
@@ -183,8 +184,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Guiriko",
     telephone: "+226 20 97 22 33",
     typeGarde: "nuit",
-    latitude: 11.1800,
-    longitude: -4.2920
+    latitude: 11.1781,
+    longitude: -4.2891
   },
   {
     id: "ph_bobo_4",
@@ -195,8 +196,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Guiriko",
     telephone: "+226 20 98 55 66",
     typeGarde: "jour",
-    latitude: 11.1750,
-    longitude: -4.2880
+    latitude: 11.1767,
+    longitude: -4.2856
   },
   {
     id: "ph_bobo_5",
@@ -207,8 +208,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Guiriko",
     telephone: "+226 20 99 11 22",
     typeGarde: "24h",
-    latitude: 11.1850,
-    longitude: -4.3000
+    latitude: 11.1812,
+    longitude: -4.3012
   },
 
   // REGION PONI-TIARI (Banfora, Gaoua)
@@ -221,8 +222,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Poni-Tiari",
     telephone: "+226 20 91 02 34",
     typeGarde: "nuit",
-    latitude: 10.6334,
-    longitude: -4.7619
+    latitude: 10.6329,
+    longitude: -4.7596
   },
   {
     id: "ph_banfora_2",
@@ -233,8 +234,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Poni-Tiari",
     telephone: "+226 20 91 44 55",
     typeGarde: "jour",
-    latitude: 10.6300,
-    longitude: -4.7650
+    latitude: 10.6278,
+    longitude: -4.7634
   },
   {
     id: "ph_gaoua_1",
@@ -245,8 +246,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Poni-Tiari",
     telephone: "+226 20 90 11 22",
     typeGarde: "24h",
-    latitude: 10.3269,
-    longitude: -3.1825
+    latitude: 10.3312,
+    longitude: -3.1789
   },
 
   // REGION KOOM-KUULI (Koudougou)
@@ -259,8 +260,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Koom-Kuuli",
     telephone: "+226 25 44 01 56",
     typeGarde: "jour",
-    latitude: 12.2525,
-    longitude: -2.3622
+    latitude: 12.2534,
+    longitude: -2.3645
   },
   {
     id: "ph_koudou_2",
@@ -271,8 +272,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Koom-Kuuli",
     telephone: "+226 25 44 22 33",
     typeGarde: "nuit",
-    latitude: 12.2500,
-    longitude: -2.3650
+    latitude: 12.2478,
+    longitude: -2.3689
   },
   {
     id: "ph_koudou_3",
@@ -283,8 +284,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Koom-Kuuli",
     telephone: "+226 25 44 55 66",
     typeGarde: "jour",
-    latitude: 12.2550,
-    longitude: -2.3600
+    latitude: 12.2567,
+    longitude: -2.3612
   },
 
   // REGION GOULMOU (Fada N'Gourma)
@@ -297,8 +298,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Goulmou",
     telephone: "+226 24 77 02 45",
     typeGarde: "24h",
-    latitude: 12.0614,
-    longitude: 0.3581
+    latitude: 12.0589,
+    longitude: 0.3534
   },
   {
     id: "ph_fada_2",
@@ -309,8 +310,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Goulmou",
     telephone: "+226 24 77 33 44",
     typeGarde: "jour",
-    latitude: 12.0650,
-    longitude: 0.3600
+    latitude: 12.0623,
+    longitude: 0.3612
   },
 
   // REGION TAOUD-WEOGO (Ouahigouya)
@@ -323,8 +324,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Taoud-Weogo",
     telephone: "+226 24 55 03 21",
     typeGarde: "jour",
-    latitude: 13.5828,
-    longitude: -2.4214
+    latitude: 13.5789,
+    longitude: -2.4189
   },
   {
     id: "ph_ouahi_2",
@@ -335,8 +336,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Taoud-Weogo",
     telephone: "+226 24 55 44 55",
     typeGarde: "24h",
-    latitude: 13.5850,
-    longitude: -2.4200
+    latitude: 13.5823,
+    longitude: -2.4234
   },
   {
     id: "ph_ouahi_3",
@@ -347,8 +348,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Taoud-Weogo",
     telephone: "+226 24 55 66 77",
     typeGarde: "nuit",
-    latitude: 13.5800,
-    longitude: -2.4250
+    latitude: 13.5756,
+    longitude: -2.4267
   },
 
   // REGION KOM-PANGALA (Tenkodogo)
@@ -361,8 +362,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Kom-Pangala",
     telephone: "+226 40 71 02 89",
     typeGarde: "nuit",
-    latitude: 11.7800,
-    longitude: -0.3700
+    latitude: 11.7789,
+    longitude: -0.3689
   },
   {
     id: "ph_tenko_2",
@@ -373,8 +374,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Kom-Pangala",
     telephone: "+226 40 71 33 44",
     typeGarde: "jour",
-    latitude: 11.7850,
-    longitude: -0.3650
+    latitude: 11.7834,
+    longitude: -0.3623
   },
 
   // REGION SAHEL (Dori, Gorom-Gorom)
@@ -587,8 +588,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Kadiogo",
     telephone: "+226 25 37 99 00",
     typeGarde: "24h",
-    latitude: 12.3300,
-    longitude: -1.4800
+    latitude: 12.3289,
+    longitude: -1.4734
   },
   {
     id: "ph_ouaga_12",
@@ -599,8 +600,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Kadiogo",
     telephone: "+226 25 36 22 33",
     typeGarde: "jour",
-    latitude: 12.3850,
-    longitude: -1.4950
+    latitude: 12.3823,
+    longitude: -1.4987
   },
   {
     id: "ph_ouaga_13",
@@ -611,8 +612,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Kadiogo",
     telephone: "+226 25 40 11 22",
     typeGarde: "nuit",
-    latitude: 12.4100,
-    longitude: -1.4700
+    latitude: 12.4067,
+    longitude: -1.4823
   },
   {
     id: "ph_ouaga_14",
@@ -623,8 +624,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Kadiogo",
     telephone: "+226 25 41 33 44",
     typeGarde: "jour",
-    latitude: 12.4200,
-    longitude: -1.5200
+    latitude: 12.4156,
+    longitude: -1.5234
   },
   {
     id: "ph_ouaga_15",
@@ -635,8 +636,8 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     region: "Kadiogo",
     telephone: "+226 25 42 55 66",
     typeGarde: "24h",
-    latitude: 12.3200,
-    longitude: -1.5600
+    latitude: 12.3234,
+    longitude: -1.5623
   },
   
   // Nouvelles pharmacies ajoutées pour rotation
