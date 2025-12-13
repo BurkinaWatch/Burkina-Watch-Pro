@@ -80,7 +80,16 @@ export async function setupAuth(app: Express) {
   const registeredStrategies = new Set<string>();
 
   const getCallbackDomain = (req: any) => {
-    return process.env.REPLIT_DEV_DOMAIN || req.get('host') || req.hostname;
+    // Get the host from various sources
+    const host = req.get('x-forwarded-host') || req.get('host') || req.hostname;
+    
+    // If we have REPLIT_DEV_DOMAIN, use it
+    if (process.env.REPLIT_DEV_DOMAIN) {
+      return process.env.REPLIT_DEV_DOMAIN;
+    }
+    
+    // Otherwise use the host from the request
+    return host;
   };
 
   const ensureStrategy = (domain: string) => {
@@ -105,6 +114,7 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/login", (req, res, next) => {
     const domain = getCallbackDomain(req);
+    console.log(`[AUTH] Login domain: ${domain}`);
     ensureStrategy(domain);
     passport.authenticate(`replitauth:${domain}`, {
       prompt: "select_account consent",
@@ -115,10 +125,12 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/callback", (req, res, next) => {
     const domain = getCallbackDomain(req);
+    console.log(`[AUTH] Callback domain: ${domain}`);
     ensureStrategy(domain);
     passport.authenticate(`replitauth:${domain}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
+      failureFlash: false
     })(req, res, next);
   });
 
@@ -138,6 +150,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user || !user.expires_at) {
+    console.log('[AUTH] User not authenticated or missing expires_at');
     return res.status(401).json({ message: "Unauthorized" });
   }
 
@@ -148,6 +161,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   const refreshToken = user.refresh_token;
   if (!refreshToken) {
+    console.log('[AUTH] No refresh token available');
     res.status(401).json({ message: "Unauthorized" });
     return;
   }
@@ -158,6 +172,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     updateUserSession(user, tokenResponse);
     return next();
   } catch (error) {
+    console.error('[AUTH] Token refresh failed:', error);
     res.status(401).json({ message: "Unauthorized" });
     return;
   }
