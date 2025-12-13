@@ -17,8 +17,19 @@ const getOidcConfig = memoize(
   { maxAge: 3600 * 1000 }
 );
 
+function getExternalUrl(req: any) {
+  // Use REPLIT_DOMAINS if available (most reliable)
+  if (process.env.REPLIT_DOMAINS) {
+    return `https://${process.env.REPLIT_DOMAINS}`;
+  }
+  // Fallback to x-forwarded-host or host header
+  const host = req.get("x-forwarded-host") || req.get("host");
+  const protocol = req.get("x-forwarded-proto") || req.protocol;
+  return `${protocol}://${host}`;
+}
+
 export function getSession() {
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000;
+  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 7 days
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
@@ -77,69 +88,44 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  const registeredStrategies = new Set<string>();
-
-  const getCallbackDomain = (req: any) => {
-    // Get the host from various sources
-    const host = req.get('x-forwarded-host') || req.get('host') || req.hostname;
-    
-    // If we have REPLIT_DEV_DOMAIN, use it
-    if (process.env.REPLIT_DEV_DOMAIN) {
-      return process.env.REPLIT_DEV_DOMAIN;
-    }
-    
-    // Otherwise use the host from the request
-    return host;
-  };
-
-  const ensureStrategy = (domain: string) => {
-    const strategyName = `replitauth:${domain}`;
-    if (!registeredStrategies.has(strategyName)) {
-      const strategy = new Strategy(
-        {
-          name: strategyName,
-          config,
-          scope: "openid email profile offline_access",
-          callbackURL: `https://${domain}/api/callback`,
-        },
-        verify,
-      );
-      passport.use(strategy);
-      registeredStrategies.add(strategyName);
-    }
-  };
+  // Use a single consistent domain for the strategy
+  const callbackDomain = process.env.REPLIT_DOMAINS || "localhost:5000";
+  
+  const strategy = new Strategy(
+    {
+      name: "replitauth",
+      config,
+      scope: "openid email profile offline_access",
+      callbackURL: `https://${callbackDomain}/api/callback`,
+    },
+    verify,
+  );
+  passport.use(strategy);
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    const domain = getCallbackDomain(req);
-    console.log(`[AUTH] Login domain: ${domain}`);
-    ensureStrategy(domain);
-    passport.authenticate(`replitauth:${domain}`, {
+    passport.authenticate("replitauth", {
       prompt: "select_account consent",
       scope: ["openid", "email", "profile", "offline_access"],
-      ui_locales: "fr",
     })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
-    const domain = getCallbackDomain(req);
-    console.log(`[AUTH] Callback domain: ${domain}`);
-    ensureStrategy(domain);
-    passport.authenticate(`replitauth:${domain}`, {
+    passport.authenticate("replitauth", {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
-      failureFlash: false
     })(req, res, next);
   });
 
   app.get("/api/logout", (req, res) => {
+    const externalUrl = getExternalUrl(req);
     req.logout(() => {
       res.redirect(
         client.buildEndSessionUrl(config, {
           client_id: process.env.REPL_ID!,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
+          post_logout_redirect_uri: externalUrl,
         }).href
       );
     });
@@ -150,7 +136,6 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user || !user.expires_at) {
-    console.log('[AUTH] User not authenticated or missing expires_at');
     return res.status(401).json({ message: "Unauthorized" });
   }
 
@@ -161,9 +146,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   const refreshToken = user.refresh_token;
   if (!refreshToken) {
-    console.log('[AUTH] No refresh token available');
-    res.status(401).json({ message: "Unauthorized" });
-    return;
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   try {
@@ -172,8 +155,6 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     updateUserSession(user, tokenResponse);
     return next();
   } catch (error) {
-    console.error('[AUTH] Token refresh failed:', error);
-    res.status(401).json({ message: "Unauthorized" });
-    return;
+    return res.status(401).json({ message: "Unauthorized" });
   }
 };
