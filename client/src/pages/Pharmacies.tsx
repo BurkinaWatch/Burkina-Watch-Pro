@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
@@ -71,7 +72,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ouagadougou",
     quartier: "Cissin",
     region: "Kadiogo",
-    telephone: "+226 70 12 34 56",
+    telephone: "+226 25 36 78 90",
     typeGarde: "jour",
     latitude: 12.3812,
     longitude: -1.5156
@@ -107,7 +108,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ouagadougou",
     quartier: "Dapoya",
     region: "Kadiogo",
-    telephone: "+226 70 23 45 67",
+    telephone: "+226 25 36 44 55",
     typeGarde: "nuit",
     latitude: 12.3856,
     longitude: -1.5078
@@ -119,7 +120,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ouagadougou",
     quartier: "Kamsonghin",
     region: "Kadiogo",
-    telephone: "+226 70 34 56 78",
+    telephone: "+226 25 37 88 99",
     typeGarde: "jour",
     latitude: 12.3634,
     longitude: -1.5387
@@ -131,7 +132,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ouagadougou",
     quartier: "Zogona",
     region: "Kadiogo",
-    telephone: "+226 70 45 67 89",
+    telephone: "+226 25 38 11 22",
     typeGarde: "24h",
     latitude: 12.3589,
     longitude: -1.5423
@@ -143,7 +144,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ouagadougou",
     quartier: "Tanghin",
     region: "Kadiogo",
-    telephone: "+226 70 56 78 90",
+    telephone: "+226 25 39 33 44",
     typeGarde: "nuit",
     latitude: 12.3512,
     longitude: -1.5567
@@ -193,7 +194,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Bobo-Dioulasso",
     quartier: "Belle Ville",
     region: "Guiriko",
-    telephone: "+226 70 98 11 22",
+    telephone: "+226 20 98 55 66",
     typeGarde: "jour",
     latitude: 11.1767,
     longitude: -4.2856
@@ -231,7 +232,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Banfora",
     quartier: "Secteur 2",
     region: "Poni-Tiari",
-    telephone: "+226 70 91 22 33",
+    telephone: "+226 20 91 44 55",
     typeGarde: "jour",
     latitude: 10.6278,
     longitude: -4.7634
@@ -243,7 +244,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Gaoua",
     quartier: "Centre",
     region: "Poni-Tiari",
-    telephone: "+226 70 90 11 22",
+    telephone: "+226 20 90 11 22",
     typeGarde: "24h",
     latitude: 10.3312,
     longitude: -3.1789
@@ -281,7 +282,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Koudougou",
     quartier: "Secteur 1",
     region: "Koom-Kuuli",
-    telephone: "+226 70 44 33 44",
+    telephone: "+226 25 44 55 66",
     typeGarde: "jour",
     latitude: 12.2567,
     longitude: -2.3612
@@ -307,7 +308,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Fada N'Gourma",
     quartier: "Secteur 2",
     region: "Goulmou",
-    telephone: "+226 70 77 11 22",
+    telephone: "+226 24 77 33 44",
     typeGarde: "jour",
     latitude: 12.0623,
     longitude: 0.3612
@@ -345,7 +346,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ouahigouya",
     quartier: "Secteur 3",
     region: "Taoud-Weogo",
-    telephone: "+226 70 55 22 33",
+    telephone: "+226 24 55 66 77",
     typeGarde: "nuit",
     latitude: 13.5756,
     longitude: -2.4267
@@ -371,7 +372,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Tenkodogo",
     quartier: "Secteur 2",
     region: "Kom-Pangala",
-    telephone: "+226 70 71 11 22",
+    telephone: "+226 40 71 33 44",
     typeGarde: "jour",
     latitude: 11.7834,
     longitude: -0.3623
@@ -397,7 +398,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Dori",
     quartier: "Secteur 1",
     region: "Sahel",
-    telephone: "+226 70 46 11 22",
+    telephone: "+226 24 46 22 33",
     typeGarde: "jour",
     latitude: 14.0400,
     longitude: -0.0300
@@ -409,13 +410,13 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Gorom-Gorom",
     quartier: "Centre",
     region: "Sahel",
-    telephone: "+226 70 45 11 22",
+    telephone: "+226 24 45 11 22",
     typeGarde: "jour",
     latitude: 14.4436,
     longitude: -0.2353
   },
 
-  // REGION DJÔRÔ (Manga)
+  // REGION DJÔRÔ (Banfora Sud)
   {
     id: "ph_manga_1",
     nom: "Pharmacie de Manga",
@@ -423,7 +424,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Manga",
     quartier: "Centre",
     region: "Djôrô",
-    telephone: "+226 70 70 11 22",
+    telephone: "+226 25 70 11 22",
     typeGarde: "jour",
     latitude: 11.6667,
     longitude: -1.0667
@@ -437,7 +438,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ziniaré",
     quartier: "Centre",
     region: "Nakambga",
-    telephone: "+226 70 30 11 22",
+    telephone: "+226 25 30 88 99",
     typeGarde: "jour",
     latitude: 12.5833,
     longitude: -1.3000
@@ -449,7 +450,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ziniaré",
     quartier: "Secteur 1",
     region: "Nakambga",
-    telephone: "+226 70 30 22 33",
+    telephone: "+226 25 30 77 88",
     typeGarde: "24h",
     latitude: 12.5850,
     longitude: -1.2950
@@ -475,7 +476,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Kaya",
     quartier: "Secteur 2",
     region: "Wètemga",
-    telephone: "+226 70 45 33 44",
+    telephone: "+226 24 45 44 55",
     typeGarde: "jour",
     latitude: 13.0950,
     longitude: -1.0800
@@ -489,7 +490,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Yako",
     quartier: "Centre",
     region: "Passoré",
-    telephone: "+226 70 54 11 22",
+    telephone: "+226 24 54 11 22",
     typeGarde: "jour",
     latitude: 12.9589,
     longitude: -2.2611
@@ -503,7 +504,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Réo",
     quartier: "Centre",
     region: "Yonyoosé",
-    telephone: "+226 70 48 11 22",
+    telephone: "+226 25 48 11 22",
     typeGarde: "jour",
     latitude: 12.3192,
     longitude: -2.4708
@@ -529,7 +530,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Dédougou",
     quartier: "Secteur 1",
     region: "Tondeka",
-    telephone: "+226 70 52 22 33",
+    telephone: "+226 20 52 33 44",
     typeGarde: "jour",
     latitude: 12.4650,
     longitude: -3.4580
@@ -543,7 +544,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Tougan",
     quartier: "Centre",
     region: "Taar-Soomba",
-    telephone: "+226 70 53 11 22",
+    telephone: "+226 24 53 11 22",
     typeGarde: "jour",
     latitude: 13.0667,
     longitude: -3.0667
@@ -557,7 +558,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Orodara",
     quartier: "Centre",
     region: "Bankui",
-    telephone: "+226 70 95 11 22",
+    telephone: "+226 20 95 11 22",
     typeGarde: "jour",
     latitude: 10.9833,
     longitude: -4.9167
@@ -571,7 +572,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Léo",
     quartier: "Centre",
     region: "Yirka-Gaongo",
-    telephone: "+226 70 43 11 22",
+    telephone: "+226 25 43 11 22",
     typeGarde: "jour",
     latitude: 11.1000,
     longitude: -2.1000
@@ -585,7 +586,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ouagadougou",
     quartier: "Ouaga 2000",
     region: "Kadiogo",
-    telephone: "+226 70 37 11 22",
+    telephone: "+226 25 37 99 00",
     typeGarde: "24h",
     latitude: 12.3289,
     longitude: -1.4734
@@ -597,7 +598,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ouagadougou",
     quartier: "Zone du Bois",
     region: "Kadiogo",
-    telephone: "+226 70 36 11 22",
+    telephone: "+226 25 36 22 33",
     typeGarde: "jour",
     latitude: 12.3823,
     longitude: -1.4987
@@ -609,7 +610,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ouagadougou",
     quartier: "Somgandé",
     region: "Kadiogo",
-    telephone: "+226 70 40 11 22",
+    telephone: "+226 25 40 11 22",
     typeGarde: "nuit",
     latitude: 12.4067,
     longitude: -1.4823
@@ -621,7 +622,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ouagadougou",
     quartier: "Tampouy",
     region: "Kadiogo",
-    telephone: "+226 70 41 11 22",
+    telephone: "+226 25 41 33 44",
     typeGarde: "jour",
     latitude: 12.4156,
     longitude: -1.5234
@@ -633,12 +634,12 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ouagadougou",
     quartier: "Zagtouli",
     region: "Kadiogo",
-    telephone: "+226 70 42 11 22",
+    telephone: "+226 25 42 55 66",
     typeGarde: "24h",
     latitude: 12.3234,
     longitude: -1.5623
   },
-
+  
   // Nouvelles pharmacies ajoutées pour rotation
   {
     id: "ph_ouaga_16",
@@ -647,7 +648,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ouagadougou",
     quartier: "Dassasgho",
     region: "Kadiogo",
-    telephone: "+226 70 43 22 33",
+    telephone: "+226 25 43 11 22",
     typeGarde: "jour",
     latitude: 12.3500,
     longitude: -1.5100
@@ -659,7 +660,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ouagadougou",
     quartier: "Pissy",
     region: "Kadiogo",
-    telephone: "+226 70 44 22 33",
+    telephone: "+226 25 44 22 33",
     typeGarde: "nuit",
     latitude: 12.3400,
     longitude: -1.5300
@@ -671,7 +672,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ouagadougou",
     quartier: "Gounghin",
     region: "Kadiogo",
-    telephone: "+226 70 45 22 33",
+    telephone: "+226 25 45 33 44",
     typeGarde: "jour",
     latitude: 12.3680,
     longitude: -1.5270
@@ -683,7 +684,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ouagadougou",
     quartier: "Koulouba",
     region: "Kadiogo",
-    telephone: "+226 70 46 22 33",
+    telephone: "+226 25 46 44 55",
     typeGarde: "nuit",
     latitude: 12.3750,
     longitude: -1.5220
@@ -695,7 +696,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ouagadougou",
     quartier: "Zone du Bois",
     region: "Kadiogo",
-    telephone: "+226 70 47 22 33",
+    telephone: "+226 25 47 55 66",
     typeGarde: "jour",
     latitude: 12.3850,
     longitude: -1.4950
@@ -707,7 +708,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Bobo-Dioulasso",
     quartier: "Centre-ville",
     region: "Guiriko",
-    telephone: "+226 70 99 11 22",
+    telephone: "+226 20 99 22 33",
     typeGarde: "nuit",
     latitude: 11.1790,
     longitude: -4.2910
@@ -719,7 +720,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Bobo-Dioulasso",
     quartier: "Sarfalao",
     region: "Guiriko",
-    telephone: "+226 70 99 22 33",
+    telephone: "+226 20 99 33 44",
     typeGarde: "jour",
     latitude: 11.1830,
     longitude: -4.2880
@@ -731,7 +732,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Koudougou",
     quartier: "Secteur 2",
     region: "Koom-Kuuli",
-    telephone: "+226 70 44 44 55",
+    telephone: "+226 25 44 66 77",
     typeGarde: "24h",
     latitude: 12.2480,
     longitude: -2.3600
@@ -743,7 +744,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Fada N'Gourma",
     quartier: "Secteur 3",
     region: "Goulmou",
-    telephone: "+226 70 77 22 33",
+    telephone: "+226 24 77 44 55",
     typeGarde: "nuit",
     latitude: 12.0600,
     longitude: 0.3620
@@ -755,7 +756,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Ouahigouya",
     quartier: "Secteur 2",
     region: "Taoud-Weogo",
-    telephone: "+226 70 55 33 44",
+    telephone: "+226 24 55 77 88",
     typeGarde: "jour",
     latitude: 13.5820,
     longitude: -2.4180
@@ -767,7 +768,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Tenkodogo",
     quartier: "Centre",
     region: "Kom-Pangala",
-    telephone: "+226 70 71 22 33",
+    telephone: "+226 40 71 44 55",
     typeGarde: "24h",
     latitude: 11.7820,
     longitude: -0.3680
@@ -779,7 +780,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Banfora",
     quartier: "Secteur 3",
     region: "Poni-Tiari",
-    telephone: "+226 70 91 33 44",
+    telephone: "+226 20 91 55 66",
     typeGarde: "24h",
     latitude: 10.6350,
     longitude: -4.7600
@@ -791,7 +792,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Dori",
     quartier: "Secteur 2",
     region: "Sahel",
-    telephone: "+226 70 46 22 33",
+    telephone: "+226 24 46 33 44",
     typeGarde: "nuit",
     latitude: 14.0380,
     longitude: -0.0320
@@ -803,7 +804,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Dédougou",
     quartier: "Secteur 2",
     region: "Tondeka",
-    telephone: "+226 70 52 33 44",
+    telephone: "+226 20 52 44 55",
     typeGarde: "nuit",
     latitude: 12.4620,
     longitude: -3.4590
@@ -815,7 +816,7 @@ const TOUTES_PHARMACIES: Pharmacie[] = [
     ville: "Kaya",
     quartier: "Secteur 3",
     region: "Wètemga",
-    telephone: "+226 70 45 44 55",
+    telephone: "+226 24 45 55 66",
     typeGarde: "nuit",
     latitude: 13.0900,
     longitude: -1.0820
@@ -827,21 +828,21 @@ function getPharmaciesDeGardeAujourdhui(): Pharmacie[] {
   // Utiliser la date du jour comme seed pour une rotation cohérente
   const today = new Date();
   const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
-
+  
   // Créer une copie et mélanger selon le jour
   const allPharmacies = [...TOUTES_PHARMACIES];
   const seed = dayOfYear;
-
+  
   // Algorithme de mélange déterministe basé sur le jour
   for (let i = allPharmacies.length - 1; i > 0; i--) {
     const j = (seed * (i + 1)) % (i + 1);
     [allPharmacies[i], allPharmacies[j]] = [allPharmacies[j], allPharmacies[i]];
   }
-
+  
   // Sélectionner environ 60% des pharmacies comme étant de garde
   const nombreDeGarde = Math.floor(allPharmacies.length * 0.6);
   const pharmaciesDeGarde = allPharmacies.slice(0, nombreDeGarde);
-
+  
   // Réassigner les types de garde de manière équilibrée
   const typeGardes: Array<"jour" | "nuit" | "24h"> = ["jour", "nuit", "24h"];
   pharmaciesDeGarde.forEach((pharmacie, index) => {
@@ -854,7 +855,7 @@ function getPharmaciesDeGardeAujourdhui(): Pharmacie[] {
       pharmacie.typeGarde = "nuit";
     }
   });
-
+  
   return pharmaciesDeGarde;
 }
 
@@ -885,7 +886,7 @@ export default function Pharmacies() {
       return;
     }
     lastFetchRef.current = now;
-
+    
     setLoading(true);
     try {
       const response = await fetch("/api/pharmacies");
@@ -1100,7 +1101,7 @@ export default function Pharmacies() {
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      <a
+                      <a 
                         href={`tel:${pharmacie.telephone}`}
                         className="text-primary hover:underline"
                       >
