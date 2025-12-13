@@ -117,7 +117,6 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/login", (req, res, next) => {
     const hostname = getHostname(req);
-    console.log("[AUTH] Login with hostname:", hostname);
     ensureStrategy(hostname);
     passport.authenticate(`replitauth:${hostname}`, {
       prompt: "login consent",
@@ -127,7 +126,6 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/callback", (req, res, next) => {
     const hostname = getHostname(req);
-    console.log("[AUTH] Callback with hostname:", hostname);
     ensureStrategy(hostname);
     passport.authenticate(`replitauth:${hostname}`, {
       successReturnToOrRedirect: "/",
