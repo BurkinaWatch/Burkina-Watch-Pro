@@ -41,53 +41,68 @@ export default function Urgences() {
   const [isLoading, setIsLoading] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
-  const lastFetchRef = useRef<number>(0);
+  const lastRefreshRef = useRef<number>(0);
 
-  // Charger les urgences depuis l'API (avec debounce)
-  const fetchUrgences = useCallback(async () => {
-    const now = Date.now();
-    if (now - lastFetchRef.current < 5000) return;
-    lastFetchRef.current = now;
-    
-    setIsLoading(true);
-    try {
-      const response = await fetch("/api/urgences");
-      if (!response.ok) throw new Error("Erreur lors du chargement");
-      const data = await response.json();
-      setUrgencesData(data);
-    } catch (error) {
-      console.error("Erreur:", error);
-      setUrgencesData([]);
-    } finally {
-      setIsLoading(false);
-    }
+  // Chargement initial des données - exécuté une seule fois au montage
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch("/api/urgences");
+        if (!response.ok) throw new Error("Erreur lors du chargement");
+        const data = await response.json();
+        console.log("Urgences chargées:", data.length, "services");
+        setUrgencesData(data);
+      } catch (error) {
+        console.error("Erreur chargement urgences:", error);
+        setUrgencesData([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
   }, []);
 
-  // Chargement initial
+  // Auto-refresh on visibility/focus (avec debounce de 5 secondes)
   useEffect(() => {
-    fetchUrgences();
-  }, [fetchUrgences]);
-
-  // Auto-refresh on visibility/focus
-  useEffect(() => {
+    const refreshData = async () => {
+      const now = Date.now();
+      if (now - lastRefreshRef.current < 5000) return;
+      lastRefreshRef.current = now;
+      
+      try {
+        const response = await fetch("/api/urgences");
+        if (response.ok) {
+          const data = await response.json();
+          setUrgencesData(data);
+        }
+      } catch (error) {
+        console.error("Erreur refresh:", error);
+      }
+    };
+    
     const handleVisibilityChange = () => {
-      if (!document.hidden) fetchUrgences();
+      if (!document.hidden) refreshData();
     };
-    const handleFocus = () => {
-      fetchUrgences();
-    };
+    const handleFocus = () => refreshData();
+    
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("focus", handleFocus);
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleFocus);
     };
-  }, [fetchUrgences]);
+  }, []);
 
   const handleRefresh = async () => {
+    setIsLoading(true);
     try {
       await fetch("/api/urgences/refresh", { method: "POST" });
-      await fetchUrgences();
+      const response = await fetch("/api/urgences");
+      if (response.ok) {
+        const data = await response.json();
+        setUrgencesData(data);
+      }
       toast({
         title: "Données actualisées",
         description: "Les services d'urgence ont été mis à jour",
@@ -98,6 +113,8 @@ export default function Urgences() {
         description: "Impossible d'actualiser les données",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
