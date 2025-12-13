@@ -537,13 +537,11 @@ export default function StreetView() {
 
   const startCapture = useCallback(async () => {
     setCameraError(null);
-    setIsCapturing(true);
     setCaptureCount(0);
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       const error = "Votre navigateur ne supporte pas la capture de photos.";
       setCameraError(error);
-      setIsCapturing(false);
       toast({
         title: "Non supporté",
         description: error,
@@ -583,13 +581,14 @@ export default function StreetView() {
         capturePhoto();
       }, 5000);
 
+      setIsCapturing(true);
+
       toast({
         title: "Capture démarrée ✓",
         description: "Les photos sont capturées toutes les 5 secondes.",
       });
 
     } catch (error: any) {
-      setIsCapturing(false);
       let errorMessage = "Impossible d'accéder à la caméra.";
 
       if (error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError") {
