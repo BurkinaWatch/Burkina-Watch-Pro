@@ -124,17 +124,25 @@ export default function Urgences() {
     }
     
     return urgencesData.filter(service => {
-      if (!service || !service.name || !service.city) return false;
+      if (!service) return false;
       
-      const matchesSearch = 
-        service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (service.phone && service.phone.includes(searchTerm)) ||
-        (service.type && service.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (service.region && service.region.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (service.address && service.address.toLowerCase().includes(searchTerm.toLowerCase()));
+      const name = service.name || "";
+      const city = service.city || "";
+      const phone = service.phone || "";
+      const type = service.type || "";
+      const region = service.region || "";
+      const address = service.address || "";
+      const search = searchTerm.toLowerCase();
       
-      const matchesType = selectedType === "all" || !service.type || service.type === selectedType;
+      const matchesSearch = !searchTerm || 
+        name.toLowerCase().includes(search) ||
+        city.toLowerCase().includes(search) ||
+        phone.includes(searchTerm) ||
+        type.toLowerCase().includes(search) ||
+        region.toLowerCase().includes(search) ||
+        address.toLowerCase().includes(search);
+      
+      const matchesType = selectedType === "all" || type === selectedType;
       
       return matchesSearch && matchesType;
     });
