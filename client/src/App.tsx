@@ -30,6 +30,7 @@ import Urgences from "@/pages/Urgences";
 import Bulletin from "@/pages/Bulletin";
 import Events from "@/pages/Events";
 import StreetView from "@/pages/StreetView";
+import Ouaga3D from "@/pages/Ouaga3D";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
@@ -55,6 +56,7 @@ function Router() {
       <Route path="/bulletin" component={Bulletin} />
       <Route path="/events" component={Events} />
       <Route path="/streetview" component={StreetView} />
+      <Route path="/ouaga3d" component={Ouaga3D} />
       <Route path="/a-propos" component={APropos} />
       <Route path="/conditions" component={Conditions} />
       <Route path="/notifications" component={Notifications} />

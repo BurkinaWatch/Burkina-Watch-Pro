@@ -387,6 +387,29 @@ async function triggerManualIngestion(): Promise<{ success: boolean; message: st
   }
 }
 
+function scheduleAutoUpdate(): void {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(2, 0, 0, 0);
+  
+  if (midnight.getTime() <= now.getTime()) {
+    midnight.setDate(midnight.getDate() + 1);
+  }
+  
+  const msUntilMidnight = midnight.getTime() - now.getTime();
+  const minutesUntil = Math.floor(msUntilMidnight / 60000);
+  
+  console.log("🌍 Service Ouaga en 3D initialisé");
+  console.log(`⏰ Prochaine ingestion automatique dans ${minutesUntil} minutes (02h00)`);
+  
+  setTimeout(() => {
+    runDailyIngestion();
+    setInterval(() => {
+      runDailyIngestion();
+    }, 24 * 60 * 60 * 1000);
+  }, msUntilMidnight);
+}
+
 export const ouaga3dService = {
   runDailyIngestion,
   getOuaga3dStats,
@@ -394,6 +417,7 @@ export const ouaga3dService = {
   getCoverageData,
   getRecentJobs,
   triggerManualIngestion,
+  scheduleAutoUpdate,
   OUAGADOUGOU_BOUNDS,
   OUAGADOUGOU_ZONES
 };
