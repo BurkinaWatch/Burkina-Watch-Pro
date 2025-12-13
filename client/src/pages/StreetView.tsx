@@ -540,34 +540,15 @@ export default function StreetView() {
     setCaptureCount(0);
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      const error = "Votre navigateur ne supporte pas la capture de photos.";
-      setCameraError(error);
-      toast({
-        title: "Non supporté",
-        description: error,
-        variant: "destructive",
-      });
+      setCameraError("Votre navigateur ne supporte pas la capture de photos.");
       return;
     }
 
     try {
-      let stream: MediaStream | null = null;
-
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-          audio: false,
-        });
-      } catch (err1) {
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: "environment" } },
-            audio: false,
-          });
-        } catch (err2) {
-          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        }
-      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false,
+      });
 
       streamRef.current = stream;
 
@@ -577,32 +558,23 @@ export default function StreetView() {
         await videoRef.current.play();
       }
 
+      setIsCapturing(true);
+
       captureIntervalRef.current = setInterval(() => {
         capturePhoto();
       }, 5000);
 
-      setIsCapturing(true);
-
       toast({
-        title: "Capture démarrée ✓",
+        title: "Capture démarrée",
         description: "Les photos sont capturées toutes les 5 secondes.",
       });
 
     } catch (error: any) {
-      let errorMessage = "Impossible d'accéder à la caméra.";
-
-      if (error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError") {
-        errorMessage = "Permission refusée - Vérifiez les permissions caméra du navigateur";
-      } else if (error?.name === "NotFoundError") {
-        errorMessage = "Aucune caméra détectée sur cet appareil";
-      } else if (error?.name === "NotReadableError") {
-        errorMessage = "La caméra est déjà utilisée par une autre application";
-      }
-
-      setCameraError(errorMessage);
+      console.error("Erreur caméra:", error);
+      setCameraError("Impossible d'accéder à la caméra. Vérifiez les permissions.");
       toast({
         title: "Erreur caméra",
-        description: errorMessage,
+        description: "Vérifiez que vous avez autorisé l'accès à la caméra.",
         variant: "destructive",
       });
     }
