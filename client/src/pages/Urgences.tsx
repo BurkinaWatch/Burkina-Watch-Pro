@@ -70,16 +70,22 @@ export default function Urgences() {
   };
 
   const filteredServices = useMemo(() => {
+    if (!Array.isArray(urgencesData) || urgencesData.length === 0) {
+      return [];
+    }
+    
     return urgencesData.filter(service => {
+      if (!service || !service.name || !service.city) return false;
+      
       const matchesSearch = 
         service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.phone.includes(searchTerm) ||
-        service.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.region?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.address?.toLowerCase().includes(searchTerm.toLowerCase());
+        (service.phone && service.phone.includes(searchTerm)) ||
+        (service.type && service.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (service.region && service.region.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (service.address && service.address.toLowerCase().includes(searchTerm.toLowerCase()));
       
-      const matchesType = selectedType === "all" || service.type === selectedType;
+      const matchesType = selectedType === "all" || !service.type || service.type === selectedType;
       
       return matchesSearch && matchesType;
     });
