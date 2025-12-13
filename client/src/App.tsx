@@ -31,7 +31,6 @@ import Bulletin from "@/pages/Bulletin";
 import Events from "@/pages/Events";
 import StreetView from "@/pages/StreetView";
 import Ouaga3D from "@/pages/Ouaga3D";
-import Auth from "@/pages/Auth";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
@@ -61,7 +60,6 @@ function Router() {
       <Route path="/a-propos" component={APropos} />
       <Route path="/conditions" component={Conditions} />
       <Route path="/notifications" component={Notifications} />
-      <Route path="/auth" component={Auth} />
       <Route component={NotFound} />
     </Switch>
   );
