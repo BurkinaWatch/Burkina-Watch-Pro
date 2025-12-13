@@ -1,7 +1,5 @@
 
-import { useState, useMemo, useRef, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import EmergencyPanel from "@/components/EmergencyPanel";
@@ -39,23 +37,57 @@ export default function Urgences() {
   const [selectedService, setSelectedService] = useState<EmergencyService | null>(null);
   const [imageStyle, setImageStyle] = useState<"light" | "dark">("light");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [urgencesData, setUrgencesData] = useState<EmergencyService[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
+  const lastFetchRef = useRef<number>(0);
 
-  // Charger les urgences depuis l'API
-  const { data: urgencesData = [], isLoading, refetch } = useQuery<EmergencyService[]>({
-    queryKey: ["/api/urgences"],
-  });
+  // Charger les urgences depuis l'API (avec debounce)
+  const fetchUrgences = useCallback(async () => {
+    const now = Date.now();
+    if (now - lastFetchRef.current < 5000) return;
+    lastFetchRef.current = now;
+    
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/urgences");
+      if (!response.ok) throw new Error("Erreur lors du chargement");
+      const data = await response.json();
+      setUrgencesData(data);
+    } catch (error) {
+      console.error("Erreur:", error);
+      setUrgencesData([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  // Charger les statistiques
-  const { data: stats } = useQuery({
-    queryKey: ["/api/urgences/stats"],
-  });
+  // Chargement initial
+  useEffect(() => {
+    fetchUrgences();
+  }, [fetchUrgences]);
+
+  // Auto-refresh on visibility/focus
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) fetchUrgences();
+    };
+    const handleFocus = () => {
+      fetchUrgences();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [fetchUrgences]);
 
   const handleRefresh = async () => {
     try {
-      await apiRequest("POST", "/api/urgences/refresh");
-      refetch();
+      await fetch("/api/urgences/refresh", { method: "POST" });
+      await fetchUrgences();
       toast({
         title: "Données actualisées",
         description: "Les services d'urgence ont été mis à jour",
