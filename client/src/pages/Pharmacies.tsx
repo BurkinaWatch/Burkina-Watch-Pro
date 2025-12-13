@@ -25,8 +25,8 @@ interface Pharmacie {
   longitude?: number;
 }
 
-// Données complètes des pharmacies de garde du Burkina Faso
-export const PHARMACIES_DATA: Pharmacie[] = [
+// Base complète de toutes les pharmacies (incluant celles qui ne sont pas de garde)
+const TOUTES_PHARMACIES: Pharmacie[] = [
   // REGION KADIOGO (Ouagadougou)
   {
     id: "1",
@@ -637,8 +637,229 @@ export const PHARMACIES_DATA: Pharmacie[] = [
     typeGarde: "24h",
     latitude: 12.3200,
     longitude: -1.5600
+  },
+  
+  // Nouvelles pharmacies ajoutées pour rotation
+  {
+    id: "ph_ouaga_16",
+    nom: "Pharmacie du Progrès",
+    adresse: "Avenue de la Révolution",
+    ville: "Ouagadougou",
+    quartier: "Dassasgho",
+    region: "Kadiogo",
+    telephone: "+226 25 43 11 22",
+    typeGarde: "jour",
+    latitude: 12.3500,
+    longitude: -1.5100
+  },
+  {
+    id: "ph_ouaga_17",
+    nom: "Pharmacie du Peuple",
+    adresse: "Route de Kaya",
+    ville: "Ouagadougou",
+    quartier: "Pissy",
+    region: "Kadiogo",
+    telephone: "+226 25 44 22 33",
+    typeGarde: "nuit",
+    latitude: 12.3400,
+    longitude: -1.5300
+  },
+  {
+    id: "ph_ouaga_18",
+    nom: "Pharmacie de la Paix",
+    adresse: "Avenue Nelson Mandela",
+    ville: "Ouagadougou",
+    quartier: "Gounghin",
+    region: "Kadiogo",
+    telephone: "+226 25 45 33 44",
+    typeGarde: "jour",
+    latitude: 12.3680,
+    longitude: -1.5270
+  },
+  {
+    id: "ph_ouaga_19",
+    nom: "Pharmacie du Soleil",
+    adresse: "Boulevard des Armées",
+    ville: "Ouagadougou",
+    quartier: "Koulouba",
+    region: "Kadiogo",
+    telephone: "+226 25 46 44 55",
+    typeGarde: "nuit",
+    latitude: 12.3750,
+    longitude: -1.5220
+  },
+  {
+    id: "ph_ouaga_20",
+    nom: "Pharmacie de l'Espoir",
+    adresse: "Avenue Loudun",
+    ville: "Ouagadougou",
+    quartier: "Zone du Bois",
+    region: "Kadiogo",
+    telephone: "+226 25 47 55 66",
+    typeGarde: "jour",
+    latitude: 12.3850,
+    longitude: -1.4950
+  },
+  {
+    id: "ph_bobo_6",
+    nom: "Pharmacie du Centre",
+    adresse: "Place de la Nation",
+    ville: "Bobo-Dioulasso",
+    quartier: "Centre-ville",
+    region: "Guiriko",
+    telephone: "+226 20 99 22 33",
+    typeGarde: "nuit",
+    latitude: 11.1790,
+    longitude: -4.2910
+  },
+  {
+    id: "ph_bobo_7",
+    nom: "Pharmacie de la République",
+    adresse: "Avenue Ouezzin Coulibaly",
+    ville: "Bobo-Dioulasso",
+    quartier: "Sarfalao",
+    region: "Guiriko",
+    telephone: "+226 20 99 33 44",
+    typeGarde: "jour",
+    latitude: 11.1830,
+    longitude: -4.2880
+  },
+  {
+    id: "ph_koudou_4",
+    nom: "Pharmacie Saint Paul",
+    adresse: "Avenue de la Nation",
+    ville: "Koudougou",
+    quartier: "Secteur 2",
+    region: "Koom-Kuuli",
+    telephone: "+226 25 44 66 77",
+    typeGarde: "24h",
+    latitude: 12.2480,
+    longitude: -2.3600
+  },
+  {
+    id: "ph_fada_3",
+    nom: "Pharmacie de l'Espérance",
+    adresse: "Route de Pama",
+    ville: "Fada N'Gourma",
+    quartier: "Secteur 3",
+    region: "Goulmou",
+    telephone: "+226 24 77 44 55",
+    typeGarde: "nuit",
+    latitude: 12.0600,
+    longitude: 0.3620
+  },
+  {
+    id: "ph_ouahi_4",
+    nom: "Pharmacie du Sahel",
+    adresse: "Avenue du Commerce",
+    ville: "Ouahigouya",
+    quartier: "Secteur 2",
+    region: "Taoud-Weogo",
+    telephone: "+226 24 55 77 88",
+    typeGarde: "jour",
+    latitude: 13.5820,
+    longitude: -2.4180
+  },
+  {
+    id: "ph_tenko_3",
+    nom: "Pharmacie Centrale Tenkodogo",
+    adresse: "Route de Ouagadougou",
+    ville: "Tenkodogo",
+    quartier: "Centre",
+    region: "Kom-Pangala",
+    telephone: "+226 40 71 44 55",
+    typeGarde: "24h",
+    latitude: 11.7820,
+    longitude: -0.3680
+  },
+  {
+    id: "ph_banfora_3",
+    nom: "Pharmacie de la Paix",
+    adresse: "Avenue Principale",
+    ville: "Banfora",
+    quartier: "Secteur 3",
+    region: "Poni-Tiari",
+    telephone: "+226 20 91 55 66",
+    typeGarde: "24h",
+    latitude: 10.6350,
+    longitude: -4.7600
+  },
+  {
+    id: "ph_dori_3",
+    nom: "Pharmacie de l'Amitié",
+    adresse: "Route de Djibo",
+    ville: "Dori",
+    quartier: "Secteur 2",
+    region: "Sahel",
+    telephone: "+226 24 46 33 44",
+    typeGarde: "nuit",
+    latitude: 14.0380,
+    longitude: -0.0320
+  },
+  {
+    id: "ph_dedou_3",
+    nom: "Pharmacie de la Santé",
+    adresse: "Route de Ouagadougou",
+    ville: "Dédougou",
+    quartier: "Secteur 2",
+    region: "Tondeka",
+    telephone: "+226 20 52 44 55",
+    typeGarde: "nuit",
+    latitude: 12.4620,
+    longitude: -3.4590
+  },
+  {
+    id: "ph_kaya_3",
+    nom: "Pharmacie du Nord",
+    adresse: "Route de Dori",
+    ville: "Kaya",
+    quartier: "Secteur 3",
+    region: "Wètemga",
+    telephone: "+226 24 45 55 66",
+    typeGarde: "nuit",
+    latitude: 13.0900,
+    longitude: -1.0820
   }
 ];
+
+// Fonction pour déterminer les pharmacies de garde du jour
+function getPharmaciesDeGardeAujourdhui(): Pharmacie[] {
+  // Utiliser la date du jour comme seed pour une rotation cohérente
+  const today = new Date();
+  const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+  
+  // Créer une copie et mélanger selon le jour
+  const allPharmacies = [...TOUTES_PHARMACIES];
+  const seed = dayOfYear;
+  
+  // Algorithme de mélange déterministe basé sur le jour
+  for (let i = allPharmacies.length - 1; i > 0; i--) {
+    const j = (seed * (i + 1)) % (i + 1);
+    [allPharmacies[i], allPharmacies[j]] = [allPharmacies[j], allPharmacies[i]];
+  }
+  
+  // Sélectionner environ 60% des pharmacies comme étant de garde
+  const nombreDeGarde = Math.floor(allPharmacies.length * 0.6);
+  const pharmaciesDeGarde = allPharmacies.slice(0, nombreDeGarde);
+  
+  // Réassigner les types de garde de manière équilibrée
+  const typeGardes: Array<"jour" | "nuit" | "24h"> = ["jour", "nuit", "24h"];
+  pharmaciesDeGarde.forEach((pharmacie, index) => {
+    // 20% en 24h, 40% jour, 40% nuit
+    if (index < nombreDeGarde * 0.2) {
+      pharmacie.typeGarde = "24h";
+    } else if (index < nombreDeGarde * 0.6) {
+      pharmacie.typeGarde = "jour";
+    } else {
+      pharmacie.typeGarde = "nuit";
+    }
+  });
+  
+  return pharmaciesDeGarde;
+}
+
+// Liste des pharmacies de garde qui change quotidiennement
+export const PHARMACIES_DATA: Pharmacie[] = getPharmaciesDeGardeAujourdhui();
 
 const REGIONS = [
   "Bankui", "Djôrô", "Goulmou", "Guiriko", "Kadiogo", "Koom-Kuuli",

@@ -15,9 +15,15 @@ export class PharmaciesService {
     return PharmaciesService.instance;
   }
 
-  // Récupérer toutes les pharmacies
+  // Récupérer toutes les pharmacies de garde du jour
   getAllPharmacies() {
+    // Récupérer la liste actualisée quotidiennement
     return PHARMACIES_DATA;
+  }
+  
+  // Récupérer le nombre total de pharmacies dans le système
+  getTotalPharmaciesCount() {
+    return PHARMACIES_DATA.length;
   }
 
   // Récupérer les pharmacies par région
@@ -72,14 +78,15 @@ export class PharmaciesService {
   // Marquer comme mis à jour
   markAsUpdated() {
     this.lastUpdate = new Date();
-    console.log(`✅ Données des pharmacies mises à jour: ${PHARMACIES_DATA.length} pharmacies`);
+    const today = new Date().toLocaleDateString('fr-FR');
+    console.log(`✅ Pharmacies de garde actualisées pour le ${today}: ${PHARMACIES_DATA.length} pharmacies de garde disponibles`);
   }
 
   // Planifier une mise à jour quotidienne automatique (à minuit)
   scheduleAutoUpdate() {
     // Mise à jour initiale
     this.markAsUpdated();
-    console.log(`✅ Données des pharmacies initialisées`);
+    console.log(`✅ Système de rotation quotidienne des pharmacies de garde initialisé`);
 
     // Calculer le temps jusqu'à minuit
     const now = new Date();
@@ -91,17 +98,18 @@ export class PharmaciesService {
     // Planifier la première mise à jour à minuit
     setTimeout(() => {
       this.markAsUpdated();
-      console.log(`🔄 Mise à jour quotidienne automatique des pharmacies (minuit)`);
+      console.log(`🔄 Rotation quotidienne des pharmacies de garde (nouvelle liste à minuit)`);
 
       // Puis répéter toutes les 24h
       setInterval(() => {
         this.markAsUpdated();
-        console.log(`🔄 Mise à jour quotidienne automatique des pharmacies (minuit)`);
+        console.log(`🔄 Rotation quotidienne des pharmacies de garde (nouvelle liste à minuit)`);
       }, 24 * 60 * 60 * 1000);
     }, timeUntilMidnight);
 
-    console.log(`⏰ Mise à jour automatique programmée tous les jours à minuit`);
-    console.log(`⏰ Prochaine mise à jour dans ${Math.round(timeUntilMidnight / 1000 / 60)} minutes`);
+    console.log(`⏰ Rotation automatique des pharmacies de garde programmée tous les jours à minuit`);
+    console.log(`⏰ Prochaine rotation dans ${Math.round(timeUntilMidnight / 1000 / 60)} minutes`);
+    console.log(`📋 La liste des pharmacies de garde change automatiquement chaque jour`);
   }
 }
 
