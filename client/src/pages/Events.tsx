@@ -28,10 +28,15 @@ interface Event {
 
 const EVENT_TYPES = [
   { value: "all", label: "Tous les types" },
-  { value: "Fête nationale", label: "Fêtes nationales" },
+  { value: "Concert", label: "Concerts & Café-concerts" },
+  { value: "Festival", label: "Festivals" },
+  { value: "Cinéma", label: "Cinéma & Projections" },
+  { value: "Théâtre", label: "Théâtre & Spectacles" },
+  { value: "Dédicace", label: "Dédicaces" },
+  { value: "Cérémonie", label: "Cérémonies de récompenses" },
   { value: "Culturel", label: "Événements culturels" },
-  { value: "Concert", label: "Concerts" },
   { value: "Conférence", label: "Conférences" },
+  { value: "Fête nationale", label: "Fêtes nationales" },
   { value: "Sport", label: "Compétitions sportives" },
   { value: "Infrastructure", label: "Fermetures de routes / Infrastructures" },
 ];
@@ -124,10 +129,15 @@ export default function Events() {
 
   const getTypeBadgeColor = (type: string) => {
     const colors: Record<string, string> = {
-      "Fête nationale": "bg-green-500",
-      "Culturel": "bg-purple-500",
       "Concert": "bg-pink-500",
+      "Festival": "bg-purple-600",
+      "Cinéma": "bg-indigo-500",
+      "Théâtre": "bg-violet-500",
+      "Dédicace": "bg-amber-500",
+      "Cérémonie": "bg-yellow-500",
+      "Culturel": "bg-purple-500",
       "Conférence": "bg-blue-500",
+      "Fête nationale": "bg-green-500",
       "Sport": "bg-orange-500",
       "Infrastructure": "bg-red-500",
     };
@@ -175,7 +185,7 @@ export default function Events() {
             Burkina Events
           </h1>
           <p className="text-muted-foreground text-lg">
-            Tous les événements importants au Burkina Faso
+            Concerts, festivals, cinéma, théâtre et événements culturels au Burkina Faso
           </p>
         </div>
 
@@ -305,6 +315,18 @@ export default function Events() {
                       <div className="flex items-start gap-2 text-sm">
                         <Clock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                         <span>{event.heure}</span>
+                      </div>
+                    )}
+                    {(event as any).organisateur && (
+                      <div className="flex items-start gap-2 text-sm">
+                        <span className="text-muted-foreground">Par:</span>
+                        <span className="font-medium">{(event as any).organisateur}</span>
+                      </div>
+                    )}
+                    {(event as any).prix && (
+                      <div className="flex items-start gap-2 text-sm">
+                        <span className="text-muted-foreground">Prix:</span>
+                        <span className="font-semibold text-primary">{(event as any).prix}</span>
                       </div>
                     )}
                     <p className="text-sm text-muted-foreground line-clamp-3">

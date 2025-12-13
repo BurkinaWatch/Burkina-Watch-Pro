@@ -5,7 +5,7 @@ import { generateChatResponse } from "./aiService";
 interface EventItem {
   id: string;
   nom: string;
-  type: "Fête nationale" | "Culturel" | "Concert" | "Conférence" | "Sport" | "Infrastructure";
+  type: "Fête nationale" | "Culturel" | "Concert" | "Conférence" | "Sport" | "Infrastructure" | "Festival" | "Cinéma" | "Théâtre" | "Dédicace" | "Cérémonie";
   date: string;
   lieu: string;
   ville: string;
@@ -14,11 +14,13 @@ interface EventItem {
   latitude?: number;
   longitude?: number;
   lienOfficiel?: string;
+  organisateur?: string;
+  prix?: string;
 }
 
 const parser = new Parser();
 
-// Sources pour les événements - Flux RSS, médias locaux, etc.
+// Sources pour les événements culturels et sécuritaires au Burkina Faso
 const EVENT_SOURCES = [
   // Agences de presse et médias nationaux
   'https://www.aib.bf/feed/',
@@ -32,12 +34,23 @@ const EVENT_SOURCES = [
   'https://www.libreinfo.net/feed/',
   'https://www.wakat.bf/feed/',
   
-  // Chaînes TV et radio (flux web si disponibles)
-  'https://www.rtb.bf/feed/',
+  // Médias spécialisés culture
+  'https://www.culture.gov.bf/feed/', // Si disponible
+  'https://www.culturebenin.com/feed/', // Région Afrique de l'Ouest
   
-  // Médias régionaux
+  // Chaînes TV et radio
+  'https://www.rtb.bf/feed/',
+  'https://www.omegafm.bf/feed/',
+  
+  // Médias régionaux et presse
   'https://www.leconomistedufaso.bf/feed/',
-  'https://www.journaldufaso.com/feed/'
+  'https://www.journaldufaso.com/feed/',
+  'https://www.minute.bf/feed/',
+  'https://www.lobs.bf/feed/',
+  
+  // Médias spécialisés événements
+  'https://www.228events.com/feed/', // Événements Afrique de l'Ouest
+  'https://www.facebook.com/feeds/page.php?id=burkinafaso', // Placeholder
 ];
 
 // Cache en mémoire (6 heures pour réduire les appels API)
@@ -113,14 +126,30 @@ export async function fetchEvents(): Promise<EventItem[]> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Analyser avec l'IA pour extraire les événements
+  // Analyser avec l'IA pour extraire les événements culturels et sécuritaires
   const events: EventItem[] = [];
 
   for (const article of allArticles) {
     try {
-      const prompt = `Analyse cet article et détermine s'il mentionne un événement FUTUR ou D'AUJOURD'HUI au Burkina Faso (concert, fête, compétition, conférence, fermeture de route, etc.).
+      const prompt = `Analyse cet article et détermine s'il mentionne un événement culturel ou sécuritaire FUTUR ou D'AUJOURD'HUI au Burkina Faso.
 
-IMPORTANT: Ignore les événements passés. N'extrais que les événements qui se déroulent aujourd'hui ou dans le futur.
+TYPES D'ÉVÉNEMENTS À DÉTECTER:
+- Concerts et café-concerts
+- Festivals (musique, arts, culture)
+- Cinéma (projections, avant-premières)
+- Théâtre (pièces, spectacles)
+- Dédicaces (livres, albums)
+- Cérémonies de récompenses (prix, distinctions)
+- Événements culturels (expositions, vernissages)
+- Conférences et tables rondes
+- Événements sportifs
+- Fêtes nationales
+- Fermetures de routes / infrastructures
+
+IMPORTANT: 
+- Ignore les événements PASSÉS
+- N'extrais que les événements d'AUJOURD'HUI ou FUTURS
+- Privilégie les événements culturels et artistiques
 
 Titre: ${article.title}
 Description: ${article.contentSnippet || article.description || ''}
@@ -130,12 +159,14 @@ Si c'est un événement FUTUR ou D'AUJOURD'HUI, réponds UNIQUEMENT au format JS
 {
   "isEvent": true,
   "nom": "nom de l'événement",
-  "type": "Fête nationale|Culturel|Concert|Conférence|Sport|Infrastructure",
+  "type": "Concert|Festival|Cinéma|Théâtre|Dédicace|Cérémonie|Culturel|Conférence|Sport|Fête nationale|Infrastructure",
   "date": "YYYY-MM-DD",
-  "lieu": "lieu précis",
+  "lieu": "lieu précis (salle, centre culturel, etc.)",
   "ville": "ville",
   "heure": "HH:MM ou null",
-  "description": "description courte"
+  "description": "description courte et attractive",
+  "organisateur": "nom de l'organisateur ou null",
+  "prix": "prix d'entrée ou 'Gratuit' ou null"
 }
 
 Si ce n'est PAS un événement ou si c'est un événement PASSÉ, réponds: {"isEvent": false}`;
@@ -164,6 +195,8 @@ Si ce n'est PAS un événement ou si c'est un événement PASSÉ, réponds: {"is
             ville: analysis.ville,
             heure: analysis.heure || undefined,
             description: analysis.description,
+            organisateur: analysis.organisateur || undefined,
+            prix: analysis.prix || undefined,
             lienOfficiel: article.link
           });
         }
