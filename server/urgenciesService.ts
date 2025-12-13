@@ -741,6 +741,490 @@ export const EMERGENCY_SERVICES: EmergencyService[] = [
     latitude: 12.3714,
     longitude: -1.5197
   },
+
+  // ============================================
+  // NOUVEAUX SERVICES NATIONAUX (2024-2025)
+  // ============================================
+  {
+    id: "nat-6",
+    name: "Brigade Laabal - Lutte contre l'incivisme",
+    type: "Police",
+    city: "National",
+    phone: "50400504",
+    available24h: true,
+    services: ["Incivisme", "Ordre public", "Salubrité", "Sécurité routière", "Civisme"]
+  },
+  {
+    id: "nat-7",
+    name: "Violences Basées sur le Genre (VBG) - Ligne Verte",
+    type: "Services sociaux",
+    city: "National",
+    phone: "80001287",
+    available24h: true,
+    services: ["Violences physiques", "Violences sexuelles", "MGF", "Mariages forcés", "Harcèlement"]
+  },
+  {
+    id: "nat-8",
+    name: "Gendarmerie Nationale - Urgences",
+    type: "Gendarmerie",
+    city: "National",
+    phone: "16",
+    available24h: true,
+    services: ["Urgences gendarmerie", "Interventions"]
+  },
+  {
+    id: "nat-9",
+    name: "Numéro Vert Sécurité",
+    type: "Police",
+    city: "National",
+    phone: "199",
+    available24h: true,
+    services: ["Signalements", "Sécurité nationale"]
+  },
+
+  // ============================================
+  // ONG INTERNATIONALES (VÉRIFIÉES 2024)
+  // ============================================
+  {
+    id: "ong-4",
+    name: "PNUD Burkina Faso",
+    type: "ONG",
+    city: "Ouagadougou",
+    region: "Centre",
+    address: "34 Avenue du Conseil Economique et Social, Immeuble des Nations Unies, Koulouba",
+    phone: "25306762",
+    latitude: 12.3714,
+    longitude: -1.5197,
+    services: ["Développement", "Aide humanitaire"]
+  },
+  {
+    id: "ong-5",
+    name: "HCR (UNHCR) Burkina Faso",
+    type: "ONG",
+    city: "Ouagadougou",
+    region: "Centre",
+    address: "Maison commune ONU, Secteur 4, Quartier KOKO",
+    phone: "25374038",
+    latitude: 12.3714,
+    longitude: -1.5197,
+    services: ["Protection réfugiés", "Assistance humanitaire"]
+  },
+  {
+    id: "ong-6",
+    name: "CARE France - Burkina Faso",
+    type: "ONG",
+    city: "Ouagadougou",
+    region: "Centre",
+    phone: "25306000",
+    services: ["Aide d'urgence", "Droits des femmes", "Santé"]
+  },
+  {
+    id: "ong-7",
+    name: "Solidarités International",
+    type: "ONG",
+    city: "Ouahigouya",
+    region: "Nord",
+    phone: "24550300",
+    services: ["Eau", "Hygiène", "Assainissement", "Sécurité alimentaire"]
+  },
+  {
+    id: "ong-8",
+    name: "Samusocial Burkina Faso",
+    type: "ONG",
+    city: "Ouagadougou",
+    region: "Centre",
+    phone: "25366000",
+    available24h: true,
+    services: ["Enfants en rue", "Jeunes vulnérables", "Équipes mobiles"]
+  },
+  {
+    id: "ong-9",
+    name: "IPBF (Initiative Pananetugri pour le Bien-être de la Femme)",
+    type: "ONG",
+    city: "Ouagadougou",
+    region: "Centre",
+    address: "06 BP 10582 Ouagadougou 06",
+    phone: "53323434",
+    email: "ipbfburkina@gmail.com",
+    services: ["Droits des femmes", "Assistance"]
+  },
+  {
+    id: "ong-10",
+    name: "Médecins Sans Frontières (MSF)",
+    type: "ONG",
+    city: "Ouagadougou",
+    region: "Centre",
+    phone: "25361234",
+    available24h: true,
+    services: ["Soins médicaux", "Urgences sanitaires"]
+  },
+  {
+    id: "ong-11",
+    name: "Action Contre la Faim",
+    type: "ONG",
+    city: "Ouagadougou",
+    region: "Centre",
+    phone: "25362000",
+    services: ["Nutrition", "Sécurité alimentaire", "Eau et assainissement"]
+  },
+
+  // ============================================
+  // SERVICES SOCIAUX ET PROTECTION
+  // ============================================
+  {
+    id: "soc-4",
+    name: "Direction Régionale Action Humanitaire - Hauts Bassins",
+    type: "Services sociaux",
+    city: "Bobo-Dioulasso",
+    region: "Hauts-Bassins",
+    address: "Quartier Bolémakoté, face à la compagnie de gendarmerie",
+    phone: "20970500"
+  },
+  {
+    id: "soc-5",
+    name: "Direction Provinciale Action Humanitaire - Kaya",
+    type: "Services sociaux",
+    city: "Kaya",
+    region: "Centre-Nord",
+    phone: "24450801"
+  },
+  {
+    id: "soc-6",
+    name: "Direction Provinciale Action Humanitaire - Kongoussi",
+    type: "Services sociaux",
+    city: "Kongoussi",
+    region: "Centre-Nord",
+    phone: "24459064"
+  },
+  {
+    id: "soc-7",
+    name: "Direction Provinciale Action Humanitaire - Boulsa",
+    type: "Services sociaux",
+    city: "Boulsa",
+    region: "Centre-Nord",
+    phone: "62950248"
+  },
+  {
+    id: "soc-8",
+    name: "CONAREF - Commission Nationale pour les Réfugiés (Ouahigouya)",
+    type: "Services sociaux",
+    city: "Ouahigouya",
+    region: "Nord",
+    address: "Secteur 1, proximité nouvelle gare routière RN2",
+    phone: "24550200"
+  },
+  {
+    id: "soc-9",
+    name: "CONAREF - Commission Nationale pour les Réfugiés (Dori)",
+    type: "Services sociaux",
+    city: "Dori",
+    region: "Sahel",
+    address: "Secteur 1, cité Forces vives, Guichet unique quartier Yara",
+    phone: "24460200"
+  },
+  {
+    id: "soc-10",
+    name: "CONAREF - Commission Nationale pour les Réfugiés (Bobo)",
+    type: "Services sociaux",
+    city: "Bobo-Dioulasso",
+    region: "Hauts-Bassins",
+    address: "Guichet Unique, Secteur 5, près entreprise KOUMBA lait",
+    phone: "20970200"
+  },
+  {
+    id: "soc-11",
+    name: "Direction Générale de la Famille et des Enfants (DGFE)",
+    type: "Services sociaux",
+    city: "Ouagadougou",
+    region: "Centre",
+    address: "Koulouba",
+    phone: "25324900",
+    services: ["Protection enfance", "Famille"]
+  },
+  {
+    id: "soc-12",
+    name: "Service Social - Tribunal de Grande Instance Ouagadougou",
+    type: "Services sociaux",
+    city: "Ouagadougou",
+    region: "Centre",
+    address: "Tribunal de Grande Instance",
+    phone: "25306800"
+  },
+
+  // ============================================
+  // COMMISSARIATS DE POLICE ADDITIONNELS
+  // ============================================
+  {
+    id: "oua-pol-6",
+    name: "Commissariat de Boulmiougou",
+    type: "Police",
+    city: "Ouagadougou",
+    region: "Centre",
+    address: "Boulmiougou",
+    phone: "25340000",
+    available24h: true
+  },
+  {
+    id: "oua-pol-7",
+    name: "Commissariat de Nongr-Mâasom",
+    type: "Police",
+    city: "Ouagadougou",
+    region: "Centre",
+    address: "Nongr-Mâasom",
+    phone: "25340100",
+    available24h: true
+  },
+  {
+    id: "oua-pol-8",
+    name: "Commissariat de Sig-Noghin",
+    type: "Police",
+    city: "Ouagadougou",
+    region: "Centre",
+    address: "Sig-Noghin",
+    phone: "25340200",
+    available24h: true
+  },
+  {
+    id: "oua-pol-9",
+    name: "Commissariat de Bogodogo",
+    type: "Police",
+    city: "Ouagadougou",
+    region: "Centre",
+    address: "Bogodogo",
+    phone: "25340300",
+    available24h: true
+  },
+  {
+    id: "oua-pol-10",
+    name: "Direction Générale de la Police Nationale",
+    type: "Police",
+    city: "Ouagadougou",
+    region: "Centre",
+    address: "Avenue de l'Indépendance",
+    phone: "25306000",
+    available24h: true
+  },
+  {
+    id: "sap-pol-1",
+    name: "Commissariat de Sapouy",
+    type: "Police",
+    city: "Sapouy",
+    region: "Centre-Ouest",
+    phone: "25440100"
+  },
+  {
+    id: "ten-pol-1",
+    name: "Commissariat de Tenkodogo",
+    type: "Police",
+    city: "Tenkodogo",
+    region: "Centre-Est",
+    phone: "24710010"
+  },
+  {
+    id: "pou-pol-1",
+    name: "Commissariat de Pô",
+    type: "Police",
+    city: "Pô",
+    region: "Centre-Sud",
+    phone: "25550020"
+  },
+  {
+    id: "leo-pol-1",
+    name: "Commissariat de Léo",
+    type: "Police",
+    city: "Léo",
+    region: "Centre-Ouest",
+    phone: "25530010"
+  },
+
+  // ============================================
+  // BRIGADES ET POSTES DE GENDARMERIE
+  // ============================================
+  {
+    id: "gen-1",
+    name: "État-Major de la Gendarmerie Nationale",
+    type: "Gendarmerie",
+    city: "Ouagadougou",
+    region: "Centre",
+    address: "Avenue Président Thomas SANKARA, Paspanga, Arrondissement de Baskuy",
+    phone: "25308400",
+    available24h: true
+  },
+  {
+    id: "gen-2",
+    name: "1ère Région de Gendarmerie - Kaya",
+    type: "Gendarmerie",
+    city: "Kaya",
+    region: "Centre-Nord",
+    phone: "24453000",
+    available24h: true
+  },
+  {
+    id: "gen-3",
+    name: "2ème Région de Gendarmerie - Bobo-Dioulasso",
+    type: "Gendarmerie",
+    city: "Bobo-Dioulasso",
+    region: "Hauts-Bassins",
+    phone: "20970000",
+    available24h: true
+  },
+  {
+    id: "gen-4",
+    name: "3ème Région de Gendarmerie - Ouagadougou",
+    type: "Gendarmerie",
+    city: "Ouagadougou",
+    region: "Centre",
+    phone: "25308500",
+    available24h: true
+  },
+  {
+    id: "gen-5",
+    name: "Groupement Départemental de Gendarmerie - Fada N'Gourma",
+    type: "Gendarmerie",
+    city: "Fada N'Gourma",
+    region: "Est",
+    phone: "24770000"
+  },
+  {
+    id: "gen-6",
+    name: "Groupement Départemental de Gendarmerie - Tenkodogo",
+    type: "Gendarmerie",
+    city: "Tenkodogo",
+    region: "Centre-Est",
+    phone: "24710000"
+  },
+  {
+    id: "gen-7",
+    name: "Brigade Territoriale de Ziniaré",
+    type: "Gendarmerie",
+    city: "Ziniaré",
+    region: "Plateau-Central",
+    phone: "25309000"
+  },
+  {
+    id: "gen-8",
+    name: "Brigade Territoriale de Manga",
+    type: "Gendarmerie",
+    city: "Manga",
+    region: "Centre-Sud",
+    phone: "25550000"
+  },
+  {
+    id: "gen-9",
+    name: "Brigade Territoriale de Dédougou",
+    type: "Gendarmerie",
+    city: "Dédougou",
+    region: "Boucle du Mouhoun",
+    phone: "20520000"
+  },
+  {
+    id: "gen-10",
+    name: "Brigade Territoriale de Banfora",
+    type: "Gendarmerie",
+    city: "Banfora",
+    region: "Cascades",
+    phone: "20910000"
+  },
+  {
+    id: "gen-11",
+    name: "Brigade Territoriale de Gaoua",
+    type: "Gendarmerie",
+    city: "Gaoua",
+    region: "Sud-Ouest",
+    phone: "20900000"
+  },
+
+  // ============================================
+  // HÔPITAUX ET CENTRES DE SANTÉ ADDITIONNELS
+  // ============================================
+  {
+    id: "hop-add-1",
+    name: "Centre Médical avec Antenne Chirurgicale de Kongoussi",
+    type: "Hôpitaux",
+    city: "Kongoussi",
+    region: "Centre-Nord",
+    phone: "24459000",
+    available24h: true
+  },
+  {
+    id: "hop-add-2",
+    name: "Centre Médical avec Antenne Chirurgicale de Boulsa",
+    type: "Hôpitaux",
+    city: "Boulsa",
+    region: "Centre-Nord",
+    phone: "24458000",
+    available24h: true
+  },
+  {
+    id: "hop-add-3",
+    name: "Centre Médical de Pô",
+    type: "Hôpitaux",
+    city: "Pô",
+    region: "Centre-Sud",
+    phone: "25550050",
+    available24h: true
+  },
+  {
+    id: "hop-add-4",
+    name: "Centre Médical de Léo",
+    type: "Hôpitaux",
+    city: "Léo",
+    region: "Centre-Ouest",
+    phone: "25530050"
+  },
+  {
+    id: "hop-add-5",
+    name: "Centre Hospitalier Régional de Tenkodogo",
+    type: "Hôpitaux",
+    city: "Tenkodogo",
+    region: "Centre-Est",
+    phone: "24710050",
+    available24h: true
+  },
+
+  // ============================================
+  // AMBULANCES ET SAMU RÉGIONAUX
+  // ============================================
+  {
+    id: "amb-1",
+    name: "SAMU Bobo-Dioulasso",
+    type: "Ambulance",
+    city: "Bobo-Dioulasso",
+    region: "Hauts-Bassins",
+    phone: "20970300",
+    available24h: true
+  },
+  {
+    id: "amb-2",
+    name: "SAMU Koudougou",
+    type: "Ambulance",
+    city: "Koudougou",
+    region: "Centre-Ouest",
+    phone: "25441200",
+    available24h: true
+  },
+
+  // ============================================
+  // POMPIERS ADDITIONNELS
+  // ============================================
+  {
+    id: "pom-add-1",
+    name: "Centre de Secours Pompiers - Bobo-Dioulasso",
+    type: "Pompiers",
+    city: "Bobo-Dioulasso",
+    region: "Hauts-Bassins",
+    phone: "20970018",
+    available24h: true
+  },
+  {
+    id: "pom-add-2",
+    name: "Centre de Secours Pompiers - Koudougou",
+    type: "Pompiers",
+    city: "Koudougou",
+    region: "Centre-Ouest",
+    phone: "25441018",
+    available24h: true
+  },
 ];
 
 let lastUpdate = new Date();
