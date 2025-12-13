@@ -71,13 +71,14 @@ export default function Urgences() {
 
   const filteredServices = useMemo(() => {
     return urgencesData.filter(service => {
+      const searchLower = searchTerm.toLowerCase();
       const matchesSearch = 
-        service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.phone.includes(searchTerm) ||
-        service.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.region?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.address?.toLowerCase().includes(searchTerm.toLowerCase());
+        (service.name || '').toLowerCase().includes(searchLower) ||
+        (service.city || '').toLowerCase().includes(searchLower) ||
+        (service.phone || '').includes(searchTerm) ||
+        (service.type || '').toLowerCase().includes(searchLower) ||
+        (service.region || '').toLowerCase().includes(searchLower) ||
+        (service.address || '').toLowerCase().includes(searchLower);
       
       const matchesType = selectedType === "all" || service.type === selectedType;
       

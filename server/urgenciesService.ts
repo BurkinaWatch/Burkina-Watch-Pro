@@ -20,7 +20,7 @@ export class UrgenciesService {
     // NUMÉROS D'URGENCE NATIONAUX
     {
       id: "urg_national_1",
-      nom: "Appel d'Urgence National",
+      nom: "Numéro Vert d'Urgence",
       numero: "1010",
       type: "urgence",
       ville: "National",
@@ -505,9 +505,58 @@ export class UrgenciesService {
       longitude: -1.0800
     },
 
-    // AUTRES CONTACTS UTILES
+    // SERVICES VBG ET PROTECTION SOCIALE
     {
-      id: "urg_autre_1",
+      id: "vbg_national_1",
+      nom: "Ligne Verte VBG (Violences Basées sur le Genre)",
+      numero: "80 00 11 12",
+      type: "urgence",
+      ville: "National",
+      region: "National",
+      disponibilite: "24h/24",
+      latitude: 12.3714,
+      longitude: -1.5197
+    },
+    {
+      id: "vbg_national_2",
+      nom: "Centre d'Écoute VBG - Ouagadougou",
+      numero: "+226 25 37 50 50",
+      type: "urgence",
+      ville: "Ouagadougou",
+      region: "Kadiogo",
+      adresse: "Avenue de la Nation, Ouaga 2000",
+      disponibilite: "Lun-Ven: 8h-17h, Urgences 24h/24",
+      latitude: 12.3356,
+      longitude: -1.4912
+    },
+    {
+      id: "vbg_national_3",
+      nom: "Ministère de la Femme - Service VBG",
+      numero: "+226 25 32 49 86",
+      type: "urgence",
+      ville: "Ouagadougou",
+      region: "Kadiogo",
+      adresse: "Secteur 4, Avenue de la Nation",
+      disponibilite: "Lun-Ven: 7h30-15h30",
+      latitude: 12.3678,
+      longitude: -1.5234
+    },
+    {
+      id: "vbg_bobo_1",
+      nom: "Centre d'Écoute VBG - Bobo-Dioulasso",
+      numero: "+226 20 97 15 25",
+      type: "urgence",
+      ville: "Bobo-Dioulasso",
+      region: "Guiriko",
+      adresse: "Quartier Diarradougou",
+      disponibilite: "Lun-Ven: 8h-17h",
+      latitude: 11.1823,
+      longitude: -4.2867
+    },
+
+    // PROTECTION DE L'ENFANCE
+    {
+      id: "enfant_1",
       nom: "SOS Enfants en Détresse",
       numero: "116",
       type: "urgence",
@@ -518,8 +567,8 @@ export class UrgenciesService {
       longitude: -1.5197
     },
     {
-      id: "urg_autre_2",
-      nom: "Écoute Enfants",
+      id: "enfant_2",
+      nom: "Écoute Enfants (Ligne Verte)",
       numero: "1011",
       type: "urgence",
       ville: "National",
@@ -529,26 +578,240 @@ export class UrgenciesService {
       longitude: -1.5197
     },
     {
-      id: "urg_autre_3",
-      nom: "Violences Basées sur le Genre",
-      numero: "80 00 11 12",
+      id: "enfant_3",
+      nom: "Direction de la Protection de l'Enfant",
+      numero: "+226 25 32 42 71",
       type: "urgence",
-      ville: "National",
-      region: "National",
-      disponibilite: "24h/24",
-      latitude: 12.3714,
-      longitude: -1.5197
+      ville: "Ouagadougou",
+      region: "Kadiogo",
+      adresse: "Ministère de la Femme, Secteur 4",
+      disponibilite: "Lun-Ven: 7h30-15h30",
+      latitude: 12.3678,
+      longitude: -1.5234
+    },
+
+    // ONG ET ASSOCIATIONS
+    {
+      id: "ong_1",
+      nom: "Association Tin Hinan (Femmes et Enfants)",
+      numero: "+226 25 36 36 76",
+      type: "urgence",
+      ville: "Ouagadougou",
+      region: "Kadiogo",
+      adresse: "Secteur 17, Ouagadougou",
+      disponibilite: "Lun-Ven: 8h-17h",
+      latitude: 12.3489,
+      longitude: -1.5123
     },
     {
-      id: "urg_autre_4",
+      id: "ong_2",
+      nom: "AIDSETI (Enfants en situation difficile)",
+      numero: "+226 25 36 27 27",
+      type: "urgence",
+      ville: "Ouagadougou",
+      region: "Kadiogo",
+      adresse: "Secteur 15, Ouagadougou",
+      disponibilite: "Lun-Ven: 8h-17h",
+      latitude: 12.3567,
+      longitude: -1.5089
+    },
+    {
+      id: "ong_3",
+      nom: "Terre des Hommes Burkina",
+      numero: "+226 25 37 41 56",
+      type: "urgence",
+      ville: "Ouagadougou",
+      region: "Kadiogo",
+      adresse: "Secteur 11, Ouagadougou",
+      disponibilite: "Lun-Ven: 8h-17h",
+      latitude: 12.3623,
+      longitude: -1.5156
+    },
+    {
+      id: "ong_4",
+      nom: "Plan International Burkina",
+      numero: "+226 25 37 58 00",
+      type: "urgence",
+      ville: "Ouagadougou",
+      region: "Kadiogo",
+      adresse: "Secteur 7, Ouagadougou",
+      disponibilite: "Lun-Ven: 8h-17h",
+      latitude: 12.3734,
+      longitude: -1.5267
+    },
+    {
+      id: "ong_5",
+      nom: "UNICEF Burkina Faso",
+      numero: "+226 25 49 08 00",
+      type: "urgence",
+      ville: "Ouagadougou",
+      region: "Kadiogo",
+      adresse: "Avenue Kwame N'Krumah, Ouagadougou",
+      disponibilite: "Lun-Ven: 8h-17h",
+      latitude: 12.3645,
+      longitude: -1.5198
+    },
+
+    // SERVICES SOCIAUX
+    {
+      id: "social_1",
+      nom: "Action Sociale Ouagadougou",
+      numero: "+226 25 30 63 24",
+      type: "urgence",
+      ville: "Ouagadougou",
+      region: "Kadiogo",
+      adresse: "Ministère de l'Action Sociale, Secteur 4",
+      disponibilite: "Lun-Ven: 7h30-15h30",
+      latitude: 12.3689,
+      longitude: -1.5245
+    },
+    {
+      id: "social_2",
+      nom: "Direction Régionale Action Sociale - Centre",
+      numero: "+226 25 30 65 89",
+      type: "urgence",
+      ville: "Ouagadougou",
+      region: "Kadiogo",
+      adresse: "Secteur 4, Ouagadougou",
+      disponibilite: "Lun-Ven: 7h30-15h30",
+      latitude: 12.3678,
+      longitude: -1.5267
+    },
+    {
+      id: "social_3",
+      nom: "Direction Régionale Action Sociale - Hauts-Bassins",
+      numero: "+226 20 97 04 56",
+      type: "urgence",
+      ville: "Bobo-Dioulasso",
+      region: "Guiriko",
+      adresse: "Avenue de la République, Bobo-Dioulasso",
+      disponibilite: "Lun-Ven: 7h30-15h30",
+      latitude: 11.1789,
+      longitude: -4.2945
+    },
+
+    // HÔPITAUX SUPPLÉMENTAIRES
+    {
+      id: "hop_ouaga_11",
+      nom: "Clinique Sandof",
+      numero: "+226 25 37 50 00",
+      type: "hopital",
+      ville: "Ouagadougou",
+      region: "Kadiogo",
+      adresse: "Secteur 20, Ouagadougou",
+      disponibilite: "24h/24",
+      latitude: 12.3445,
+      longitude: -1.4989
+    },
+    {
+      id: "hop_ouaga_12",
+      nom: "Polyclinique Notre Dame de la Paix",
+      numero: "+226 25 36 29 29",
+      type: "hopital",
+      ville: "Ouagadougou",
+      region: "Kadiogo",
+      adresse: "Secteur 11, Ouagadougou",
+      disponibilite: "24h/24",
+      latitude: 12.3612,
+      longitude: -1.5178
+    },
+    {
+      id: "hop_ouaga_13",
+      nom: "Clinique El Fateh Suka",
+      numero: "+226 25 37 62 62",
+      type: "hopital",
+      ville: "Ouagadougou",
+      region: "Kadiogo",
+      adresse: "Secteur 8, Ouagadougou",
+      disponibilite: "24h/24",
+      latitude: 12.3789,
+      longitude: -1.5234
+    },
+    {
+      id: "hop_ouaga_14",
+      nom: "Centre Médical Schiphra",
+      numero: "+226 25 36 58 58",
+      type: "hopital",
+      ville: "Ouagadougou",
+      region: "Kadiogo",
+      adresse: "Secteur 12, Ouagadougou",
+      disponibilite: "24h/24",
+      latitude: 12.3567,
+      longitude: -1.5089
+    },
+    {
+      id: "hop_bobo_6",
+      nom: "Polyclinique Internationale de Bobo",
+      numero: "+226 20 98 25 25",
+      type: "hopital",
+      ville: "Bobo-Dioulasso",
+      region: "Guiriko",
+      adresse: "Quartier Koko, Bobo-Dioulasso",
+      disponibilite: "24h/24",
+      latitude: 11.1756,
+      longitude: -4.2878
+    },
+    {
+      id: "hop_bobo_7",
+      nom: "Centre Médical Doufiguisso",
+      numero: "+226 20 97 35 35",
+      type: "hopital",
+      ville: "Bobo-Dioulasso",
+      region: "Guiriko",
+      adresse: "Quartier Doufiguisso, Bobo-Dioulasso",
+      disponibilite: "24h/24",
+      latitude: 11.1834,
+      longitude: -4.2912
+    },
+
+    // AUTRES CONTACTS UTILES
+    {
+      id: "autre_1",
       nom: "Centre Anti-Poison",
       numero: "+226 25 30 67 50",
       type: "samu",
       ville: "Ouagadougou",
       region: "Kadiogo",
+      adresse: "CHU Yalgado Ouédraogo",
       disponibilite: "24h/24",
-      latitude: 12.3686,
-      longitude: -1.5275
+      latitude: 12.3856,
+      longitude: -1.5078
+    },
+    {
+      id: "autre_2",
+      nom: "Samu Social Burkina",
+      numero: "+226 25 37 85 85",
+      type: "samu",
+      ville: "Ouagadougou",
+      region: "Kadiogo",
+      adresse: "Secteur 30, Ouagadougou",
+      disponibilite: "24h/24",
+      latitude: 12.3423,
+      longitude: -1.4867
+    },
+    {
+      id: "autre_3",
+      nom: "Centre de Transfusion Sanguine",
+      numero: "+226 25 30 67 89",
+      type: "samu",
+      ville: "Ouagadougou",
+      region: "Kadiogo",
+      adresse: "Secteur 11, Ouagadougou",
+      disponibilite: "24h/24",
+      latitude: 12.3634,
+      longitude: -1.5167
+    },
+    {
+      id: "autre_4",
+      nom: "Pharmacie de Garde (Info)",
+      numero: "+226 25 30 61 91",
+      type: "samu",
+      ville: "Ouagadougou",
+      region: "Kadiogo",
+      adresse: "Ordre des Pharmaciens",
+      disponibilite: "24h/24",
+      latitude: 12.3689,
+      longitude: -1.5234
     }
   ];
 
