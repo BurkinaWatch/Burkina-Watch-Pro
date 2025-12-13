@@ -1308,15 +1308,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let services;
 
       if (search) {
-        services = urgenciesService.searchEmergencies(search as string);
+        services = urgenciesService.searchContacts(search as string);
       } else if (type) {
-        services = urgenciesService.getEmergenciesByType(type as any);
+        services = urgenciesService.getContactsByType(type as any);
       } else if (city) {
-        services = urgenciesService.getEmergenciesByCity(city as string);
+        services = urgenciesService.getContactsByVille(city as string);
       } else if (region) {
-        services = urgenciesService.getEmergenciesByRegion(region as string);
+        services = urgenciesService.getContactsByRegion(region as string);
       } else {
-        services = urgenciesService.getAllEmergencies();
+        services = urgenciesService.getAllContacts();
       }
 
       res.set('Cache-Control', 'public, max-age=3600'); // Cache 1 heure

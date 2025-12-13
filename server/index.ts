@@ -83,8 +83,8 @@ app.use((req, res, next) => {
   scheduleEventsUpdate();
   
   // Importer et démarrer la mise à jour automatique des urgences
-  const { scheduleAutoUpdate: scheduleUrgenciesUpdate } = await import("./urgenciesService");
-  scheduleUrgenciesUpdate();
+  const { urgenciesService } = await import("./urgenciesService");
+  urgenciesService.scheduleAutoUpdate();
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.
