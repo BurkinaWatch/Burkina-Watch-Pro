@@ -18,12 +18,10 @@ interface EventItem {
 
 const parser = new Parser();
 
-// Sources pour les événements - Flux RSS, médias locaux, etc.
+// Sources pour les événements - Flux RSS, médias locaux, blogs, forums
 const EVENT_SOURCES = [
-  // Agences de presse et médias nationaux
-  'https://www.aib.bf/feed/',
+  // Agences de presse et médias nationaux Burkina
   'https://lefaso.net/spip.php?page=backend',
-  'https://burkina24.com/feed/',
   'https://www.sidwaya.info/feed/',
   'https://fasonews.africa/feed/',
   'https://www.fasozine.com/feed/',
@@ -32,18 +30,23 @@ const EVENT_SOURCES = [
   'https://www.libreinfo.net/feed/',
   'https://www.wakat.bf/feed/',
   
-  // Chaînes TV et radio (flux web si disponibles)
-  'https://www.rtb.bf/feed/',
+  // Blogs locaux et sites d'actualités
+  'https://www.lefaso.net/spip.php?page=rss',
+  'https://www.sidwaya.info/spip.php?page=rss',
   
-  // Médias régionaux
-  'https://www.leconomistedufaso.bf/feed/',
-  'https://www.journaldufaso.com/feed/'
+  // Flux RSS génériques pour Burkina Faso (actualités)
+  'https://feeds.bloomberg.com/markets/news.rss',
+  'https://feeds.reuters.com/reuters/businessNews',
+  'https://www.bbc.com/news/world/africa/rss.xml',
+  
+  // Flux d'événements régionaux et culturels
+  'https://www.aib.bf/spip.php?page=backend',
 ];
 
-// Cache en mémoire (6 heures pour réduire les appels API)
+// Cache en mémoire (3 heures - plus court pour des sources sociales)
 let cachedEvents: EventItem[] = [];
 let lastFetchTime = 0;
-const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 heures
+const CACHE_DURATION = 3 * 60 * 60 * 1000; // 3 heures
 
 // Fonction pour planifier les mises à jour automatiques
 export function scheduleAutoUpdate() {
@@ -88,24 +91,28 @@ export async function fetchEvents(): Promise<EventItem[]> {
     return cachedEvents;
   }
 
-  console.log('🔄 Récupération des événements...');
+  console.log('🔄 Récupération des événements depuis médias et réseaux sociaux...');
   const allArticles: any[] = [];
 
-  // Récupérer les flux RSS
+  // Récupérer les flux RSS avec timeout plus long pour les réseaux sociaux
   for (const sourceUrl of EVENT_SOURCES) {
     try {
       const response = await fetch(sourceUrl, {
-        headers: { 'User-Agent': 'BurkinaWatch/1.0' },
-        signal: AbortSignal.timeout(10000)
+        headers: { 
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'application/rss+xml, application/atom+xml, text/html'
+        },
+        signal: AbortSignal.timeout(15000)
       });
 
       if (!response.ok) continue;
 
       const xml = await response.text();
       const parsed = await parser.parseString(xml);
-      allArticles.push(...parsed.items.slice(0, 20));
+      // Récupérer plus d'articles pour avoir plus de résultats
+      allArticles.push(...parsed.items.slice(0, 50));
     } catch (error) {
-      console.error(`❌ Erreur source ${sourceUrl}:`, error);
+      // Silencieusement ignorer les sources non disponibles
     }
   }
 
@@ -118,36 +125,46 @@ export async function fetchEvents(): Promise<EventItem[]> {
 
   for (const article of allArticles) {
     try {
-      const prompt = `Analyse cet article et détermine s'il mentionne un événement FUTUR ou D'AUJOURD'HUI au Burkina Faso.
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      
+      const prompt = `Analyse cet article et détermine s'il mentionne un événement CONFIRMÉ et FUTUR au Burkina Faso.
+
+DATE ACTUELLE: ${todayStr}
+
+IMPORTANT - NE RETENIR QUE LES ÉVÉNEMENTS:
+✓ Confirmés avec date précise ou implicite future
+✓ Prenant place AUJOURD'HUI ou APRÈS (pas avant)
+✓ Réels et vérifiables (pas hypothétiques ou "à venir")
+✓ Avec lieu spécifique, pas vague
 
 CATÉGORIES ÉVÉNEMENTS À CHERCHER:
-- CULTUREL: Concerts, Café-concerts, Festivals, Cinéma, Théâtre, Dédicaces, Cérémonies de récompenses, Expositions, Spectacles
-- SÉCURITÉ: Manifestations, Rassemblements, Fermetures de routes, Alertes sécuritaires
-- AUTRES: Fêtes nationales, Conférences, Compétitions sportives, Infractions routières
+- CULTUREL: Concerts, Café-concerts, Festivals, Cinéma, Théâtre, Dédicaces, Expositions, Spectacles, Festivals musicaux
+- SÉCURITÉ: Manifestations publiques, Rassemblements, Marches, Alertes sécuritaires
+- AUTRES: Fêtes nationales, Conférences, Compétitions sportives, Gala, Cérémonie officielle
 
-IMPORTANT: 
-1. Ignore les événements passés
-2. N'extrais que les événements futurs ou d'aujourd'hui
-3. Détecte les dates implicites (ex: "ce weekend", "samedi prochain")
-4. Cherche les détails: concert, café-concert, festival, film, pièce de théâtre, dédicace d'auteur, cérémonie, gala
+DÉTECTION DE DATES:
+- Interprète "ce weekend", "samedi prochain", "lundi" comme dates futures
+- Ignore "hier", "la semaine passée", "l'événement passé"
+- Pour les dates implicites, calcule la prochaine occurrence
 
 Titre: ${article.title}
 Description: ${article.contentSnippet || article.description || ''}
-Date de publication: ${article.pubDate || ''}
+Date publication: ${article.pubDate || ''}
 
-Si c'est un événement FUTUR ou D'AUJOURD'HUI, réponds UNIQUEMENT en JSON:
+Si c'est un événement CONFIRMÉ et FUTUR/AUJOURD'HUI, réponds UNIQUEMENT en JSON valide:
 {
   "isEvent": true,
-  "nom": "nom de l'événement",
-  "type": "Concert|Café-concert|Festival|Cinéma|Théâtre|Dédicace|Cérémonie|Culturel|Conférence|Sport|Infrastructure|Sécurité|Fête nationale",
+  "nom": "nom exact de l'événement",
+  "type": "Concert|Café-concert|Festival|Cinéma|Théâtre|Dédicace|Cérémonie|Culturel|Conférence|Sport|Sécurité|Fête nationale",
   "date": "YYYY-MM-DD",
   "lieu": "lieu spécifique",
   "ville": "ville",
   "heure": "HH:MM ou null",
-  "description": "description courte en 1-2 phrases"
+  "description": "description courte 1-2 phrases"
 }
 
-Sinon: {"isEvent": false}`;
+SINON (événement passé, vague, ou non confirmé): {"isEvent": false}`;
 
       const response = await generateChatResponse([
         { role: "user", content: prompt }
