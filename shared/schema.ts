@@ -372,3 +372,152 @@ export const insertStreetviewPointSchema = createInsertSchema(streetviewPoints).
 
 export type InsertStreetviewPoint = z.infer<typeof insertStreetviewPointSchema>;
 export type StreetviewPoint = typeof streetviewPoints.$inferSelect;
+
+// ============================================
+// OUAGA EN 3D - Modèles de données
+// ============================================
+
+// Sources d'images disponibles
+export const imageSourceProviders = ["mapillary", "openstreetcam", "wikimedia", "citizen"] as const;
+export type ImageSourceProvider = typeof imageSourceProviders[number];
+
+// Statuts des jobs de reconstruction
+export const reconstructionJobStatuses = ["pending", "processing", "completed", "failed"] as const;
+export type ReconstructionJobStatus = typeof reconstructionJobStatuses[number];
+
+// Niveaux de détail (LOD) pour les tuiles 3D
+export const lodLevels = [0, 1, 2, 3] as const;
+export type LodLevel = typeof lodLevels[number];
+
+// Table des assets images collectés
+export const ouaga3dImageAssets = pgTable("ouaga3d_image_assets", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  source: text("source").notNull(), // mapillary, openstreetcam, wikimedia, citizen
+  sourceAssetId: text("source_asset_id").notNull(), // ID original de la source
+  latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
+  altitude: decimal("altitude", { precision: 10, scale: 2 }),
+  heading: decimal("heading", { precision: 5, scale: 2 }), // Orientation 0-360
+  pitch: decimal("pitch", { precision: 5, scale: 2 }),
+  captureDate: timestamp("capture_date"),
+  license: text("license"), // CC-BY-SA, public domain, etc.
+  imageUrl: text("image_url"), // URL de l'image originale
+  thumbnailUrl: text("thumbnail_url"),
+  providerMeta: jsonb("provider_meta"), // Métadonnées spécifiques au provider
+  usedInSceneId: text("used_in_scene_id"), // Référence à la scène 3D
+  addedAt: timestamp("added_at").notNull().defaultNow(),
+}, (table) => ({
+  sourceAssetIdx: uniqueIndex("ouaga3d_source_asset_idx").on(table.source, table.sourceAssetId),
+  locationIdx: index("ouaga3d_location_idx").on(table.latitude, table.longitude),
+  sourceIdx: index("ouaga3d_source_idx").on(table.source),
+}));
+
+// Table des tuiles de scènes 3D
+export const ouaga3dSceneTiles = pgTable("ouaga3d_scene_tiles", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  quadkey: text("quadkey").notNull(), // Clé de tuile géographique
+  lodLevel: integer("lod_level").notNull().default(0), // 0=haute résolution, 3=basse
+  tileUrl: text("tile_url"), // URL du fichier 3D (glTF, 3D Tiles)
+  boundingBox: jsonb("bounding_box"), // {minLat, maxLat, minLng, maxLng}
+  vertexCount: integer("vertex_count"), // Nombre de sommets pour stats
+  textureCount: integer("texture_count"),
+  status: text("status").notNull().default("pending"), // pending, processing, completed, failed
+  imageAssetIds: text("image_asset_ids").array(), // Images utilisées
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  quadkeyLodIdx: uniqueIndex("ouaga3d_quadkey_lod_idx").on(table.quadkey, table.lodLevel),
+  statusIdx: index("ouaga3d_scene_status_idx").on(table.status),
+}));
+
+// Table des jobs de reconstruction 3D
+export const ouaga3dReconstructionJobs = pgTable("ouaga3d_reconstruction_jobs", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobDate: timestamp("job_date").notNull().defaultNow(),
+  status: text("status").notNull().default("pending"),
+  quadkey: text("quadkey"), // Zone ciblée
+  imagesProcessed: integer("images_processed").default(0),
+  imagesTotal: integer("images_total").default(0),
+  tilesGenerated: integer("tiles_generated").default(0),
+  errorMessage: text("error_message"),
+  statsJson: jsonb("stats_json"), // Statistiques détaillées
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  statusIdx: index("ouaga3d_job_status_idx").on(table.status),
+  jobDateIdx: index("ouaga3d_job_date_idx").on(table.jobDate),
+}));
+
+// Table de suivi de la couverture géographique
+export const ouaga3dCoverage = pgTable("ouaga3d_coverage", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  quadkey: text("quadkey").notNull().unique(),
+  centerLat: decimal("center_lat", { precision: 10, scale: 7 }).notNull(),
+  centerLng: decimal("center_lng", { precision: 10, scale: 7 }).notNull(),
+  imageCount: integer("image_count").notNull().default(0),
+  lastUpdated: timestamp("last_updated").notNull().defaultNow(),
+  hasSceneTile: boolean("has_scene_tile").notNull().default(false),
+  coveragePercent: integer("coverage_percent").default(0), // 0-100
+});
+
+// Table pour le suivi des exécutions du scheduler
+export const ouaga3dSchedulerRuns = pgTable("ouaga3d_scheduler_runs", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  runDate: timestamp("run_date").notNull().defaultNow(),
+  provider: text("provider").notNull(), // mapillary, openstreetcam, etc.
+  imagesFound: integer("images_found").default(0),
+  imagesAdded: integer("images_added").default(0),
+  imagesDuplicate: integer("images_duplicate").default(0),
+  success: boolean("success").notNull().default(false),
+  errorMessage: text("error_message"),
+  durationMs: integer("duration_ms"),
+});
+
+// Schemas d'insertion
+export const insertOuaga3dImageAssetSchema = createInsertSchema(ouaga3dImageAssets).omit({
+  id: true,
+  addedAt: true,
+});
+
+export const insertOuaga3dSceneTileSchema = createInsertSchema(ouaga3dSceneTiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertOuaga3dReconstructionJobSchema = createInsertSchema(ouaga3dReconstructionJobs).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertOuaga3dCoverageSchema = createInsertSchema(ouaga3dCoverage).omit({
+  id: true,
+});
+
+export const insertOuaga3dSchedulerRunSchema = createInsertSchema(ouaga3dSchedulerRuns).omit({
+  id: true,
+});
+
+// Types
+export type InsertOuaga3dImageAsset = z.infer<typeof insertOuaga3dImageAssetSchema>;
+export type Ouaga3dImageAsset = typeof ouaga3dImageAssets.$inferSelect;
+export type InsertOuaga3dSceneTile = z.infer<typeof insertOuaga3dSceneTileSchema>;
+export type Ouaga3dSceneTile = typeof ouaga3dSceneTiles.$inferSelect;
+export type InsertOuaga3dReconstructionJob = z.infer<typeof insertOuaga3dReconstructionJobSchema>;
+export type Ouaga3dReconstructionJob = typeof ouaga3dReconstructionJobs.$inferSelect;
+export type InsertOuaga3dCoverage = z.infer<typeof insertOuaga3dCoverageSchema>;
+export type Ouaga3dCoverage = typeof ouaga3dCoverage.$inferSelect;
+export type InsertOuaga3dSchedulerRun = z.infer<typeof insertOuaga3dSchedulerRunSchema>;
+export type Ouaga3dSchedulerRun = typeof ouaga3dSchedulerRuns.$inferSelect;
+
+// Type pour les statistiques de couverture
+export type Ouaga3dStats = {
+  totalImages: number;
+  totalScenes: number;
+  coveragePercent: number;
+  lastUpdate: string | null;
+  imagesBySource: Record<string, number>;
+  jobsCompleted: number;
+  jobsPending: number;
+};

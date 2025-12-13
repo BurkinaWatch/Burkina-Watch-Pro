@@ -1459,6 +1459,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ----------------------------------------
+  // ROUTES OUAGA EN 3D
+  // ----------------------------------------
+  const { ouaga3dService } = await import("./services/ouaga3dService");
+
+  app.get("/api/ouaga3d/stats", async (req, res) => {
+    try {
+      const stats = await ouaga3dService.getOuaga3dStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Erreur stats Ouaga3D:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
+    }
+  });
+
+  app.get("/api/ouaga3d/assets", async (req, res) => {
+    try {
+      const { limit, offset, source } = req.query;
+      const assets = await ouaga3dService.getImageAssets({
+        limit: limit ? parseInt(limit as string) : 100,
+        offset: offset ? parseInt(offset as string) : 0,
+        source: source as string | undefined
+      });
+      res.json(assets);
+    } catch (error) {
+      console.error("Erreur assets Ouaga3D:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des assets" });
+    }
+  });
+
+  app.get("/api/ouaga3d/coverage", async (req, res) => {
+    try {
+      const coverage = await ouaga3dService.getCoverageData();
+      res.json(coverage);
+    } catch (error) {
+      console.error("Erreur coverage Ouaga3D:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération de la couverture" });
+    }
+  });
+
+  app.get("/api/ouaga3d/jobs", async (req, res) => {
+    try {
+      const jobs = await ouaga3dService.getRecentJobs(10);
+      res.json(jobs);
+    } catch (error) {
+      console.error("Erreur jobs Ouaga3D:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des jobs" });
+    }
+  });
+
+  app.get("/api/ouaga3d/zones", (req, res) => {
+    res.json({
+      bounds: ouaga3dService.OUAGADOUGOU_BOUNDS,
+      zones: ouaga3dService.OUAGADOUGOU_ZONES
+    });
+  });
+
+  app.post("/api/ouaga3d/trigger-ingestion", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== "admin") {
+        return res.status(403).json({ error: "Accès réservé aux administrateurs" });
+      }
+
+      const result = await ouaga3dService.triggerManualIngestion();
+      res.json(result);
+    } catch (error) {
+      console.error("Erreur trigger ingestion:", error);
+      res.status(500).json({ error: "Erreur lors du déclenchement de l'ingestion" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
