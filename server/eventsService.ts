@@ -5,7 +5,7 @@ import { generateChatResponse } from "./aiService";
 interface EventItem {
   id: string;
   nom: string;
-  type: "Fête nationale" | "Culturel" | "Concert" | "Conférence" | "Sport" | "Infrastructure";
+  type: "Fête nationale" | "Concert" | "Café-concert" | "Festival" | "Cinéma" | "Théâtre" | "Dédicace" | "Cérémonie" | "Culturel" | "Conférence" | "Sport" | "Infrastructure" | "Sécurité";
   date: string;
   lieu: string;
   ville: string;
@@ -118,27 +118,36 @@ export async function fetchEvents(): Promise<EventItem[]> {
 
   for (const article of allArticles) {
     try {
-      const prompt = `Analyse cet article et détermine s'il mentionne un événement FUTUR ou D'AUJOURD'HUI au Burkina Faso (concert, fête, compétition, conférence, fermeture de route, etc.).
+      const prompt = `Analyse cet article et détermine s'il mentionne un événement FUTUR ou D'AUJOURD'HUI au Burkina Faso.
 
-IMPORTANT: Ignore les événements passés. N'extrais que les événements qui se déroulent aujourd'hui ou dans le futur.
+CATÉGORIES ÉVÉNEMENTS À CHERCHER:
+- CULTUREL: Concerts, Café-concerts, Festivals, Cinéma, Théâtre, Dédicaces, Cérémonies de récompenses, Expositions, Spectacles
+- SÉCURITÉ: Manifestations, Rassemblements, Fermetures de routes, Alertes sécuritaires
+- AUTRES: Fêtes nationales, Conférences, Compétitions sportives, Infractions routières
+
+IMPORTANT: 
+1. Ignore les événements passés
+2. N'extrais que les événements futurs ou d'aujourd'hui
+3. Détecte les dates implicites (ex: "ce weekend", "samedi prochain")
+4. Cherche les détails: concert, café-concert, festival, film, pièce de théâtre, dédicace d'auteur, cérémonie, gala
 
 Titre: ${article.title}
 Description: ${article.contentSnippet || article.description || ''}
 Date de publication: ${article.pubDate || ''}
 
-Si c'est un événement FUTUR ou D'AUJOURD'HUI, réponds UNIQUEMENT au format JSON strict suivant (sans texte additionnel):
+Si c'est un événement FUTUR ou D'AUJOURD'HUI, réponds UNIQUEMENT en JSON:
 {
   "isEvent": true,
   "nom": "nom de l'événement",
-  "type": "Fête nationale|Culturel|Concert|Conférence|Sport|Infrastructure",
+  "type": "Concert|Café-concert|Festival|Cinéma|Théâtre|Dédicace|Cérémonie|Culturel|Conférence|Sport|Infrastructure|Sécurité|Fête nationale",
   "date": "YYYY-MM-DD",
-  "lieu": "lieu précis",
+  "lieu": "lieu spécifique",
   "ville": "ville",
   "heure": "HH:MM ou null",
-  "description": "description courte"
+  "description": "description courte en 1-2 phrases"
 }
 
-Si ce n'est PAS un événement ou si c'est un événement PASSÉ, réponds: {"isEvent": false}`;
+Sinon: {"isEvent": false}`;
 
       const response = await generateChatResponse([
         { role: "user", content: prompt }

@@ -14,7 +14,7 @@ import { useLocation } from "wouter";
 interface Event {
   id: string;
   nom: string;
-  type: "Fête nationale" | "Culturel" | "Concert" | "Conférence" | "Sport" | "Infrastructure";
+  type: "Fête nationale" | "Concert" | "Café-concert" | "Festival" | "Cinéma" | "Théâtre" | "Dédicace" | "Cérémonie" | "Culturel" | "Conférence" | "Sport" | "Infrastructure" | "Sécurité";
   date: string;
   lieu: string;
   ville: string;
@@ -27,13 +27,20 @@ interface Event {
 }
 
 const EVENT_TYPES = [
-  { value: "all", label: "Tous les types" },
-  { value: "Fête nationale", label: "Fêtes nationales" },
-  { value: "Culturel", label: "Événements culturels" },
-  { value: "Concert", label: "Concerts" },
+  { value: "all", label: "Tous les événements" },
+  { value: "Culturel", label: "Culturel & Divertissement" },
+  { value: "Concert", label: "🎵 Concerts" },
+  { value: "Café-concert", label: "☕ Café-concerts" },
+  { value: "Festival", label: "🎭 Festivals" },
+  { value: "Cinéma", label: "🎬 Cinéma" },
+  { value: "Théâtre", label: "🎪 Théâtre & Spectacles" },
+  { value: "Dédicace", label: "📚 Dédicaces & Lectures" },
+  { value: "Cérémonie", label: "🏆 Cérémonies & Galas" },
+  { value: "Sécurité", label: "⚠️ Sécurité & Alertes" },
   { value: "Conférence", label: "Conférences" },
-  { value: "Sport", label: "Compétitions sportives" },
-  { value: "Infrastructure", label: "Fermetures de routes / Infrastructures" },
+  { value: "Sport", label: "Sport & Compétitions" },
+  { value: "Infrastructure", label: "Infrastructure & Routes" },
+  { value: "Fête nationale", label: "Fêtes nationales" },
 ];
 
 export default function Events() {
@@ -124,12 +131,19 @@ export default function Events() {
 
   const getTypeBadgeColor = (type: string) => {
     const colors: Record<string, string> = {
-      "Fête nationale": "bg-green-500",
+      "Fête nationale": "bg-green-600",
       "Culturel": "bg-purple-500",
       "Concert": "bg-pink-500",
+      "Café-concert": "bg-amber-600",
+      "Festival": "bg-fuchsia-500",
+      "Cinéma": "bg-indigo-500",
+      "Théâtre": "bg-purple-600",
+      "Dédicace": "bg-cyan-500",
+      "Cérémonie": "bg-yellow-600",
       "Conférence": "bg-blue-500",
       "Sport": "bg-orange-500",
       "Infrastructure": "bg-red-500",
+      "Sécurité": "bg-red-600",
     };
     return colors[type] || "bg-gray-500";
   };
@@ -172,10 +186,10 @@ export default function Events() {
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-2 flex items-center gap-3">
             <Calendar className="w-8 h-8 text-primary" />
-            Burkina Events
+            Agenda Burkina
           </h1>
           <p className="text-muted-foreground text-lg">
-            Tous les événements importants au Burkina Faso
+            Événements culturels, divertissements et alertes sécuritaires • Jour et à venir
           </p>
         </div>
 
