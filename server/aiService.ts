@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Groq from "groq-sdk";
+import OpenAI from "openai";
 
 const SYSTEM_PROMPT = `Tu es "Assistance Burkina Watch", un assistant intelligent et bienveillant qui aide les citoyens du Burkina Faso à utiliser la plateforme de veille citoyenne Burkina Watch.
 
@@ -57,10 +58,18 @@ const groqClient = process.env.GROQ_API_KEY
   ? new Groq({ apiKey: process.env.GROQ_API_KEY })
   : null;
 
+// Initialize OpenAI (using Replit AI Integrations)
+const openaiClient = process.env.AI_INTEGRATIONS_OPENAI_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+      baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+    })
+  : null;
+
 export async function generateChatResponse(
   messages: ChatMessage[],
   appContext?: AppContext
-): Promise<{ message: string; engine: "gemini" | "groq" | "unavailable" }> {
+): Promise<{ message: string; engine: "gemini" | "groq" | "openai" | "unavailable" }> {
   // Construire un contexte enrichi si disponible
   let contextMessage = "";
   if (appContext) {
@@ -152,21 +161,47 @@ export async function generateChatResponse(
       };
     } catch (error: any) {
       console.error("❌ Groq API error:", error?.message || error);
-
-      // If it's a rate limit error, re-throw it so the caller knows
-      if (error?.status === 429 || error?.message?.includes("rate limit") || error?.message?.includes("Rate limit")) {
-        throw error; // Re-throw rate limit errors for proper handling
+      // Continue to OpenAI fallback
+      if (openaiClient) {
+        console.log("⚠️ Groq failed, falling back to OpenAI...");
       }
     }
   }
 
-  // If both fail or are not configured
-  const errorMessage = geminiClient && groqClient
-    ? "Les services d'IA ne sont pas disponibles."
+  // Try OpenAI (final fallback using Replit AI Integrations)
+  if (openaiClient) {
+    try {
+      const openaiMessages = [
+        { role: "system" as const, content: SYSTEM_PROMPT + contextMessage },
+        ...messages.map(msg => ({
+          role: msg.role as "user" | "assistant",
+          content: msg.content,
+        }))
+      ];
+
+      const completion = await openaiClient.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: openaiMessages,
+        temperature: 0.7,
+        max_tokens: 500,
+      });
+
+      return {
+        message: completion.choices[0]?.message?.content || "Désolé, je n'ai pas pu générer une réponse.",
+        engine: "openai"
+      };
+    } catch (error: any) {
+      console.error("❌ OpenAI API error:", error?.message || error);
+    }
+  }
+
+  // If all engines fail or are not configured
+  const errorMessage = geminiClient || groqClient || openaiClient
+    ? "Les services d'IA ne sont pas disponibles actuellement. Veuillez réessayer plus tard."
     : "Services d'IA non configurés. Veuillez contacter l'administrateur.";
   throw new Error(errorMessage);
 }
 
 export function isAIAvailable(): boolean {
-  return !!(geminiClient || groqClient);
+  return !!(geminiClient || groqClient || openaiClient);
 }

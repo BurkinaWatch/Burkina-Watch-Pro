@@ -16,6 +16,10 @@ export const sessions = pgTable(
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
   email: text("email").unique().notNull(),
+  password: text("password"),
+  authProvider: text("auth_provider").default("email"),
+  googleId: text("google_id"),
+  facebookId: text("facebook_id"),
   firstName: text("first_name"),
   lastName: text("last_name"),
   profileImageUrl: text("profile_image_url"),
