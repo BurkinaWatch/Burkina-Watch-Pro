@@ -537,10 +537,13 @@ export default function StreetView() {
 
   const startCapture = useCallback(async () => {
     setCameraError(null);
+    setIsCapturing(true);
+    setCaptureCount(0);
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      const error = "Votre navigateur ne supporte pas la capture de photos. Veuillez utiliser un navigateur moderne (Chrome, Firefox, Safari).";
+      const error = "Votre navigateur ne supporte pas la capture de photos.";
       setCameraError(error);
+      setIsCapturing(false);
       toast({
         title: "Non supporté",
         description: error,
@@ -549,37 +552,23 @@ export default function StreetView() {
       return;
     }
 
-    if (window.location.protocol !== "https:" && window.location.hostname !== "localhost" && !window.location.hostname.includes("replit")) {
-      const error = "La caméra nécessite une connexion HTTPS sécurisée.";
-      setCameraError(error);
-      toast({
-        title: "Connexion non sécurisée",
-        description: error,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setCaptureCount(0);
-
     try {
       let stream: MediaStream | null = null;
 
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: "environment" },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
           audio: false,
         });
-      } catch (backCameraError) {
-        console.warn("Caméra arrière non disponible, tentative avec n'importe quelle caméra:", backCameraError);
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: false,
-        });
+      } catch (err1) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: "environment" } },
+            audio: false,
+          });
+        } catch (err2) {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        }
       }
 
       streamRef.current = stream;
@@ -590,50 +579,26 @@ export default function StreetView() {
         await videoRef.current.play();
       }
 
-      // Mettre isCapturing à true SEULEMENT après succès de l'accès caméra
-      setIsCapturing(true);
-
       captureIntervalRef.current = setInterval(() => {
         capturePhoto();
       }, 5000);
 
       toast({
-        title: "Capture démarrée",
-        description: "Les photos sont capturées automatiquement toutes les 5 secondes.",
+        title: "Capture démarrée ✓",
+        description: "Les photos sont capturées toutes les 5 secondes.",
       });
 
     } catch (error: any) {
-      console.error("Erreur accès caméra - nom:", error?.name, "message:", error?.message, "erreur complète:", error);
-
+      setIsCapturing(false);
       let errorMessage = "Impossible d'accéder à la caméra.";
-      let errorInstructions = "";
 
       if (error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError") {
-        errorMessage = "Accès à la caméra refusé";
-        errorInstructions = "1. Cliquez sur l'icône 🔒 dans la barre d'adresse\n2. Cherchez 'Caméra' dans les permissions\n3. Changez de 'Bloqué' à 'Autoriser'\n4. Rechargez la page";
-      } else if (error?.name === "NotFoundError" || error?.name === "DevicesNotFoundError") {
-        errorMessage = "Aucune caméra détectée sur cet appareil.";
-        errorInstructions = "Vérifiez qu'une caméra est connectée et fonctionnelle.";
-      } else if (error?.name === "NotReadableError" || error?.name === "TrackStartError") {
-        errorMessage = "La caméra est déjà utilisée par une autre application.";
-        errorInstructions = "Fermez les autres applications utilisant la caméra (Zoom, Teams, etc.) et réessayez.";
-      } else if (error?.name === "OverconstrainedError") {
-        errorMessage = "La caméra ne supporte pas les paramètres demandés.";
-        errorInstructions = "Votre caméra ne supporte pas la résolution demandée. Essayez avec une autre caméra.";
-      } else if (error?.name === "TypeError") {
-        errorMessage = "Erreur de configuration de la caméra.";
-        errorInstructions = "Rechargez la page et réessayez.";
-      } else if (error?.name === "AbortError") {
-        errorMessage = "L'accès à la caméra a été interrompu.";
-        errorInstructions = "Réessayez de démarrer la capture.";
-      } else if (error?.name === "SecurityError") {
-        errorMessage = "Accès à la caméra bloqué pour des raisons de sécurité.";
-        errorInstructions = "Vérifiez les permissions de la caméra dans les paramètres de votre navigateur.";
-      } else {
-        errorInstructions = "Vérifiez les permissions de la caméra dans les paramètres de votre navigateur.";
+        errorMessage = "Permission refusée - Vérifiez les permissions caméra du navigateur";
+      } else if (error?.name === "NotFoundError") {
+        errorMessage = "Aucune caméra détectée sur cet appareil";
+      } else if (error?.name === "NotReadableError") {
+        errorMessage = "La caméra est déjà utilisée par une autre application";
       }
-
-      setCameraError(errorMessage + (errorInstructions ? "\n\n" + errorInstructions : ""));
 
       setCameraError(errorMessage);
       toast({
@@ -656,6 +621,72 @@ export default function StreetView() {
   const handleMapillaryError = useCallback((message: string) => {
     console.error("Mapillary error:", message);
   }, []);
+
+  const create3DVideo = useCallback(async () => {
+    if (localHistory.length < 2) {
+      toast({
+        title: "Pas assez d'images",
+        description: "Vous avez besoin d'au moins 2 images pour créer une vidéo 3D",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1280;
+      canvas.height = 720;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const images = await Promise.all(
+        localHistory.map(item => {
+          return new Promise<HTMLImageElement>((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = item.imageData;
+          });
+        })
+      );
+
+      const frames: string[] = [];
+      for (const img of images) {
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        frames.push(canvas.toDataURL("image/jpeg", 0.7));
+      }
+
+      const blob = new Blob([JSON.stringify({
+        frames,
+        metadata: {
+          count: localHistory.length,
+          created: new Date().toISOString(),
+          positions: localHistory.map(h => ({ lat: h.latitude, lng: h.longitude }))
+        }
+      })], { type: "application/json" });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `video-3d-${Date.now()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Vidéo 3D créée ✓",
+        description: `${localHistory.length} images compilées en vidéo 3D`,
+      });
+    } catch (error) {
+      console.error("Erreur création vidéo 3D:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer la vidéo 3D",
+        variant: "destructive",
+      });
+    }
+  }, [localHistory, toast]);
 
   const mapCenter: [number, number] = [currentPosition.lat, currentPosition.lng];
 
@@ -946,6 +977,16 @@ export default function StreetView() {
                               </div>
                             ))}
                           </div>
+
+                          <Button
+                            onClick={create3DVideo}
+                            className="w-full bg-purple-600 hover:bg-purple-700 gap-2"
+                            disabled={localHistory.length < 2}
+                            data-testid="button-create-3d-video"
+                          >
+                            <Globe className="h-4 w-4" />
+                            Créer vidéo 3D ({localHistory.length} images)
+                          </Button>
 
                           <Button
                             variant="destructive"
