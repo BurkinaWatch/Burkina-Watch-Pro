@@ -1,5 +1,6 @@
 import * as client from "openid-client";
 import { Strategy, type VerifyFunction } from "openid-client/passport";
+
 import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
@@ -17,19 +18,8 @@ const getOidcConfig = memoize(
   { maxAge: 3600 * 1000 }
 );
 
-function getExternalUrl(req: any) {
-  // Use REPLIT_DOMAINS if available (most reliable)
-  if (process.env.REPLIT_DOMAINS) {
-    return `https://${process.env.REPLIT_DOMAINS}`;
-  }
-  // Fallback to x-forwarded-host or host header
-  const host = req.get("x-forwarded-host") || req.get("host");
-  const protocol = req.get("x-forwarded-proto") || req.protocol;
-  return `${protocol}://${host}`;
-}
-
 export function getSession() {
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 7 days
+  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
@@ -60,7 +50,9 @@ function updateUserSession(
   user.expires_at = user.claims?.exp;
 }
 
-async function upsertUser(claims: any) {
+async function upsertUser(
+  claims: any,
+) {
   await storage.upsertUser({
     id: claims["sub"],
     email: claims["email"],
@@ -88,44 +80,67 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  // Use a single consistent domain for the strategy
-  const callbackDomain = process.env.REPLIT_DOMAINS || "localhost:5000";
-  
-  const strategy = new Strategy(
-    {
-      name: "replitauth",
-      config,
-      scope: "openid email profile offline_access",
-      callbackURL: `https://${callbackDomain}/api/callback`,
-    },
-    verify,
-  );
-  passport.use(strategy);
+  // Keep track of registered strategies
+  const registeredStrategies = new Set<string>();
+
+  // Get the proper hostname from request headers (handles Replit proxy)
+  const getHostname = (req: any): string => {
+    // In Replit, x-forwarded-host contains the actual domain
+    const forwardedHost = req.get("x-forwarded-host");
+    if (forwardedHost) {
+      // Take the first host if there are multiple
+      return forwardedHost.split(",")[0].trim();
+    }
+    return req.hostname;
+  };
+
+  // Helper function to ensure strategy exists for a domain
+  const ensureStrategy = (domain: string) => {
+    const strategyName = `replitauth:${domain}`;
+    if (!registeredStrategies.has(strategyName)) {
+      const strategy = new Strategy(
+        {
+          name: strategyName,
+          config,
+          scope: "openid email profile offline_access",
+          callbackURL: `https://${domain}/api/callback`,
+        },
+        verify,
+      );
+      passport.use(strategy);
+      registeredStrategies.add(strategyName);
+    }
+  };
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    passport.authenticate("replitauth", {
-      prompt: "select_account consent",
+    const hostname = getHostname(req);
+    console.log("[AUTH] Login with hostname:", hostname);
+    ensureStrategy(hostname);
+    passport.authenticate(`replitauth:${hostname}`, {
+      prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
-    passport.authenticate("replitauth", {
+    const hostname = getHostname(req);
+    console.log("[AUTH] Callback with hostname:", hostname);
+    ensureStrategy(hostname);
+    passport.authenticate(`replitauth:${hostname}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
     })(req, res, next);
   });
 
   app.get("/api/logout", (req, res) => {
-    const externalUrl = getExternalUrl(req);
     req.logout(() => {
       res.redirect(
         client.buildEndSessionUrl(config, {
           client_id: process.env.REPL_ID!,
-          post_logout_redirect_uri: externalUrl,
+          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
         }).href
       );
     });
@@ -146,7 +161,8 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   const refreshToken = user.refresh_token;
   if (!refreshToken) {
-    return res.status(401).json({ message: "Unauthorized" });
+    res.status(401).json({ message: "Unauthorized" });
+    return;
   }
 
   try {
@@ -155,6 +171,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     updateUserSession(user, tokenResponse);
     return next();
   } catch (error) {
-    return res.status(401).json({ message: "Unauthorized" });
+    res.status(401).json({ message: "Unauthorized" });
+    return;
   }
 };
