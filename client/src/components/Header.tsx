@@ -8,9 +8,10 @@ import HamburgerMenu from "./HamburgerMenu";
 import LanguageSelector from "./LanguageSelector";
 import BurkinaWatchLogo from "./BurkinaWatchLogo";
 import { Link, useLocation } from "wouter";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { playNotificationSound } from "@/lib/notificationSound";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -19,15 +20,25 @@ interface HeaderProps {
 }
 
 function UnreadBadge() {
+  const prevCountRef = useRef<number>(0);
   const { data } = useQuery<{ count: number }>({
     queryKey: ["/api/notifications/unread-count"],
     refetchInterval: 30000,
   });
 
+  useEffect(() => {
+    if (data && data.count > prevCountRef.current && prevCountRef.current !== 0) {
+      playNotificationSound();
+    }
+    if (data) {
+      prevCountRef.current = data.count;
+    }
+  }, [data]);
+
   if (!data || data.count === 0) return null;
 
   return (
-    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
       {data.count > 9 ? '9+' : data.count}
     </span>
   );
