@@ -8,7 +8,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, Link } from "wouter";
 import type { EmergencyContact } from "@shared/schema";
-import { playPanicSound, playSuccessSound } from "@/lib/notificationSound";
+import { playSuccessSound } from "@/lib/notificationSound";
 
 // Placeholder for PanicButton component, assuming it exists elsewhere and handles panic logic
 function PanicButton({ className }: { className?: string }) {
@@ -131,7 +131,6 @@ function PanicButton({ className }: { className?: string }) {
       return;
     }
 
-    playPanicSound();
     setIsActivating(true);
     panicMutation.mutate();
   };
