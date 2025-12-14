@@ -861,12 +861,12 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
             <div className="p-2 border-b">
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-primary" />
-                <Select value={selectedRegion || ''} onValueChange={(value) => setSelectedRegion(value === '' ? null : value)}>
+                <Select value={selectedRegion || 'all'} onValueChange={(value) => setSelectedRegion(value === 'all' ? null : value)}>
                   <SelectTrigger className="flex-1 text-xs bg-transparent border-none focus:ring-0 focus:shadow-none p-0 h-auto">
                     <SelectValue placeholder="Toutes les régions" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Toutes les régions</SelectItem>
+                    <SelectItem value="all">Toutes les régions</SelectItem>
                     {BURKINA_REGIONS.map(region => (
                       <SelectItem key={region.name} value={region.name}>
                         {region.name} ({region.chefLieu})
