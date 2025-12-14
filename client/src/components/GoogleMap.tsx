@@ -15,9 +15,16 @@ import type { Categorie } from '@shared/schema';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, AlertTriangle, Locate, Flame, Navigation, GripVertical, Search, X } from 'lucide-react';
+import { MapPin, AlertTriangle, Locate, Flame, Navigation, GripVertical, Search, X, Filter, Layers } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import Draggable from 'react-draggable';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface MapMarker {
   id: string;
@@ -255,7 +262,7 @@ const BURKINA_REGIONS = [
 
 function CustomMarker({ color, isSOS, niveauUrgence }: { color: string; isSOS: boolean; niveauUrgence?: string | null }) {
   const urgencyColor = niveauUrgence ? urgencyColors[niveauUrgence] || urgencyColors.moyen : urgencyColors.moyen;
-  
+
   // Intensité du glow basée sur l'urgence
   const glowIntensity = niveauUrgence === 'critique' ? 0.8 : niveauUrgence === 'moyen' ? 0.6 : 0.4;
   const glowSize = niveauUrgence === 'critique' ? '70px' : niveauUrgence === 'moyen' ? '60px' : '50px';
@@ -276,7 +283,7 @@ function CustomMarker({ color, isSOS, niveauUrgence }: { color: string; isSOS: b
           pointerEvents: 'none'
         }}
       />
-      
+
       {/* Animation pulsante pour tous les signalements */}
       <div 
         className="absolute inset-0 rounded-full animate-pulse"
@@ -291,7 +298,7 @@ function CustomMarker({ color, isSOS, niveauUrgence }: { color: string; isSOS: b
           animationDuration: isSOS ? '1s' : '2s'
         }}
       />
-      
+
       {/* Animation supplémentaire pour SOS */}
       {isSOS && (
         <div 
@@ -308,7 +315,7 @@ function CustomMarker({ color, isSOS, niveauUrgence }: { color: string; isSOS: b
           }}
         />
       )}
-      
+
       {/* Marker principal avec effet de brillance */}
       <div 
         style={{
@@ -352,7 +359,7 @@ function CustomMarker({ color, isSOS, niveauUrgence }: { color: string; isSOS: b
           />
         )}
       </div>
-      
+
       {/* Voyant d'urgence avec effet lumineux */}
       <div 
         className="animate-pulse"
@@ -575,6 +582,8 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
   const [showSearchResults, setShowSearchResults] = useState<boolean>(false);
   const [mapCenter, setMapCenter] = useState<{lat: number; lng: number}>(BURKINA_FASO_CENTER);
   const [mapZoom, setMapZoom] = useState<number>(6.5);
+  const [filteredCount, setFilteredCount] = useState<number>(0);
+  const [selectedCategory, setSelectedCategory] = useState<string>('tous'); // Added state for category filter
 
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -676,7 +685,7 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
       });
     }
 
-    if (selectedRegion) {
+    if (selectedRegion && selectedRegion !== "all") {
       const region = BURKINA_REGIONS.find(r => r.name === selectedRegion);
       if (region) {
         filtered = filtered.filter(marker => {
@@ -686,13 +695,24 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
             marker.lat,
             marker.lng
           );
-          return distance <= 100;
+          return distance <= 100; // Arbitrary large radius to approximate region inclusion
         });
       }
     }
 
+    // Apply category filter
+    if (selectedCategory !== "tous") {
+      filtered = filtered.filter(marker => marker.categorie === selectedCategory);
+    }
+
     return filtered;
-  }, [markers, radiusFilter, selectedRegion, userLocation]);
+  }, [markers, radiusFilter, selectedRegion, userLocation, selectedCategory]);
+
+  // Effect to update filteredCount whenever filteredMarkers change
+  useEffect(() => {
+    setFilteredCount(filteredMarkers.length);
+  }, [filteredMarkers]);
+
 
   useEffect(() => {
     const checkInterval = setInterval(() => {
@@ -731,10 +751,13 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
   };
 
   const handleRecenter = () => {
-    // Cette fonction sera utilisée par le RecenterControl
+    setMapCenter(BURKINA_FASO_CENTER);
+    setMapZoom(6.5);
   };
 
   const handleSearchResultClick = (result: any) => {
+    setMapCenter({ lat: result.lat, lng: result.lng });
+    setMapZoom(12);
     setSelectedRegion(result.region || result.name);
     setSearchQuery('');
     setShowSearchResults(false);
@@ -769,12 +792,42 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
 
   return (
     <div className={`relative ${className}`}>
-      {/* Contrôles de filtre - Déplaçable */}
-      <Draggable
-        handle=".drag-handle"
-        bounds="parent"
-        defaultPosition={{ x: 8, y: 80 }}
-      >
+      {/* Barre de recherche */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-full max-w-lg px-4">
+        <div className="relative">
+          <Input
+            type="text"
+            placeholder="Rechercher une région, province ou commune..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full shadow-lg"
+            startIcon={<Search className="w-4 h-4 text-muted-foreground" />}
+            endIcon={searchQuery && <X className="w-4 h-4 text-muted-foreground cursor-pointer" onClick={() => setSearchQuery('')} />}
+          />
+          {showSearchResults && searchResults.length > 0 && (
+            <Card className="absolute top-full left-0 right-0 mt-2 p-2 shadow-lg z-30 max-h-60 overflow-y-auto">
+              {searchResults.map((result, index) => (
+                <Button
+                  key={index}
+                  variant="ghost"
+                  className="w-full justify-start text-left text-sm h-auto p-2"
+                  onClick={() => handleSearchResultClick(result)}
+                >
+                  <div>
+                    <span className="font-semibold">{result.name}</span>
+                    {result.province && <span className="text-muted-foreground"> ({result.province})</span>}
+                    {result.region && <span className="text-muted-foreground"> - {result.region}</span>}
+                    <p className="text-xs text-muted-foreground">{result.type}</p>
+                  </div>
+                </Button>
+              ))}
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* Floating Controls Panel */}
+      <Draggable handle=".drag-handle">
         <div className="absolute z-30 max-w-md space-y-2 cursor-move">
           <Card className="bg-background/95 backdrop-blur shadow-lg">
             <div className="drag-handle p-2 flex items-center justify-center border-b cursor-grab active:cursor-grabbing">
@@ -808,18 +861,39 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
             <div className="p-2 border-b">
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-primary" />
-                <select
-                  value={selectedRegion || ''}
-                  onChange={(e) => setSelectedRegion(e.target.value || null)}
-                  className="flex-1 text-xs bg-transparent border-none focus:outline-none"
-                >
-                  <option value="">Toutes les régions</option>
-                  {BURKINA_REGIONS.map(region => (
-                    <option key={region.name} value={region.name}>
-                      {region.name} ({region.chefLieu})
-                    </option>
-                  ))}
-                </select>
+                <Select value={selectedRegion || ''} onValueChange={(value) => setSelectedRegion(value === '' ? null : value)}>
+                  <SelectTrigger className="flex-1 text-xs bg-transparent border-none focus:ring-0 focus:shadow-none p-0 h-auto">
+                    <SelectValue placeholder="Toutes les régions" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Toutes les régions</SelectItem>
+                    {BURKINA_REGIONS.map(region => (
+                      <SelectItem key={region.name} value={region.name}>
+                        {region.name} ({region.chefLieu})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            {/* Filtre par catégorie */}
+            <div className="p-2 border-b">
+              <div className="flex items-center gap-2">
+                <Flame className="w-4 h-4 text-primary" />
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="flex-1 text-xs bg-transparent border-none focus:ring-0 focus:shadow-none p-0 h-auto">
+                    <SelectValue placeholder="Toutes les catégories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="tous">Toutes catégories</SelectItem>
+                    {Object.keys(categoryColors).map(cat => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -945,11 +1019,16 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
       </APIProvider>
 
       {/* Indicateur de filtrage actif */}
-      {(radiusFilter || selectedRegion) && (
+      {(radiusFilter || selectedRegion || selectedCategory !== "tous") && (
         <div className="absolute bottom-4 left-4 z-20">
           <Card className="p-2 bg-background/95 backdrop-blur text-xs">
-            {filteredMarkers.length} / {markers.length} signalements affichés
-            {selectedRegion && <div className="font-medium mt-1">Région: {selectedRegion}</div>}
+            <div className="font-medium flex items-center gap-2">
+              <span className="text-lg font-bold text-primary">{filteredCount}</span>
+              signalements trouvés
+            </div>
+            {selectedRegion && selectedRegion !== "all" && <div className="mt-1">Région: {selectedRegion}</div>}
+            {selectedCategory && selectedCategory !== "tous" && <div className="mt-1">Catégorie: {selectedCategory}</div>}
+            {radiusFilter && <div className="mt-1">Rayon: {radiusFilter}km</div>}
           </Card>
         </div>
       )}
