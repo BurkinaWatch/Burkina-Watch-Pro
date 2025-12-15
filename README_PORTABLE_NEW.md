@@ -382,7 +382,7 @@ npm run build -- --force
 
 ### Contact
 
-- 📧 Email: support@burkinawatch.com
+- 📧 Email: help-burkinawatch@outlook.fr
 - 📱 Téléphone: +226 65511323
 - 💬 WhatsApp: +226 70019540
 - 🌐 Website: https://burkinawatch.com

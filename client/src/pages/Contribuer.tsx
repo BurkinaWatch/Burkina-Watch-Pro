@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { Mail } from "lucide-react";
 
 export default function Contribuer() {
   const { toast } = useToast();
@@ -24,7 +25,7 @@ export default function Contribuer() {
   return (
     <div className="min-h-screen bg-background pb-20">
       <Header />
-      
+
       <section className="container max-w-4xl mx-auto px-4 pt-24">
         <Link href="/">
           <Button variant="ghost" className="mb-6" data-testid="button-back-home">
@@ -151,6 +152,20 @@ export default function Contribuer() {
                   )}
                 </Button>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800 mb-8">
+          <CardHeader>
+            <CardTitle className="text-green-700 dark:text-green-400">
+              Nous contacter
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <Mail className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm">help-burkinawatch@outlook.fr</span>
             </div>
           </CardContent>
         </Card>
