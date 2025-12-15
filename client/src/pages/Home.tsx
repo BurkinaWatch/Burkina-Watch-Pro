@@ -188,6 +188,13 @@ Cette page rassemble conseils pratiques, règles et bonnes pratiques pour utilis
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+CONTACT & SUPPORT
+Email: help-burkinawatch@outlook.fr
+Téléphone: +226 65511323
+WhatsApp: +226 70019540
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 1) RAPPEL : OBJECTIF DE L'APPLICATION
 
 BurkinaWatch permet de signaler, alerter et partager des faits d'intérêt public (danger, incivilités, urgences, etc.).
@@ -370,6 +377,11 @@ BurkinaWatch est un outil collectif : son efficacité dépend de la qualité et 
 Merci d'agir avec responsabilité — ta vigilance sauve des vies.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CONTACT & SUPPORT
+Email: help-burkinawatch@outlook.fr
+Téléphone: +226 65511323
+WhatsApp: +226 70019540
 
 © ${new Date().getFullYear()} BurkinaWatch - Tous droits réservés
 Document généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}
