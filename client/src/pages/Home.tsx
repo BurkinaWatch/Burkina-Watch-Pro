@@ -10,7 +10,7 @@ import EmergencyPanel from "@/components/EmergencyPanel";
 import SignalementCard from "@/components/SignalementCard";
 import StatCard from "@/components/StatCard";
 import MessageDuJour from "@/components/MessageDuJour";
-import { AlertCircle, Shield, Users, TrendingUp, ArrowRight, Loader2, Heart, AlertTriangle, Search, X, MapPin, Filter, BookOpen, Download } from "lucide-react";
+import { AlertCircle, Shield, Users, TrendingUp, ArrowRight, Loader2, Heart, AlertTriangle, Search, X, MapPin, Filter, BookOpen, Download, Phone, MessageCircle, Mail } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { Signalement } from "@shared/schema";
@@ -1230,14 +1230,33 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center space-y-4">
             {/* Contact Info */}
-            <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-2 sm:gap-4 text-xs sm:text-sm">
-              <p className="text-muted-foreground">
-                Tel: <span className="text-foreground font-medium">+226 65511323</span>
-              </p>
-              <span className="hidden sm:inline text-muted-foreground">•</span>
-              <p className="text-muted-foreground">
-                WhatsApp: <span className="text-foreground font-medium">+226 70019540</span>
-              </p>
+            <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4">
+              <a
+                href="tel:+22665511323"
+                className="flex items-center gap-2 px-3 py-2 rounded-full bg-green-500/10 hover:bg-green-500/20 text-green-600 dark:text-green-400 transition-all hover:scale-105"
+                title="Appeler"
+              >
+                <Phone className="w-4 h-4" />
+                <span className="text-xs font-medium hidden sm:inline">+226 65511323</span>
+              </a>
+              <a
+                href="https://wa.me/22670019540"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-2 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 transition-all hover:scale-105"
+                title="WhatsApp"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span className="text-xs font-medium hidden sm:inline">WhatsApp</span>
+              </a>
+              <a
+                href="mailto:help-burkinawatch@outlook.fr"
+                className="flex items-center gap-2 px-3 py-2 rounded-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 transition-all hover:scale-105"
+                title="Email"
+              >
+                <Mail className="w-4 h-4" />
+                <span className="text-xs font-medium hidden sm:inline">Email</span>
+              </a>
             </div>
 
             {/* Legal Links */}
