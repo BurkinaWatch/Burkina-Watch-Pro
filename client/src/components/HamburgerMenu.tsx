@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Link, useLocation } from "wouter";
-import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Cross, Newspaper, Calendar, Navigation, Sparkles, Bell, Shield, Camera } from "lucide-react";
+import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Cross, Newspaper, Calendar, Navigation, Sparkles, Bell, Shield, Camera, Utensils, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +42,12 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
   const urgenceItems = [
     { href: "/urgences", icon: AlertCircle, label: t("nav.urgences"), color: "text-orange-600 dark:text-orange-500" },
     { href: "/pharmacies", icon: Cross, label: t("nav.pharmacies"), color: "text-red-500 dark:text-red-400" },
+  ];
+
+  // Vie Quotidienne - Restaurants et Commerces
+  const vieQuotidienneItems = [
+    { href: "/restaurants", icon: Utensils, label: "Restaurants", color: "text-amber-600 dark:text-amber-500", badge: t("common.new"), badgeColor: "bg-amber-500" },
+    { href: "/boutiques-marches", icon: ShoppingBag, label: "Boutiques & Marchés", color: "text-pink-600 dark:text-pink-500", badge: t("common.new"), badgeColor: "bg-pink-500" },
   ];
 
   // Informations & Engagement
@@ -163,6 +169,39 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <item.icon className={`w-5 h-5 ${item.color} group-hover:scale-110 transition-transform`} />
                       <span className="font-medium">{item.label}</span>
+                    </Button>
+                  </Link>
+                ))}
+              </nav>
+            </div>
+
+            <Separator className="my-3" />
+
+            {/* Vie Quotidienne */}
+            <div className="px-3 mb-4">
+              <div className="flex items-center gap-2 mb-3 px-2">
+                <ShoppingBag className="w-4 h-4 text-pink-600 dark:text-pink-500" />
+                <p className="text-xs font-bold text-foreground uppercase tracking-wider">
+                  Vie Quotidienne
+                </p>
+              </div>
+              <nav className="space-y-1.5">
+                {vieQuotidienneItems.map((item) => (
+                  <Link key={item.href} href={item.href}>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start gap-3 h-11 rounded-xl hover:bg-pink-50 dark:hover:bg-pink-950/20 hover:scale-[1.02] transition-all duration-200 group relative overflow-hidden"
+                      onClick={() => onOpenChange(false)}
+                      data-testid={`menu-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-pink-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <item.icon className={`w-5 h-5 ${item.color} group-hover:scale-110 transition-transform`} />
+                      <span className="font-medium">{item.label}</span>
+                      {item.badge && (
+                        <Badge className={`ml-auto text-[10px] px-1.5 py-0 ${item.badgeColor} text-white border-0`}>
+                          {item.badge}
+                        </Badge>
+                      )}
                     </Button>
                   </Link>
                 ))}
