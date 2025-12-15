@@ -179,224 +179,138 @@ const BURKINA_REGIONS = [
 ];
 
 function SecurityNotesDialog() {
-  const exportToPDF = () => {
-    // Créer le contenu texte pour le PDF
-    const content = `
-NOTES IMPORTANTES — CONSEILS DE SÉCURITÉ POUR UTILISER BURKINAWATCH
-
-Cette page rassemble conseils pratiques, règles et bonnes pratiques pour utiliser BurkinaWatch en toute sécurité — protéger ta personne, tes proches et la crédibilité des signalements. Lis attentivement et applique ce qui correspond à ta situation.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-CONTACT & SUPPORT
-Email: help-burkinawatch@outlook.fr
-Téléphone: +226 65511323
-WhatsApp: +226 70019540
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-1) RAPPEL : OBJECTIF DE L'APPLICATION
-
-BurkinaWatch permet de signaler, alerter et partager des faits d'intérêt public (danger, incivilités, urgences, etc.).
-L'objectif est d'augmenter la sécurité collective — pas de remplacer les secours. Utilise toujours l'application de façon responsable.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-2) AVANT DE FILMER / PRENDRE UNE PHOTO : ÉVALUE TA SÉCURITÉ
-
-• Priorité : ta vie d'abord. Si la situation est dangereuse (violence, attaque, incendie), recule et appelle les secours (police, pompiers, SAMU) plutôt que d'intervenir.
-• Ne provoque pas : ne t'expose pas physiquement pour obtenir une meilleure vidéo.
-• Si possible, filme depuis un endroit sûr (fenêtre, voiture, distance protégée).
-• Évite les confrontations verbales ou physiques avec des personnes en crise.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-3) PROTÉGER TON ANONYMAT (SI TU LE SOUHAITES)
-
-• Active l'option Anonyme lors de la publication si tu crains des représailles.
-• N'inclus jamais ton nom complet, adresse personnelle ou autres informations identifiantes dans la description si tu veux rester anonyme.
-• Si tu dois donner plus d'informations aux autorités, préfère le canal sécurisé prévu (escrow ou contact officiel), pas le fil public.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-4) LORS DE LA CAPTURE D'IMAGES / VIDÉOS — BONNES PRATIQUES TECHNIQUES
-
-• Stabilise l'image au maximum (pose le téléphone si possible).
-• Capture l'essentiel : personne(s) impliquée(s), lieu (repères visibles), date/heure si possible.
-• Ne retouche pas l'image de façon à modifier la réalité (pas de filtres trompeurs).
-• Si tu veux protéger l'identité de tiers (enfants, victimes), utilise le floutage avant de publier.
-• Si tu veux préserver la preuve légale, conserve l'original (non compressé) en cas de demande des autorités.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-5) MÉTADONNÉES ET GÉOLOCALISATION
-
-• Les photos/vidéos contiennent souvent des métadonnées (EXIF) — date, heure, coordonnées.
-• Si tu veux prouver un fait, conserve les métadonnées.
-• Si tu veux protéger un témoin, supprime/édites les métadonnées avant publication ou utilise l'option d'anonymat.
-• BurkinaWatch propose (ou proposera) une option "supprimer EXIF" — utilise-la selon ton besoin.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-6) RÉDIGER UN SIGNALEMENT UTILE (MODÈLE)
-
-Fournis des informations claires et factuelles, sans dramatisation :
-
-Titre : Éboulement sur la route Ziniaré – kilomètre 12
-Description : « Glissement de terrain bloquant la RN3, voitures immobilisées, risque d'accident. Localisation : intersection X (voir pin). Heure : 08:12. »
-Pièce jointe : 2 photos + courte vidéo 15s
-Anonymat : Oui / Non
-
-Exemple court prêt à envoyer : "Feu de brousse près du village Y, rive nord de la route, flammes visibles sur 50m. Demande intervention pompiers. Coordonnées : [pin]."
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-7) VÉRIFIER AVANT DE PUBLIER — LUTTE CONTRE LA DÉSINFORMATION
-
-• Ne publie pas une rumeur. Si tu n'es pas sûr, mentionne clairement : "À vérifier — témoin sur place".
-• Vérifie la source et la date (évite de republier des vidéos anciennes comme si elles étaient actuelles).
-• Si tu trouves une information douteuse, utilises le signalement interne "vérifier" pour demander une revue modérateurs.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-8) SI TU ES VICTIME OU TÉMOIN D'UN CRIME
-
-• Appelle immédiatement les forces de l'ordre si la situation est en cours.
-• Si tu filmes, fais-le depuis un endroit sûr, puis fournis la vidéo au service compétent via le canal sécurisé.
-• N'essaye pas de "juger" ou d'infliger la justice toi-même. BurkinaWatch n'encourage aucune action violente.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-9) PROTÉGER LES MINEURS ET LES PERSONNES VULNÉRABLES
-
-• Ne publie jamais d'image d'un enfant sans le consentement des responsables légaux, sauf si c'est strictement nécessaire pour une urgence (disparition) — et alors masque le visage si possible.
-• Les signalements impliquant violences sexuelles ou exploitation doivent être envoyés via le canal SOS — catégorie protection enfant / femme pour priorisation et confidentialité.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-10) UTILISATION INTELLIGENTE DU BOUTON SOS
-
-• Réserve le SOS aux urgences réelles (danger immédiat, personne disparue, agression, incendie).
-• Pour incidents non urgents, préfère la rubrique Signalement normale.
-• L'abus du bouton SOS peut retarder les véritables interventions : n'en abuse pas.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-11) INTERACTION AVEC D'AUTRES UTILISATEURS
-
-• Respecte la charte citoyenne : pas d'insultes, pas de propos haineux, pas d'appels à la violence.
-• Si un utilisateur publie des propos abusifs, utilise le signalement intégré.
-• Ne diffuse pas des informations personnelles d'autrui sans consentement.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-12) RÉCEPTION D'UNE RÉPONSE / SUIVI D'UN SIGNALEMENT
-
-• Suis le statut de ton signalement via la page de suivi : Reçu → En revue → Pris en charge → Résolu.
-• Si tu estimes que la réponse est insuffisante, utilise la fonction appel ou contacter le modérateur (prévoir délai raisonnable).
-• Conserve les preuves originales au cas où les autorités les demanderaient.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-13) SÉCURITÉ NUMÉRIQUE ET MOT DE PASSE
-
-• Utilise un mot de passe fort et unique pour ton compte. Active 2FA si disponible.
-• Ne partage jamais ton identifiant et mot de passe.
-• Si tu utilises l'option "compte anonyme", sache que l'anonymat est géré par l'app : ne partage pas d'infos qui te identifient.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-14) QUE FAIRE SI QUELQU'UN TE MENACE APRÈS UNE PUBLICATION ?
-
-• Ne réponds pas aux menaces. Capture les messages (screenshots).
-• Utilise le signalement d'abus dans l'application.
-• Si la menace est grave, contacte immédiatement les forces de l'ordre et fournis les preuves.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-15) SÉCURITÉ LORS DU TÉLÉCHARGEMENT D'UNE IMAGE "ÉCRAN DE VEILLE"
-
-• Si tu génères une carte d'urgence pour ton lockscreen : ne mets que le numéro essentiel (évite d'y mettre ton adresse personnelle).
-• Teste le téléchargement et l'affichage avant de l'utiliser en situation critique.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-16) PROTECTION DES PREUVES (SI NÉCESSAIRE POUR ENQUÊTE)
-
-• Garde une copie non compressée (originale) des médias si l'affaire doit être utilisée par la justice.
-• Ne supprime pas les fichiers tant que l'enquête n'est pas terminée.
-• Utilise le canal sécurisé pour transmettre aux autorités (si disponible).
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-17) RÈGLES À RESPECTER — RÉSUMÉ RAPIDE (DO / DON'T)
-
-DO ✓
-• Signaler rapidement et factuellement
-• Protéger ta sécurité
-• Masquer les visages si besoin
-• Utiliser anonymat quand nécessaire
-• Conserver originaux
-
-DON'T ✗
-• Ne pas prendre de risques physiques
-• Ne pas diffuser des rumeurs
-• Ne pas harceler d'autres utilisateurs
-• Ne pas publier de données personnelles sans consentement
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-18) QUESTIONS FRÉQUENTES (FAQ COURTE)
-
-Q : Je veux rester anonyme, comment faire ?
-R : Active l'option "Publier anonymement" avant d'envoyer.
-
-Q : Mes données peuvent-elles être fournies à la police ?
-R : Les données sont chiffrées ; un accès officiel peut être encadré par la procédure légale/escrow.
-
-Q : Comment flouter un visage ?
-R : Utilise l'outil de floutage intégré avant publication ou recadre/masque la zone sensible.
-
-Q : J'ai subi des menaces après un signalement — que faire ?
-R : Capture les preuves, signale dans l'app et contacte la police.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-19) CONTACTS & SUPPORT
-
-• Support BurkinaWatch : support@burkinawatch.bf
-• Signalement d'abus technique : abuse@burkinawatch.bf
-• Urgence réelle : appelle les numéros d'urgence locaux (liste disponible sur la page Urgences Burkina)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-20) REMARQUE FINALE
-
-BurkinaWatch est un outil collectif : son efficacité dépend de la qualité et de la responsabilité des signalements. En respectant ces conseils, tu protèges ta sécurité, tu aides les autres et tu renforces la confiance entre citoyens et autorités.
-
-Merci d'agir avec responsabilité — ta vigilance sauve des vies.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-CONTACT & SUPPORT
-Email: help-burkinawatch@outlook.fr
-Téléphone: +226 65511323
-WhatsApp: +226 70019540
-
-© ${new Date().getFullYear()} BurkinaWatch - Tous droits réservés
-Document généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}
-    `.trim();
-
-    // Créer un blob et télécharger
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `BurkinaWatch_Notes_Securite_${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  const exportToPDF = async () => {
+    // Import dynamique de jsPDF
+    const { default: jsPDF } = await import('jspdf');
+    
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 15;
+    const maxWidth = pageWidth - 2 * margin;
+    let yPosition = margin;
+
+    // Fonction pour ajouter du texte avec retour à la ligne automatique
+    const addText = (text: string, fontSize: number = 10, isBold: boolean = false, isTitle: boolean = false) => {
+      doc.setFontSize(fontSize);
+      if (isBold) {
+        doc.setFont('helvetica', 'bold');
+      } else {
+        doc.setFont('helvetica', 'normal');
+      }
+
+      const lines = doc.splitTextToSize(text, maxWidth);
+      
+      for (let i = 0; i < lines.length; i++) {
+        if (yPosition + 7 > pageHeight - margin) {
+          doc.addPage();
+          yPosition = margin;
+        }
+        
+        if (isTitle) {
+          doc.setTextColor(200, 0, 0);
+        } else {
+          doc.setTextColor(0, 0, 0);
+        }
+        
+        doc.text(lines[i], margin, yPosition);
+        yPosition += fontSize * 0.5;
+      }
+      
+      yPosition += 3;
+    };
+
+    const addSeparator = () => {
+      yPosition += 2;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 4;
+    };
+
+    // En-tête
+    doc.setFillColor(220, 38, 38);
+    doc.rect(0, 0, pageWidth, 25, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('NOTES IMPORTANTES', pageWidth / 2, 12, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text('Conseils de sécurité pour utiliser BurkinaWatch', pageWidth / 2, 19, { align: 'center' });
+    
+    yPosition = 35;
+    doc.setTextColor(0, 0, 0);
+
+    // Contenu
+    addText('Cette page rassemble conseils pratiques, règles et bonnes pratiques pour utiliser BurkinaWatch en toute sécurité — protéger ta personne, tes proches et la crédibilité des signalements.', 9);
+    addSeparator();
+
+    // Contact en haut
+    doc.setFillColor(240, 240, 240);
+    doc.rect(margin, yPosition, maxWidth, 20, 'F');
+    yPosition += 5;
+    addText('CONTACT & SUPPORT', 11, true);
+    addText('Email: help-burkinawatch@outlook.fr', 9);
+    addText('Téléphone: +226 65511323', 9);
+    addText('WhatsApp: +226 70019540', 9);
+    yPosition += 3;
+    addSeparator();
+
+    // Sections
+    const sections = [
+      { title: '1) RAPPEL : OBJECTIF DE L\'APPLICATION', content: 'BurkinaWatch permet de signaler, alerter et partager des faits d\'intérêt public (danger, incivilités, urgences, etc.). L\'objectif est d\'augmenter la sécurité collective — pas de remplacer les secours.' },
+      { title: '2) AVANT DE FILMER / PRENDRE UNE PHOTO : ÉVALUE TA SÉCURITÉ', content: '• Priorité : ta vie d\'abord. Si dangereuse (violence, attaque, incendie), recule et appelle les secours.\n• Ne provoque pas : ne t\'expose pas physiquement.\n• Filme depuis un endroit sûr.\n• Évite les confrontations.' },
+      { title: '3) PROTÉGER TON ANONYMAT', content: '• Active l\'option Anonyme lors de la publication.\n• N\'inclus jamais ton nom complet ou adresse.\n• Préfère le canal sécurisé pour contacter les autorités.' },
+      { title: '4) LORS DE LA CAPTURE D\'IMAGES / VIDÉOS', content: '• Stabilise l\'image au maximum.\n• Capture l\'essentiel : personnes, lieu, date/heure.\n• Ne retouche pas la réalité.\n• Utilise le floutage pour protéger l\'identité.\n• Conserve l\'original.' },
+      { title: '5) MÉTADONNÉES ET GÉOLOCALISATION', content: '• Les photos contiennent des métadonnées (EXIF).\n• Conserve-les pour prouver un fait.\n• Supprime-les pour protéger un témoin.' },
+      { title: '6) RÉDIGER UN SIGNALEMENT UTILE', content: 'Fournis des informations claires et factuelles :\n• Titre précis\n• Description détaillée avec localisation\n• Pièces jointes pertinentes\n• Choix anonymat' },
+      { title: '7) VÉRIFIER AVANT DE PUBLIER', content: '• Ne publie pas de rumeur.\n• Vérifie la source et la date.\n• Utilise le signalement interne si doute.' },
+      { title: '8) SI TU ES VICTIME OU TÉMOIN D\'UN CRIME', content: '• Appelle immédiatement les forces de l\'ordre.\n• Filme depuis un endroit sûr.\n• N\'essaye pas de juger toi-même.' },
+      { title: '9) PROTÉGER LES MINEURS ET PERSONNES VULNÉRABLES', content: '• Ne publie jamais d\'image d\'enfant sans consentement.\n• Utilise le canal SOS pour violences sexuelles.' },
+      { title: '10) UTILISATION INTELLIGENTE DU BOUTON SOS', content: '• Réserve le SOS aux urgences réelles.\n• Pour incidents non urgents, utilise Signalement normal.\n• L\'abus retarde les véritables interventions.' },
+      { title: '11) INTERACTION AVEC D\'AUTRES UTILISATEURS', content: '• Respecte la charte : pas d\'insultes, propos haineux.\n• Signale les abus.\n• Ne diffuse pas d\'infos personnelles sans consentement.' },
+      { title: '12) RÉCEPTION D\'UNE RÉPONSE / SUIVI', content: '• Suis le statut : Reçu → En revue → Pris en charge → Résolu.\n• Utilise la fonction appel si insuffisant.\n• Conserve les preuves.' },
+      { title: '13) SÉCURITÉ NUMÉRIQUE ET MOT DE PASSE', content: '• Mot de passe fort et unique.\n• Active 2FA si disponible.\n• Ne partage jamais tes identifiants.' },
+      { title: '14) QUE FAIRE SI QUELQU\'UN TE MENACE ?', content: '• Ne réponds pas aux menaces.\n• Capture les preuves.\n• Signale dans l\'app et contacte la police.' },
+      { title: '15) SÉCURITÉ ÉCRAN DE VEILLE', content: '• Ne mets que le numéro essentiel.\n• Teste avant utilisation critique.' },
+      { title: '16) PROTECTION DES PREUVES', content: '• Garde une copie non compressée.\n• Ne supprime pas tant que l\'enquête n\'est pas terminée.\n• Utilise le canal sécurisé.' },
+      { title: '17) RÈGLES À RESPECTER — RÉSUMÉ', content: 'DO ✓ : Signaler rapidement, Protéger ta sécurité, Masquer visages, Utiliser anonymat, Conserver originaux\n\nDON\'T ✗ : Risques physiques, Rumeurs, Harcèlement, Données personnelles sans consentement' },
+      { title: '18) QUESTIONS FRÉQUENTES (FAQ)', content: 'Q : Rester anonyme ?\nR : Active "Publier anonymement"\n\nQ : Données fournies à la police ?\nR : Données chiffrées, accès encadré légalement\n\nQ : Flouter un visage ?\nR : Outil intégré avant publication\n\nQ : Menaces après signalement ?\nR : Capture preuves, signale, contacte police' },
+      { title: '19) REMARQUE FINALE', content: 'BurkinaWatch est un outil collectif : son efficacité dépend de la qualité et de la responsabilité des signalements. En respectant ces conseils, tu protèges ta sécurité, tu aides les autres et tu renforces la confiance entre citoyens et autorités.\n\nMerci d\'agir avec responsabilité — ta vigilance sauve des vies.' }
+    ];
+
+    sections.forEach((section, index) => {
+      if (yPosition > pageHeight - 50) {
+        doc.addPage();
+        yPosition = margin;
+      }
+      addText(section.title, 11, true, true);
+      addText(section.content, 9);
+      if (index < sections.length - 1) {
+        addSeparator();
+      }
+    });
+
+    // Footer avec contact
+    doc.addPage();
+    yPosition = margin;
+    doc.setFillColor(240, 240, 240);
+    doc.rect(margin, yPosition, maxWidth, 25, 'F');
+    yPosition += 5;
+    addText('CONTACT & SUPPORT', 11, true);
+    addText('Email: help-burkinawatch@outlook.fr', 9);
+    addText('Téléphone: +226 65511323', 9);
+    addText('WhatsApp: +226 70019540', 9);
+    yPosition += 5;
+    addSeparator();
+
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`© ${new Date().getFullYear()} BurkinaWatch - Tous droits réservés`, pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 5;
+    doc.text(`Document généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`, pageWidth / 2, yPosition, { align: 'center' });
+
+    // Télécharger le PDF
+    doc.save(`BurkinaWatch_Notes_Securite_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   return (
@@ -638,17 +552,8 @@ Document généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().
               </div>
             </section>
 
-            <section>
-              <h3 className="font-bold text-lg mb-2">19) Contacts & support</h3>
-              <ul className="list-disc list-inside space-y-1 ml-4">
-                <li><strong>Support BurkinaWatch</strong> : support@burkinawatch.bf</li>
-                <li><strong>Signalement d'abus technique</strong> : abuse@burkinawatch.bf</li>
-                <li><strong>Urgence réelle</strong> : appelle les numéros d'urgence locaux (liste disponible sur la page <em>Urgences Burkina</em>)</li>
-              </ul>
-            </section>
-
             <section className="bg-primary/5 p-4 rounded-lg border-l-4 border-primary">
-              <h3 className="font-bold text-lg mb-2">20) Remarque finale</h3>
+              <h3 className="font-bold text-lg mb-2">19) Remarque finale</h3>
               <p>
                 BurkinaWatch est un <strong>outil collectif</strong> : son efficacité dépend de la qualité et de la responsabilité des signalements. En respectant ces conseils, tu protèges ta sécurité, tu aides les autres et tu renforces la confiance entre citoyens et autorités.
               </p>
