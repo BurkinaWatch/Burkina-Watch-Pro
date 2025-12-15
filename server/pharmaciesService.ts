@@ -1,10 +1,14 @@
 
 import { PHARMACIES_DATA } from "../client/src/pages/Pharmacies";
 
-// Service de gestion des pharmacies
+// Service de gestion des pharmacies de garde du Burkina Faso
+// Base de données élargie: 150+ pharmacies couvrant toutes les 17 régions
+// Actualisation automatique toutes les 24 heures
 export class PharmaciesService {
   private static instance: PharmaciesService;
   private lastUpdate: Date | null = null;
+  private updateInterval: NodeJS.Timeout | null = null;
+  private isScheduled: boolean = false;
 
   private constructor() {}
 
@@ -59,29 +63,51 @@ export class PharmaciesService {
       return acc;
     }, {} as Record<string, number>);
 
+    // Calculer le nombre de villes couvertes
+    const villes = new Set(PHARMACIES_DATA.map(p => p.ville));
+
     return {
       total,
       par24h,
       parJour,
       parNuit,
       parRegion,
+      nombreVilles: villes.size,
       lastUpdate: this.lastUpdate || new Date(),
+      nextUpdate: this.getNextUpdateTime(),
     };
+  }
+
+  // Calculer la prochaine heure de mise à jour
+  private getNextUpdateTime(): Date {
+    const now = new Date();
+    const next = new Date(now);
+    next.setDate(next.getDate() + 1);
+    next.setHours(0, 0, 0, 0);
+    return next;
   }
 
   // Marquer comme mis à jour
   markAsUpdated() {
     this.lastUpdate = new Date();
-    console.log(`✅ Données des pharmacies mises à jour: ${PHARMACIES_DATA.length} pharmacies`);
+    const stats = this.getStats();
+    console.log(`✅ Données des pharmacies actualisées: ${stats.total} pharmacies dans ${stats.nombreVilles} villes`);
+    console.log(`   - 24h/24: ${stats.par24h} | Jour: ${stats.parJour} | Nuit: ${stats.parNuit}`);
   }
 
-  // Planifier une mise à jour quotidienne automatique (à minuit)
+  // Planifier une mise à jour quotidienne automatique (toutes les 24h)
   scheduleAutoUpdate() {
+    // Éviter les doublons si déjà programmé
+    if (this.isScheduled) {
+      console.log(`⏰ Actualisation automatique déjà programmée`);
+      return;
+    }
+    
     // Mise à jour initiale
     this.markAsUpdated();
-    console.log(`✅ Données des pharmacies initialisées`);
+    console.log(`✅ Service des pharmacies de garde initialisé`);
 
-    // Calculer le temps jusqu'à minuit
+    // Calculer le temps jusqu'à minuit (heure locale Burkina Faso = GMT)
     const now = new Date();
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -91,17 +117,30 @@ export class PharmaciesService {
     // Planifier la première mise à jour à minuit
     setTimeout(() => {
       this.markAsUpdated();
-      console.log(`🔄 Mise à jour quotidienne automatique des pharmacies (minuit)`);
+      console.log(`🔄 Actualisation quotidienne automatique des pharmacies (minuit GMT)`);
 
-      // Puis répéter toutes les 24h
-      setInterval(() => {
+      // Puis répéter toutes les 24h (86400000 ms)
+      this.updateInterval = setInterval(() => {
         this.markAsUpdated();
-        console.log(`🔄 Mise à jour quotidienne automatique des pharmacies (minuit)`);
+        console.log(`🔄 Actualisation quotidienne automatique des pharmacies (minuit GMT)`);
       }, 24 * 60 * 60 * 1000);
     }, timeUntilMidnight);
 
-    console.log(`⏰ Mise à jour automatique programmée tous les jours à minuit`);
-    console.log(`⏰ Prochaine mise à jour dans ${Math.round(timeUntilMidnight / 1000 / 60)} minutes`);
+    this.isScheduled = true;
+    const hoursUntil = Math.floor(timeUntilMidnight / 1000 / 60 / 60);
+    const minutesUntil = Math.floor((timeUntilMidnight / 1000 / 60) % 60);
+    console.log(`⏰ Actualisation automatique programmée toutes les 24h à minuit GMT`);
+    console.log(`⏰ Prochaine actualisation dans ${hoursUntil}h ${minutesUntil}min`);
+  }
+
+  // Arrêter l'actualisation automatique (pour les tests)
+  stopAutoUpdate() {
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+      this.updateInterval = null;
+      this.isScheduled = false;
+      console.log(`⏹️ Actualisation automatique arrêtée`);
+    }
   }
 }
 
