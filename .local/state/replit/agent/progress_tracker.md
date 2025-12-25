@@ -9,3 +9,6 @@ Additional completed tasks:
 [x] 7. Fixed TypeScript error in chat service
 [x] 8. Added lockscreen image generation feature to Emergency Contacts page (Profil.tsx)
 [x] 9. Added "Mettre sur écran de veille" button for each emergency contact
+[x] 10. Installed tsx package (was missing from dependencies)
+[x] 11. Created PostgreSQL database
+[x] 12. Pushed database schema to create all tables
