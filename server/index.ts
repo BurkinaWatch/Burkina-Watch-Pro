@@ -89,6 +89,15 @@ app.use((req, res, next) => {
   // Importer et démarrer le service Ouaga en 3D
   const { ouaga3dService } = await import("./services/ouaga3dService");
   ouaga3dService.scheduleAutoUpdate();
+  
+  // Synchroniser les lieux OpenStreetMap (Restaurants, Marchés, Boutiques)
+  const { overpassService } = await import("./overpassService");
+  // Lancer la sync en arrière-plan sans bloquer le démarrage
+  overpassService.syncAllPlaces().then(() => {
+    console.log("✅ Synchronisation OpenStreetMap terminée");
+  }).catch(err => {
+    console.error("❌ Erreur synchronisation OpenStreetMap:", err);
+  });
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.
