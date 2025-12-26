@@ -256,54 +256,55 @@ export default function Stations() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6 relative z-20">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher une station..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-              data-testid="input-search"
-            />
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher une station..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+                data-testid="input-search"
+              />
+            </div>
+
+            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+              <SelectTrigger data-testid="select-region">
+                <SelectValue placeholder="Toutes les regions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les regions</SelectItem>
+                {regions.map(r => (
+                  <SelectItem key={r} value={r}>{r}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedMarque} onValueChange={setSelectedMarque}>
+              <SelectTrigger data-testid="select-marque">
+                <SelectValue placeholder="Toutes les marques" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les marques</SelectItem>
+                {marques.map(m => (
+                  <SelectItem key={m} value={m}>{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant={show24hOnly ? "default" : "outline"}
+              onClick={() => setShow24hOnly(!show24hOnly)}
+              className="w-full"
+              data-testid="button-24h-filter"
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              24h/24 uniquement
+            </Button>
           </div>
 
-          <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-            <SelectTrigger data-testid="select-region">
-              <SelectValue placeholder="Toutes les regions" />
-            </SelectTrigger>
-            <SelectContent className="z-50">
-              <SelectItem value="all">Toutes les regions</SelectItem>
-              {regions.map(r => (
-                <SelectItem key={r} value={r}>{r}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={selectedMarque} onValueChange={setSelectedMarque}>
-            <SelectTrigger data-testid="select-marque">
-              <SelectValue placeholder="Toutes les marques" />
-            </SelectTrigger>
-            <SelectContent className="z-50">
-              <SelectItem value="all">Toutes les marques</SelectItem>
-              {marques.map(m => (
-                <SelectItem key={m} value={m}>{m}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button
-            variant={show24hOnly ? "default" : "outline"}
-            onClick={() => setShow24hOnly(!show24hOnly)}
-            className="w-full"
-            data-testid="button-24h-filter"
-          >
-            <Clock className="h-4 w-4 mr-2" />
-            24h/24 uniquement
-          </Button>
-        </div>
-
-        <div className="h-[300px] md:h-[400px] rounded-lg overflow-hidden mb-6 border">
+          <div className="h-[300px] md:h-[400px] rounded-lg overflow-hidden border">
           <MapContainer
             center={mapCenter}
             zoom={mapZoom}
@@ -350,6 +351,7 @@ export default function Stations() {
               </Marker>
             ))}
           </MapContainer>
+          </div>
         </div>
 
         <div className="flex items-center justify-between mb-4">
