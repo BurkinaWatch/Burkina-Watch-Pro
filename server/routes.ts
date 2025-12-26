@@ -1251,6 +1251,228 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----------------------------------------
+  // ROUTES RESTAURANTS
+  // ----------------------------------------
+  app.get("/api/restaurants", async (req, res) => {
+    try {
+      const { RESTAURANTS_DATA } = await import("./restaurantsData");
+      const { region, type, gammePrix, search, livraison, wifi } = req.query;
+
+      let restaurants = [...RESTAURANTS_DATA];
+
+      if (search) {
+        const query = (search as string).toLowerCase();
+        restaurants = restaurants.filter(r =>
+          r.nom.toLowerCase().includes(query) ||
+          r.ville.toLowerCase().includes(query) ||
+          r.quartier.toLowerCase().includes(query) ||
+          r.type.toLowerCase().includes(query) ||
+          r.specialites.some(s => s.toLowerCase().includes(query))
+        );
+      }
+
+      if (region && region !== "all") {
+        restaurants = restaurants.filter(r => r.region === region);
+      }
+
+      if (type && type !== "all") {
+        restaurants = restaurants.filter(r => r.type === type);
+      }
+
+      if (gammePrix && gammePrix !== "all") {
+        restaurants = restaurants.filter(r => r.gammePrix === gammePrix);
+      }
+
+      if (livraison === "true") {
+        restaurants = restaurants.filter(r => r.livraison);
+      }
+
+      if (wifi === "true") {
+        restaurants = restaurants.filter(r => r.wifi);
+      }
+
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json(restaurants);
+    } catch (error) {
+      console.error("Erreur récupération restaurants:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des restaurants" });
+    }
+  });
+
+  app.get("/api/restaurants/stats", async (req, res) => {
+    try {
+      const { getRestaurantsStats } = await import("./restaurantsData");
+      const stats = getRestaurantsStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Erreur stats restaurants:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
+    }
+  });
+
+  // ----------------------------------------
+  // ROUTES MARCHÉS
+  // ----------------------------------------
+  app.get("/api/marches", async (req, res) => {
+    try {
+      const { MARCHES_DATA } = await import("./marchesData");
+      const { region, type, search } = req.query;
+
+      let marches = [...MARCHES_DATA];
+
+      if (search) {
+        const query = (search as string).toLowerCase();
+        marches = marches.filter(m =>
+          m.nom.toLowerCase().includes(query) ||
+          m.ville.toLowerCase().includes(query) ||
+          m.quartier.toLowerCase().includes(query) ||
+          m.type.toLowerCase().includes(query) ||
+          m.produits.some(p => p.toLowerCase().includes(query))
+        );
+      }
+
+      if (region && region !== "all") {
+        marches = marches.filter(m => m.region === region);
+      }
+
+      if (type && type !== "all") {
+        marches = marches.filter(m => m.type === type);
+      }
+
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json(marches);
+    } catch (error) {
+      console.error("Erreur récupération marchés:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des marchés" });
+    }
+  });
+
+  app.get("/api/marches/stats", async (req, res) => {
+    try {
+      const { getMarchesStats } = await import("./marchesData");
+      const stats = getMarchesStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Erreur stats marchés:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
+    }
+  });
+
+  // ----------------------------------------
+  // ROUTES BOUTIQUES
+  // ----------------------------------------
+  app.get("/api/boutiques", async (req, res) => {
+    try {
+      const { BOUTIQUES_DATA } = await import("./boutiquesData");
+      const { region, categorie, search, livraison, climatisation } = req.query;
+
+      let boutiques = [...BOUTIQUES_DATA];
+
+      if (search) {
+        const query = (search as string).toLowerCase();
+        boutiques = boutiques.filter(b =>
+          b.nom.toLowerCase().includes(query) ||
+          b.ville.toLowerCase().includes(query) ||
+          b.quartier.toLowerCase().includes(query) ||
+          b.categorie.toLowerCase().includes(query) ||
+          b.produits.some(p => p.toLowerCase().includes(query)) ||
+          (b.marques && b.marques.some(m => m.toLowerCase().includes(query)))
+        );
+      }
+
+      if (region && region !== "all") {
+        boutiques = boutiques.filter(b => b.region === region);
+      }
+
+      if (categorie && categorie !== "all") {
+        boutiques = boutiques.filter(b => b.categorie === categorie);
+      }
+
+      if (livraison === "true") {
+        boutiques = boutiques.filter(b => b.livraison);
+      }
+
+      if (climatisation === "true") {
+        boutiques = boutiques.filter(b => b.climatisation);
+      }
+
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json(boutiques);
+    } catch (error) {
+      console.error("Erreur récupération boutiques:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des boutiques" });
+    }
+  });
+
+  app.get("/api/boutiques/stats", async (req, res) => {
+    try {
+      const { getBoutiquesStats } = await import("./boutiquesData");
+      const stats = getBoutiquesStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Erreur stats boutiques:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
+    }
+  });
+
+  // ----------------------------------------
+  // ROUTES PHARMACIES (nouvelle version avec données hardcodées)
+  // ----------------------------------------
+  app.get("/api/pharmacies/v2", async (req, res) => {
+    try {
+      const { PHARMACIES_DATA } = await import("./pharmaciesData");
+      const { region, type, search, is24h, gardeNuit } = req.query;
+
+      let pharmacies = [...PHARMACIES_DATA];
+
+      if (search) {
+        const query = (search as string).toLowerCase();
+        pharmacies = pharmacies.filter(p =>
+          p.nom.toLowerCase().includes(query) ||
+          p.ville.toLowerCase().includes(query) ||
+          p.quartier.toLowerCase().includes(query) ||
+          p.type.toLowerCase().includes(query) ||
+          p.services.some(s => s.toLowerCase().includes(query)) ||
+          p.specialites.some(s => s.toLowerCase().includes(query))
+        );
+      }
+
+      if (region && region !== "all") {
+        pharmacies = pharmacies.filter(p => p.region === region);
+      }
+
+      if (type && type !== "all") {
+        pharmacies = pharmacies.filter(p => p.type === type);
+      }
+
+      if (is24h === "true") {
+        pharmacies = pharmacies.filter(p => p.is24h);
+      }
+
+      if (gardeNuit === "true") {
+        pharmacies = pharmacies.filter(p => p.gardeNuit);
+      }
+
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json(pharmacies);
+    } catch (error) {
+      console.error("Erreur récupération pharmacies v2:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des pharmacies" });
+    }
+  });
+
+  app.get("/api/pharmacies/v2/stats", async (req, res) => {
+    try {
+      const { getPharmaciesStats } = await import("./pharmaciesData");
+      const stats = getPharmaciesStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Erreur stats pharmacies v2:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
+    }
+  });
+
+  // ----------------------------------------
   // ROUTES STATIONS-SERVICE
   // ----------------------------------------
   app.get("/api/stations", async (req, res) => {
