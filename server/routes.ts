@@ -1250,6 +1250,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----------------------------------------
+  // ROUTES STATIONS-SERVICE
+  // ----------------------------------------
+  app.get("/api/stations", async (req, res) => {
+    try {
+      const { stationsService } = await import("./stationsService");
+      const { region, marque, ville, search, is24h } = req.query;
+
+      let stations;
+
+      if (search) {
+        stations = stationsService.searchStations(search as string);
+      } else if (region && region !== "all") {
+        stations = stationsService.getStationsByRegion(region as string);
+      } else if (marque && marque !== "all") {
+        stations = stationsService.getStationsByMarque(marque as string);
+      } else if (ville) {
+        stations = stationsService.getStationsByVille(ville as string);
+      } else if (is24h === "true") {
+        stations = stationsService.getStations24h();
+      } else {
+        stations = stationsService.getAllStations();
+      }
+
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json(stations);
+    } catch (error) {
+      console.error("Erreur récupération stations:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des stations" });
+    }
+  });
+
+  app.get("/api/stations/stats", async (req, res) => {
+    try {
+      const { stationsService } = await import("./stationsService");
+      const stats = stationsService.getStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Erreur stats stations:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
+    }
+  });
+
+  app.post("/api/stations/refresh", async (req, res) => {
+    try {
+      const { stationsService } = await import("./stationsService");
+      stationsService.markAsUpdated();
+      const stats = stationsService.getStats();
+      res.json({ 
+        message: "Données des stations-service actualisées",
+        ...stats
+      });
+    } catch (error) {
+      console.error("Erreur actualisation stations:", error);
+      res.status(500).json({ error: "Erreur lors de l'actualisation" });
+    }
+  });
+
+  // ----------------------------------------
   // ROUTES BULLETIN CITOYEN (RSS)
   // ----------------------------------------
   app.get("/api/bulletin-citoyen", async (req, res) => {
