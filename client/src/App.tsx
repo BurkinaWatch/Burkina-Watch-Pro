@@ -33,6 +33,8 @@ import StreetView from "@/pages/StreetView";
 import Ouaga3D from "@/pages/Ouaga3D";
 import Restaurants from "@/pages/Restaurants";
 import BoutiquesMarchés from "@/pages/BoutiquesMarchés";
+import Marches from "@/pages/Marches";
+import Boutiques from "@/pages/Boutiques";
 import Stations from "@/pages/Stations";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
@@ -62,6 +64,8 @@ function Router() {
       <Route path="/ouaga3d" component={Ouaga3D} />
       <Route path="/restaurants" component={Restaurants} />
       <Route path="/boutiques-marches" component={BoutiquesMarchés} />
+      <Route path="/marches" component={Marches} />
+      <Route path="/boutiques" component={Boutiques} />
       <Route path="/stations" component={Stations} />
       <Route path="/a-propos" component={APropos} />
       <Route path="/conditions" component={Conditions} />

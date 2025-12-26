@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Link, useLocation } from "wouter";
-import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Cross, Newspaper, Calendar, Navigation, Sparkles, Bell, Shield, Camera, Utensils, ShoppingBag, Fuel } from "lucide-react";
+import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Cross, Newspaper, Calendar, Navigation, Sparkles, Bell, Shield, Camera, Utensils, ShoppingBag, Fuel, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -44,11 +44,12 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     { href: "/pharmacies", icon: Cross, label: t("nav.pharmacies"), color: "text-red-500 dark:text-red-400" },
   ];
 
-  // Vie Quotidienne - Restaurants et Commerces
+  // Vie Quotidienne - Restaurants et Commerces (OpenStreetMap)
   const vieQuotidienneItems = [
-    { href: "/restaurants", icon: Utensils, label: "Restaurants", color: "text-amber-600 dark:text-amber-500", badge: t("common.new"), badgeColor: "bg-amber-500" },
-    { href: "/boutiques-marches", icon: ShoppingBag, label: "Boutiques & Marchés", color: "text-pink-600 dark:text-pink-500", badge: t("common.new"), badgeColor: "bg-pink-500" },
-    { href: "/stations", icon: Fuel, label: "Stations-Service", color: "text-red-600 dark:text-red-500", badge: t("common.new"), badgeColor: "bg-red-500" },
+    { href: "/restaurants", icon: Utensils, label: "Restaurants", color: "text-amber-600 dark:text-amber-500", badge: "OSM", badgeColor: "bg-blue-500" },
+    { href: "/marches", icon: Store, label: "Marchés", color: "text-amber-700 dark:text-amber-400", badge: "OSM", badgeColor: "bg-blue-500" },
+    { href: "/boutiques", icon: ShoppingBag, label: "Boutiques", color: "text-pink-600 dark:text-pink-500", badge: "OSM", badgeColor: "bg-blue-500" },
+    { href: "/stations", icon: Fuel, label: "Stations-Service", color: "text-red-600 dark:text-red-500" },
   ];
 
   // Informations & Engagement
