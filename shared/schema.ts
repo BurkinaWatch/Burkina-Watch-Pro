@@ -525,3 +525,98 @@ export type Ouaga3dStats = {
   jobsCompleted: number;
   jobsPending: number;
 };
+
+// ============================================================================
+// SYSTÈME DE LIEUX VÉRIFIÉS (OpenStreetMap + Crowdsourced Verification)
+// ============================================================================
+
+// Table des lieux (pharmacies, restaurants, stations-service, marchés, boutiques)
+export const places = pgTable("places", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  osmId: text("osm_id").notNull(), // OpenStreetMap ID
+  osmType: text("osm_type").notNull(), // node, way, relation
+  placeType: text("place_type").notNull(), // pharmacy, restaurant, fuel, marketplace, shop
+  name: text("name").notNull(),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
+  address: text("address"),
+  quartier: text("quartier"),
+  ville: text("ville"),
+  region: text("region"),
+  telephone: text("telephone"),
+  email: text("email"),
+  website: text("website"),
+  horaires: text("horaires"),
+  tags: jsonb("tags"), // All OSM tags for this place
+  confirmations: integer("confirmations").notNull().default(0),
+  reports: integer("reports").notNull().default(0),
+  verificationStatus: text("verification_status").notNull().default("pending"), // pending, verified, needs_review
+  lastSyncedAt: timestamp("last_synced_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  osmIdTypeIdx: uniqueIndex("places_osm_id_type_idx").on(table.osmId, table.osmType),
+  placeTypeIdx: index("places_place_type_idx").on(table.placeType),
+  villeIdx: index("places_ville_idx").on(table.ville),
+  regionIdx: index("places_region_idx").on(table.region),
+  verificationStatusIdx: index("places_verification_status_idx").on(table.verificationStatus),
+}));
+
+// Table des vérifications de lieux (confirmations et signalements)
+export const placeVerifications = pgTable("place_verifications", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  placeId: text("place_id").notNull().references(() => places.id, { onDelete: "cascade" }),
+  userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+  action: text("action").notNull(), // confirm, report
+  comment: text("comment"),
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  placeIdIdx: index("place_verifications_place_id_idx").on(table.placeId),
+  userIdIdx: index("place_verifications_user_id_idx").on(table.userId),
+  ipIdx: index("place_verifications_ip_idx").on(table.ipAddress),
+}));
+
+// Schemas d'insertion pour les lieux
+export const insertPlaceSchema = createInsertSchema(places, {
+  latitude: z.union([z.string(), z.number()]).transform(val => String(val)),
+  longitude: z.union([z.string(), z.number()]).transform(val => String(val)),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  confirmations: true,
+  reports: true,
+  verificationStatus: true,
+});
+
+export const insertPlaceVerificationSchema = createInsertSchema(placeVerifications).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types pour les lieux
+export type InsertPlace = z.infer<typeof insertPlaceSchema>;
+export type Place = typeof places.$inferSelect;
+export type InsertPlaceVerification = z.infer<typeof insertPlaceVerificationSchema>;
+export type PlaceVerification = typeof placeVerifications.$inferSelect;
+
+// Enum pour les types de lieux
+export const PlaceTypes = {
+  PHARMACY: "pharmacy",
+  RESTAURANT: "restaurant",
+  FUEL: "fuel",
+  MARKETPLACE: "marketplace",
+  SHOP: "shop",
+} as const;
+
+export type PlaceType = typeof PlaceTypes[keyof typeof PlaceTypes];
+
+// Enum pour les statuts de vérification
+export const VerificationStatuses = {
+  PENDING: "pending",
+  VERIFIED: "verified",
+  NEEDS_REVIEW: "needs_review",
+} as const;
+
+export type VerificationStatus = typeof VerificationStatuses[keyof typeof VerificationStatuses];

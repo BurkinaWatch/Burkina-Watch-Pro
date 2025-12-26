@@ -15,6 +15,7 @@ import { signalementMutationLimiter } from "./securityHardening";
 import { generateChatResponse, isAIAvailable } from "./aiService";
 import { fetchBulletins, clearCache } from "./rssService";
 import { fetchEvents, clearEventsCache } from "./eventsService";
+import { overpassService } from "./overpassService";
 
 // ============================================
 // ENREGISTREMENT DES ROUTES
@@ -1304,6 +1305,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erreur actualisation stations:", error);
       res.status(500).json({ error: "Erreur lors de l'actualisation" });
+    }
+  });
+
+  // ----------------------------------------
+  // ROUTES LIEUX VÉRIFIÉS (OpenStreetMap)
+  // ----------------------------------------
+  app.get("/api/places", async (req, res) => {
+    try {
+      const { placeType, region, ville, search, verificationStatus, limit, offset } = req.query;
+      
+      const places = await overpassService.getPlaces({
+        placeType: placeType as string,
+        region: region as string,
+        ville: ville as string,
+        search: search as string,
+        verificationStatus: verificationStatus as string,
+        limit: limit ? parseInt(limit as string) : undefined,
+        offset: offset ? parseInt(offset as string) : undefined,
+      });
+
+      res.set('Cache-Control', 'public, max-age=300');
+      res.json(places);
+    } catch (error) {
+      console.error("Erreur récupération places:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des lieux" });
+    }
+  });
+
+  app.get("/api/places/stats", async (req, res) => {
+    try {
+      const stats = await overpassService.getStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Erreur stats places:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
+    }
+  });
+
+  app.get("/api/places/:id", async (req, res) => {
+    try {
+      const place = await overpassService.getPlaceById(req.params.id);
+      if (!place) {
+        return res.status(404).json({ error: "Lieu non trouvé" });
+      }
+      res.json(place);
+    } catch (error) {
+      console.error("Erreur récupération place:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération du lieu" });
+    }
+  });
+
+  app.get("/api/places/:id/verifications", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.json({ confirmed: false, reported: false });
+      }
+      
+      const verifications = await overpassService.getUserVerifications(req.params.id, userId);
+      res.json(verifications);
+    } catch (error) {
+      console.error("Erreur récupération verifications:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des vérifications" });
+    }
+  });
+
+  app.post("/api/places/:id/confirm", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || null;
+      const ipAddress = req.ip || req.connection?.remoteAddress || "unknown";
+      
+      const success = await overpassService.confirmPlace(req.params.id, userId, ipAddress);
+      
+      if (!success) {
+        return res.status(400).json({ error: "Vous avez déjà confirmé ce lieu" });
+      }
+      
+      res.json({ message: "Confirmation enregistrée", success: true });
+    } catch (error) {
+      console.error("Erreur confirmation place:", error);
+      res.status(500).json({ error: "Erreur lors de la confirmation" });
+    }
+  });
+
+  app.post("/api/places/:id/report", async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || null;
+      const ipAddress = req.ip || req.connection?.remoteAddress || "unknown";
+      const { comment } = req.body;
+      
+      const success = await overpassService.reportPlace(req.params.id, userId, comment, ipAddress);
+      
+      if (!success) {
+        return res.status(400).json({ error: "Vous avez déjà signalé ce lieu" });
+      }
+      
+      res.json({ message: "Signalement enregistré", success: true });
+    } catch (error) {
+      console.error("Erreur signalement place:", error);
+      res.status(500).json({ error: "Erreur lors du signalement" });
+    }
+  });
+
+  app.post("/api/places/sync", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (user?.role !== "admin") {
+        return res.status(403).json({ error: "Accès non autorisé" });
+      }
+
+      overpassService.syncAllPlaces().catch(console.error);
+      res.json({ message: "Synchronisation OpenStreetMap lancée en arrière-plan" });
+    } catch (error) {
+      console.error("Erreur sync places:", error);
+      res.status(500).json({ error: "Erreur lors de la synchronisation" });
     }
   });
 
