@@ -46,6 +46,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
 
   // Vie Quotidienne - Restaurants et Commerces (OpenStreetMap)
   const vieQuotidienneItems = [
+    { href: "/pharmacies-osm", icon: Cross, label: "Pharmacies", color: "text-green-600 dark:text-green-500", badge: "OSM", badgeColor: "bg-blue-500" },
     { href: "/restaurants", icon: Utensils, label: "Restaurants", color: "text-amber-600 dark:text-amber-500", badge: "OSM", badgeColor: "bg-blue-500" },
     { href: "/marches", icon: Store, label: "Marchés", color: "text-amber-700 dark:text-amber-400", badge: "OSM", badgeColor: "bg-blue-500" },
     { href: "/boutiques", icon: ShoppingBag, label: "Boutiques", color: "text-pink-600 dark:text-pink-500", badge: "OSM", badgeColor: "bg-blue-500" },

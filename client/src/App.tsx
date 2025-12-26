@@ -36,6 +36,7 @@ import BoutiquesMarchés from "@/pages/BoutiquesMarchés";
 import Marches from "@/pages/Marches";
 import Boutiques from "@/pages/Boutiques";
 import Stations from "@/pages/Stations";
+import PharmaciesOSM from "@/pages/PharmaciesOSM";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
@@ -57,6 +58,7 @@ function Router() {
       <Route path="/tracking-live" component={TrackingLive} />
       <Route path="/contribuer" component={Contribuer} />
       <Route path="/pharmacies" component={Pharmacies} />
+      <Route path="/pharmacies-osm" component={PharmaciesOSM} />
       <Route path="/urgences" component={Urgences} />
       <Route path="/bulletin" component={Bulletin} />
       <Route path="/events" component={Events} />
