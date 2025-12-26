@@ -57,8 +57,8 @@ function Router() {
       <Route path="/classement" component={Leaderboard} />
       <Route path="/tracking-live" component={TrackingLive} />
       <Route path="/contribuer" component={Contribuer} />
-      <Route path="/pharmacies" component={Pharmacies} />
-      <Route path="/pharmacies-osm" component={PharmaciesOSM} />
+      <Route path="/pharmacies" component={PharmaciesOSM} />
+      <Route path="/pharmacies-garde" component={Pharmacies} />
       <Route path="/urgences" component={Urgences} />
       <Route path="/bulletin" component={Bulletin} />
       <Route path="/events" component={Events} />
