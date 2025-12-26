@@ -468,13 +468,30 @@ export default function Banques() {
                     <span className="text-foreground">{banque.horaires}</span>
                   </div>
 
-                  <div className="flex items-center gap-3 text-xs">
-                    {banque.hasGAB && (
-                      <div className="flex items-center gap-1 text-emerald-600">
-                        <CreditCard className="h-4 w-4" />
-                        <span>GAB {banque.nombreGAB ? `(${banque.nombreGAB})` : ""}</span>
+                  {banque.hasGAB && banque.nombreGAB && banque.nombreGAB > 0 && (
+                    <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-md p-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="bg-emerald-500 rounded-full p-1.5">
+                            <CreditCard className="h-4 w-4 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                              {banque.nombreGAB} GAB disponible{banque.nombreGAB > 1 ? "s" : ""}
+                            </p>
+                            <p className="text-xs text-emerald-600 dark:text-emerald-500">
+                              Retrait 24h/24
+                            </p>
+                          </div>
+                        </div>
+                        <Badge className="bg-emerald-500 text-white text-xs">
+                          GAB
+                        </Badge>
                       </div>
-                    )}
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-3 text-xs">
                     {banque.nombreAgences && (
                       <div className="flex items-center gap-1 text-blue-600">
                         <Building2 className="h-4 w-4" />
