@@ -257,7 +257,7 @@ export default function Stations() {
         </div>
 
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 relative z-50">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -269,29 +269,33 @@ export default function Stations() {
               />
             </div>
 
-            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-              <SelectTrigger data-testid="select-region">
-                <SelectValue placeholder="Toutes les regions" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les regions</SelectItem>
-                {regions.map(r => (
-                  <SelectItem key={r} value={r}>{r}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="relative z-50">
+              <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                <SelectTrigger data-testid="select-region">
+                  <SelectValue placeholder="Toutes les regions" />
+                </SelectTrigger>
+                <SelectContent className="z-[60]">
+                  <SelectItem value="all">Toutes les regions</SelectItem>
+                  {regions.map(r => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={selectedMarque} onValueChange={setSelectedMarque}>
-              <SelectTrigger data-testid="select-marque">
-                <SelectValue placeholder="Toutes les marques" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les marques</SelectItem>
-                {marques.map(m => (
-                  <SelectItem key={m} value={m}>{m}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="relative z-50">
+              <Select value={selectedMarque} onValueChange={setSelectedMarque}>
+                <SelectTrigger data-testid="select-marque">
+                  <SelectValue placeholder="Toutes les marques" />
+                </SelectTrigger>
+                <SelectContent className="z-[60]">
+                  <SelectItem value="all">Toutes les marques</SelectItem>
+                  {marques.map(m => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             <Button
               variant={show24hOnly ? "default" : "outline"}
@@ -304,7 +308,8 @@ export default function Stations() {
             </Button>
           </div>
 
-          <div className="h-[300px] md:h-[400px] rounded-lg overflow-hidden border">
+          <div className="h-[300px] md:h-[400px] rounded-lg border relative z-0">
+            <div className="absolute inset-0 rounded-lg overflow-hidden">
           <MapContainer
             center={mapCenter}
             zoom={mapZoom}
@@ -351,6 +356,7 @@ export default function Stations() {
               </Marker>
             ))}
           </MapContainer>
+            </div>
           </div>
         </div>
 
