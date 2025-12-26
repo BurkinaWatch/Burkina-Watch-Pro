@@ -6,7 +6,7 @@ export default function Boutiques() {
     <PlacesListPage
       placeType="shop"
       title="Boutiques"
-      description="Découvrez les boutiques vérifiées par la communauté"
+      description="Boutiques du Burkina Faso via OpenStreetMap"
       icon={<ShoppingBag className="h-8 w-8 text-purple-600" />}
     />
   );

@@ -1,16 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { CheckCircle, Flag, MapPin, Phone, Clock, ExternalLink, ThumbsUp, AlertTriangle, Shield, Loader2 } from "lucide-react";
+import { MapPin, Phone, Clock, Navigation, Globe, Mail, ExternalLink } from "lucide-react";
 import type { Place } from "@shared/schema";
 
 interface PlaceCardProps {
   place: Place;
-  showVerification?: boolean;
-  isAuthenticated?: boolean;
 }
 
 const PLACE_TYPE_LABELS: Record<string, string> = {
@@ -21,190 +16,137 @@ const PLACE_TYPE_LABELS: Record<string, string> = {
   shop: "Boutique",
 };
 
-const VERIFICATION_STATUS_BADGES: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  pending: { label: "Non vérifié", variant: "secondary" },
-  verified: { label: "Vérifié", variant: "default" },
-  needs_review: { label: "À vérifier", variant: "destructive" },
+const PLACE_TYPE_COLORS: Record<string, string> = {
+  pharmacy: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  restaurant: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+  fuel: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+  marketplace: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+  shop: "bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400",
 };
 
-export function PlaceCard({ place, showVerification = true, isAuthenticated = false }: PlaceCardProps) {
-  const { toast } = useToast();
-  
-  const { data: userVerifications } = useQuery<{ confirmed: boolean; reported: boolean }>({
-    queryKey: ['/api/places', place.id, 'verifications'],
-    enabled: isAuthenticated && showVerification,
-  });
-
-  const confirmMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", `/api/places/${place.id}/confirm`);
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Merci !",
-        description: "Votre confirmation a été enregistrée.",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/places'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/places', place.id] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erreur",
-        description: error.message || "Vous avez déjà confirmé ce lieu",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const reportMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", `/api/places/${place.id}/report`, { comment: "Signalement de l'utilisateur" });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Signalement enregistré",
-        description: "Nous examinerons ce lieu.",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/places'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/places', place.id] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erreur",
-        description: error.message || "Vous avez déjà signalé ce lieu",
-        variant: "destructive",
-      });
-    },
-  });
-
+export function PlaceCard({ place }: PlaceCardProps) {
   const typeLabel = PLACE_TYPE_LABELS[place.placeType] || place.placeType;
-  const statusInfo = VERIFICATION_STATUS_BADGES[place.verificationStatus] || VERIFICATION_STATUS_BADGES.pending;
+  const typeColor = PLACE_TYPE_COLORS[place.placeType] || "bg-muted text-muted-foreground";
+  
+  const tags = (place.tags || {}) as Record<string, string>;
+  
+  const imageUrl = tags.image || tags.photo || tags["image:url"] || null;
+  const website = tags.website || tags["contact:website"] || null;
+  const email = tags.email || tags["contact:email"] || null;
+  const phone = place.telephone || tags.phone || tags["contact:phone"] || null;
+  const openingHours = place.horaires || tags.opening_hours || null;
+  const brand = tags.brand || tags.operator || null;
 
   const openInMaps = () => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${place.latitude},${place.longitude}`;
+    window.open(url, "_blank");
+  };
+
+  const openLocation = () => {
     const url = `https://www.google.com/maps?q=${place.latitude},${place.longitude}`;
     window.open(url, "_blank");
   };
 
   return (
-    <Card data-testid={`card-place-${place.id}`} className="group">
+    <Card data-testid={`card-place-${place.id}`} className="overflow-hidden">
+      {imageUrl && (
+        <div className="relative h-40 w-full overflow-hidden bg-muted">
+          <img 
+            src={imageUrl} 
+            alt={place.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        </div>
+      )}
+      
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2 flex-wrap">
-          <CardTitle className="text-base font-medium leading-tight" data-testid={`text-place-name-${place.id}`}>
+          <CardTitle className="text-base font-semibold leading-tight" data-testid={`text-place-name-${place.id}`}>
             {place.name}
           </CardTitle>
-          <div className="flex items-center gap-1 flex-wrap">
-            <Badge variant={statusInfo.variant} className="text-xs" data-testid={`badge-verification-${place.id}`}>
-              {place.verificationStatus === "verified" && <Shield className="w-3 h-3 mr-1" />}
-              {place.verificationStatus === "needs_review" && <AlertTriangle className="w-3 h-3 mr-1" />}
-              {statusInfo.label}
-            </Badge>
-            <Badge variant="outline" className="text-xs">
-              {typeLabel}
-            </Badge>
-          </div>
+          <Badge className={`text-xs ${typeColor}`} variant="secondary">
+            {typeLabel}
+          </Badge>
         </div>
+        {brand && (
+          <p className="text-xs text-muted-foreground">{brand}</p>
+        )}
       </CardHeader>
+      
       <CardContent className="space-y-3">
-        {place.ville && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <MapPin className="w-4 h-4 flex-shrink-0" />
-            <span data-testid={`text-place-location-${place.id}`}>
-              {[place.quartier, place.ville, place.region].filter(Boolean).join(", ")}
-            </span>
+        <button
+          onClick={openLocation}
+          className="flex items-start gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full text-left group"
+          data-testid={`button-location-${place.id}`}
+        >
+          <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5 text-primary" />
+          <span className="group-hover:underline" data-testid={`text-place-location-${place.id}`}>
+            {place.address || [place.quartier, place.ville, place.region].filter(Boolean).join(", ") || "Voir sur la carte"}
+          </span>
+        </button>
+        
+        {openingHours && (
+          <div className="flex items-start gap-2 text-sm text-muted-foreground">
+            <Clock className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span className="break-words">{openingHours}</span>
           </div>
         )}
         
-        {place.address && (
-          <div className="text-sm text-muted-foreground">
-            {place.address}
-          </div>
-        )}
-        
-        {place.telephone && (
+        {phone && (
           <div className="flex items-center gap-2 text-sm">
             <Phone className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
             <a 
-              href={`tel:${place.telephone}`} 
+              href={`tel:${phone.replace(/\s/g, '')}`} 
               className="text-primary hover:underline"
               data-testid={`link-phone-${place.id}`}
             >
-              {place.telephone}
+              {phone}
             </a>
           </div>
         )}
         
-        {place.horaires && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Clock className="w-4 h-4 flex-shrink-0" />
-            <span>{place.horaires}</span>
+        {email && (
+          <div className="flex items-center gap-2 text-sm">
+            <Mail className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+            <a 
+              href={`mailto:${email}`} 
+              className="text-primary hover:underline truncate"
+              data-testid={`link-email-${place.id}`}
+            >
+              {email}
+            </a>
+          </div>
+        )}
+        
+        {website && (
+          <div className="flex items-center gap-2 text-sm">
+            <Globe className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+            <a 
+              href={website.startsWith('http') ? website : `https://${website}`} 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline truncate"
+              data-testid={`link-website-${place.id}`}
+            >
+              {website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+            </a>
           </div>
         )}
 
-        <div className="flex items-center justify-between gap-2 pt-2 flex-wrap">
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <ThumbsUp className="w-3 h-3" />
-              {place.confirmations} confirmations
-            </span>
-            {place.reports > 0 && (
-              <span className="flex items-center gap-1 text-orange-500">
-                <Flag className="w-3 h-3" />
-                {place.reports} signalements
-              </span>
-            )}
-          </div>
-          
+        <div className="pt-3 border-t">
           <Button
-            size="sm"
-            variant="outline"
             onClick={openInMaps}
-            data-testid={`button-map-${place.id}`}
+            className="w-full gap-2"
+            variant="default"
+            data-testid={`button-directions-${place.id}`}
           >
-            <ExternalLink className="w-3 h-3 mr-1" />
-            Carte
+            <Navigation className="w-4 h-4" />
+            Itinéraire
           </Button>
         </div>
-
-        {showVerification && (
-          <div className="flex items-center gap-2 pt-2 border-t flex-wrap">
-            <Button
-              size="sm"
-              variant={userVerifications?.confirmed ? "default" : "outline"}
-              onClick={() => confirmMutation.mutate()}
-              disabled={confirmMutation.isPending || userVerifications?.confirmed}
-              className={userVerifications?.confirmed ? "bg-green-600 hover:bg-green-700" : ""}
-              data-testid={`button-confirm-${place.id}`}
-            >
-              {confirmMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  <CheckCircle className="w-4 h-4 mr-1" />
-                  {userVerifications?.confirmed ? "Confirmé" : "Confirmer"}
-                </>
-              )}
-            </Button>
-            
-            <Button
-              size="sm"
-              variant={userVerifications?.reported ? "destructive" : "ghost"}
-              onClick={() => reportMutation.mutate()}
-              disabled={reportMutation.isPending || userVerifications?.reported}
-              data-testid={`button-report-${place.id}`}
-            >
-              {reportMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  <Flag className="w-4 h-4 mr-1" />
-                  {userVerifications?.reported ? "Signalé" : "Signaler"}
-                </>
-              )}
-            </Button>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
@@ -212,7 +154,8 @@ export function PlaceCard({ place, showVerification = true, isAuthenticated = fa
 
 export function PlaceCardSkeleton() {
   return (
-    <Card className="animate-pulse">
+    <Card className="animate-pulse overflow-hidden">
+      <div className="h-40 bg-muted" />
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <div className="h-5 w-2/3 bg-muted rounded" />
@@ -222,15 +165,14 @@ export function PlaceCardSkeleton() {
       <CardContent className="space-y-3">
         <div className="flex items-center gap-2">
           <div className="h-4 w-4 bg-muted rounded" />
-          <div className="h-4 w-1/2 bg-muted rounded" />
+          <div className="h-4 w-3/4 bg-muted rounded" />
         </div>
         <div className="flex items-center gap-2">
           <div className="h-4 w-4 bg-muted rounded" />
-          <div className="h-4 w-1/3 bg-muted rounded" />
+          <div className="h-4 w-1/2 bg-muted rounded" />
         </div>
-        <div className="flex items-center justify-between pt-2">
-          <div className="h-4 w-24 bg-muted rounded" />
-          <div className="h-8 w-16 bg-muted rounded" />
+        <div className="pt-3 border-t">
+          <div className="h-9 w-full bg-muted rounded" />
         </div>
       </CardContent>
     </Card>

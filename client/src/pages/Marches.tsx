@@ -6,7 +6,7 @@ export default function Marches() {
     <PlacesListPage
       placeType="marketplace"
       title="Marchés"
-      description="Trouvez les marchés vérifiés par la communauté"
+      description="Marchés du Burkina Faso via OpenStreetMap"
       icon={<Store className="h-8 w-8 text-amber-600" />}
     />
   );

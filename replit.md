@@ -2,7 +2,7 @@
 
 ## Overview
 
-Burkina Watch is a full-stack web application designed for civic engagement in Burkina Faso. It enables citizens to anonymously report incidents (accidents, corruption, infrastructure issues), request or offer help via an SOS feature, and visualize real-time reports on an interactive map. Public institutions can respond to these reports through a secure professional interface. The platform prioritizes reliability, simplicity, accessibility, and mobile responsiveness, even on low-bandwidth connections. Key capabilities include Google authentication, comprehensive profile protection, an urgency indicator system for reports, user-editable signalements, and clickable location points integrated with Google Maps.
+Burkina Watch is a full-stack web application for civic engagement in Burkina Faso. It enables citizens to anonymously report incidents, request/offer help via an SOS feature, and visualize real-time reports on an interactive map. Public institutions can respond through a secure interface. The platform emphasizes reliability, simplicity, accessibility, and mobile responsiveness, even on low-bandwidth connections. Key features include Google authentication, comprehensive profile protection, an urgency indicator system, user-editable signalements, clickable location points integrated with Google Maps, and an AI-powered chatbot assistant. The project aims to improve citizen safety and engagement, foster transparency, and support community resilience in Burkina Faso.
 
 ## User Preferences
 
@@ -10,81 +10,27 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Frontend
+### UI/UX
+The frontend uses React 18 with TypeScript and Vite, featuring Shadcn/ui components (Radix UI, Tailwind CSS - New York variant). It employs an ecological and security-focused design with a primary green color palette (HSL 142° 65% 45% light, 142° 60% 55% dark) and WCAG AA compliant contrast. The slogan "Voir. Agir. Protéger." incorporates national colors, and urgency is indicated by a traffic light system.
 
-*   **Framework**: React 18 with TypeScript and Vite with React Helmet Async for SEO/Open Graph support.
-*   **UI/UX**: Shadcn/ui components (Radix UI, Tailwind CSS - New York variant). Ecological and security-focused design with a primary green color palette (HSL 142° 65% 45% light, 142° 60% 55% dark) for nature, security, and environmental awareness. WCAG AA compliant contrast. The slogan "Voir. Agir. Protéger." uses national colors (Red, Yellow, Green) reflecting the Burkinabé flag. Urgency is indicated by a traffic light color system.
-*   **Routing**: Wouter for client-side routing with protected routes and programmatic navigation.
-*   **State Management**: TanStack Query for server state, React Context for theme, React hooks for local state.
-*   **Key Pages**: Landing, Home, Feed (filterable), Interactive Map (signalements, SOS), Report Creation (`/publier`), SOS Publishing (`/sos/publier`), Signalement Detail (`/signalement/:id`), Notifications, User Profile, Admin, Contribution (`/contribuer`), About (`/a-propos`), Terms of Use (`/conditions`), StreetView (`/streetview`).
-*   **Features**: Dynamic "Message du Jour" on homepage, interactive map with marker clustering and local statistics (SOS markers unclustered), clickable location points opening Google Maps, automatic image compression on upload (1200x1200px, 80% JPEG quality, max 20MB before compression), dynamic SOS filtering system (Urgences, Demandes d'aide, Personnes recherchées), professional hamburger navigation menu, detailed "About" and "Terms of Use" pages, "Contribution" page for mobile money donations, and **Stations-Service page** displaying 80 gas stations across 39 cities with interactive map, search/filter capabilities, and brand statistics (TotalEnergies, Shell). Social features include a **robust like system** with junction table, transaction-based toggling, and duplicate prevention, comment system, and share functionality. **Automatic Points System**: Users earn points automatically through platform engagement: +5 points when someone likes their signalement (removed when unliked), +10 points when a signalement is marked as "resolu". Points are awarded atomically within database transactions to ensure consistency. The system includes `syncUserPointsFromSignalements` helper function for point reconciliation from actual signalement data. Authorization ensures only authors and admins can change signalement status. User levels (Sentinelle, Veilleur de Proximité, Force de Sécurité) are recalculated automatically based on total points. **Live Location Tracking**: Users can start/stop real-time location tracking from their profile page; the system records GPS coordinates every 30 seconds to create a safety trajectory that can be used by emergency services to locate citizens in case of incidents or accidents. The tracking automatically resumes after page reload if a session is active, with synchronized point counter displaying the number of recorded positions. **Trajectory Visualization**: Each tracking session automatically generates a Google Maps link displaying the complete trajectory for investigation and search purposes. Users can copy the link or open it directly; the system intelligently samples waypoints (max 8) to respect Google Maps API limits while preserving route accuracy. **Full Article Detail Pages**: Each signalement has a dedicated shareable detail page with full content display, SEO meta tags via React Helmet Async, and Open Graph tags for optimal social sharing. Clickable titles throughout the app navigate to these detail pages. **Comprehensive Notification System**: All users receive real-time notifications for all platform activities including new posts, SOS alerts, likes, comments, shares, and modifications. The system uses async batch processing to efficiently broadcast notifications to all users without impacting request latency. Unread notification count displays in the header. **Location Email Delivery**: When users stop live location tracking, they automatically receive an email containing the reverse-geocoded address of their last position along with session statistics. The system uses Google Maps Geocoding API with Nominatim (OpenStreetMap) as fallback, includes in-memory caching for performance, and sends professionally formatted HTML emails via Resend. **AI Chatbot Assistant**: "Assistance Burkina Watch" is an intelligent chatbot powered by OpenAI (gpt-4o-mini) accessible from all pages via a floating button. The assistant helps users create signalements, provides safety advice, answers FAQs in French, and maintains conversation history per session. Features include persistent chat history in PostgreSQL, graceful error handling with differentiated messages for quota exhaustion vs technical errors, loading states, automatic scroll, and emergency contact reminders. The chatbot uses Replit AI Integrations for seamless API key management. **Real-time Online Users Count**: The homepage displays a live count of currently connected users through an elegant blue-themed stat card. The system uses automatic heartbeat tracking (every 2 minutes) via the useOnlineStatus hook to maintain accurate presence information in the onlineSessions database table. Users are marked online when they connect and automatically marked offline when they disconnect or close the browser, with proper cleanup through sendBeacon on page unload.
-
-### Backend
-
-*   **Runtime**: Node.js with Express.js.
-*   **Language**: TypeScript with ES modules.
-*   **API Design**: RESTful endpoints (`/api`) for authentication, reports, comments, and user profiles.
-*   **Session Management**: Express sessions with PostgreSQL session store.
-
-### Database
-
-*   **ORM**: Drizzle ORM with PostgreSQL dialect via Neon serverless driver.
-*   **Schema**: `users`, `signalements` (geolocation, category, status, media URLs, anonymous/SOS flags, urgency, likes counter), `signalement_likes` (junction table with unique constraint on user_id + signalement_id for atomic like toggling), `commentaires`, `sessions`, `trackingSessions` (live location tracking sessions), `locationPoints` (GPS coordinates with timestamps), `onlineSessions` (real-time user presence tracking with connected_at, disconnected_at timestamps), `notifications` (user notifications with types, read status, indexed for performance), `chatMessages` (AI chatbot conversation history with sessionId, userId, role, content, timestamps; indexed on sessionId and userId for performance), `streetviewPoints` (anonymous photo captures with geolocation, thumbnails, heading/pitch data for map display).
-*   **Migrations**: Schema-first approach with Drizzle Kit using `npm run db:push`.
-*   **Performance Optimization**: Database indexes on notification queries (`user_id`, `read`, `created_at`) for fast notification retrieval. Unique composite index on `signalement_likes(user_id, signalement_id)` prevents duplicate likes and enables race-condition-free toggling.
-
-### Authentication & Authorization
-
-*   **Provider**: OpenID Connect (OIDC) via Replit Auth (Google, GitHub, X, Apple, email/password).
-*   **Strategy**: Passport.js with `openid-client`.
-*   **Session Storage**: PostgreSQL-backed sessions with 7-day TTL.
-*   **User Flow**: Authentication required for reports, comments, profile; anonymous access for public content.
-*   **Authorization**: Role-based access control; "citoyen" default, support for institutional roles.
-
-### Security & Encryption
-
-*   **Encryption Service**: Envelope encryption pattern with AES-256-GCM for field-level encryption of sensitive data. Master key wraps unique data keys (DEKs) for each encrypted field. Supports both local fallback (development) and Google Cloud KMS (production).
-*   **Security Middlewares**: Helmet (CSP, HSTS, X-Frame-Options), express-rate-limit (API throttling), xss-clean (XSS sanitization), hpp (HTTP Parameter Pollution protection), CORS strict origin validation.
-*   **Rate Limiting**: Per-endpoint rate limiting (general: 100 req/15min, login: 5 req/15min, signalements: 20 req/hour, chatbot: 15 req/5min). Brute-force protection with automatic lockout (5 failed attempts = 30min lockout).
-*   **Refresh Token Security**: SHA-256 hashing with salt before database storage. Tokens never stored in plaintext.
-*   **Audit Logging**: Comprehensive audit trail in `audit_logs` table tracking all sensitive operations (authentication, signalement CRUD, admin actions, security events) with user_id, IP address, user agent, severity levels.
-*   **Database Schema**: Additional security tables: `audit_logs` (operation tracking), `refreshTokens` (secure token storage with revocation support).
-*   **Testing**: Unit test suite using Node.js built-in `node:test` runner validating encryption round-trips, refresh token hashing, key rotation, error handling, and performance (18 tests covering all critical paths).
-*   **Documentation**: Complete security documentation in `README_security.md` covering architecture, encryption procedures, key rotation, migration strategies, emergency procedures, and deployment checklist.
-
-### Data Validation
-
-*   **Schema Validation**: Zod schemas generated from Drizzle schemas (`drizzle-zod`).
-*   **Error Handling**: `Zod-validation-error` for user-friendly messages.
-*   **Form Validation**: React Hook Form with Zod resolver (client-side) and server-side request body validation.
-
-### Styling System
-
-*   **Framework**: Tailwind CSS with custom configuration.
-*   **Theme**: Ecological and security-focused palette with dominant greens, using CSS custom properties for light/dark modes. WCAG AA compliance.
-*   **Typography**: Inter font family from Google Fonts.
-
-### Build and Deployment
-
-*   **Development**: `npm run dev` (Express with Vite middleware, HMR).
-*   **Production**: Vite for frontend, esbuild for Node.js server. Configured for autoscale deployment.
-*   **Build Command**: `npm run build` (Vite build + esbuild server bundle).
-*   **Start Command**: `npm run start` (Production Node.js server).
-*   **Type Checking**: `npm run check`.
-*   **Database Migrations**: `npm run db:push`.
-*   **UUID Generation**: PostgreSQL native `gen_random_uuid()` function used for all ID generation in database schema to ensure browser compatibility during Vite build (crypto module removed from shared/schema.ts).
-*   **Content Refresh**: Pages for Pharmacies, Bulletin Citoyen, and Urgences services now automatically refresh content when users open them via visibility and focus event listeners.
-*   **Deployment Status**: Ready for deployment. All i18n translations complete for 5 languages (French, English, Dioula, Moore, Fulfulde). Resend integration configured for transactional emails.
+### Technical Implementations
+*   **Frontend**: React 18, TypeScript, Vite, Wouter for routing, TanStack Query for server state, React Context for themes. Key pages include Landing, Home, Feed, Interactive Map, Report Creation, SOS Publishing, Signalement Detail, User Profile, Admin, and specialized pages for Gas Stations, Pharmacies, and news. Features include dynamic "Message du Jour," interactive map with marker clustering, automatic image compression, dynamic SOS filtering, a robust like system, comment system, share functionality, and an automatic points system with user levels. Live location tracking and trajectory visualization are available for safety. Full article detail pages with SEO via React Helmet Async, a comprehensive real-time notification system, and location email delivery upon stopping tracking are implemented. An AI Chatbot Assistant powered by OpenAI (gpt-4o-mini) provides assistance and FAQs, maintaining persistent chat history. Real-time online user count is displayed.
+*   **Backend**: Node.js with Express.js and TypeScript. It provides RESTful endpoints for authentication, reports, comments, and user profiles. Session management uses Express sessions with a PostgreSQL store.
+*   **Database**: Drizzle ORM with PostgreSQL (Neon serverless driver). Schema includes `users`, `signalements`, `signalement_likes`, `commentaires`, `sessions`, `trackingSessions`, `locationPoints`, `onlineSessions`, `notifications`, `chatMessages`, and `streetviewPoints`. Migrations are handled with Drizzle Kit. Performance is optimized with database indexes.
+*   **Authentication & Authorization**: OpenID Connect (OIDC) via Replit Auth (Google, GitHub, X, Apple, email/password) using Passport.js. Role-based access control (default "citoyen") and PostgreSQL-backed sessions with a 7-day TTL are implemented.
+*   **Security & Encryption**: Envelope encryption with AES-256-GCM for sensitive data, using Google Cloud KMS in production. Security middlewares include Helmet, express-rate-limit, xss-clean, hpp, and strict CORS. Rate limiting is applied per-endpoint, with brute-force protection. Refresh tokens are secured with SHA-256 hashing. Comprehensive audit logging tracks sensitive operations.
+*   **Data Validation**: Zod schemas generated from Drizzle schemas, with `Zod-validation-error` for user-friendly messages. React Hook Form with Zod resolver is used for client-side and server-side validation.
+*   **Styling**: Tailwind CSS with a custom ecological theme and WCAG AA compliance. Inter font family is used.
+*   **Build and Deployment**: Development uses `npm run dev` (Express with Vite middleware), and production uses Vite for frontend and esbuild for Node.js server. UUIDs are generated using `gen_random_uuid()` in PostgreSQL. Content refresh for dynamic pages is handled via visibility and focus event listeners. The application is ready for deployment with i18n translations for 5 languages and Resend integration.
 
 ## External Dependencies
 
 *   **Database**: Neon PostgreSQL
 *   **Authentication**: Replit Auth (OIDC provider)
-*   **UI Components**: Radix UI (headless), Lucide React (icons), Date-fns
-*   **Development Tools (Replit Plugins)**: `@replit/vite-plugin-runtime-error-modal`, `@replit/vite-plugin-cartographer`, `@replit/vite-plugin-dev-banner`
+*   **UI Components**: Radix UI, Lucide React, Date-fns
+*   **Development Tools**: Replit Vite plugins (`@replit/vite-plugin-runtime-error-modal`, `@replit/vite-plugin-cartographer`, `@replit/vite-plugin-dev-banner`)
 *   **Form Handling**: React Hook Form, Hookform Resolvers (Zod integration)
-*   **Third-party Services**: Google Maps API (@googlemaps/markerclusterer for clustering, Geocoding API for reverse geocoding), Google Fonts, Unsplash (for placeholder images), Resend (transactional email service for location tracking), Nominatim/OpenStreetMap (geocoding fallback).
-*   **SEO**: React Helmet Async for dynamic meta tags and Open Graph tags on signalement detail pages for improved social sharing and search engine optimization.
-*   **Mapping**: Leaflet.js with react-leaflet for StreetView interactive map display with custom camera markers and photo popups.
-*   **StreetView Panoramas**: Mapillary (mapillary-js) for crowdsourced street-level 3D panoramic imagery in Burkina Faso. Integration uses OAuth Authorization header for API v4, with intelligent bounding box search (0.02° radius, fixed-precision coordinates) to find nearby panoramas. CSP configured to allow graph.mapillary.com, tiles.mapillary.com, and *.fbcdn.net (Facebook CDN for image hosting). Default location centered on Ouagadougou areas with confirmed Mapillary coverage (lat: 12.3769, lng: -1.5160). Requires WebGL-capable browser for 3D rendering.
-*   **Events RSS Aggregation**: Pulls from major Burkina Faso news sources (Lefaso.net, Sidwaya, Fasozine, etc.) and international news feeds (BBC Africa, Reuters, Bloomberg). AI-powered event detection filters for future/today-only events with improved date parsing and comprehensive event categories (cultural, security, sports, conferences).
+*   **Third-party Services**: Google Maps API (MarkerClusterer, Geocoding API), Google Fonts, Unsplash, Resend (transactional email), Nominatim/OpenStreetMap (geocoding fallback), OpenAI (gpt-4o-mini for chatbot).
+*   **Mapping & Geolocation**: Leaflet.js (with react-leaflet for StreetView), Mapillary (for street-level panoramas), Overpass API (for OSM places data).
+*   **SEO**: React Helmet Async
+*   **RSS Aggregation**: Various Burkina Faso news sources (Lefaso.net, Sidwaya, Fasozine) and international news feeds (BBC Africa, Reuters, Bloomberg) for AI-powered event detection.

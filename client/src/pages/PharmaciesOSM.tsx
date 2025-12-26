@@ -6,7 +6,7 @@ export default function PharmaciesOSM() {
     <PlacesListPage
       placeType="pharmacy"
       title="Pharmacies"
-      description="Trouvez les pharmacies vérifiées par la communauté"
+      description="Pharmacies du Burkina Faso via OpenStreetMap"
       icon={<Cross className="h-8 w-8 text-green-600" />}
     />
   );

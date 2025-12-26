@@ -6,7 +6,7 @@ export default function Restaurants() {
     <PlacesListPage
       placeType="restaurant"
       title="Restaurants"
-      description="Découvrez les restaurants vérifiés par la communauté"
+      description="Restaurants du Burkina Faso via OpenStreetMap"
       icon={<UtensilsCrossed className="h-8 w-8 text-orange-600" />}
     />
   );

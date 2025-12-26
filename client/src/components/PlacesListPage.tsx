@@ -5,9 +5,8 @@ import { PlaceCard, PlaceCardSkeleton } from "@/components/PlaceCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, ArrowLeft, RefreshCw, MapPin, CheckCircle, AlertTriangle, Building2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Search, ArrowLeft, RefreshCw, MapPin, Building2, Map } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -31,7 +30,6 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
   const { data: places = [], isLoading, refetch, isRefetching } = useQuery<Place[]>({
     queryKey: ['/api/places', placeType],
@@ -40,16 +38,6 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
       if (!response.ok) throw new Error('Failed to fetch places');
       return response.json();
     },
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: stats } = useQuery<{
-    total: number;
-    byType: Record<string, number>;
-    verified: number;
-    needsReview: number;
-  }>({
-    queryKey: ['/api/places/stats'],
     staleTime: 5 * 60 * 1000,
   });
 
@@ -78,11 +66,10 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
         place.address?.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesRegion = selectedRegion === "all" || place.region === selectedRegion;
-      const matchesStatus = selectedStatus === "all" || place.verificationStatus === selectedStatus;
       
-      return matchesSearch && matchesRegion && matchesStatus;
+      return matchesSearch && matchesRegion;
     });
-  }, [places, searchTerm, selectedRegion, selectedStatus]);
+  }, [places, searchTerm, selectedRegion]);
 
   const regionCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -101,10 +88,6 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
       description: `${filteredPlaces.length} lieux trouvés`,
     });
   };
-
-  const typeStats = stats?.byType?.[placeType] || places.length;
-  const verifiedCount = places.filter(p => p.verificationStatus === "verified").length;
-  const pendingCount = places.filter(p => p.verificationStatus === "pending").length;
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -129,36 +112,14 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-muted-foreground" />
+                <Building2 className="h-5 w-5 text-primary" />
                 <div>
-                  <p className="text-2xl font-bold">{typeStats}</p>
+                  <p className="text-2xl font-bold">{places.length}</p>
                   <p className="text-xs text-muted-foreground">Total</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-500" />
-                <div>
-                  <p className="text-2xl font-bold">{verifiedCount}</p>
-                  <p className="text-xs text-muted-foreground">Vérifiés</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-orange-500" />
-                <div>
-                  <p className="text-2xl font-bold">{pendingCount}</p>
-                  <p className="text-xs text-muted-foreground">En attente</p>
                 </div>
               </div>
             </CardContent>
@@ -170,6 +131,17 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
                 <div>
                   <p className="text-2xl font-bold">{Object.keys(regionCounts).length}</p>
                   <p className="text-xs text-muted-foreground">Régions</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="col-span-2 md:col-span-1">
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-2">
+                <Map className="h-5 w-5 text-green-500" />
+                <div>
+                  <p className="text-2xl font-bold">OSM</p>
+                  <p className="text-xs text-muted-foreground">OpenStreetMap</p>
                 </div>
               </div>
             </CardContent>
@@ -202,18 +174,6 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
             </SelectContent>
           </Select>
 
-          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className="w-full md:w-48" data-testid="select-status">
-              <SelectValue placeholder="Statut" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les statuts</SelectItem>
-              <SelectItem value="verified">Vérifiés</SelectItem>
-              <SelectItem value="pending">En attente</SelectItem>
-              <SelectItem value="needs_review">À vérifier</SelectItem>
-            </SelectContent>
-          </Select>
-
           <Button
             variant="outline"
             onClick={handleRefresh}
@@ -229,14 +189,13 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
           <p className="text-sm text-muted-foreground">
             {filteredPlaces.length} lieu{filteredPlaces.length > 1 ? 'x' : ''} trouvé{filteredPlaces.length > 1 ? 's' : ''}
           </p>
-          {(searchTerm || selectedRegion !== "all" || selectedStatus !== "all") && (
+          {(searchTerm || selectedRegion !== "all") && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => {
                 setSearchTerm("");
                 setSelectedRegion("all");
-                setSelectedStatus("all");
               }}
             >
               Réinitialiser les filtres
@@ -256,9 +215,9 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
               <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">Aucun lieu trouvé</h3>
               <p className="text-muted-foreground mb-4">
-                {searchTerm || selectedRegion !== "all" || selectedStatus !== "all"
+                {searchTerm || selectedRegion !== "all"
                   ? "Essayez de modifier vos critères de recherche"
-                  : "Les données seront bientôt disponibles après synchronisation"}
+                  : "Les données seront disponibles après synchronisation avec OpenStreetMap"}
               </p>
               <Button variant="outline" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4 mr-2" />
@@ -272,8 +231,6 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
               <PlaceCard
                 key={place.id}
                 place={place}
-                showVerification={true}
-                isAuthenticated={false}
               />
             ))}
           </div>
