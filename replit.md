@@ -45,9 +45,10 @@ The platform features extensive verified data for locations across all 13 region
 *   **Restaurants** (`server/restaurantsData.ts`): 65+ restaurants including famous establishments (Le Verdoyant, Le Bistrot Lyonnais, Le Coq Bleu, Gondwana, Chellas Cafe, Rosa Dei Venti, Royal Garden, L'Art Rouge). Restaurant types include: Africain, Burkinabè, Français, Libanais, Asiatique, Fast-food, Pizzeria, Grillades, Maquis, Café, Pâtisserie, International, Italien, and Fusion.
 *   **Boutiques** (`server/boutiquesData.ts`): 60+ boutiques including **Marina Market** supermarket chain (4 locations in Ouagadougou), KIABI, Village Artisanal, Home Market, and Orange Boutique. Categories include: Supermarché, Alimentation, Électronique, Mode, Quincaillerie, Cosmétiques, Téléphonie, Ameublement, Pharmacie, Librairie, Sport, Bijouterie, Électroménager, and Artisanat.
 *   **Marchés** (`server/marchesData.ts`): Traditional markets across all regions with operating days and specialties.
+*   **Banques et Caisses Populaires** (`server/banquesData.ts`): 40+ financial establishments including all 16 official banks verified from BCEAO/Commission Bancaire UMOA 2024 sources, the RCPB network (35 caisses populaires, 212 points of sale, 5 regional delegations), and microfinance institutions. Features include 5 EBIS (systemically important banks: Coris Bank, Ecobank, BOA, Société Générale, UBA), 770+ GABs, 577 agencies. Bank types include: Banque, Caisse Populaire, Microfinance. Categories include: Commerciale, Agricole, Postale, Régionale.
 
 ### Data Features
 - GPS coordinates verified via OpenStreetMap and Google Maps
 - Real business names and phone numbers sourced from 2024 web research
 - Complete service information (24h, parking, WiFi, delivery, etc.)
-- Coverage across all 13 regions of Burkina Faso with 350+ total locations
+- Coverage across all 13 regions of Burkina Faso with 450+ total locations
