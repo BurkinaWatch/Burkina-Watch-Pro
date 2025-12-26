@@ -256,7 +256,7 @@ export default function Stations() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6 relative z-20">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -272,7 +272,7 @@ export default function Stations() {
             <SelectTrigger data-testid="select-region">
               <SelectValue placeholder="Toutes les regions" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-50">
               <SelectItem value="all">Toutes les regions</SelectItem>
               {regions.map(r => (
                 <SelectItem key={r} value={r}>{r}</SelectItem>
@@ -284,7 +284,7 @@ export default function Stations() {
             <SelectTrigger data-testid="select-marque">
               <SelectValue placeholder="Toutes les marques" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-50">
               <SelectItem value="all">Toutes les marques</SelectItem>
               {marques.map(m => (
                 <SelectItem key={m} value={m}>{m}</SelectItem>
