@@ -1416,6 +1416,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----------------------------------------
+  // ROUTES BANQUES ET CAISSES POPULAIRES
+  // ----------------------------------------
+  app.get("/api/banques", async (req, res) => {
+    try {
+      const { BANQUES_DATA } = await import("./banquesData");
+      const { region, type, categorie, search, hasGAB, importanceSystemique } = req.query;
+
+      let banques = [...BANQUES_DATA];
+
+      if (search) {
+        const query = (search as string).toLowerCase();
+        banques = banques.filter(b =>
+          b.nom.toLowerCase().includes(query) ||
+          b.sigle.toLowerCase().includes(query) ||
+          b.ville.toLowerCase().includes(query) ||
+          b.quartier.toLowerCase().includes(query) ||
+          b.type.toLowerCase().includes(query) ||
+          b.services.some(s => s.toLowerCase().includes(query))
+        );
+      }
+
+      if (region && region !== "all") {
+        banques = banques.filter(b => b.region === region);
+      }
+
+      if (type && type !== "all") {
+        banques = banques.filter(b => b.type === type);
+      }
+
+      if (categorie && categorie !== "all") {
+        banques = banques.filter(b => b.categorie === categorie);
+      }
+
+      if (hasGAB === "true") {
+        banques = banques.filter(b => b.hasGAB);
+      }
+
+      if (importanceSystemique === "true") {
+        banques = banques.filter(b => b.importanceSystemique);
+      }
+
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json(banques);
+    } catch (error) {
+      console.error("Erreur récupération banques:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des banques" });
+    }
+  });
+
+  app.get("/api/banques/stats", async (req, res) => {
+    try {
+      const { getBanquesStats } = await import("./banquesData");
+      const stats = getBanquesStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Erreur stats banques:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
+    }
+  });
+
+  // ----------------------------------------
   // ROUTES PHARMACIES (nouvelle version avec données hardcodées)
   // ----------------------------------------
   app.get("/api/pharmacies/v2", async (req, res) => {

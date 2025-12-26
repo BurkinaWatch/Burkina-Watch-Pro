@@ -35,6 +35,7 @@ import Restaurants from "@/pages/Restaurants";
 import BoutiquesMarchés from "@/pages/BoutiquesMarchés";
 import Marches from "@/pages/Marches";
 import Boutiques from "@/pages/Boutiques";
+import Banques from "@/pages/Banques";
 import Stations from "@/pages/Stations";
 import PharmaciesOSM from "@/pages/PharmaciesOSM";
 import NotFound from "@/pages/not-found";
@@ -68,6 +69,7 @@ function Router() {
       <Route path="/boutiques-marches" component={BoutiquesMarchés} />
       <Route path="/marches" component={Marches} />
       <Route path="/boutiques" component={Boutiques} />
+      <Route path="/banques" component={Banques} />
       <Route path="/stations" component={Stations} />
       <Route path="/a-propos" component={APropos} />
       <Route path="/conditions" component={Conditions} />
