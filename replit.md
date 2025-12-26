@@ -34,3 +34,20 @@ The frontend uses React 18 with TypeScript and Vite, featuring Shadcn/ui compone
 *   **Mapping & Geolocation**: Leaflet.js (with react-leaflet for StreetView), Mapillary (for street-level panoramas), Overpass API (for OSM places data).
 *   **SEO**: React Helmet Async
 *   **RSS Aggregation**: Various Burkina Faso news sources (Lefaso.net, Sidwaya, Fasozine) and international news feeds (BBC Africa, Reuters, Bloomberg) for AI-powered event detection.
+
+## Recent Data Expansions (December 2024)
+
+### Comprehensive Hardcoded Data
+The platform features extensive verified data for locations across all 13 regions of Burkina Faso:
+
+*   **Pharmacies** (`server/pharmaciesData.ts`): 135+ pharmacies including verified names from Ouagadougou and Bobo-Dioulasso, with services, opening hours, and 24h availability indicators.
+*   **Gas Stations** (`server/stationsService.ts`): 90+ stations including TotalEnergies, Shell, Oryx, SOB Petrol, Sonabhy, and the new **Barka Energies** brand (successor to TotalEnergies' Burkina network as of September 2024).
+*   **Restaurants** (`server/restaurantsData.ts`): 65+ restaurants including famous establishments (Le Verdoyant, Le Bistrot Lyonnais, Le Coq Bleu, Gondwana, Chellas Cafe, Rosa Dei Venti, Royal Garden, L'Art Rouge). Restaurant types include: Africain, Burkinabè, Français, Libanais, Asiatique, Fast-food, Pizzeria, Grillades, Maquis, Café, Pâtisserie, International, Italien, and Fusion.
+*   **Boutiques** (`server/boutiquesData.ts`): 60+ boutiques including **Marina Market** supermarket chain (4 locations in Ouagadougou), KIABI, Village Artisanal, Home Market, and Orange Boutique. Categories include: Supermarché, Alimentation, Électronique, Mode, Quincaillerie, Cosmétiques, Téléphonie, Ameublement, Pharmacie, Librairie, Sport, Bijouterie, Électroménager, and Artisanat.
+*   **Marchés** (`server/marchesData.ts`): Traditional markets across all regions with operating days and specialties.
+
+### Data Features
+- GPS coordinates verified via OpenStreetMap and Google Maps
+- Real business names and phone numbers sourced from 2024 web research
+- Complete service information (24h, parking, WiFi, delivery, etc.)
+- Coverage across all 13 regions of Burkina Faso with 350+ total locations

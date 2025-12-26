@@ -5,7 +5,7 @@
 export interface StationService {
   id: string;
   nom: string;
-  marque: "TotalEnergies" | "Shell" | "Oryx" | "SOB Petrol" | "Sonabhy" | "Star Oil" | "Nafex" | "Vivo Energy" | "Autre";
+  marque: "TotalEnergies" | "Shell" | "Oryx" | "SOB Petrol" | "Sonabhy" | "Star Oil" | "Nafex" | "Vivo Energy" | "Barka Energies" | "Autre";
   adresse: string;
   quartier: string;
   ville: string;
@@ -1457,6 +1457,171 @@ export const STATIONS_DATA: StationService[] = [
     services: ["Boutique", "Lavage auto", "Gonflage"],
     carburants: ["Super sans plomb", "Gasoil"]
   },
+
+  // ========================================
+  // BARKA ENERGIES - Nouveau réseau 2024
+  // Ex-TotalEnergies racheté par Coris Invest
+  // ========================================
+  {
+    id: "st-081",
+    nom: "Barka Energies Charles de Gaulle",
+    marque: "Barka Energies",
+    adresse: "Boulevard Charles De Gaulle, 1200 Logements",
+    quartier: "1200 Logements",
+    ville: "Ouagadougou",
+    region: "Centre",
+    latitude: 12.3698,
+    longitude: -1.5256,
+    telephone: "+226 25 30 67 00",
+    horaires: "06h00 - 22h00",
+    is24h: false,
+    services: ["Boutique", "Lavage auto", "Vidange", "Gonflage", "Gaz butane"],
+    carburants: ["Super sans plomb", "Gasoil", "Pétrole"]
+  },
+  {
+    id: "st-082",
+    nom: "Barka Energies Ouaga 2000",
+    marque: "Barka Energies",
+    adresse: "Boulevard France-Afrique, Ouaga 2000",
+    quartier: "Ouaga 2000",
+    ville: "Ouagadougou",
+    region: "Centre",
+    latitude: 12.3456,
+    longitude: -1.4889,
+    telephone: "+226 25 37 66 00",
+    horaires: "24h/24 - 7j/7",
+    is24h: true,
+    services: ["Boutique", "Lavage auto", "Vidange", "Restaurant", "Gonflage", "ATM", "Gaz butane"],
+    carburants: ["Super sans plomb", "Gasoil", "Pétrole", "GPL"]
+  },
+  {
+    id: "st-083",
+    nom: "Barka Energies Patte d'Oie",
+    marque: "Barka Energies",
+    adresse: "Carrefour Patte d'Oie",
+    quartier: "Patte d'Oie",
+    ville: "Ouagadougou",
+    region: "Centre",
+    latitude: 12.3567,
+    longitude: -1.5478,
+    telephone: "+226 25 38 12 00",
+    horaires: "06h00 - 23h00",
+    is24h: false,
+    services: ["Boutique", "Lavage auto", "Vidange", "Gonflage"],
+    carburants: ["Super sans plomb", "Gasoil", "Pétrole"]
+  },
+  {
+    id: "st-084",
+    nom: "Barka Energies Ex-Gare Bobo",
+    marque: "Barka Energies",
+    adresse: "Centre-ville, derrière Ciné Sayon",
+    quartier: "Centre-ville",
+    ville: "Bobo-Dioulasso",
+    region: "Hauts-Bassins",
+    latitude: 11.1789,
+    longitude: -4.2945,
+    telephone: "+226 20 97 12 00",
+    horaires: "06h00 - 22h00",
+    is24h: false,
+    services: ["Boutique", "Lavage auto", "Vidange", "Gonflage", "Gaz butane"],
+    carburants: ["Super sans plomb", "Gasoil", "Pétrole"]
+  },
+  {
+    id: "st-085",
+    nom: "Barka Energies Tondorosso",
+    marque: "Barka Energies",
+    adresse: "Péage RN1 de Bobo",
+    quartier: "Tondorosso",
+    ville: "Bobo-Dioulasso",
+    region: "Hauts-Bassins",
+    latitude: 11.2012,
+    longitude: -4.3234,
+    telephone: "+226 20 97 15 00",
+    horaires: "24h/24 - 7j/7",
+    is24h: true,
+    services: ["Boutique", "Lavage auto", "Restaurant", "Gonflage", "Gaz butane", "Parking poids lourds"],
+    carburants: ["Super sans plomb", "Gasoil", "Pétrole", "GPL"]
+  },
+  {
+    id: "st-086",
+    nom: "Barka Energies Tampouy",
+    marque: "Barka Energies",
+    adresse: "Avenue de Tampouy",
+    quartier: "Tampouy",
+    ville: "Ouagadougou",
+    region: "Centre",
+    latitude: 12.3912,
+    longitude: -1.5045,
+    telephone: "+226 25 36 88 00",
+    horaires: "06h00 - 22h00",
+    is24h: false,
+    services: ["Boutique", "Lavage auto", "Gonflage"],
+    carburants: ["Super sans plomb", "Gasoil"]
+  },
+  {
+    id: "st-087",
+    nom: "Barka Energies Koudougou RN",
+    marque: "Barka Energies",
+    adresse: "Route Nationale, Sortie vers Ouagadougou",
+    quartier: "Secteur 5",
+    ville: "Koudougou",
+    region: "Centre-Ouest",
+    latitude: 12.2578,
+    longitude: -2.3578,
+    telephone: "+226 25 44 20 00",
+    horaires: "06h00 - 22h00",
+    is24h: false,
+    services: ["Boutique", "Lavage auto", "Vidange", "Gonflage", "Gaz butane"],
+    carburants: ["Super sans plomb", "Gasoil", "Pétrole"]
+  },
+  {
+    id: "st-088",
+    nom: "Barka Energies Banfora Centre",
+    marque: "Barka Energies",
+    adresse: "Centre-ville, près du marché",
+    quartier: "Centre-ville",
+    ville: "Banfora",
+    region: "Cascades",
+    latitude: 10.6312,
+    longitude: -4.7567,
+    telephone: "+226 20 91 15 00",
+    horaires: "06h00 - 21h00",
+    is24h: false,
+    services: ["Boutique", "Lavage auto", "Gonflage"],
+    carburants: ["Super sans plomb", "Gasoil"]
+  },
+  {
+    id: "st-089",
+    nom: "Barka Energies Zone Industrielle",
+    marque: "Barka Energies",
+    adresse: "Zone Industrielle de Gounghin",
+    quartier: "Zone Industrielle",
+    ville: "Ouagadougou",
+    region: "Centre",
+    latitude: 12.3645,
+    longitude: -1.5378,
+    telephone: "+226 25 34 55 00",
+    horaires: "24h/24 - 7j/7",
+    is24h: true,
+    services: ["Boutique", "Lavage auto", "Vidange", "Gonflage", "Parking poids lourds", "Gaz butane"],
+    carburants: ["Super sans plomb", "Gasoil", "Pétrole", "GPL"]
+  },
+  {
+    id: "st-090",
+    nom: "Barka Energies Dédougou",
+    marque: "Barka Energies",
+    adresse: "Route de Bobo, Sortie sud",
+    quartier: "Centre",
+    ville: "Dédougou",
+    region: "Boucle du Mouhoun",
+    latitude: 12.4623,
+    longitude: -3.4612,
+    telephone: "+226 20 52 18 00",
+    horaires: "06h00 - 21h00",
+    is24h: false,
+    services: ["Boutique", "Lavage auto", "Gonflage", "Gaz butane"],
+    carburants: ["Super sans plomb", "Gasoil"]
+  }
 ];
 
 export class StationsService {
