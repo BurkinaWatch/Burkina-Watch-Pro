@@ -130,6 +130,8 @@ export default function Banques() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([12.3714, -1.5197]);
   const [mapZoom, setMapZoom] = useState(7);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showGABDetails, setShowGABDetails] = useState(false);
+  const [gabViewMode, setGabViewMode] = useState<"ville" | "banque">("ville");
   const mapRef = useRef<L.Map | null>(null);
 
   const { data: banques = [], isLoading, refetch } = useQuery<Banque[]>({
@@ -187,6 +189,43 @@ export default function Banques() {
 
     return result;
   }, [banques, searchQuery, selectedRegion, selectedType, showGABOnly, showSystemiqueOnly]);
+
+  const gabParVille = useMemo(() => {
+    const villeMap: Record<string, { ville: string; region: string; totalGAB: number; etablissements: { nom: string; sigle: string; nombreGAB: number; adresse: string }[] }> = {};
+    
+    banques.filter(b => b.hasGAB && b.nombreGAB && b.nombreGAB > 0).forEach(b => {
+      if (!villeMap[b.ville]) {
+        villeMap[b.ville] = { ville: b.ville, region: b.region, totalGAB: 0, etablissements: [] };
+      }
+      villeMap[b.ville].totalGAB += b.nombreGAB || 0;
+      villeMap[b.ville].etablissements.push({
+        nom: b.nom,
+        sigle: b.sigle,
+        nombreGAB: b.nombreGAB || 0,
+        adresse: b.adresse
+      });
+    });
+    
+    return Object.values(villeMap).sort((a, b) => b.totalGAB - a.totalGAB);
+  }, [banques]);
+
+  const gabParBanque = useMemo(() => {
+    const banqueMap: Record<string, { sigle: string; totalGAB: number; villes: { ville: string; nombreGAB: number; adresse: string }[] }> = {};
+    
+    banques.filter(b => b.hasGAB && b.nombreGAB && b.nombreGAB > 0).forEach(b => {
+      if (!banqueMap[b.sigle]) {
+        banqueMap[b.sigle] = { sigle: b.sigle, totalGAB: 0, villes: [] };
+      }
+      banqueMap[b.sigle].totalGAB += b.nombreGAB || 0;
+      banqueMap[b.sigle].villes.push({
+        ville: b.ville,
+        nombreGAB: b.nombreGAB || 0,
+        adresse: b.adresse
+      });
+    });
+    
+    return Object.values(banqueMap).sort((a, b) => b.totalGAB - a.totalGAB);
+  }, [banques]);
 
   const handleBanqueClick = useCallback((banque: Banque) => {
     setSelectedBanque(banque);
@@ -278,10 +317,15 @@ export default function Banques() {
               <p className="text-xs text-muted-foreground">Caisses Populaires</p>
             </CardContent>
           </Card>
-          <Card className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
+          <Card 
+            className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 cursor-pointer hover-elevate"
+            onClick={() => setShowGABDetails(!showGABDetails)}
+            data-testid="card-gab-details"
+          >
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-amber-600">{stats?.totalGAB || 0}</p>
               <p className="text-xs text-muted-foreground">GAB disponibles</p>
+              <p className="text-xs text-amber-600 mt-1">Cliquez pour voir la liste</p>
             </CardContent>
           </Card>
           <Card className="bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800">
@@ -291,6 +335,101 @@ export default function Banques() {
             </CardContent>
           </Card>
         </div>
+
+        {showGABDetails && (
+          <Card className="mb-6 border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-amber-600" />
+                  Liste des GAB ({stats?.totalGAB || 0} distributeurs)
+                </CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={gabViewMode === "ville" ? "default" : "outline"}
+                    onClick={() => setGabViewMode("ville")}
+                    data-testid="button-gab-by-city"
+                  >
+                    <MapPin className="h-4 w-4 mr-1" />
+                    Par ville
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={gabViewMode === "banque" ? "default" : "outline"}
+                    onClick={() => setGabViewMode("banque")}
+                    data-testid="button-gab-by-bank"
+                  >
+                    <Building2 className="h-4 w-4 mr-1" />
+                    Par banque
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowGABDetails(false)}
+                    data-testid="button-close-gab-details"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="max-h-[400px] overflow-y-auto space-y-3 pr-2">
+                {gabViewMode === "ville" ? (
+                  gabParVille.map((villeData, idx) => (
+                    <div key={idx} className="bg-background rounded-lg p-3 border">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-amber-600" />
+                          <span className="font-semibold">{villeData.ville}</span>
+                          <Badge variant="outline" className="text-xs">{villeData.region}</Badge>
+                        </div>
+                        <Badge className="bg-amber-500 text-white">{villeData.totalGAB} GAB</Badge>
+                      </div>
+                      <div className="space-y-1 ml-6">
+                        {villeData.etablissements.map((etab, i) => (
+                          <div key={i} className="flex items-center justify-between text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2">
+                              <CreditCard className="h-3 w-3" />
+                              <span>{etab.sigle}</span>
+                              <span className="text-xs">- {etab.adresse.substring(0, 40)}{etab.adresse.length > 40 ? "..." : ""}</span>
+                            </div>
+                            <span className="text-amber-600 font-medium">{etab.nombreGAB}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  gabParBanque.map((banqueData, idx) => (
+                    <div key={idx} className="bg-background rounded-lg p-3 border">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-blue-600" />
+                          <span className="font-semibold">{banqueData.sigle}</span>
+                        </div>
+                        <Badge className="bg-amber-500 text-white">{banqueData.totalGAB} GAB</Badge>
+                      </div>
+                      <div className="space-y-1 ml-6">
+                        {banqueData.villes.map((ville, i) => (
+                          <div key={i} className="flex items-center justify-between text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-3 w-3" />
+                              <span>{ville.ville}</span>
+                              <span className="text-xs">- {ville.adresse.substring(0, 40)}{ville.adresse.length > 40 ? "..." : ""}</span>
+                            </div>
+                            <span className="text-amber-600 font-medium">{ville.nombreGAB}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 relative z-50">
