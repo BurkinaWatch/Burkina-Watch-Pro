@@ -13,3 +13,7 @@ Additional completed tasks:
 [x] 11. Created PostgreSQL database
 [x] 12. Pushed database schema to create all tables
 [x] 13. Reinstalled dependencies and restarted workflow - application running successfully
+[x] 14. Extended PLACE_TYPE_QUERIES with 80+ new OSM categories (health, restaurants, transport, shops, services, education, tourism, etc.)
+[x] 15. Increased query timeout to 180s and maxsize for larger data retrieval
+[x] 16. Increased default places limit from 500 to 10,000
+[x] 17. Synced 11,344+ places from OpenStreetMap (pharmacies, hospitals, restaurants, markets, stations, etc.)

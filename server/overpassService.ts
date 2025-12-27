@@ -24,11 +24,148 @@ interface OverpassResponse {
 }
 
 const PLACE_TYPE_QUERIES: Record<string, string> = {
+  // Santé
   pharmacy: `["amenity"="pharmacy"]`,
+  hospital: `["amenity"="hospital"]`,
+  clinic: `["amenity"="clinic"]`,
+  doctors: `["amenity"="doctors"]`,
+  dentist: `["amenity"="dentist"]`,
+  
+  // Restauration
   restaurant: `["amenity"="restaurant"]`,
+  fast_food: `["amenity"="fast_food"]`,
+  cafe: `["amenity"="cafe"]`,
+  bar: `["amenity"="bar"]`,
+  pub: `["amenity"="pub"]`,
+  ice_cream: `["amenity"="ice_cream"]`,
+  food_court: `["amenity"="food_court"]`,
+  
+  // Carburant et transport
   fuel: `["amenity"="fuel"]`,
+  car_wash: `["amenity"="car_wash"]`,
+  car_repair: `["shop"="car_repair"]`,
+  car_parts: `["shop"="car_parts"]`,
+  bicycle: `["shop"="bicycle"]`,
+  motorcycle: `["shop"="motorcycle"]`,
+  bus_station: `["amenity"="bus_station"]`,
+  taxi: `["amenity"="taxi"]`,
+  
+  // Commerce
   marketplace: `["amenity"="marketplace"]`,
-  shop: `["shop"]`,
+  supermarket: `["shop"="supermarket"]`,
+  convenience: `["shop"="convenience"]`,
+  grocery: `["shop"="grocery"]`,
+  butcher: `["shop"="butcher"]`,
+  bakery: `["shop"="bakery"]`,
+  pastry: `["shop"="pastry"]`,
+  confectionery: `["shop"="confectionery"]`,
+  greengrocer: `["shop"="greengrocer"]`,
+  seafood: `["shop"="seafood"]`,
+  deli: `["shop"="deli"]`,
+  
+  // Mode et beauté
+  clothes: `["shop"="clothes"]`,
+  shoes: `["shop"="shoes"]`,
+  jewelry: `["shop"="jewelry"]`,
+  hairdresser: `["shop"="hairdresser"]`,
+  beauty: `["shop"="beauty"]`,
+  cosmetics: `["shop"="cosmetics"]`,
+  tailor: `["shop"="tailor"]`,
+  fabric: `["shop"="fabric"]`,
+  
+  // Électronique et télécom
+  electronics: `["shop"="electronics"]`,
+  mobile_phone: `["shop"="mobile_phone"]`,
+  computer: `["shop"="computer"]`,
+  appliance: `["shop"="appliance"]`,
+  
+  // Maison et construction
+  hardware: `["shop"="hardware"]`,
+  furniture: `["shop"="furniture"]`,
+  houseware: `["shop"="houseware"]`,
+  paint: `["shop"="paint"]`,
+  bathroom_furnishing: `["shop"="bathroom_furnishing"]`,
+  
+  // Services financiers
+  bank: `["amenity"="bank"]`,
+  atm: `["amenity"="atm"]`,
+  bureau_de_change: `["amenity"="bureau_de_change"]`,
+  money_transfer: `["amenity"="money_transfer"]`,
+  
+  // Hébergement
+  hotel: `["tourism"="hotel"]`,
+  guest_house: `["tourism"="guest_house"]`,
+  hostel: `["tourism"="hostel"]`,
+  motel: `["tourism"="motel"]`,
+  
+  // Éducation
+  school: `["amenity"="school"]`,
+  university: `["amenity"="university"]`,
+  college: `["amenity"="college"]`,
+  kindergarten: `["amenity"="kindergarten"]`,
+  library: `["amenity"="library"]`,
+  driving_school: `["amenity"="driving_school"]`,
+  
+  // Culture et loisirs
+  cinema: `["amenity"="cinema"]`,
+  theatre: `["amenity"="theatre"]`,
+  nightclub: `["amenity"="nightclub"]`,
+  arts_centre: `["amenity"="arts_centre"]`,
+  community_centre: `["amenity"="community_centre"]`,
+  place_of_worship: `["amenity"="place_of_worship"]`,
+  
+  // Sport et fitness
+  sports_centre: `["leisure"="sports_centre"]`,
+  fitness_centre: `["leisure"="fitness_centre"]`,
+  swimming_pool: `["leisure"="swimming_pool"]`,
+  stadium: `["leisure"="stadium"]`,
+  pitch: `["leisure"="pitch"]`,
+  
+  // Services publics
+  police: `["amenity"="police"]`,
+  fire_station: `["amenity"="fire_station"]`,
+  post_office: `["amenity"="post_office"]`,
+  townhall: `["amenity"="townhall"]`,
+  embassy: `["amenity"="embassy"]`,
+  courthouse: `["amenity"="courthouse"]`,
+  
+  // Autres commerces
+  bookshop: `["shop"="books"]`,
+  stationery: `["shop"="stationery"]`,
+  gift: `["shop"="gift"]`,
+  toys: `["shop"="toys"]`,
+  sports: `["shop"="sports"]`,
+  optician: `["shop"="optician"]`,
+  photo: `["shop"="photo"]`,
+  variety_store: `["shop"="variety_store"]`,
+  kiosk: `["shop"="kiosk"]`,
+  tobacco: `["shop"="tobacco"]`,
+  alcohol: `["shop"="alcohol"]`,
+  beverages: `["shop"="beverages"]`,
+  
+  // Agriculture et élevage
+  agrarian: `["shop"="agrarian"]`,
+  farm: `["shop"="farm"]`,
+  pet: `["shop"="pet"]`,
+  
+  // Autres services
+  laundry: `["shop"="laundry"]`,
+  dry_cleaning: `["shop"="dry_cleaning"]`,
+  copyshop: `["shop"="copyshop"]`,
+  travel_agency: `["shop"="travel_agency"]`,
+  funeral_directors: `["shop"="funeral_directors"]`,
+  locksmith: `["shop"="locksmith"]`,
+  
+  // Tourisme
+  attraction: `["tourism"="attraction"]`,
+  museum: `["tourism"="museum"]`,
+  viewpoint: `["tourism"="viewpoint"]`,
+  artwork: `["tourism"="artwork"]`,
+  
+  // Espaces verts
+  park: `["leisure"="park"]`,
+  garden: `["leisure"="garden"]`,
+  nature_reserve: `["leisure"="nature_reserve"]`,
 };
 
 const REGIONS_MAPPING: Record<string, { cities: string[]; bounds?: { south: number; north: number; west: number; east: number } }> = {
@@ -107,7 +244,7 @@ export class OverpassService {
     const { south, west, north, east } = BURKINA_BBOX;
     
     return `
-      [out:json][timeout:60];
+      [out:json][timeout:180][maxsize:536870912];
       (
         node${typeQuery}(${south},${west},${north},${east});
         way${typeQuery}(${south},${west},${north},${east});
@@ -295,7 +432,7 @@ export class OverpassService {
     }
 
     const results = await query
-      .limit(options.limit || 500)
+      .limit(options.limit || 10000)
       .offset(options.offset || 0);
 
     return results;
