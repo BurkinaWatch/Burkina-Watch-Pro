@@ -85,8 +85,10 @@ export interface IStorage {
   }>;
 
   startTrackingSession(userId: string): Promise<TrackingSession>;
+  startPanicTrackingSession(userId: string): Promise<TrackingSession>;
   stopTrackingSession(sessionId: string): Promise<TrackingSession | undefined>; // Changed parameter to sessionId
   getActiveTrackingSession(userId: string): Promise<TrackingSession | undefined>;
+  getTrackingSessionByShareToken(shareToken: string): Promise<TrackingSession | undefined>;
   addLocationPoint(locationPoint: InsertLocationPoint): Promise<LocationPoint>;
   getSessionLocationPoints(sessionId: string): Promise<LocationPoint[]>;
   getUserTrackingSessions(userId: string): Promise<TrackingSession[]>;
@@ -594,6 +596,37 @@ export class DbStorage implements IStorage {
       .insert(trackingSessions)
       .values({ userId })
       .returning();
+    return session;
+  }
+
+  async startPanicTrackingSession(userId: string): Promise<TrackingSession> {
+    const activeSession = await this.getActiveTrackingSession(userId);
+    if (activeSession) {
+      await this.stopTrackingSession(activeSession.id);
+    }
+
+    // Generate a unique share token for public access
+    const shareToken = crypto.randomUUID();
+
+    const [session] = await db
+      .insert(trackingSessions)
+      .values({ 
+        userId, 
+        isPanicMode: true,
+        shareToken 
+      })
+      .returning();
+    
+    console.log(`🚨 Session de tracking d'urgence demarree pour l'utilisateur ${userId} avec token ${shareToken}`);
+    return session;
+  }
+
+  async getTrackingSessionByShareToken(shareToken: string): Promise<TrackingSession | undefined> {
+    const [session] = await db
+      .select()
+      .from(trackingSessions)
+      .where(eq(trackingSessions.shareToken, shareToken))
+      .limit(1);
     return session;
   }
 

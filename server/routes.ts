@@ -1221,17 +1221,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       const userName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Un utilisateur';
 
+      // Demarrer une session de tracking d'urgence avec live location
+      const trackingSession = await storage.startPanicTrackingSession(userId);
+
+      // Ajouter le premier point de localisation
+      await storage.addLocationPoint({
+        sessionId: trackingSession.id,
+        userId,
+        latitude,
+        longitude,
+        accuracy: "10",
+      });
+
       const sentTo = contacts.map(c => c.phone);
 
-      // Créer le lien Google Maps
-      const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+      // Creer le lien de suivi en direct
+      const host = req.get('host') || 'burkinawatch.replit.app';
+      const protocol = req.get('x-forwarded-proto') || 'https';
+      const liveTrackingUrl = `${protocol}://${host}/track/${trackingSession.shareToken}`;
 
-      // Message à envoyer
-      const message = `🚨 ALERTE URGENCE - ${userName} a besoin d'aide!\n\nPosition: ${mapsUrl}\n\nRéagissez rapidement!`;
+      // Message avec le lien de suivi en direct
+      const message = `🚨 ALERTE URGENCE - ${userName} a besoin d'aide!\n\n📍 SUIVI EN DIRECT:\n${liveTrackingUrl}\n\nCliquez sur ce lien pour suivre sa position en temps reel. Reagissez rapidement!`;
 
       // Envoyer via WhatsApp pour chaque contact
       const whatsappPromises = contacts.map(contact => {
-        // Nettoyer le numéro de téléphone (enlever espaces et caractères spéciaux)
         const cleanPhone = contact.phone.replace(/[^\d+]/g, '');
         const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 
@@ -1250,19 +1263,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createNotification({
         userId,
         type: "panic_alert",
-        title: "🚨 Alerte de sécurité émise",
-        description: `Alerte panique envoyée à ${contacts.length} contact(s) d'urgence`,
+        title: "🚨 Alerte de securite avec suivi en direct",
+        description: `Alerte panique envoyee a ${contacts.length} contact(s). Suivi en direct actif.`,
       });
 
-      // Retourner les URLs WhatsApp pour que le client puisse les ouvrir
+      console.log(`🚨 Alerte panique avec Live Location activee pour ${userName}. Token: ${trackingSession.shareToken}`);
+
+      // Retourner les URLs WhatsApp et les infos de tracking pour que le client puisse continuer le suivi
       res.status(201).json({
         ...alert,
         whatsappUrls: whatsappPromises,
-        message: `Alerte envoyée. ${contacts.length} lien(s) WhatsApp générés.`
+        trackingSessionId: trackingSession.id,
+        shareToken: trackingSession.shareToken,
+        liveTrackingUrl,
+        message: `Alerte envoyee avec suivi en direct. ${contacts.length} contact(s) notifies.`
       });
     } catch (error) {
       console.error("Error creating panic alert:", error);
       res.status(500).json({ error: "Erreur lors de l'envoi de l'alerte" });
+    }
+  });
+
+  // Endpoint public pour recuperer la position en direct (sans authentification)
+  // Securite: expose uniquement les donnees minimales necessaires
+  app.get("/api/track/:shareToken", async (req, res) => {
+    try {
+      const { shareToken } = req.params;
+
+      // Validation du format UUID
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(shareToken)) {
+        return res.status(400).json({ error: "Token invalide" });
+      }
+
+      const session = await storage.getTrackingSessionByShareToken(shareToken);
+
+      if (!session) {
+        return res.status(404).json({ error: "Session de tracking introuvable" });
+      }
+
+      // Verifier que la session n'est pas trop ancienne (24h max)
+      const sessionAge = Date.now() - new Date(session.startTime).getTime();
+      const maxAge = 24 * 60 * 60 * 1000; // 24 heures
+      if (sessionAge > maxAge) {
+        return res.status(410).json({ error: "Session expiree" });
+      }
+
+      // Recuperer les points de localisation (limites aux 50 derniers pour la confidentialite)
+      const allLocations = await storage.getSessionLocationPoints(session.id);
+      const locations = allLocations.slice(-50);
+
+      // Recuperer les infos de l'utilisateur - ANONYMISE (prenom uniquement)
+      const user = await storage.getUser(session.userId);
+      const userName = user?.firstName || 'Utilisateur';
+
+      res.json({
+        isActive: session.isActive,
+        isPanicMode: session.isPanicMode,
+        startTime: session.startTime,
+        endTime: session.endTime,
+        userName, // Prenom uniquement, pas le nom complet
+        locations: locations.map(loc => ({
+          latitude: parseFloat(loc.latitude),
+          longitude: parseFloat(loc.longitude),
+          accuracy: loc.accuracy ? parseFloat(loc.accuracy) : null,
+          timestamp: loc.timestamp,
+        })),
+      });
+    } catch (error) {
+      console.error("Error fetching live tracking:", error);
+      res.status(500).json({ error: "Erreur lors de la recuperation du tracking" });
     }
   });
 

@@ -38,6 +38,7 @@ import Boutiques from "@/pages/Boutiques";
 import Banques from "@/pages/Banques";
 import Stations from "@/pages/Stations";
 import PharmaciesOSM from "@/pages/PharmaciesOSM";
+import LiveTrack from "@/pages/LiveTrack";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
@@ -74,6 +75,7 @@ function Router() {
       <Route path="/a-propos" component={APropos} />
       <Route path="/conditions" component={Conditions} />
       <Route path="/notifications" component={Notifications} />
+      <Route path="/track/:shareToken" component={LiveTrack} />
       <Route component={NotFound} />
     </Switch>
   );

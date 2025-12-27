@@ -71,6 +71,8 @@ export const trackingSessions = pgTable("tracking_sessions", {
   startTime: timestamp("started_at").notNull().defaultNow(),
   endTime: timestamp("ended_at"),
   isActive: boolean("is_active").notNull().default(true),
+  isPanicMode: boolean("is_panic_mode").default(false),
+  shareToken: text("share_token"),
 });
 
 export const onlineSessions = pgTable("online_sessions", {
