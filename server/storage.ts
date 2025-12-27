@@ -25,6 +25,9 @@ import {
   type AuditLog,
   type InsertStreetviewPoint,
   type StreetviewPoint,
+  type InsertVirtualTour,
+  type VirtualTour,
+  type VirtualTourWithPhotos,
   users,
   signalements,
   commentaires,
@@ -37,6 +40,7 @@ import {
   chatMessages,
   auditLogs,
   streetviewPoints,
+  virtualTours,
   insertSignalementSchema,
   insertCommentaireSchema,
   updateSignalementSchema,
@@ -141,6 +145,12 @@ export interface IStorage {
   // --- StreetView Points ---
   getStreetviewPoints(): Promise<StreetviewPoint[]>;
   createStreetviewPoint(point: InsertStreetviewPoint): Promise<StreetviewPoint>;
+
+  // --- Virtual Tours ---
+  getVirtualTours(): Promise<VirtualTour[]>;
+  getVirtualTourWithPhotos(tourId: string): Promise<VirtualTourWithPhotos | undefined>;
+  createVirtualTour(tour: InsertVirtualTour, photos: InsertStreetviewPoint[]): Promise<VirtualTour>;
+  incrementTourViewCount(tourId: string): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
@@ -1107,6 +1117,80 @@ L'équipe Burkina Watch
       .values(point)
       .returning();
     return created;
+  }
+
+  // --- Virtual Tours ---
+  async getVirtualTours(): Promise<VirtualTour[]> {
+    const result = await db
+      .select()
+      .from(virtualTours)
+      .where(eq(virtualTours.isPublished, true))
+      .orderBy(desc(virtualTours.createdAt))
+      .limit(100);
+    return result;
+  }
+
+  async getVirtualTourWithPhotos(tourId: string): Promise<VirtualTourWithPhotos | undefined> {
+    const [tour] = await db
+      .select()
+      .from(virtualTours)
+      .where(eq(virtualTours.id, tourId))
+      .limit(1);
+
+    if (!tour) return undefined;
+
+    const photos = await db
+      .select()
+      .from(streetviewPoints)
+      .where(eq(streetviewPoints.tourId, tourId))
+      .orderBy(streetviewPoints.orderIndex);
+
+    return { ...tour, photos };
+  }
+
+  async createVirtualTour(tour: InsertVirtualTour, photos: InsertStreetviewPoint[]): Promise<VirtualTour> {
+    const [createdTour] = await db
+      .insert(virtualTours)
+      .values({
+        ...tour,
+        photoCount: photos.length,
+      })
+      .returning();
+
+    if (photos.length > 0) {
+      const photosWithTourId = photos.map((photo, index) => ({
+        ...photo,
+        tourId: createdTour.id,
+        orderIndex: index,
+      }));
+
+      await db.insert(streetviewPoints).values(photosWithTourId);
+
+      const [firstPhoto] = await db
+        .select({ id: streetviewPoints.id })
+        .from(streetviewPoints)
+        .where(eq(streetviewPoints.tourId, createdTour.id))
+        .orderBy(streetviewPoints.orderIndex)
+        .limit(1);
+
+      if (firstPhoto) {
+        const [updatedTour] = await db
+          .update(virtualTours)
+          .set({ coverPhotoId: firstPhoto.id })
+          .where(eq(virtualTours.id, createdTour.id))
+          .returning();
+        return updatedTour;
+      }
+    }
+
+    return createdTour;
+  }
+
+  async incrementTourViewCount(tourId: string): Promise<void> {
+    await db
+      .update(virtualTours)
+      .set({ viewCount: sql`${virtualTours.viewCount} + 1` })
+      .where(eq(virtualTours.id, tourId));
   }
 }
 

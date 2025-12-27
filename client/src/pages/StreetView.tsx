@@ -342,19 +342,39 @@ function CreateTourDialog({
     });
   };
 
+  const MAX_PHOTOS_PER_TOUR = 20;
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
+    const remainingSlots = MAX_PHOTOS_PER_TOUR - photos.length;
+    if (remainingSlots <= 0) {
+      toast({ 
+        title: "Limite atteinte", 
+        description: `Maximum ${MAX_PHOTOS_PER_TOUR} photos par tour`, 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     setIsUploading(true);
     const newPhotos: { data: string; thumbnail: string }[] = [];
+    const filesToProcess = Array.from(files).slice(0, remainingSlots);
 
-    for (const file of Array.from(files)) {
+    for (const file of filesToProcess) {
       if (file.type.startsWith("image/")) {
         const compressed = await compressImage(file);
         const thumbnail = await createThumbnail(compressed);
         newPhotos.push({ data: compressed, thumbnail });
       }
+    }
+
+    if (files.length > remainingSlots) {
+      toast({ 
+        title: "Limite de photos", 
+        description: `Seulement ${filesToProcess.length} photos ajoutees (max ${MAX_PHOTOS_PER_TOUR})` 
+      });
     }
 
     setPhotos(prev => [...prev, ...newPhotos]);

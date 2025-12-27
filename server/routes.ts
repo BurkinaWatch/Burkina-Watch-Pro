@@ -2357,6 +2357,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----------------------------------------
+  // ROUTES VIRTUAL TOURS (Tours virtuels)
+  // ----------------------------------------
+
+  // Récupérer tous les tours virtuels
+  app.get("/api/virtual-tours", async (req, res) => {
+    try {
+      const tours = await storage.getVirtualTours();
+      res.json(tours);
+    } catch (error) {
+      console.error("Erreur récupération tours virtuels:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des tours" });
+    }
+  });
+
+  // Récupérer un tour avec ses photos
+  app.get("/api/virtual-tours/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const tour = await storage.getVirtualTourWithPhotos(id);
+      
+      if (!tour) {
+        return res.status(404).json({ error: "Tour non trouvé" });
+      }
+
+      // Incrémenter le compteur de vues
+      await storage.incrementTourViewCount(id);
+      
+      res.json(tour);
+    } catch (error) {
+      console.error("Erreur récupération tour:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération du tour" });
+    }
+  });
+
+  // Créer un nouveau tour virtuel avec ses photos (rate limited)
+  app.post("/api/virtual-tours", signalementMutationLimiter, async (req, res) => {
+    try {
+      const { name, description, quartier, latitude, longitude, photos } = req.body;
+
+      if (!name || !latitude || !longitude) {
+        return res.status(400).json({ error: "Nom et coordonnées requis" });
+      }
+
+      if (!photos || !Array.isArray(photos) || photos.length === 0) {
+        return res.status(400).json({ error: "Au moins une photo requise" });
+      }
+
+      // Limite du nombre de photos par tour
+      const MAX_PHOTOS_PER_TOUR = 20;
+      if (photos.length > MAX_PHOTOS_PER_TOUR) {
+        return res.status(400).json({ 
+          error: `Maximum ${MAX_PHOTOS_PER_TOUR} photos par tour` 
+        });
+      }
+
+      // Vérifier la taille des images
+      for (const photo of photos) {
+        if (!photo.imageData || !photo.imageData.startsWith('data:image/')) {
+          return res.status(400).json({ error: "Format d'image invalide" });
+        }
+        const sizeMB = photo.imageData.length / (1024 * 1024);
+        if (sizeMB > 2) {
+          return res.status(400).json({ 
+            error: `Une image est trop volumineuse (${sizeMB.toFixed(1)}MB). Maximum: 2MB` 
+          });
+        }
+      }
+
+      // Préparer les photos pour la création
+      const photoData = photos.map((photo: { imageData: string; thumbnailData?: string }) => ({
+        imageData: photo.imageData,
+        thumbnailData: photo.thumbnailData || null,
+        latitude: latitude.toString(),
+        longitude: longitude.toString(),
+        heading: null,
+        pitch: null,
+        deviceInfo: null,
+      }));
+
+      const tour = await storage.createVirtualTour(
+        {
+          name: name.slice(0, 100), // Limiter le nom
+          description: description ? description.slice(0, 500) : null,
+          quartier: quartier ? quartier.slice(0, 100) : null,
+          latitude: latitude.toString(),
+          longitude: longitude.toString(),
+          coverPhotoId: null,
+          isPublished: true,
+        },
+        photoData
+      );
+
+      console.log(`✅ Tour virtuel créé: ${tour.id} - "${name}" (${photos.length} photos)`);
+      res.status(201).json(tour);
+    } catch (error) {
+      console.error("Erreur création tour virtuel:", error);
+      res.status(500).json({ error: "Erreur lors de la création du tour" });
+    }
+  });
+
+  // ----------------------------------------
   // ROUTES OUAGA EN 3D
   // ----------------------------------------
   const { ouaga3dService } = await import("./services/ouaga3dService");
