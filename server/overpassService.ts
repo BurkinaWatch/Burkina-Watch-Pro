@@ -2,7 +2,13 @@ import { db } from "./db";
 import { places, placeVerifications, type Place, type InsertPlace, PlaceTypes, VerificationStatuses } from "@shared/schema";
 import { eq, and, sql, ilike, or } from "drizzle-orm";
 
-const OVERPASS_API_URL = "https://overpass-api.de/api/interpreter";
+// Multiple Overpass API endpoints for redundancy
+const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+];
+let currentEndpointIndex = 0;
 const BURKINA_BBOX = {
   south: 9.4,
   west: -5.5,
@@ -313,7 +319,7 @@ export class OverpassService {
     return OverpassService.instance;
   }
 
-  private async fetchFromOverpass(query: string): Promise<OverpassResponse> {
+  private async fetchFromOverpass(query: string, retries = 3): Promise<OverpassResponse> {
     const cacheKey = query;
     const cached = this.cache.get(cacheKey);
     
@@ -321,29 +327,58 @@ export class OverpassService {
       return cached.data;
     }
 
-    try {
-      const response = await fetch(OVERPASS_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `data=${encodeURIComponent(query)}`,
-      });
+    for (let attempt = 0; attempt < retries; attempt++) {
+      // Rotate through endpoints on each retry
+      const endpoint = OVERPASS_ENDPOINTS[(currentEndpointIndex + attempt) % OVERPASS_ENDPOINTS.length];
+      
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+        
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `data=${encodeURIComponent(query)}`,
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        if (response.status === 429) {
-          console.warn("Overpass API rate limited, waiting...");
-          await this.sleep(5000);
-          return this.fetchFromOverpass(query);
+        if (!response.ok) {
+          if (response.status === 429) {
+            console.warn(`Overpass API rate limited on ${endpoint}, waiting...`);
+            await this.sleep(10000);
+            continue;
+          }
+          if (response.status === 504 || response.status === 503) {
+            console.warn(`Overpass API ${response.status} on ${endpoint}, trying next...`);
+            currentEndpointIndex = (currentEndpointIndex + 1) % OVERPASS_ENDPOINTS.length;
+            await this.sleep(3000);
+            continue;
+          }
+          throw new Error(`Overpass API error: ${response.status}`);
         }
-        throw new Error(`Overpass API error: ${response.status}`);
-      }
 
-      const data = await response.json() as OverpassResponse;
-      this.cache.set(cacheKey, { data, timestamp: Date.now() });
-      return data;
-    } catch (error) {
-      console.error("Overpass fetch error:", error);
-      throw error;
+        const data = await response.json() as OverpassResponse;
+        this.cache.set(cacheKey, { data, timestamp: Date.now() });
+        return data;
+      } catch (error: any) {
+        if (error.name === 'AbortError') {
+          console.warn(`Overpass API timeout on ${endpoint}, trying next...`);
+          currentEndpointIndex = (currentEndpointIndex + 1) % OVERPASS_ENDPOINTS.length;
+          continue;
+        }
+        console.error(`Overpass fetch error on ${endpoint}:`, error);
+        if (attempt < retries - 1) {
+          await this.sleep(5000);
+          continue;
+        }
+      }
     }
+    
+    // Return empty result instead of throwing
+    console.warn("All Overpass endpoints failed, returning empty result");
+    return { elements: [] };
   }
 
   private sleep(ms: number): Promise<void> {
