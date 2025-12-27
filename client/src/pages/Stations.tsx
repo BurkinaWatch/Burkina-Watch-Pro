@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, Fuel, Car, Store, CreditCard } from "lucide-react";
+import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, Fuel, Car, Store, CreditCard, Locate } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -110,11 +110,47 @@ export default function Stations() {
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [selectedMarque, setSelectedMarque] = useState("all");
   const [show24hOnly, setShow24hOnly] = useState(false);
+  const [showNearestOnly, setShowNearestOnly] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedStation, setSelectedStation] = useState<StationService | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([12.3714, -1.5197]);
   const [mapZoom, setMapZoom] = useState(7);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
+
+  const calculateDistance = useCallback((lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }, []);
+
+  useEffect(() => {
+    if (showNearestOnly) {
+      if (!userLocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setUserLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            });
+          },
+          (error) => {
+            toast({
+              title: "Erreur de localisation",
+              description: "Impossible d'obtenir votre position. Veuillez autoriser la geolocalisation.",
+              variant: "destructive",
+            });
+            setShowNearestOnly(false);
+          }
+        );
+      }
+    }
+  }, [showNearestOnly, userLocation, toast]);
 
   const { data: stations = [], isLoading, refetch } = useQuery<StationService[]>({
     queryKey: ["/api/stations"],
@@ -156,8 +192,18 @@ export default function Stations() {
       result = result.filter(s => s.is24h);
     }
 
+    if (showNearestOnly && userLocation) {
+      result = result
+        .map(s => ({
+          ...s,
+          distance: calculateDistance(userLocation.lat, userLocation.lng, s.latitude, s.longitude)
+        }))
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, 20);
+    }
+
     return result;
-  }, [stations, searchQuery, selectedRegion, selectedMarque, show24hOnly]);
+  }, [stations, searchQuery, selectedRegion, selectedMarque, show24hOnly, showNearestOnly, userLocation, calculateDistance]);
 
   const handleStationClick = useCallback((station: StationService) => {
     setSelectedStation(station);
@@ -308,6 +354,21 @@ export default function Stations() {
             </Button>
           </div>
 
+          <Button
+            variant={showNearestOnly ? "default" : "outline"}
+            onClick={() => setShowNearestOnly(!showNearestOnly)}
+            className="w-full"
+            data-testid="button-nearest-filter"
+          >
+            <Locate className="h-4 w-4 mr-2" />
+            {showNearestOnly ? "Voir tout" : "Les plus proches"}
+          </Button>
+          {showNearestOnly && (
+            <Badge className="bg-primary text-primary-foreground">
+              20 plus proches
+            </Badge>
+          )}
+
           <div className="h-[300px] md:h-[400px] rounded-lg border relative z-0">
             <div className="absolute inset-0 rounded-lg overflow-hidden">
           <MapContainer
@@ -397,6 +458,17 @@ export default function Stations() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
+                  {(station as any).distance !== undefined && (
+                    <div className="bg-primary/10 border border-primary/20 rounded-md p-2 flex items-center gap-2">
+                      <Locate className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-semibold text-primary">
+                        {(station as any).distance < 1 
+                          ? `${Math.round((station as any).distance * 1000)} m` 
+                          : `${(station as any).distance.toFixed(1)} km`}
+                      </span>
+                      <span className="text-xs text-muted-foreground">de vous</span>
+                    </div>
+                  )}
                   <div className="flex items-start gap-2 text-sm">
                     <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                     <div>
