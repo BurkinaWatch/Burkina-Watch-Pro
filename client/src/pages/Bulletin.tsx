@@ -23,13 +23,28 @@ interface BulletinItem {
 
 const SOURCES = [
   { value: "all", label: "Toutes les sources" },
-  { value: "aib", label: "AIB (Agence d'Information du Burkina)" },
-  { value: "lefaso", label: "Lefaso.net" },
-  { value: "burkina24", label: "Burkina24" },
-  { value: "rtb", label: "RTB (Radiodiffusion Télévision du Burkina)" },
-  { value: "bf1", label: "BF1" },
-  { value: "sidwaya", label: "Sidwaya" },
-  { value: "gouvernement", label: "Site du Gouvernement" },
+  // Sources officielles burkinabè
+  { value: "AIB", label: "AIB (Agence d'Information du Burkina)" },
+  { value: "Sidwaya", label: "Sidwaya (Journal officiel)" },
+  // Médias burkinabè majeurs
+  { value: "Lefaso.net", label: "Lefaso.net" },
+  { value: "Burkina24", label: "Burkina24" },
+  { value: "Fasozine", label: "Fasozine" },
+  { value: "L'Economiste du Faso", label: "L'Economiste du Faso" },
+  { value: "Wakatsera", label: "Wakatsera" },
+  { value: "Libre Info", label: "Libre Info" },
+  { value: "InfoWakat", label: "InfoWakat" },
+  { value: "NetAfrique", label: "NetAfrique" },
+  // Sources internationales
+  { value: "BBC Afrique", label: "BBC Afrique" },
+  { value: "RFI Afrique", label: "RFI Afrique" },
+  { value: "Jeune Afrique", label: "Jeune Afrique" },
+  { value: "VOA Afrique", label: "VOA Afrique" },
+  { value: "Le Monde Afrique", label: "Le Monde Afrique" },
+  // Sources régionales
+  { value: "MaliActu", label: "MaliActu (Mali)" },
+  { value: "Niger Diaspora", label: "Niger Diaspora" },
+  { value: "Abidjan.net", label: "Abidjan.net (Côte d'Ivoire)" },
 ];
 
 export default function Bulletin() {

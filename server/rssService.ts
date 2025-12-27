@@ -20,13 +20,20 @@ const parser = new Parser({
   }
 });
 
-// Configuration des flux RSS des médias burkinabè
+// Configuration des flux RSS des médias burkinabè et africains fiables
 const RSS_FEEDS = [
+  // Sources officielles burkinabè
   {
     url: 'https://www.aib.bf/feed/',
     source: 'AIB',
     categorie: 'Officiel'
   },
+  {
+    url: 'https://www.sidwaya.info/feed/',
+    source: 'Sidwaya',
+    categorie: 'Officiel'
+  },
+  // Médias burkinabè majeurs
   {
     url: 'https://lefaso.net/spip.php?page=backend',
     source: 'Lefaso.net',
@@ -38,9 +45,76 @@ const RSS_FEEDS = [
     categorie: 'Média'
   },
   {
-    url: 'https://www.sidwaya.info/feed/',
-    source: 'Sidwaya',
-    categorie: 'Officiel'
+    url: 'https://www.fasozine.com/feed/',
+    source: 'Fasozine',
+    categorie: 'Média'
+  },
+  {
+    url: 'https://www.leconomistedufaso.bf/feed/',
+    source: 'L\'Economiste du Faso',
+    categorie: 'Économie'
+  },
+  {
+    url: 'https://www.wakatsera.com/feed/',
+    source: 'Wakatsera',
+    categorie: 'Média'
+  },
+  {
+    url: 'https://www.libreinfo.net/feed/',
+    source: 'Libre Info',
+    categorie: 'Média'
+  },
+  {
+    url: 'https://www.infowakat.net/feed/',
+    source: 'InfoWakat',
+    categorie: 'Média'
+  },
+  {
+    url: 'https://netafrique.net/feed/',
+    source: 'NetAfrique',
+    categorie: 'Média'
+  },
+  // Sources africaines et internationales (Afrique de l'Ouest)
+  {
+    url: 'https://www.bbc.com/afrique/rss/afrique.xml',
+    source: 'BBC Afrique',
+    categorie: 'International'
+  },
+  {
+    url: 'https://www.rfi.fr/fr/afrique/rss',
+    source: 'RFI Afrique',
+    categorie: 'International'
+  },
+  {
+    url: 'https://www.jeuneafrique.com/feeds/rss/',
+    source: 'Jeune Afrique',
+    categorie: 'International'
+  },
+  {
+    url: 'https://www.voaafrique.com/api/ztkoetiv',
+    source: 'VOA Afrique',
+    categorie: 'International'
+  },
+  {
+    url: 'https://www.lemonde.fr/afrique/rss_full.xml',
+    source: 'Le Monde Afrique',
+    categorie: 'International'
+  },
+  // Sources régionales (CEDEAO/Sahel)
+  {
+    url: 'https://maliactu.net/feed/',
+    source: 'MaliActu',
+    categorie: 'Régional'
+  },
+  {
+    url: 'https://www.nigerdiaspora.net/feed/',
+    source: 'Niger Diaspora',
+    categorie: 'Régional'
+  },
+  {
+    url: 'https://news.abidjan.net/rss/',
+    source: 'Abidjan.net',
+    categorie: 'Régional'
   }
 ];
 
@@ -78,7 +152,7 @@ export async function fetchBulletins(): Promise<BulletinItem[]> {
       const xml = await response.text();
       const parsed = await parser.parseString(xml);
 
-      return parsed.items.slice(0, 10).map((item, index) => ({
+      return parsed.items.map((item, index) => ({
         id: `${feed.source}-${index}-${Date.now()}`,
         source: feed.source,
         titre: item.title || 'Sans titre',
