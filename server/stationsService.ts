@@ -1465,7 +1465,7 @@ export const STATIONS_DATA: StationService[] = [
   {
     id: "st-081",
     nom: "Barka Energies Charles de Gaulle",
-    marque: "Barka Energies",
+    marque: "Barka Énergies",
     adresse: "Boulevard Charles De Gaulle, 1200 Logements",
     quartier: "1200 Logements",
     ville: "Ouagadougou",
@@ -1481,7 +1481,7 @@ export const STATIONS_DATA: StationService[] = [
   {
     id: "st-082",
     nom: "Barka Energies Ouaga 2000",
-    marque: "Barka Energies",
+    marque: "Barka Énergies",
     adresse: "Boulevard France-Afrique, Ouaga 2000",
     quartier: "Ouaga 2000",
     ville: "Ouagadougou",
@@ -1497,7 +1497,7 @@ export const STATIONS_DATA: StationService[] = [
   {
     id: "st-083",
     nom: "Barka Energies Patte d'Oie",
-    marque: "Barka Energies",
+    marque: "Barka Énergies",
     adresse: "Carrefour Patte d'Oie",
     quartier: "Patte d'Oie",
     ville: "Ouagadougou",
@@ -1513,7 +1513,7 @@ export const STATIONS_DATA: StationService[] = [
   {
     id: "st-084",
     nom: "Barka Energies Ex-Gare Bobo",
-    marque: "Barka Energies",
+    marque: "Barka Énergies",
     adresse: "Centre-ville, derrière Ciné Sayon",
     quartier: "Centre-ville",
     ville: "Bobo-Dioulasso",
@@ -1529,7 +1529,7 @@ export const STATIONS_DATA: StationService[] = [
   {
     id: "st-085",
     nom: "Barka Energies Tondorosso",
-    marque: "Barka Energies",
+    marque: "Barka Énergies",
     adresse: "Péage RN1 de Bobo",
     quartier: "Tondorosso",
     ville: "Bobo-Dioulasso",
@@ -1545,7 +1545,7 @@ export const STATIONS_DATA: StationService[] = [
   {
     id: "st-086",
     nom: "Barka Energies Tampouy",
-    marque: "Barka Energies",
+    marque: "Barka Énergies",
     adresse: "Avenue de Tampouy",
     quartier: "Tampouy",
     ville: "Ouagadougou",
@@ -1561,7 +1561,7 @@ export const STATIONS_DATA: StationService[] = [
   {
     id: "st-087",
     nom: "Barka Energies Koudougou RN",
-    marque: "Barka Energies",
+    marque: "Barka Énergies",
     adresse: "Route Nationale, Sortie vers Ouagadougou",
     quartier: "Secteur 5",
     ville: "Koudougou",
@@ -1577,7 +1577,7 @@ export const STATIONS_DATA: StationService[] = [
   {
     id: "st-088",
     nom: "Barka Energies Banfora Centre",
-    marque: "Barka Energies",
+    marque: "Barka Énergies",
     adresse: "Centre-ville, près du marché",
     quartier: "Centre-ville",
     ville: "Banfora",
@@ -1593,7 +1593,7 @@ export const STATIONS_DATA: StationService[] = [
   {
     id: "st-089",
     nom: "Barka Energies Zone Industrielle",
-    marque: "Barka Energies",
+    marque: "Barka Énergies",
     adresse: "Zone Industrielle de Gounghin",
     quartier: "Zone Industrielle",
     ville: "Ouagadougou",
@@ -1609,7 +1609,7 @@ export const STATIONS_DATA: StationService[] = [
   {
     id: "st-090",
     nom: "Barka Energies Dédougou",
-    marque: "Barka Energies",
+    marque: "Barka Énergies",
     adresse: "Route de Bobo, Sortie sud",
     quartier: "Centre",
     ville: "Dédougou",
