@@ -532,7 +532,7 @@ export default function Boutiques() {
                     )}
                   </div>
 
-                  {boutique.produits.length > 0 && (
+                  {boutique.produits && boutique.produits.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {boutique.produits.slice(0, 3).map((p, i) => (
                         <Badge key={i} variant="outline" className="text-xs">
@@ -551,7 +551,7 @@ export default function Boutiques() {
                     {boutique.climatisation && <Snowflake className="h-4 w-4 text-cyan-500" />}
                     {boutique.livraison && <Truck className="h-4 w-4 text-green-500" />}
                     {boutique.parking && <Car className="h-4 w-4 text-gray-500" />}
-                    {boutique.paiements.includes("Carte bancaire") && <CreditCard className="h-4 w-4 text-blue-500" />}
+                    {boutique.paiements?.includes("Carte bancaire") && <CreditCard className="h-4 w-4 text-blue-500" />}
                   </div>
 
                   {boutique.marques && boutique.marques.length > 0 && (
