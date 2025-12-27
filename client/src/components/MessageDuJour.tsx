@@ -53,7 +53,7 @@ export default function MessageDuJour() {
           <div className="flex-1 relative">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="font-semibold text-sm uppercase tracking-wide text-primary">
-                {t(`messageDuJour.${message.type}`)}
+                Mots du Jour
               </h3>
             </div>
             <blockquote className="text-foreground text-lg font-medium leading-relaxed italic">
