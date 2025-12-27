@@ -356,17 +356,47 @@ export type Categorie = typeof categories[number];
 export type Statut = typeof statuts[number];
 export type NiveauUrgence = typeof niveauxUrgence[number];
 
+// ============================================
+// VIRTUAL TOURS / STREETVIEW - Contributions citoyennes
+// ============================================
+
+// Tours virtuels (séries de photos d'un lieu)
+export const virtualTours = pgTable("virtual_tours", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  quartier: text("quartier"),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
+  photoCount: integer("photo_count").notNull().default(0),
+  coverPhotoId: text("cover_photo_id"),
+  isPublished: boolean("is_published").notNull().default(true),
+  viewCount: integer("view_count").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // StreetView Points - photos capturées anonymement
 export const streetviewPoints = pgTable("streetview_points", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  tourId: text("tour_id").references(() => virtualTours.id, { onDelete: "cascade" }),
   latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
   longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
-  imageData: text("image_data").notNull(), // Base64 encoded image
-  thumbnailData: text("thumbnail_data"), // Compressed thumbnail
-  heading: decimal("heading", { precision: 5, scale: 2 }), // Direction 0-360
-  pitch: decimal("pitch", { precision: 5, scale: 2 }), // Inclinaison -90 to 90
+  imageData: text("image_data").notNull(),
+  thumbnailData: text("thumbnail_data"),
+  heading: decimal("heading", { precision: 5, scale: 2 }),
+  pitch: decimal("pitch", { precision: 5, scale: 2 }),
+  orderIndex: integer("order_index").default(0),
   capturedAt: timestamp("captured_at").notNull().defaultNow(),
-  deviceInfo: text("device_info"), // Type d'appareil (anonymisé)
+  deviceInfo: text("device_info"),
+});
+
+export const insertVirtualTourSchema = createInsertSchema(virtualTours).omit({
+  id: true,
+  photoCount: true,
+  viewCount: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export const insertStreetviewPointSchema = createInsertSchema(streetviewPoints).omit({
@@ -374,8 +404,14 @@ export const insertStreetviewPointSchema = createInsertSchema(streetviewPoints).
   capturedAt: true,
 });
 
+export type InsertVirtualTour = z.infer<typeof insertVirtualTourSchema>;
+export type VirtualTour = typeof virtualTours.$inferSelect;
 export type InsertStreetviewPoint = z.infer<typeof insertStreetviewPointSchema>;
 export type StreetviewPoint = typeof streetviewPoints.$inferSelect;
+
+export type VirtualTourWithPhotos = VirtualTour & {
+  photos: StreetviewPoint[];
+};
 
 // ============================================
 // OUAGA EN 3D - Modèles de données
