@@ -81,11 +81,6 @@ const RSS_FEEDS = [
     categorie: 'International'
   },
   {
-    url: 'https://www.rfi.fr/fr/afrique/rss',
-    source: 'RFI Afrique',
-    categorie: 'International'
-  },
-  {
     url: 'https://www.jeuneafrique.com/feeds/rss/',
     source: 'Jeune Afrique',
     categorie: 'International'
@@ -93,11 +88,6 @@ const RSS_FEEDS = [
   {
     url: 'https://www.voaafrique.com/api/ztkoetiv',
     source: 'VOA Afrique',
-    categorie: 'International'
-  },
-  {
-    url: 'https://www.lemonde.fr/afrique/rss_full.xml',
-    source: 'Le Monde Afrique',
     categorie: 'International'
   },
   // Sources régionales (CEDEAO/Sahel)

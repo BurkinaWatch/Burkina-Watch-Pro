@@ -37,10 +37,8 @@ const SOURCES = [
   { value: "NetAfrique", label: "NetAfrique" },
   // Sources internationales
   { value: "BBC Afrique", label: "BBC Afrique" },
-  { value: "RFI Afrique", label: "RFI Afrique" },
   { value: "Jeune Afrique", label: "Jeune Afrique" },
   { value: "VOA Afrique", label: "VOA Afrique" },
-  { value: "Le Monde Afrique", label: "Le Monde Afrique" },
   // Sources régionales
   { value: "MaliActu", label: "MaliActu (Mali)" },
   { value: "Niger Diaspora", label: "Niger Diaspora" },
