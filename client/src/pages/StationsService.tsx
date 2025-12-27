@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, Fuel, Droplets } from "lucide-react";
+import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, Fuel, Droplets, Locate } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
@@ -208,8 +208,53 @@ export default function StationsService() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [selectedMarque, setSelectedMarque] = useState<string>("all");
+  const [showNearestOnly, setShowNearestOnly] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+
+  const calculateDistance = useCallback((lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }, []);
+
+  const handleNearestFilter = useCallback(() => {
+    if (showNearestOnly) {
+      setShowNearestOnly(false);
+      return;
+    }
+    if (userLocation) {
+      setShowNearestOnly(true);
+      return;
+    }
+    setIsLocating(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const loc = { lat: position.coords.latitude, lng: position.coords.longitude };
+          setUserLocation(loc);
+          setShowNearestOnly(true);
+          setIsLocating(false);
+          toast({ title: "Position trouvee", description: "Affichage des stations les plus proches" });
+        },
+        () => {
+          setIsLocating(false);
+          toast({ title: "Erreur de localisation", description: "Impossible d'obtenir votre position", variant: "destructive" });
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    } else {
+      setIsLocating(false);
+      toast({ title: "Non supporte", description: "Geolocalisation non supportee", variant: "destructive" });
+    }
+  }, [showNearestOnly, userLocation, toast]);
 
   const filteredStations = useMemo(() => {
     let filtered = STATIONS_DATA;
@@ -232,8 +277,18 @@ export default function StationsService() {
       );
     }
 
+    if (showNearestOnly && userLocation) {
+      filtered = filtered
+        .map(s => ({
+          ...s,
+          distance: calculateDistance(userLocation.lat, userLocation.lng, s.latitude, s.longitude)
+        }))
+        .sort((a, b) => (a.distance || 0) - (b.distance || 0))
+        .slice(0, 20);
+    }
+
     return filtered;
-  }, [searchQuery, selectedRegion, selectedMarque]);
+  }, [searchQuery, selectedRegion, selectedMarque, showNearestOnly, userLocation, calculateDistance]);
 
   const openInMaps = (station: StationService) => {
     const url = `https://www.google.com/maps/search/?api=1&query=${station.latitude},${station.longitude}`;
@@ -378,6 +433,27 @@ export default function StationsService() {
                   </SelectContent>
                 </Select>
               </div>
+              
+              <div className="flex gap-2 mt-3">
+                <Button
+                  variant={showNearestOnly ? "default" : "outline"}
+                  onClick={handleNearestFilter}
+                  disabled={isLocating}
+                  data-testid="button-nearest-filter"
+                >
+                  {isLocating ? (
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Locate className="h-4 w-4 mr-2" />
+                  )}
+                  {showNearestOnly ? "Voir tout" : "Les plus proches"}
+                </Button>
+                {showNearestOnly && (
+                  <Badge className="bg-primary text-white self-center">
+                    20 plus proches
+                  </Badge>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -399,6 +475,17 @@ export default function StationsService() {
               data-testid={`card-station-${station.id}`}
             >
               <CardContent className="p-4">
+                {(station as any).distance !== undefined && (
+                  <div className="bg-primary/10 border border-primary/20 rounded-md p-2 flex items-center gap-2 mb-3">
+                    <Locate className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-semibold text-primary">
+                      {(station as any).distance < 1 
+                        ? `${Math.round((station as any).distance * 1000)} m` 
+                        : `${(station as any).distance.toFixed(1)} km`}
+                    </span>
+                    <span className="text-xs text-muted-foreground">de vous</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">

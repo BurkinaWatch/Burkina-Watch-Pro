@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { PlaceCard, PlaceCardSkeleton } from "@/components/PlaceCard";
@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, ArrowLeft, RefreshCw, MapPin, Building2, Map } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Search, ArrowLeft, RefreshCw, MapPin, Building2, Map, Locate } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -25,11 +26,73 @@ const REGIONS = [
   "Boucle du Mouhoun", "Plateau-Central"
 ];
 
+interface PlaceWithDistance extends Place {
+  distance?: number;
+}
+
 export function PlacesListPage({ placeType, title, description, icon }: PlacesListPageProps) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
+  const [showNearestOnly, setShowNearestOnly] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+
+  const calculateDistance = useCallback((lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }, []);
+
+  const handleNearestFilter = useCallback(() => {
+    if (showNearestOnly) {
+      setShowNearestOnly(false);
+      return;
+    }
+
+    if (userLocation) {
+      setShowNearestOnly(true);
+      return;
+    }
+
+    setIsLocating(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const loc = { lat: position.coords.latitude, lng: position.coords.longitude };
+          setUserLocation(loc);
+          setShowNearestOnly(true);
+          setIsLocating(false);
+          toast({
+            title: "Position trouvee",
+            description: "Affichage des lieux les plus proches",
+          });
+        },
+        (error) => {
+          setIsLocating(false);
+          toast({
+            title: "Erreur de localisation",
+            description: "Impossible d'obtenir votre position. Verifiez les permissions.",
+            variant: "destructive",
+          });
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    } else {
+      setIsLocating(false);
+      toast({
+        title: "Non supporte",
+        description: "La geolocalisation n'est pas supportee par votre navigateur.",
+        variant: "destructive",
+      });
+    }
+  }, [showNearestOnly, userLocation, toast]);
 
   const { data: places = [], isLoading, refetch, isRefetching } = useQuery<Place[]>({
     queryKey: ['/api/places', placeType],
@@ -57,8 +120,8 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
     };
   }, [refetch]);
 
-  const filteredPlaces = useMemo(() => {
-    return places.filter(place => {
+  const filteredPlaces = useMemo((): PlaceWithDistance[] => {
+    let result = places.filter(place => {
       const matchesSearch = !searchTerm || 
         place.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         place.ville?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -69,7 +132,22 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
       
       return matchesSearch && matchesRegion;
     });
-  }, [places, searchTerm, selectedRegion]);
+
+    if (showNearestOnly && userLocation) {
+      result = result
+        .map(p => ({
+          ...p,
+          distance: p.latitude && p.longitude 
+            ? calculateDistance(userLocation.lat, userLocation.lng, Number(p.latitude), Number(p.longitude))
+            : undefined
+        }))
+        .filter(p => p.distance !== undefined)
+        .sort((a, b) => (a.distance || 0) - (b.distance || 0))
+        .slice(0, 20);
+    }
+    
+    return result;
+  }, [places, searchTerm, selectedRegion, showNearestOnly, userLocation, calculateDistance]);
 
   const regionCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -183,6 +261,29 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefetching ? 'animate-spin' : ''}`} />
             Actualiser
           </Button>
+        </div>
+
+        {/* Bouton Les plus proches */}
+        <div className="flex gap-2 mb-4">
+          <Button
+            variant={showNearestOnly ? "default" : "outline"}
+            onClick={handleNearestFilter}
+            disabled={isLocating}
+            className="flex-1 md:flex-none"
+            data-testid="button-nearest-filter"
+          >
+            {isLocating ? (
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Locate className="h-4 w-4 mr-2" />
+            )}
+            {showNearestOnly ? "Voir tout" : "Les plus proches"}
+          </Button>
+          {showNearestOnly && (
+            <Badge className="bg-primary text-white self-center">
+              20 plus proches
+            </Badge>
+          )}
         </div>
 
         <div className="flex items-center justify-between mb-4">

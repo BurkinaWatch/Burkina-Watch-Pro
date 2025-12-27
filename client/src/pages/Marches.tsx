@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, Store, Users, Calendar, ShoppingBasket } from "lucide-react";
+import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, Store, Users, Calendar, ShoppingBasket, Locate } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -114,7 +114,52 @@ export default function Marches() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([12.3714, -1.5197]);
   const [mapZoom, setMapZoom] = useState(7);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showNearestOnly, setShowNearestOnly] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
+
+  const calculateDistance = useCallback((lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }, []);
+
+  const handleNearestFilter = useCallback(() => {
+    if (showNearestOnly) {
+      setShowNearestOnly(false);
+      return;
+    }
+    if (userLocation) {
+      setShowNearestOnly(true);
+      return;
+    }
+    setIsLocating(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const loc = { lat: position.coords.latitude, lng: position.coords.longitude };
+          setUserLocation(loc);
+          setShowNearestOnly(true);
+          setIsLocating(false);
+          toast({ title: "Position trouvee", description: "Affichage des marches les plus proches" });
+        },
+        () => {
+          setIsLocating(false);
+          toast({ title: "Erreur de localisation", description: "Impossible d'obtenir votre position", variant: "destructive" });
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    } else {
+      setIsLocating(false);
+      toast({ title: "Non supporte", description: "Geolocalisation non supportee", variant: "destructive" });
+    }
+  }, [showNearestOnly, userLocation, toast]);
 
   const { data: marches = [], isLoading, refetch } = useQuery<Marche[]>({
     queryKey: ["/api/marches"],
@@ -153,8 +198,18 @@ export default function Marches() {
       result = result.filter(m => m.type === selectedType);
     }
 
+    if (showNearestOnly && userLocation) {
+      result = result
+        .map(m => ({
+          ...m,
+          distance: calculateDistance(userLocation.lat, userLocation.lng, m.latitude, m.longitude)
+        }))
+        .sort((a, b) => (a.distance || 0) - (b.distance || 0))
+        .slice(0, 20);
+    }
+
     return result;
-  }, [marches, searchQuery, selectedRegion, selectedType]);
+  }, [marches, searchQuery, selectedRegion, selectedType, showNearestOnly, userLocation, calculateDistance]);
 
   const handleMarcheClick = useCallback((marche: Marche) => {
     setSelectedMarche(marche);
@@ -294,6 +349,27 @@ export default function Marches() {
               </Select>
             </div>
           </div>
+          
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant={showNearestOnly ? "default" : "outline"}
+              onClick={handleNearestFilter}
+              disabled={isLocating}
+              data-testid="button-nearest-filter"
+            >
+              {isLocating ? (
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Locate className="h-4 w-4 mr-2" />
+              )}
+              {showNearestOnly ? "Voir tout" : "Les plus proches"}
+            </Button>
+            {showNearestOnly && (
+              <Badge className="bg-primary text-white self-center">
+                20 plus proches
+              </Badge>
+            )}
+          </div>
 
           <div className="h-[300px] md:h-[400px] rounded-lg border relative z-0">
             <div className="absolute inset-0 rounded-lg overflow-hidden">
@@ -374,6 +450,17 @@ export default function Marches() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
+                  {(marche as any).distance !== undefined && (
+                    <div className="bg-primary/10 border border-primary/20 rounded-md p-2 flex items-center gap-2">
+                      <Locate className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-semibold text-primary">
+                        {(marche as any).distance < 1 
+                          ? `${Math.round((marche as any).distance * 1000)} m` 
+                          : `${(marche as any).distance.toFixed(1)} km`}
+                      </span>
+                      <span className="text-xs text-muted-foreground">de vous</span>
+                    </div>
+                  )}
                   <div className="flex items-start gap-2 text-sm">
                     <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                     <div>

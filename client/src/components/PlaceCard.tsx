@@ -1,11 +1,15 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Phone, Clock, Navigation, Globe, Mail, ExternalLink } from "lucide-react";
+import { MapPin, Phone, Clock, Navigation, Globe, Mail, ExternalLink, Locate } from "lucide-react";
 import type { Place } from "@shared/schema";
 
+interface PlaceWithDistance extends Place {
+  distance?: number;
+}
+
 interface PlaceCardProps {
-  place: Place;
+  place: PlaceWithDistance;
 }
 
 const PLACE_TYPE_LABELS: Record<string, string> = {
@@ -77,6 +81,17 @@ export function PlaceCard({ place }: PlaceCardProps) {
       </CardHeader>
       
       <CardContent className="space-y-3">
+        {place.distance !== undefined && (
+          <div className="bg-primary/10 border border-primary/20 rounded-md p-2 flex items-center gap-2">
+            <Locate className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold text-primary">
+              {place.distance < 1 
+                ? `${Math.round(place.distance * 1000)} m` 
+                : `${place.distance.toFixed(1)} km`}
+            </span>
+            <span className="text-xs text-muted-foreground">de vous</span>
+          </div>
+        )}
         <button
           onClick={openLocation}
           className="flex items-start gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full text-left group"
