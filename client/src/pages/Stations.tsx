@@ -19,7 +19,7 @@ import "leaflet/dist/leaflet.css";
 interface StationService {
   id: string;
   nom: string;
-  marque: "TotalEnergies" | "Shell" | "Oryx" | "SOB Petrol" | "Sonabhy" | "Star Oil" | "Nafex" | "Vivo Energy" | "Autre";
+  marque: "Barka Énergies" | "TotalEnergies" | "Shell" | "Oryx" | "SOB Petrol" | "Sonabhy" | "Star Oil" | "Nafex" | "Vivo Energy" | "Autre";
   adresse: string;
   quartier: string;
   ville: string;
@@ -34,6 +34,7 @@ interface StationService {
 }
 
 const marqueColors: Record<string, string> = {
+  "Barka Énergies": "bg-red-600 text-white",
   "TotalEnergies": "bg-red-600 text-white",
   "Shell": "bg-yellow-500 text-black",
   "Oryx": "bg-blue-600 text-white",
@@ -285,10 +286,10 @@ export default function Stations() {
             variant="blue"
           />
           <PageStatCard
-            title="TotalEnergies"
-            value={stats?.parMarque?.["TotalEnergies"] || 0}
+            title="Barka Énergies"
+            value={(stats?.parMarque?.["TotalEnergies"] || 0) + (stats?.parMarque?.["Barka Énergies"] || 0)}
             icon={Gauge}
-            description="Reseau principal"
+            description="Ex-TotalEnergies BF"
             variant="red"
           />
           <PageStatCard

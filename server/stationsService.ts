@@ -5,7 +5,7 @@
 export interface StationService {
   id: string;
   nom: string;
-  marque: "TotalEnergies" | "Shell" | "Oryx" | "SOB Petrol" | "Sonabhy" | "Star Oil" | "Nafex" | "Vivo Energy" | "Barka Energies" | "Autre";
+  marque: "Barka Énergies" | "TotalEnergies" | "Shell" | "Oryx" | "SOB Petrol" | "Sonabhy" | "Star Oil" | "Nafex" | "Vivo Energy" | "Autre";
   adresse: string;
   quartier: string;
   ville: string;
@@ -27,8 +27,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-001",
-    nom: "TotalEnergies Charles de Gaulle",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Charles de Gaulle",
+    marque: "Barka Énergies",
     adresse: "Boulevard Charles De Gaulle",
     quartier: "1200 Logements",
     ville: "Ouagadougou",
@@ -43,8 +43,8 @@ export const STATIONS_DATA: StationService[] = [
   },
   {
     id: "st-002",
-    nom: "TotalEnergies Ouaga 2000",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Ouaga 2000",
+    marque: "Barka Énergies",
     adresse: "Boulevard France-Afrique, Ouaga 2000",
     quartier: "Ouaga 2000",
     ville: "Ouagadougou",
@@ -59,8 +59,8 @@ export const STATIONS_DATA: StationService[] = [
   },
   {
     id: "st-003",
-    nom: "TotalEnergies CFAO-Burkina",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies CFAO-Burkina",
+    marque: "Barka Énergies",
     adresse: "Avenue Maurice Yaméogo",
     quartier: "Centre-ville",
     ville: "Ouagadougou",
@@ -75,8 +75,8 @@ export const STATIONS_DATA: StationService[] = [
   },
   {
     id: "st-004",
-    nom: "TotalEnergies Trame d'Accueil",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Trame d'Accueil",
+    marque: "Barka Énergies",
     adresse: "Avenue Ousmane Sembène, Secteur 53",
     quartier: "Trame d'Accueil",
     ville: "Ouagadougou",
@@ -91,8 +91,8 @@ export const STATIONS_DATA: StationService[] = [
   },
   {
     id: "st-005",
-    nom: "TotalEnergies Secteur 25",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Secteur 25",
+    marque: "Barka Énergies",
     adresse: "Rue 25.05, Secteur 25",
     quartier: "Secteur 25",
     ville: "Ouagadougou",
@@ -155,8 +155,8 @@ export const STATIONS_DATA: StationService[] = [
   },
   {
     id: "st-009",
-    nom: "TotalEnergies Patte d'Oie",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Patte d'Oie",
+    marque: "Barka Énergies",
     adresse: "Carrefour Patte d'Oie",
     quartier: "Patte d'Oie",
     ville: "Ouagadougou",
@@ -187,8 +187,8 @@ export const STATIONS_DATA: StationService[] = [
   },
   {
     id: "st-011",
-    nom: "TotalEnergies Pissy",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Pissy",
+    marque: "Barka Énergies",
     adresse: "Route de Pissy",
     quartier: "Pissy",
     ville: "Ouagadougou",
@@ -219,8 +219,8 @@ export const STATIONS_DATA: StationService[] = [
   },
   {
     id: "st-013",
-    nom: "TotalEnergies Karpala",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Karpala",
+    marque: "Barka Énergies",
     adresse: "Boulevard Tansoba, Karpala",
     quartier: "Karpala",
     ville: "Ouagadougou",
@@ -251,8 +251,8 @@ export const STATIONS_DATA: StationService[] = [
   },
   {
     id: "st-015",
-    nom: "TotalEnergies Gounghin",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Gounghin",
+    marque: "Barka Énergies",
     adresse: "Avenue Yennenga, Gounghin",
     quartier: "Gounghin",
     ville: "Ouagadougou",
@@ -283,8 +283,8 @@ export const STATIONS_DATA: StationService[] = [
   },
   {
     id: "st-017",
-    nom: "TotalEnergies Cissin",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Cissin",
+    marque: "Barka Énergies",
     adresse: "Route de Cissin",
     quartier: "Cissin",
     ville: "Ouagadougou",
@@ -315,8 +315,8 @@ export const STATIONS_DATA: StationService[] = [
   },
   {
     id: "st-019",
-    nom: "TotalEnergies Wemtenga",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Wemtenga",
+    marque: "Barka Énergies",
     adresse: "Avenue de Wemtenga",
     quartier: "Wemtenga",
     ville: "Ouagadougou",
@@ -331,8 +331,8 @@ export const STATIONS_DATA: StationService[] = [
   },
   {
     id: "st-020",
-    nom: "TotalEnergies Samandin",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Samandin",
+    marque: "Barka Énergies",
     adresse: "Route de Samandin",
     quartier: "Samandin",
     ville: "Ouagadougou",
@@ -351,8 +351,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-021",
-    nom: "TotalEnergies Bobo Centre",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Bobo Centre",
+    marque: "Barka Énergies",
     adresse: "Avenue de la République",
     quartier: "Centre-ville",
     ville: "Bobo-Dioulasso",
@@ -383,8 +383,8 @@ export const STATIONS_DATA: StationService[] = [
   },
   {
     id: "st-023",
-    nom: "TotalEnergies Bobo Route de Ouaga",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Bobo Route de Ouaga",
+    marque: "Barka Énergies",
     adresse: "Route Nationale 1, Sortie Ouagadougou",
     quartier: "Sortie Est",
     ville: "Bobo-Dioulasso",
@@ -415,8 +415,8 @@ export const STATIONS_DATA: StationService[] = [
   },
   {
     id: "st-025",
-    nom: "TotalEnergies Bobo Sarfalao",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Bobo Sarfalao",
+    marque: "Barka Énergies",
     adresse: "Quartier Sarfalao",
     quartier: "Sarfalao",
     ville: "Bobo-Dioulasso",
@@ -447,8 +447,8 @@ export const STATIONS_DATA: StationService[] = [
   },
   {
     id: "st-027",
-    nom: "TotalEnergies Bobo Colsama",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Bobo Colsama",
+    marque: "Barka Énergies",
     adresse: "Quartier Colsama",
     quartier: "Colsama",
     ville: "Bobo-Dioulasso",
@@ -483,8 +483,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-029",
-    nom: "TotalEnergies Koudougou Centre",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Koudougou Centre",
+    marque: "Barka Énergies",
     adresse: "Avenue de l'Indépendance",
     quartier: "Centre-ville",
     ville: "Koudougou",
@@ -515,8 +515,8 @@ export const STATIONS_DATA: StationService[] = [
   },
   {
     id: "st-031",
-    nom: "TotalEnergies Koudougou Secteur 8",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Koudougou Secteur 8",
+    marque: "Barka Énergies",
     adresse: "Secteur 8, Route de Bobo",
     quartier: "Secteur 8",
     ville: "Koudougou",
@@ -535,8 +535,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-032",
-    nom: "TotalEnergies Ouahigouya",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Ouahigouya",
+    marque: "Barka Énergies",
     adresse: "Avenue Principale",
     quartier: "Centre-ville",
     ville: "Ouahigouya",
@@ -587,8 +587,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-035",
-    nom: "TotalEnergies Banfora",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Banfora",
+    marque: "Barka Énergies",
     adresse: "Avenue de la Comoé",
     quartier: "Centre-ville",
     ville: "Banfora",
@@ -623,8 +623,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-037",
-    nom: "TotalEnergies Kaya",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Kaya",
+    marque: "Barka Énergies",
     adresse: "Avenue de l'Unité",
     quartier: "Centre-ville",
     ville: "Kaya",
@@ -659,8 +659,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-039",
-    nom: "TotalEnergies Fada N'Gourma",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Fada N'Gourma",
+    marque: "Barka Énergies",
     adresse: "Avenue Principale",
     quartier: "Centre-ville",
     ville: "Fada N'Gourma",
@@ -711,8 +711,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-042",
-    nom: "TotalEnergies Dédougou",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Dédougou",
+    marque: "Barka Énergies",
     adresse: "Avenue du Mouhoun",
     quartier: "Centre-ville",
     ville: "Dédougou",
@@ -747,8 +747,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-044",
-    nom: "TotalEnergies Tenkodogo",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Tenkodogo",
+    marque: "Barka Énergies",
     adresse: "Avenue Principale",
     quartier: "Centre-ville",
     ville: "Tenkodogo",
@@ -783,8 +783,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-046",
-    nom: "TotalEnergies Ziniaré",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Ziniaré",
+    marque: "Barka Énergies",
     adresse: "Avenue du Naaba",
     quartier: "Centre-ville",
     ville: "Ziniaré",
@@ -819,8 +819,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-048",
-    nom: "TotalEnergies Gaoua",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Gaoua",
+    marque: "Barka Énergies",
     adresse: "Avenue de l'Indépendance",
     quartier: "Centre-ville",
     ville: "Gaoua",
@@ -855,8 +855,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-050",
-    nom: "TotalEnergies Dori",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Dori",
+    marque: "Barka Énergies",
     adresse: "Avenue du Sahel",
     quartier: "Centre-ville",
     ville: "Dori",
@@ -891,8 +891,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-052",
-    nom: "TotalEnergies Houndé",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Houndé",
+    marque: "Barka Énergies",
     adresse: "Route Nationale 1",
     quartier: "Centre-ville",
     ville: "Houndé",
@@ -911,8 +911,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-053",
-    nom: "TotalEnergies Orodara",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Orodara",
+    marque: "Barka Énergies",
     adresse: "Centre-ville",
     quartier: "Centre-ville",
     ville: "Orodara",
@@ -931,8 +931,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-054",
-    nom: "TotalEnergies Diébougou",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Diébougou",
+    marque: "Barka Énergies",
     adresse: "Avenue Principale",
     quartier: "Centre-ville",
     ville: "Diébougou",
@@ -951,8 +951,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-055",
-    nom: "TotalEnergies Léo",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Léo",
+    marque: "Barka Énergies",
     adresse: "Route de Ouagadougou",
     quartier: "Centre-ville",
     ville: "Léo",
@@ -971,8 +971,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-056",
-    nom: "TotalEnergies Kombissiri",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Kombissiri",
+    marque: "Barka Énergies",
     adresse: "Route Nationale 5",
     quartier: "Centre-ville",
     ville: "Kombissiri",
@@ -991,8 +991,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-057",
-    nom: "TotalEnergies Manga",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Manga",
+    marque: "Barka Énergies",
     adresse: "Avenue de l'Indépendance",
     quartier: "Centre-ville",
     ville: "Manga",
@@ -1011,8 +1011,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-058",
-    nom: "TotalEnergies Pô",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Pô",
+    marque: "Barka Énergies",
     adresse: "Route de Ouagadougou",
     quartier: "Centre-ville",
     ville: "Pô",
@@ -1031,8 +1031,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-059",
-    nom: "TotalEnergies Boromo",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Boromo",
+    marque: "Barka Énergies",
     adresse: "Route Nationale 1",
     quartier: "Centre-ville",
     ville: "Boromo",
@@ -1067,8 +1067,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-061",
-    nom: "TotalEnergies Tougan",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Tougan",
+    marque: "Barka Énergies",
     adresse: "Centre-ville",
     quartier: "Centre-ville",
     ville: "Tougan",
@@ -1087,8 +1087,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-062",
-    nom: "TotalEnergies Nouna",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Nouna",
+    marque: "Barka Énergies",
     adresse: "Route de Dédougou",
     quartier: "Centre-ville",
     ville: "Nouna",
@@ -1107,8 +1107,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-063",
-    nom: "TotalEnergies Kongoussi",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Kongoussi",
+    marque: "Barka Énergies",
     adresse: "Route de Ouagadougou",
     quartier: "Centre-ville",
     ville: "Kongoussi",
@@ -1127,8 +1127,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-064",
-    nom: "TotalEnergies Réo",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Réo",
+    marque: "Barka Énergies",
     adresse: "Route de Koudougou",
     quartier: "Centre-ville",
     ville: "Réo",
@@ -1147,8 +1147,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-065",
-    nom: "TotalEnergies Pouytenga",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Pouytenga",
+    marque: "Barka Énergies",
     adresse: "Route Nationale 4",
     quartier: "Centre-ville",
     ville: "Pouytenga",
@@ -1183,8 +1183,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-067",
-    nom: "TotalEnergies Koupéla",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Koupéla",
+    marque: "Barka Énergies",
     adresse: "Route Nationale 4",
     quartier: "Centre-ville",
     ville: "Koupéla",
@@ -1203,8 +1203,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-068",
-    nom: "TotalEnergies Boulsa",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Boulsa",
+    marque: "Barka Énergies",
     adresse: "Centre-ville",
     quartier: "Centre-ville",
     ville: "Boulsa",
@@ -1223,8 +1223,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-069",
-    nom: "TotalEnergies Yako",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Yako",
+    marque: "Barka Énergies",
     adresse: "Route de Ouahigouya",
     quartier: "Centre-ville",
     ville: "Yako",
@@ -1243,8 +1243,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-070",
-    nom: "TotalEnergies Gourcy",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Gourcy",
+    marque: "Barka Énergies",
     adresse: "Route Nationale 2",
     quartier: "Centre-ville",
     ville: "Gourcy",
@@ -1263,8 +1263,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-071",
-    nom: "TotalEnergies Djibo",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Djibo",
+    marque: "Barka Énergies",
     adresse: "Centre-ville",
     quartier: "Centre-ville",
     ville: "Djibo",
@@ -1303,8 +1303,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-073",
-    nom: "TotalEnergies Diapaga",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Diapaga",
+    marque: "Barka Énergies",
     adresse: "Centre-ville",
     quartier: "Centre-ville",
     ville: "Diapaga",
@@ -1323,8 +1323,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-074",
-    nom: "TotalEnergies Bogandé",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Bogandé",
+    marque: "Barka Énergies",
     adresse: "Route de Fada",
     quartier: "Centre-ville",
     ville: "Bogandé",
@@ -1343,8 +1343,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-075",
-    nom: "TotalEnergies Niangoloko",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Niangoloko",
+    marque: "Barka Énergies",
     adresse: "Route de Côte d'Ivoire",
     quartier: "Centre-ville",
     ville: "Niangoloko",
@@ -1363,8 +1363,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-076",
-    nom: "TotalEnergies Sapouy",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Sapouy",
+    marque: "Barka Énergies",
     adresse: "Route de Léo",
     quartier: "Centre-ville",
     ville: "Sapouy",
@@ -1383,8 +1383,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-077",
-    nom: "TotalEnergies Solenzo",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Solenzo",
+    marque: "Barka Énergies",
     adresse: "Centre-ville",
     quartier: "Centre-ville",
     ville: "Solenzo",
@@ -1403,8 +1403,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-078",
-    nom: "TotalEnergies Ouargaye",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Ouargaye",
+    marque: "Barka Énergies",
     adresse: "Centre-ville",
     quartier: "Centre-ville",
     ville: "Ouargaye",
@@ -1423,8 +1423,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-079",
-    nom: "TotalEnergies Garango",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Garango",
+    marque: "Barka Énergies",
     adresse: "Route de Tenkodogo",
     quartier: "Centre-ville",
     ville: "Garango",
@@ -1443,8 +1443,8 @@ export const STATIONS_DATA: StationService[] = [
   // ========================================
   {
     id: "st-080",
-    nom: "TotalEnergies Bittou",
-    marque: "TotalEnergies",
+    nom: "Barka Énergies Bittou",
+    marque: "Barka Énergies",
     adresse: "Route du Ghana/Togo",
     quartier: "Centre-ville",
     ville: "Bittou",
