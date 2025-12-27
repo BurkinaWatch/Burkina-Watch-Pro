@@ -416,7 +416,7 @@ function CameraCapture({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black flex flex-col">
+    <div className="fixed inset-0 bg-black flex flex-col" style={{ zIndex: 99999 }}>
       <div className="flex items-center justify-between p-4 bg-black/80">
         <Button variant="ghost" size="sm" onClick={() => { stopCamera(); onClose(); }} className="text-white gap-2">
           <X className="h-4 w-4" />
