@@ -1745,13 +1745,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Récupérer les données codées en dur
       let banques: any[] = [...BANQUES_DATA];
 
-      // Ajouter les données OSM (banques et DAB)
+      // Ajouter les données OSM (banques, bureaux de change, transferts d'argent)
       try {
         const osmBanks = await overpassService.getPlaces({ placeType: "bank" });
-        const osmAtm = await overpassService.getPlaces({ placeType: "atm" });
         const osmBureauChange = await overpassService.getPlaces({ placeType: "bureau_de_change" });
+        const osmMoneyTransfer = await overpassService.getPlaces({ placeType: "money_transfer" });
         
-        const allOsmPlaces = [...osmBanks, ...osmAtm, ...osmBureauChange];
+        const allOsmPlaces = [...osmBanks, ...osmBureauChange, ...osmMoneyTransfer];
         const osmTransformed = allOsmPlaces.map(p => transformOsmToBanque(p));
         banques = [...banques, ...osmTransformed];
       } catch (osmError) {
@@ -1802,12 +1802,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { BANQUES_DATA } = await import("./banquesData");
       
-      // Compter les données OSM
+      // Compter les données OSM (bank, bureau_de_change, money_transfer)
       let osmCount = 0;
       try {
         const osmBanks = await overpassService.getPlaces({ placeType: "bank" });
-        const osmATMs = await overpassService.getPlaces({ placeType: "atm" });
-        osmCount = osmBanks.length + osmATMs.length;
+        const osmBureauChange = await overpassService.getPlaces({ placeType: "bureau_de_change" });
+        const osmMoneyTransfer = await overpassService.getPlaces({ placeType: "money_transfer" });
+        osmCount = osmBanks.length + osmBureauChange.length + osmMoneyTransfer.length;
       } catch (e) {}
       
       const total = BANQUES_DATA.length + osmCount;
@@ -1816,6 +1817,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         total,
         localCount: BANQUES_DATA.length,
         osmCount,
+        banquesOsm: osmCount,
         source: "OSM + Local"
       });
     } catch (error) {
