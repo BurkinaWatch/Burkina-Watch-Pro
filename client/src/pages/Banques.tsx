@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, Building2, Landmark, CreditCard, Globe, Mail, Star, Wallet, Locate, X } from "lucide-react";
+import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, Building2, Landmark, CreditCard, Globe, Mail, Star, Wallet, Locate, X, AlertTriangle } from "lucide-react";
+import PageStatCard from "@/components/PageStatCard";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -443,50 +444,42 @@ export default function Banques() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <Card 
-            className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 cursor-pointer hover-elevate"
+          <PageStatCard
+            title="Banques"
+            value={stats?.banques || 0}
+            icon={Landmark}
+            description="Cliquez pour la liste"
+            variant="blue"
             onClick={() => setShowBanquesDetails(!showBanquesDetails)}
-            data-testid="card-banques-details"
-          >
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">{stats?.banques || 0}</p>
-              <p className="text-xs text-muted-foreground">Banques</p>
-              <p className="text-xs text-blue-600 mt-1">Cliquez pour voir la liste</p>
-            </CardContent>
-          </Card>
-          <Card 
-            className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800 cursor-pointer hover-elevate"
+            clickable
+          />
+          <PageStatCard
+            title="Caisses Populaires"
+            value={stats?.caissesPopulaires || 0}
+            icon={Wallet}
+            description="Cliquez pour la liste"
+            variant="green"
             onClick={() => setShowCaissesDetails(!showCaissesDetails)}
-            data-testid="card-caisses-details"
-          >
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-green-600">{stats?.caissesPopulaires || 0}</p>
-              <p className="text-xs text-muted-foreground">Caisses Populaires</p>
-              <p className="text-xs text-green-600 mt-1">Cliquez pour voir la liste</p>
-            </CardContent>
-          </Card>
-          <Card 
-            className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 cursor-pointer hover-elevate"
+            clickable
+          />
+          <PageStatCard
+            title="GAB disponibles"
+            value={stats?.totalGAB || 0}
+            icon={CreditCard}
+            description="Cliquez pour la liste"
+            variant="amber"
             onClick={() => setShowGABDetails(!showGABDetails)}
-            data-testid="card-gab-details"
-          >
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-amber-600">{stats?.totalGAB || 0}</p>
-              <p className="text-xs text-muted-foreground">GAB disponibles</p>
-              <p className="text-xs text-amber-600 mt-1">Cliquez pour voir la liste</p>
-            </CardContent>
-          </Card>
-          <Card 
-            className="bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 cursor-pointer hover-elevate"
+            clickable
+          />
+          <PageStatCard
+            title="EBIS (Systemique)"
+            value={stats?.importanceSystemique || 0}
+            icon={AlertTriangle}
+            description="Cliquez pour la liste"
+            variant="red"
             onClick={() => setShowEBISDetails(!showEBISDetails)}
-            data-testid="card-ebis-details"
-          >
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-red-600">{stats?.importanceSystemique || 0}</p>
-              <p className="text-xs text-muted-foreground">EBIS (Systemique)</p>
-              <p className="text-xs text-red-600 mt-1">Cliquez pour voir la liste</p>
-            </CardContent>
-          </Card>
+            clickable
+          />
         </div>
 
         {showGABDetails && (

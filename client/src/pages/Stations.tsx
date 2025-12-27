@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, Fuel, Car, Store, CreditCard, Locate } from "lucide-react";
+import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, Fuel, Car, Store, CreditCard, Locate, Gauge } from "lucide-react";
+import PageStatCard from "@/components/PageStatCard";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -276,30 +277,34 @@ export default function Stations() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <Card className="bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-red-600">{stats?.parMarque?.["TotalEnergies"] || 0}</p>
-              <p className="text-xs text-muted-foreground">TotalEnergies</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-yellow-600">{stats?.parMarque?.["Shell"] || 0}</p>
-              <p className="text-xs text-muted-foreground">Shell</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-green-600">{stats?.par24h || 0}</p>
-              <p className="text-xs text-muted-foreground">Ouvertes 24h/24</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">{stats?.total || 0}</p>
-              <p className="text-xs text-muted-foreground">Total stations</p>
-            </CardContent>
-          </Card>
+          <PageStatCard
+            title="Total stations"
+            value={stats?.total || 0}
+            icon={Fuel}
+            description={`Dans ${stats?.nombreVilles || 0} villes`}
+            variant="blue"
+          />
+          <PageStatCard
+            title="TotalEnergies"
+            value={stats?.parMarque?.["TotalEnergies"] || 0}
+            icon={Gauge}
+            description="Reseau principal"
+            variant="red"
+          />
+          <PageStatCard
+            title="Shell"
+            value={stats?.parMarque?.["Shell"] || 0}
+            icon={Gauge}
+            description="Reseau international"
+            variant="yellow"
+          />
+          <PageStatCard
+            title="Ouvertes 24h/24"
+            value={stats?.par24h || 0}
+            icon={Clock}
+            description="Service continu"
+            variant="green"
+          />
         </div>
 
         <div className="space-y-4">

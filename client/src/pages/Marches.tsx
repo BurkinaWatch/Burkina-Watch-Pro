@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, Store, Users, Calendar, ShoppingBasket, Locate } from "lucide-react";
+import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, Store, Users, Calendar, ShoppingBasket, Locate, Building } from "lucide-react";
+import PageStatCard from "@/components/PageStatCard";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -282,30 +283,34 @@ export default function Marches() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <Card className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-amber-600">{stats?.total || 0}</p>
-              <p className="text-xs text-muted-foreground">Total marches</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-green-600">{stats?.parType?.["Quartier"] || 0}</p>
-              <p className="text-xs text-muted-foreground">Marches de quartier</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">{stats?.parType?.["Hebdomadaire"] || 0}</p>
-              <p className="text-xs text-muted-foreground">Hebdomadaires</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-purple-600">{stats?.totalCommercants?.toLocaleString() || 0}</p>
-              <p className="text-xs text-muted-foreground">Commercants</p>
-            </CardContent>
-          </Card>
+          <PageStatCard
+            title="Total marches"
+            value={stats?.total || 0}
+            icon={Store}
+            description={`Dans ${stats?.nombreVilles || 0} villes`}
+            variant="amber"
+          />
+          <PageStatCard
+            title="Marches de quartier"
+            value={stats?.parType?.["Quartier"] || 0}
+            icon={Building}
+            description="Proximite"
+            variant="green"
+          />
+          <PageStatCard
+            title="Hebdomadaires"
+            value={stats?.parType?.["Hebdomadaire"] || 0}
+            icon={Calendar}
+            description="Jours fixes"
+            variant="blue"
+          />
+          <PageStatCard
+            title="Commercants"
+            value={stats?.totalCommercants || 0}
+            icon={Users}
+            description="Acteurs economiques"
+            variant="purple"
+          />
         </div>
 
         <div className="space-y-4">

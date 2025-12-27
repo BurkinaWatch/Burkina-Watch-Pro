@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, UtensilsCrossed, Wifi, Truck, Car, Star, Locate } from "lucide-react";
+import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, UtensilsCrossed, Wifi, Truck, Car, Star, Locate, ChefHat } from "lucide-react";
+import PageStatCard from "@/components/PageStatCard";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -328,30 +329,34 @@ export default function Restaurants() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <Card className="bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-orange-600">{stats?.total || 0}</p>
-              <p className="text-xs text-muted-foreground">Total restaurants</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-green-600">{stats?.parType?.["Burkinabe"] || stats?.parType?.["Africain"] || 0}</p>
-              <p className="text-xs text-muted-foreground">Cuisine locale</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">{stats?.avecWifi || 0}</p>
-              <p className="text-xs text-muted-foreground">Avec Wifi</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-purple-600">{stats?.avecLivraison || 0}</p>
-              <p className="text-xs text-muted-foreground">Livraison</p>
-            </CardContent>
-          </Card>
+          <PageStatCard
+            title="Total restaurants"
+            value={stats?.total || 0}
+            icon={UtensilsCrossed}
+            description={`Dans ${stats?.nombreVilles || 0} villes`}
+            variant="orange"
+          />
+          <PageStatCard
+            title="Cuisine locale"
+            value={(stats?.parType?.["Burkinabe"] || 0) + (stats?.parType?.["Africain"] || 0)}
+            icon={ChefHat}
+            description="Burkinabe et Africain"
+            variant="green"
+          />
+          <PageStatCard
+            title="Avec Wifi"
+            value={stats?.avecWifi || 0}
+            icon={Wifi}
+            description="Connexion internet"
+            variant="blue"
+          />
+          <PageStatCard
+            title="Livraison"
+            value={stats?.avecLivraison || 0}
+            icon={Truck}
+            description="Service a domicile"
+            variant="purple"
+          />
         </div>
 
         <div className="space-y-4">

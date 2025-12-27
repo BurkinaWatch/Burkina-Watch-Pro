@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, ShoppingBag, Truck, Car, Snowflake, CreditCard, Locate } from "lucide-react";
+import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, ShoppingBag, Truck, Car, Snowflake, CreditCard, Locate, Store } from "lucide-react";
+import PageStatCard from "@/components/PageStatCard";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -311,30 +312,34 @@ export default function Boutiques() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <Card className="bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-purple-600">{stats?.total || 0}</p>
-              <p className="text-xs text-muted-foreground">Total boutiques</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-green-600">{stats?.parCategorie?.["Supermarche"] || 0}</p>
-              <p className="text-xs text-muted-foreground">Supermarches</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">{stats?.avecLivraison || 0}</p>
-              <p className="text-xs text-muted-foreground">Avec livraison</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-cyan-50 dark:bg-cyan-950/30 border-cyan-200 dark:border-cyan-800">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-cyan-600">{stats?.avecClimatisation || 0}</p>
-              <p className="text-xs text-muted-foreground">Climatisees</p>
-            </CardContent>
-          </Card>
+          <PageStatCard
+            title="Total boutiques"
+            value={stats?.total || 0}
+            icon={ShoppingBag}
+            description={`Dans ${stats?.nombreVilles || 0} villes`}
+            variant="purple"
+          />
+          <PageStatCard
+            title="Supermarches"
+            value={stats?.parCategorie?.["Supermarche"] || 0}
+            icon={Store}
+            description="Grandes surfaces"
+            variant="green"
+          />
+          <PageStatCard
+            title="Avec livraison"
+            value={stats?.avecLivraison || 0}
+            icon={Truck}
+            description="Service a domicile"
+            variant="blue"
+          />
+          <PageStatCard
+            title="Climatisees"
+            value={stats?.avecClimatisation || 0}
+            icon={Snowflake}
+            description="Confort assure"
+            variant="cyan"
+          />
         </div>
 
         <div className="space-y-4">
