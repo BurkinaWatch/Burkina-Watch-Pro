@@ -265,6 +265,8 @@ function CreateTourDialog({
   const [photos, setPhotos] = useState<{ data: string; thumbnail: string }[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const MAX_PHOTOS_PER_TOUR = 20;
 
   const createTourMutation = useMutation({
     mutationFn: async (data: {
@@ -341,8 +343,6 @@ function CreateTourDialog({
       img.src = imageData;
     });
   };
-
-  const MAX_PHOTOS_PER_TOUR = 20;
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -463,7 +463,7 @@ function CreateTourDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Photos ({photos.length})</Label>
+            <Label>Photos ({photos.length}/{MAX_PHOTOS_PER_TOUR})</Label>
             <div className="border-2 border-dashed rounded-lg p-6 text-center">
               <input
                 ref={fileInputRef}
@@ -474,22 +474,43 @@ function CreateTourDialog({
                 className="hidden"
                 data-testid="input-photos"
               />
-              <Button
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className="gap-2"
-                data-testid="button-add-photos"
-              >
-                {isUploading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileSelect}
+                className="hidden"
+                data-testid="input-camera"
+              />
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <Button
+                  variant="default"
+                  onClick={() => cameraInputRef.current?.click()}
+                  disabled={isUploading || photos.length >= MAX_PHOTOS_PER_TOUR}
+                  className="gap-2"
+                  data-testid="button-capture-photo"
+                >
+                  {isUploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
+                  Prendre une photo
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading || photos.length >= MAX_PHOTOS_PER_TOUR}
+                  className="gap-2"
+                  data-testid="button-add-photos"
+                >
                   <Upload className="h-4 w-4" />
-                )}
-                Ajouter des photos
-              </Button>
+                  Galerie
+                </Button>
+              </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Selectionnez plusieurs photos pour creer une visite complete
+                Prenez plusieurs photos du lieu sous differents angles
               </p>
             </div>
 
