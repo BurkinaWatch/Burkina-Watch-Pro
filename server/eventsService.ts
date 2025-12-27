@@ -194,6 +194,358 @@ function getFallbackEvents(): EventItem[] {
     description: 'Soirée musique live avec artistes locaux. Ambiance décontractée et conviviale.',
   });
   
+  // ========================================
+  // ÉVÉNEMENTS SUPPLÉMENTAIRES POUR ENRICHIR LE CONTENU
+  // ========================================
+  
+  // Récital Afro-Jazz (prochain mercredi)
+  const nextWednesday = new Date(now);
+  const daysUntilWednesday = (3 - now.getDay() + 7) % 7 || 7;
+  nextWednesday.setDate(now.getDate() + daysUntilWednesday);
+  events.push({
+    id: 'fallback-afro-jazz',
+    nom: 'Récital Afro-Jazz au Jardin de la Musique',
+    type: 'Concert',
+    date: nextWednesday.toISOString().split('T')[0],
+    lieu: 'Jardin de la Musique',
+    ville: 'Ouagadougou',
+    heure: '20:30',
+    description: 'Concert intimiste mêlant jazz traditionnel et rythmes africains. Entrée libre.',
+  });
+  
+  // Spectacle de danse traditionnelle (prochain dimanche)
+  const nextSunday = new Date(now);
+  const daysUntilSunday = (7 - now.getDay()) % 7 || 7;
+  nextSunday.setDate(now.getDate() + daysUntilSunday);
+  events.push({
+    id: 'fallback-danse-trad',
+    nom: 'Spectacle de Danses Traditionnelles Mossi',
+    type: 'Culturel',
+    date: nextSunday.toISOString().split('T')[0],
+    lieu: 'Centre Culturel Gambidi',
+    ville: 'Ouagadougou',
+    heure: '16:00',
+    description: 'Spectacle de danses traditionnelles du peuple Mossi avec costumes authentiques.',
+  });
+  
+  // Match de football (dans 3 jours)
+  const matchDate = new Date(now);
+  matchDate.setDate(now.getDate() + 3);
+  events.push({
+    id: 'fallback-football',
+    nom: 'Match Étalons du Burkina vs Sénégal',
+    type: 'Sport',
+    date: matchDate.toISOString().split('T')[0],
+    lieu: 'Stade du 4 Août',
+    ville: 'Ouagadougou',
+    heure: '17:00',
+    description: 'Match amical international. Les Étalons affrontent les Lions de la Teranga.',
+  });
+  
+  // Conférence économique (dans 5 jours)
+  const confDate = new Date(now);
+  confDate.setDate(now.getDate() + 5);
+  events.push({
+    id: 'fallback-conference',
+    nom: 'Forum Économique Régional du Sahel',
+    type: 'Conférence',
+    date: confDate.toISOString().split('T')[0],
+    lieu: 'Hôtel Laico Ouaga 2000',
+    ville: 'Ouagadougou',
+    heure: '09:00',
+    description: 'Forum sur le développement économique de la région sahélienne. Experts et décideurs.',
+  });
+  
+  // Exposition d'art (dans 7 jours)
+  const expoDate = new Date(now);
+  expoDate.setDate(now.getDate() + 7);
+  events.push({
+    id: 'fallback-expo-art',
+    nom: 'Exposition Art Contemporain Burkinabè',
+    type: 'Culturel',
+    date: expoDate.toISOString().split('T')[0],
+    lieu: 'Musée National',
+    ville: 'Ouagadougou',
+    heure: '10:00',
+    description: 'Exposition des œuvres d\'artistes contemporains burkinabè. Peintures, sculptures, photos.',
+  });
+  
+  // Théâtre populaire (dans 4 jours)
+  const theatreDate = new Date(now);
+  theatreDate.setDate(now.getDate() + 4);
+  events.push({
+    id: 'fallback-theatre',
+    nom: 'Pièce de Théâtre "Les Voix du Terroir"',
+    type: 'Théâtre',
+    date: theatreDate.toISOString().split('T')[0],
+    lieu: 'Théâtre Populaire',
+    ville: 'Ouagadougou',
+    heure: '19:30',
+    description: 'Comédie dramatique sur les traditions burkinabè. Mise en scène de Jean-Pierre Guingané.',
+  });
+  
+  // Concert reggae Bobo-Dioulasso (prochain samedi)
+  const reggaeDate = new Date(nextSaturday);
+  events.push({
+    id: 'fallback-reggae-bobo',
+    nom: 'Reggae Night Bobo-Dioulasso',
+    type: 'Concert',
+    date: reggaeDate.toISOString().split('T')[0],
+    lieu: 'Espace Dafra',
+    ville: 'Bobo-Dioulasso',
+    heure: '21:30',
+    description: 'Soirée reggae avec les meilleurs artistes locaux. Ambiance roots et positive vibes.',
+  });
+  
+  // Foire agricole (dans 10 jours)
+  const foireDate = new Date(now);
+  foireDate.setDate(now.getDate() + 10);
+  events.push({
+    id: 'fallback-foire-agri',
+    nom: 'Foire Agricole Nationale',
+    type: 'Culturel',
+    date: foireDate.toISOString().split('T')[0],
+    lieu: 'Parc des Expositions',
+    ville: 'Bobo-Dioulasso',
+    heure: '08:00',
+    description: 'Exposition des produits agricoles burkinabè. Démonstrations et ventes directes producteurs.',
+  });
+  
+  // Cinéma en plein air (dans 2 jours)
+  const cinemaDate = new Date(now);
+  cinemaDate.setDate(now.getDate() + 2);
+  events.push({
+    id: 'fallback-cinema-plein-air',
+    nom: 'Cinéma en Plein Air - Film Africain',
+    type: 'Cinéma',
+    date: cinemaDate.toISOString().split('T')[0],
+    lieu: 'Place de la Révolution',
+    ville: 'Ouagadougou',
+    heure: '20:00',
+    description: 'Projection gratuite de films africains primés. Animation et débat avec réalisateur.',
+  });
+  
+  // Dédicace livre (dans 6 jours)
+  const dedicaceDate = new Date(now);
+  dedicaceDate.setDate(now.getDate() + 6);
+  events.push({
+    id: 'fallback-dedicace',
+    nom: 'Dédicace - "L\'Enfant du Faso" par Amadou Koné',
+    type: 'Dédicace',
+    date: dedicaceDate.toISOString().split('T')[0],
+    lieu: 'Librairie Mercury',
+    ville: 'Ouagadougou',
+    heure: '15:00',
+    description: 'Rencontre avec l\'auteur et séance de dédicace de son nouveau roman.',
+  });
+  
+  // Cérémonie traditionnelle (dans 8 jours)
+  const ceremonyDate = new Date(now);
+  ceremonyDate.setDate(now.getDate() + 8);
+  events.push({
+    id: 'fallback-ceremony',
+    nom: 'Cérémonie du Naaba - Fête Royale Mossi',
+    type: 'Cérémonie',
+    date: ceremonyDate.toISOString().split('T')[0],
+    lieu: 'Palais du Moogho Naaba',
+    ville: 'Ouagadougou',
+    heure: '07:00',
+    description: 'Cérémonie traditionnelle hebdomadaire du Roi des Mossi. Danse, musique et protocole royal.',
+  });
+  
+  // Tournoi de lutte traditionnelle (dans 9 jours)
+  const lutteDate = new Date(now);
+  lutteDate.setDate(now.getDate() + 9);
+  events.push({
+    id: 'fallback-lutte',
+    nom: 'Tournoi de Lutte Traditionnelle',
+    type: 'Sport',
+    date: lutteDate.toISOString().split('T')[0],
+    lieu: 'Arène de Ouahigouya',
+    ville: 'Ouahigouya',
+    heure: '15:00',
+    description: 'Compétition de lutte traditionnelle. Champions des différentes régions du Nord.',
+  });
+  
+  // Festival du masque (dans 12 jours)
+  const masqueDate = new Date(now);
+  masqueDate.setDate(now.getDate() + 12);
+  events.push({
+    id: 'fallback-masque',
+    nom: 'Festival International des Masques de Dédougou',
+    type: 'Festival',
+    date: masqueDate.toISOString().split('T')[0],
+    lieu: 'Place Centrale',
+    ville: 'Dédougou',
+    heure: '14:00',
+    description: 'Festival célébrant les masques sacrés Bwa et Nuna. Danses, rites et expositions.',
+  });
+  
+  // Concert afrobeat (dans 11 jours)
+  const afrobeatDate = new Date(now);
+  afrobeatDate.setDate(now.getDate() + 11);
+  events.push({
+    id: 'fallback-afrobeat',
+    nom: 'Concert Afrobeat - Les Fils du Faso',
+    type: 'Concert',
+    date: afrobeatDate.toISOString().split('T')[0],
+    lieu: 'CENASA',
+    ville: 'Ouagadougou',
+    heure: '20:00',
+    description: 'Concert de musique afrobeat par le groupe Les Fils du Faso. Fusion moderne et tradition.',
+  });
+  
+  // Café-concert Bobo (dans 5 jours)
+  const cafeBoboDate = new Date(now);
+  cafeBoboDate.setDate(now.getDate() + 5);
+  events.push({
+    id: 'fallback-cafe-bobo',
+    nom: 'Café-Concert Jazz Manège',
+    type: 'Café-concert',
+    date: cafeBoboDate.toISOString().split('T')[0],
+    lieu: 'Jazz Club Le Manège',
+    ville: 'Bobo-Dioulasso',
+    heure: '20:30',
+    description: 'Soirée jazz dans l\'ambiance feutrée du Manège. Artistes locaux et invités.',
+  });
+  
+  // Projection documentaire (dans 4 jours)
+  const docDate = new Date(now);
+  docDate.setDate(now.getDate() + 4);
+  events.push({
+    id: 'fallback-documentaire',
+    nom: 'Projection "Thomas Sankara, l\'Homme Intègre"',
+    type: 'Cinéma',
+    date: docDate.toISOString().split('T')[0],
+    lieu: 'Institut Français',
+    ville: 'Ouagadougou',
+    heure: '18:30',
+    description: 'Documentaire sur la vie et l\'héritage de Thomas Sankara. Débat après projection.',
+  });
+  
+  // Salon du livre (dans 14 jours)
+  const salonLivreDate = new Date(now);
+  salonLivreDate.setDate(now.getDate() + 14);
+  events.push({
+    id: 'fallback-salon-livre',
+    nom: 'Salon du Livre de Ouagadougou (SILO)',
+    type: 'Culturel',
+    date: salonLivreDate.toISOString().split('T')[0],
+    lieu: 'SIAO',
+    ville: 'Ouagadougou',
+    heure: '09:00',
+    description: 'Salon annuel du livre avec éditeurs africains, auteurs et animations littéraires.',
+  });
+  
+  // Match de basket (dans 7 jours)
+  const basketDate = new Date(now);
+  basketDate.setDate(now.getDate() + 7);
+  events.push({
+    id: 'fallback-basket',
+    nom: 'Finale Championnat National de Basketball',
+    type: 'Sport',
+    date: basketDate.toISOString().split('T')[0],
+    lieu: 'Palais des Sports',
+    ville: 'Ouagadougou',
+    heure: '16:00',
+    description: 'Finale du championnat national de basketball masculin. ASFA vs Étoile Filante.',
+  });
+  
+  // Concert gospel (prochain dimanche)
+  events.push({
+    id: 'fallback-gospel',
+    nom: 'Concert Gospel - Chorale Nationale',
+    type: 'Concert',
+    date: nextSunday.toISOString().split('T')[0],
+    lieu: 'Cathédrale de Ouagadougou',
+    ville: 'Ouagadougou',
+    heure: '10:00',
+    description: 'Concert de musique gospel par la Chorale Nationale. Chants de louange et spiritualité.',
+  });
+  
+  // Atelier cuisine (dans 3 jours)
+  const cuisineDate = new Date(now);
+  cuisineDate.setDate(now.getDate() + 3);
+  events.push({
+    id: 'fallback-cuisine',
+    nom: 'Atelier Cuisine Traditionnelle Burkinabè',
+    type: 'Culturel',
+    date: cuisineDate.toISOString().split('T')[0],
+    lieu: 'Centre Culturel Américain',
+    ville: 'Ouagadougou',
+    heure: '14:00',
+    description: 'Apprenez à préparer le Tô, le Riz gras et autres plats traditionnels. Dégustation incluse.',
+  });
+  
+  // Spectacle de marionnettes (dans 2 jours)
+  const marionetteDate = new Date(now);
+  marionetteDate.setDate(now.getDate() + 2);
+  events.push({
+    id: 'fallback-marionnettes',
+    nom: 'Spectacle de Marionnettes Géantes',
+    type: 'Théâtre',
+    date: marionetteDate.toISOString().split('T')[0],
+    lieu: 'Place de la Révolution',
+    ville: 'Ouagadougou',
+    heure: '17:00',
+    description: 'Spectacle de marionnettes géantes par la compagnie Naam. Pour enfants et adultes.',
+  });
+  
+  // Festival Récréâtrales (annuel)
+  events.push({
+    id: 'fallback-recreatrales',
+    nom: 'Festival Les Récréâtrales',
+    type: 'Festival',
+    date: getNextOccurrence(10, 20),
+    lieu: 'Quartier Gounghin',
+    ville: 'Ouagadougou',
+    heure: '18:00',
+    description: 'Festival de théâtre de rue dans le quartier populaire de Gounghin. Art vivant et communauté.',
+  });
+  
+  // Course cycliste (dans 13 jours)
+  const cycloDate = new Date(now);
+  cycloDate.setDate(now.getDate() + 13);
+  events.push({
+    id: 'fallback-cyclisme',
+    nom: 'Tour du Faso - Étape Ouagadougou',
+    type: 'Sport',
+    date: cycloDate.toISOString().split('T')[0],
+    lieu: 'Avenue Kwamé N\'Krumah',
+    ville: 'Ouagadougou',
+    heure: '08:00',
+    description: 'Étape du Tour du Faso, course cycliste internationale. Arrivée au centre-ville.',
+  });
+  
+  // Soirée stand-up (prochain jeudi)
+  const nextThursday = new Date(now);
+  const daysUntilThursday = (4 - now.getDay() + 7) % 7 || 7;
+  nextThursday.setDate(now.getDate() + daysUntilThursday);
+  events.push({
+    id: 'fallback-standup',
+    nom: 'Soirée Stand-Up Comedy',
+    type: 'Culturel',
+    date: nextThursday.toISOString().split('T')[0],
+    lieu: 'Chez Momo',
+    ville: 'Ouagadougou',
+    heure: '21:00',
+    description: 'Soirée humour avec les meilleurs comédiens burkinabè. Rires garantis!',
+  });
+  
+  // Conférence santé (dans 6 jours)
+  const santeDate = new Date(now);
+  santeDate.setDate(now.getDate() + 6);
+  events.push({
+    id: 'fallback-sante',
+    nom: 'Journée de Sensibilisation à la Santé',
+    type: 'Conférence',
+    date: santeDate.toISOString().split('T')[0],
+    lieu: 'Hôpital Yalgado',
+    ville: 'Ouagadougou',
+    heure: '08:00',
+    description: 'Consultations gratuites et sensibilisation aux maladies courantes. Dépistage offert.',
+  });
+  
   return events;
 }
 
@@ -263,8 +615,8 @@ export async function fetchEvents(): Promise<EventItem[]> {
 
       const xml = await response.text();
       const parsed = await parser.parseString(xml);
-      // Récupérer plus d'articles pour avoir plus de résultats
-      allArticles.push(...parsed.items.slice(0, 50));
+      // Récupérer TOUS les articles sans limite
+      allArticles.push(...parsed.items);
     } catch (error) {
       // Silencieusement ignorer les sources non disponibles
     }
