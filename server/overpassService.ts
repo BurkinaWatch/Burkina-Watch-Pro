@@ -168,20 +168,133 @@ const PLACE_TYPE_QUERIES: Record<string, string> = {
   nature_reserve: `["leisure"="nature_reserve"]`,
 };
 
-const REGIONS_MAPPING: Record<string, { cities: string[]; bounds?: { south: number; north: number; west: number; east: number } }> = {
-  "Centre": { cities: ["Ouagadougou", "Ziniaré", "Saaba", "Pabré", "Tanghin-Dassouri"] },
-  "Hauts-Bassins": { cities: ["Bobo-Dioulasso", "Houndé", "Dédougou"] },
-  "Cascades": { cities: ["Banfora", "Sindou", "Niangoloko"] },
-  "Centre-Nord": { cities: ["Kaya", "Kongoussi", "Bourzanga"] },
-  "Centre-Ouest": { cities: ["Koudougou", "Réo", "Léo"] },
-  "Centre-Est": { cities: ["Tenkodogo", "Koupéla", "Garango"] },
-  "Centre-Sud": { cities: ["Manga", "Pô", "Kombissiri"] },
-  "Est": { cities: ["Fada N'Gourma", "Diapaga", "Gayéri"] },
-  "Nord": { cities: ["Ouahigouya", "Yako", "Gourcy"] },
-  "Sahel": { cities: ["Dori", "Djibo", "Gorom-Gorom"] },
-  "Sud-Ouest": { cities: ["Gaoua", "Diébougou", "Dano"] },
-  "Boucle du Mouhoun": { cities: ["Dédougou", "Boromo", "Nouna"] },
-  "Plateau-Central": { cities: ["Ziniaré", "Zorgho", "Boussé"] },
+const REGIONS_MAPPING: Record<string, { cities: string[]; bounds: { south: number; north: number; west: number; east: number } }> = {
+  "Centre": { 
+    cities: ["Ouagadougou", "Ziniaré", "Saaba", "Pabré", "Tanghin-Dassouri", "Komsilga", "Koubri", "Loumbila", "Nagréongo", "Ourgou-Manega"],
+    bounds: { south: 12.0, north: 12.8, west: -1.9, east: -1.2 }
+  },
+  "Hauts-Bassins": { 
+    cities: ["Bobo-Dioulasso", "Houndé", "Léna", "Dandé", "Padéma", "Bama", "Karangasso-Vigué", "Péni", "Satiri", "Toussiana"],
+    bounds: { south: 10.5, north: 12.0, west: -5.5, east: -3.5 }
+  },
+  "Cascades": { 
+    cities: ["Banfora", "Sindou", "Niangoloko", "Bérégadougou", "Ouo", "Sidéradougou", "Tiéfora", "Mangodara", "Soubakaniédougou", "Douna"],
+    bounds: { south: 9.4, north: 11.0, west: -5.5, east: -4.0 }
+  },
+  "Centre-Nord": { 
+    cities: ["Kaya", "Kongoussi", "Bourzanga", "Boulsa", "Barsalogho", "Pissila", "Tougouri", "Yalgo", "Dablo", "Namissiguima"],
+    bounds: { south: 12.8, north: 14.0, west: -1.8, east: -0.5 }
+  },
+  "Centre-Ouest": { 
+    cities: ["Koudougou", "Réo", "Léo", "Sabou", "Ténado", "Nanoro", "Didyr", "Pouni", "Zawara", "Thyou"],
+    bounds: { south: 11.5, north: 12.8, west: -2.8, east: -1.8 }
+  },
+  "Centre-Est": { 
+    cities: ["Tenkodogo", "Koupéla", "Garango", "Ouargaye", "Bittou", "Pouytenga", "Andemtenga", "Dourtenga", "Lalgaye", "Sangha"],
+    bounds: { south: 11.0, north: 12.5, west: -0.8, east: 0.5 }
+  },
+  "Centre-Sud": { 
+    cities: ["Manga", "Pô", "Kombissiri", "Nobéré", "Saponé", "Gogo", "Guiaro", "Tiébélé", "Biéha", "Gongombiro"],
+    bounds: { south: 11.0, north: 12.2, west: -1.6, east: -0.6 }
+  },
+  "Est": { 
+    cities: ["Fada N'Gourma", "Diapaga", "Gayéri", "Bogandé", "Manni", "Pama", "Kantchari", "Tambaga", "Matiacoali", "Comin-Yanga"],
+    bounds: { south: 11.0, north: 13.5, west: -0.5, east: 2.4 }
+  },
+  "Nord": { 
+    cities: ["Ouahigouya", "Yako", "Gourcy", "Titao", "Séguénéga", "Thiou", "Koumbri", "Arbollé", "Bokin", "Kirsi"],
+    bounds: { south: 12.8, north: 14.5, west: -3.0, east: -1.8 }
+  },
+  "Sahel": { 
+    cities: ["Dori", "Djibo", "Gorom-Gorom", "Sebba", "Aribinda", "Seytenga", "Tongomayel", "Baraboulé", "Sampelga", "Markoye"],
+    bounds: { south: 13.5, north: 15.1, west: -1.5, east: 1.0 }
+  },
+  "Sud-Ouest": { 
+    cities: ["Gaoua", "Diébougou", "Dano", "Batié", "Kampti", "Loropéni", "Nako", "Dissin", "Legmoin", "Iolonioro"],
+    bounds: { south: 9.8, north: 11.5, west: -4.0, east: -2.5 }
+  },
+  "Boucle du Mouhoun": { 
+    cities: ["Dédougou", "Boromo", "Nouna", "Solenzo", "Toma", "Tougan", "Djibasso", "Safané", "Bondokuy", "Gassan"],
+    bounds: { south: 11.5, north: 13.5, west: -4.5, east: -2.5 }
+  },
+  "Plateau-Central": { 
+    cities: ["Ziniaré", "Zorgho", "Boussé", "Mogtédo", "Méguet", "Absouya", "Laye", "Niou", "Zitenga", "Sourgoubila"],
+    bounds: { south: 12.2, north: 13.0, west: -1.5, east: -0.5 }
+  },
+};
+
+// Extended city coordinates for more accurate geo-matching (45 provinces + major towns)
+const CITY_COORDINATES: Record<string, { lat: number; lon: number; radius: number }> = {
+  // Région Centre
+  "Ouagadougou": { lat: 12.37, lon: -1.52, radius: 0.15 },
+  "Ziniaré": { lat: 12.58, lon: -1.30, radius: 0.05 },
+  "Saaba": { lat: 12.36, lon: -1.40, radius: 0.03 },
+  
+  // Région Hauts-Bassins
+  "Bobo-Dioulasso": { lat: 11.17, lon: -4.30, radius: 0.12 },
+  "Houndé": { lat: 11.50, lon: -3.52, radius: 0.05 },
+  "Léna": { lat: 11.10, lon: -4.00, radius: 0.03 },
+  
+  // Région Cascades
+  "Banfora": { lat: 10.63, lon: -4.77, radius: 0.06 },
+  "Sindou": { lat: 10.67, lon: -5.17, radius: 0.03 },
+  "Niangoloko": { lat: 10.27, lon: -4.92, radius: 0.03 },
+  
+  // Région Centre-Nord
+  "Kaya": { lat: 13.08, lon: -1.08, radius: 0.05 },
+  "Kongoussi": { lat: 13.33, lon: -1.53, radius: 0.03 },
+  "Boulsa": { lat: 12.67, lon: -0.57, radius: 0.03 },
+  
+  // Région Centre-Ouest
+  "Koudougou": { lat: 12.25, lon: -2.37, radius: 0.06 },
+  "Réo": { lat: 12.32, lon: -2.47, radius: 0.03 },
+  "Léo": { lat: 11.10, lon: -2.10, radius: 0.03 },
+  
+  // Région Centre-Est
+  "Tenkodogo": { lat: 11.78, lon: -0.37, radius: 0.04 },
+  "Koupéla": { lat: 12.18, lon: -0.35, radius: 0.03 },
+  "Garango": { lat: 11.80, lon: -0.55, radius: 0.03 },
+  "Pouytenga": { lat: 12.25, lon: -0.52, radius: 0.03 },
+  
+  // Région Centre-Sud
+  "Manga": { lat: 11.67, lon: -1.07, radius: 0.03 },
+  "Pô": { lat: 11.17, lon: -1.15, radius: 0.03 },
+  "Kombissiri": { lat: 12.07, lon: -1.33, radius: 0.03 },
+  
+  // Région Est
+  "Fada N'Gourma": { lat: 12.07, lon: 0.35, radius: 0.05 },
+  "Diapaga": { lat: 12.07, lon: 1.78, radius: 0.03 },
+  "Bogandé": { lat: 12.97, lon: -0.13, radius: 0.03 },
+  "Pama": { lat: 11.25, lon: 0.70, radius: 0.03 },
+  
+  // Région Nord
+  "Ouahigouya": { lat: 13.58, lon: -2.43, radius: 0.06 },
+  "Yako": { lat: 12.95, lon: -2.27, radius: 0.03 },
+  "Gourcy": { lat: 13.20, lon: -2.35, radius: 0.03 },
+  "Titao": { lat: 13.77, lon: -2.07, radius: 0.03 },
+  
+  // Région Sahel
+  "Dori": { lat: 14.03, lon: -0.03, radius: 0.04 },
+  "Djibo": { lat: 14.10, lon: -1.63, radius: 0.03 },
+  "Gorom-Gorom": { lat: 14.45, lon: -0.23, radius: 0.03 },
+  "Sebba": { lat: 13.43, lon: 0.53, radius: 0.03 },
+  
+  // Région Sud-Ouest
+  "Gaoua": { lat: 10.33, lon: -3.18, radius: 0.04 },
+  "Diébougou": { lat: 10.97, lon: -3.25, radius: 0.03 },
+  "Dano": { lat: 11.15, lon: -3.07, radius: 0.03 },
+  "Batié": { lat: 9.88, lon: -2.92, radius: 0.03 },
+  
+  // Région Boucle du Mouhoun
+  "Dédougou": { lat: 12.47, lon: -3.47, radius: 0.05 },
+  "Boromo": { lat: 11.75, lon: -2.93, radius: 0.03 },
+  "Nouna": { lat: 12.73, lon: -3.87, radius: 0.03 },
+  "Solenzo": { lat: 12.18, lon: -4.07, radius: 0.03 },
+  "Tougan": { lat: 13.07, lon: -3.07, radius: 0.03 },
+  
+  // Région Plateau-Central
+  "Zorgho": { lat: 12.25, lon: -0.62, radius: 0.03 },
+  "Boussé": { lat: 12.67, lon: -1.90, radius: 0.03 },
 };
 
 export class OverpassService {
@@ -621,6 +734,203 @@ export class OverpassService {
     setInterval(() => {
       this.syncAllPlaces().catch(console.error);
     }, intervalHours * 60 * 60 * 1000);
+  }
+
+  // Enhanced fuel station sync with multiple tags and region-based querying
+  async syncFuelStationsExtended(): Promise<{ total: number; added: number; updated: number; errors: number }> {
+    console.log("⛽ Starting extended fuel station sync...");
+    
+    let totalAdded = 0, totalUpdated = 0, totalErrors = 0;
+    const processedOsmIds = new Set<string>();
+
+    // Extended fuel queries - multiple tag variations
+    const fuelQueries = [
+      `["amenity"="fuel"]`,
+      `["shop"="gas"]`,
+      `["shop"="fuel"]`,
+      `["amenity"="fuel_station"]`,
+      `["landuse"="fuel_station"]`,
+      // Brand-specific queries to catch stations with brand but different main tags
+      `["brand"~"Total|Shell|Oryx|Barka|Sonabhy|SOB|Vivo|Petrofa|Nafex|Star Oil|Libya Oil|Petrolyn"]`,
+      `["operator"~"Total|Shell|Oryx|Sonabhy|Vivo|Barka"]`,
+    ];
+
+    // Sync by region to avoid Overpass limits and get better coverage
+    for (const [regionName, regionData] of Object.entries(REGIONS_MAPPING)) {
+      const { south, north, west, east } = regionData.bounds;
+      console.log(`  📍 Syncing region: ${regionName}...`);
+
+      for (const queryFilter of fuelQueries) {
+        try {
+          const query = `
+            [out:json][timeout:180][maxsize:536870912];
+            (
+              node${queryFilter}(${south},${west},${north},${east});
+              way${queryFilter}(${south},${west},${north},${east});
+              relation${queryFilter}(${south},${west},${north},${east});
+            );
+            out center;
+          `;
+
+          const response = await this.fetchFromOverpass(query);
+          
+          for (const element of response.elements) {
+            const osmKey = `${element.type}-${element.id}`;
+            if (processedOsmIds.has(osmKey)) continue;
+            processedOsmIds.add(osmKey);
+
+            try {
+              const placeData = this.parseOSMElement(element, "fuel");
+              if (!placeData) continue;
+
+              // Override region with the actual region we're querying
+              placeData.region = regionName;
+              placeData.ville = placeData.ville || this.guessCityExtended(
+                parseFloat(placeData.latitude),
+                parseFloat(placeData.longitude)
+              );
+
+              const existing = await db.select()
+                .from(places)
+                .where(and(
+                  eq(places.osmId, placeData.osmId),
+                  eq(places.osmType, placeData.osmType)
+                ))
+                .limit(1);
+
+              if (existing.length > 0) {
+                await db.update(places)
+                  .set({
+                    name: placeData.name,
+                    latitude: placeData.latitude,
+                    longitude: placeData.longitude,
+                    address: placeData.address,
+                    telephone: placeData.telephone,
+                    horaires: placeData.horaires,
+                    region: placeData.region,
+                    ville: placeData.ville,
+                    tags: placeData.tags,
+                    lastSyncedAt: new Date(),
+                    updatedAt: new Date(),
+                  })
+                  .where(eq(places.id, existing[0].id));
+                totalUpdated++;
+              } else {
+                await db.insert(places).values(placeData);
+                totalAdded++;
+              }
+            } catch (err) {
+              totalErrors++;
+            }
+          }
+
+          await this.sleep(500); // Respect rate limits between queries
+        } catch (error) {
+          console.error(`  ❌ Error with query ${queryFilter} in ${regionName}:`, error);
+          totalErrors++;
+        }
+      }
+      
+      await this.sleep(1000); // Pause between regions
+    }
+
+    // Also do a country-wide sync for any stations that might fall outside defined regions
+    console.log("  🌍 Country-wide fuel station sweep...");
+    for (const queryFilter of fuelQueries.slice(0, 3)) { // Main fuel queries only
+      try {
+        const { south, west, north, east } = BURKINA_BBOX;
+        const query = `
+          [out:json][timeout:300][maxsize:1073741824];
+          (
+            node${queryFilter}(${south},${west},${north},${east});
+            way${queryFilter}(${south},${west},${north},${east});
+            relation${queryFilter}(${south},${west},${north},${east});
+          );
+          out center;
+        `;
+
+        const response = await this.fetchFromOverpass(query);
+        
+        for (const element of response.elements) {
+          const osmKey = `${element.type}-${element.id}`;
+          if (processedOsmIds.has(osmKey)) continue;
+          processedOsmIds.add(osmKey);
+
+          try {
+            const placeData = this.parseOSMElement(element, "fuel");
+            if (!placeData) continue;
+
+            placeData.ville = placeData.ville || this.guessCityExtended(
+              parseFloat(placeData.latitude),
+              parseFloat(placeData.longitude)
+            );
+            placeData.region = placeData.region || this.guessRegionFromCoords(
+              parseFloat(placeData.latitude),
+              parseFloat(placeData.longitude)
+            );
+
+            const existing = await db.select()
+              .from(places)
+              .where(and(
+                eq(places.osmId, placeData.osmId),
+                eq(places.osmType, placeData.osmType)
+              ))
+              .limit(1);
+
+            if (existing.length === 0) {
+              await db.insert(places).values(placeData);
+              totalAdded++;
+            }
+          } catch (err) {
+            totalErrors++;
+          }
+        }
+
+        await this.sleep(2000);
+      } catch (error) {
+        console.error("Country-wide sweep error:", error);
+      }
+    }
+
+    const total = processedOsmIds.size;
+    console.log(`⛽ Extended fuel sync complete: ${total} unique stations processed, ${totalAdded} added, ${totalUpdated} updated, ${totalErrors} errors`);
+    
+    return { total, added: totalAdded, updated: totalUpdated, errors: totalErrors };
+  }
+
+  // Extended city guessing with coordinate-based matching
+  private guessCityExtended(lat: number, lon: number): string | null {
+    // First check the detailed city coordinates
+    for (const [cityName, coords] of Object.entries(CITY_COORDINATES)) {
+      const distance = Math.sqrt(
+        Math.pow(lat - coords.lat, 2) + Math.pow(lon - coords.lon, 2)
+      );
+      if (distance <= coords.radius) {
+        return cityName;
+      }
+    }
+    
+    // Fallback to the original method
+    return this.guessCity(lat, lon);
+  }
+
+  // Guess region from coordinates
+  private guessRegionFromCoords(lat: number, lon: number): string | null {
+    for (const [regionName, regionData] of Object.entries(REGIONS_MAPPING)) {
+      const { south, north, west, east } = regionData.bounds;
+      if (lat >= south && lat <= north && lon >= west && lon <= east) {
+        return regionName;
+      }
+    }
+    return null;
+  }
+
+  // Get fuel station count from OSM
+  async getFuelStationCount(): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(places)
+      .where(eq(places.placeType, "fuel"));
+    return result[0]?.count || 0;
   }
 }
 

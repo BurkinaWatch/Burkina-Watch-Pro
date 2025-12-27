@@ -2131,6 +2131,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Extended fuel station sync - more thorough with region-based queries
+  app.post("/api/stations/sync-extended", async (req: any, res) => {
+    try {
+      res.json({ message: "Synchronisation étendue des stations-service lancée en arrière-plan" });
+      
+      // Run in background
+      overpassService.syncFuelStationsExtended().then(result => {
+        console.log("⛽ Extended fuel sync result:", result);
+      }).catch(console.error);
+    } catch (error) {
+      console.error("Erreur sync stations:", error);
+      res.status(500).json({ error: "Erreur lors de la synchronisation" });
+    }
+  });
+
   // ----------------------------------------
   // ROUTES BULLETIN CITOYEN (RSS)
   // ----------------------------------------
