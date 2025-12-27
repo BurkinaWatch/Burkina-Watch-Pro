@@ -191,7 +191,7 @@ export default function Banques() {
   }, [banques, searchQuery, selectedRegion, selectedType, showGABOnly, showSystemiqueOnly]);
 
   const gabParVille = useMemo(() => {
-    const villeMap: Record<string, { ville: string; region: string; totalGAB: number; etablissements: { nom: string; sigle: string; nombreGAB: number; adresse: string }[] }> = {};
+    const villeMap: Record<string, { ville: string; region: string; totalGAB: number; etablissements: { nom: string; sigle: string; nombreGAB: number; adresse: string; latitude: number; longitude: number }[] }> = {};
     
     banques.filter(b => b.hasGAB && b.nombreGAB && b.nombreGAB > 0).forEach(b => {
       if (!villeMap[b.ville]) {
@@ -202,7 +202,9 @@ export default function Banques() {
         nom: b.nom,
         sigle: b.sigle,
         nombreGAB: b.nombreGAB || 0,
-        adresse: b.adresse
+        adresse: b.adresse,
+        latitude: b.latitude,
+        longitude: b.longitude
       });
     });
     
@@ -210,7 +212,7 @@ export default function Banques() {
   }, [banques]);
 
   const gabParBanque = useMemo(() => {
-    const banqueMap: Record<string, { sigle: string; totalGAB: number; villes: { ville: string; nombreGAB: number; adresse: string }[] }> = {};
+    const banqueMap: Record<string, { sigle: string; totalGAB: number; villes: { ville: string; nombreGAB: number; adresse: string; latitude: number; longitude: number }[] }> = {};
     
     banques.filter(b => b.hasGAB && b.nombreGAB && b.nombreGAB > 0).forEach(b => {
       if (!banqueMap[b.sigle]) {
@@ -220,12 +222,19 @@ export default function Banques() {
       banqueMap[b.sigle].villes.push({
         ville: b.ville,
         nombreGAB: b.nombreGAB || 0,
-        adresse: b.adresse
+        adresse: b.adresse,
+        latitude: b.latitude,
+        longitude: b.longitude
       });
     });
     
     return Object.values(banqueMap).sort((a, b) => b.totalGAB - a.totalGAB);
   }, [banques]);
+
+  const handleGABNavigate = (latitude: number, longitude: number) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+    window.open(url, "_blank");
+  };
 
   const handleBanqueClick = useCallback((banque: Banque) => {
     setSelectedBanque(banque);
@@ -389,13 +398,21 @@ export default function Banques() {
                       </div>
                       <div className="space-y-1 ml-6">
                         {villeData.etablissements.map((etab, i) => (
-                          <div key={i} className="flex items-center justify-between text-sm text-muted-foreground">
-                            <div className="flex items-center gap-2">
-                              <CreditCard className="h-3 w-3" />
-                              <span>{etab.sigle}</span>
-                              <span className="text-xs">- {etab.adresse.substring(0, 40)}{etab.adresse.length > 40 ? "..." : ""}</span>
+                          <div 
+                            key={i} 
+                            className="flex items-center justify-between text-sm text-muted-foreground p-1.5 rounded hover-elevate cursor-pointer"
+                            onClick={() => handleGABNavigate(etab.latitude, etab.longitude)}
+                            data-testid={`gab-navigate-ville-${idx}-${i}`}
+                          >
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <CreditCard className="h-3 w-3 shrink-0" />
+                              <span className="font-medium">{etab.sigle}</span>
+                              <span className="text-xs truncate">- {etab.adresse}</span>
                             </div>
-                            <span className="text-amber-600 font-medium">{etab.nombreGAB}</span>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-amber-600 font-medium">{etab.nombreGAB}</span>
+                              <Navigation className="h-3 w-3 text-primary" />
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -413,13 +430,21 @@ export default function Banques() {
                       </div>
                       <div className="space-y-1 ml-6">
                         {banqueData.villes.map((ville, i) => (
-                          <div key={i} className="flex items-center justify-between text-sm text-muted-foreground">
-                            <div className="flex items-center gap-2">
-                              <MapPin className="h-3 w-3" />
-                              <span>{ville.ville}</span>
-                              <span className="text-xs">- {ville.adresse.substring(0, 40)}{ville.adresse.length > 40 ? "..." : ""}</span>
+                          <div 
+                            key={i} 
+                            className="flex items-center justify-between text-sm text-muted-foreground p-1.5 rounded hover-elevate cursor-pointer"
+                            onClick={() => handleGABNavigate(ville.latitude, ville.longitude)}
+                            data-testid={`gab-navigate-banque-${idx}-${i}`}
+                          >
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <MapPin className="h-3 w-3 shrink-0" />
+                              <span className="font-medium">{ville.ville}</span>
+                              <span className="text-xs truncate">- {ville.adresse}</span>
                             </div>
-                            <span className="text-amber-600 font-medium">{ville.nombreGAB}</span>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-amber-600 font-medium">{ville.nombreGAB}</span>
+                              <Navigation className="h-3 w-3 text-primary" />
+                            </div>
                           </div>
                         ))}
                       </div>
