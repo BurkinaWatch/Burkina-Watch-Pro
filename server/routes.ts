@@ -1802,22 +1802,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { BANQUES_DATA } = await import("./banquesData");
       
-      // Compter les données OSM (bank, bureau_de_change, money_transfer)
-      let osmCount = 0;
+      // Récupérer les données OSM
+      let osmBanques: any[] = [];
       try {
         const osmBanks = await overpassService.getPlaces({ placeType: "bank" });
         const osmBureauChange = await overpassService.getPlaces({ placeType: "bureau_de_change" });
         const osmMoneyTransfer = await overpassService.getPlaces({ placeType: "money_transfer" });
-        osmCount = osmBanks.length + osmBureauChange.length + osmMoneyTransfer.length;
+        osmBanques = [...osmBanks, ...osmBureauChange, ...osmMoneyTransfer].map(p => transformOsmToBanque(p));
       } catch (e) {}
       
-      const total = BANQUES_DATA.length + osmCount;
+      // Combiner les données locales et OSM
+      const allBanques = [...BANQUES_DATA, ...osmBanques];
+      
+      // Calculer les statistiques attendues par le frontend
+      const banques = allBanques.filter(b => b.type === "Banque").length;
+      const caissesPopulaires = allBanques.filter(b => b.type === "Caisse Populaire").length;
+      const microfinance = allBanques.filter(b => b.type === "Microfinance").length;
+      const avecGAB = allBanques.filter(b => b.hasGAB || (b.nombreGAB && b.nombreGAB > 0)).length;
+      const totalGAB = allBanques.reduce((sum, b) => sum + (b.nombreGAB || 0), 0);
+      const importanceSystemique = allBanques.filter(b => b.importanceSystemique).length;
+      
+      // Répartitions
+      const parType: Record<string, number> = {};
+      const parCategorie: Record<string, number> = {};
+      const parRegion: Record<string, number> = {};
+      const villes = new Set<string>();
+      
+      allBanques.forEach(b => {
+        if (b.type) parType[b.type] = (parType[b.type] || 0) + 1;
+        if (b.categorie) parCategorie[b.categorie] = (parCategorie[b.categorie] || 0) + 1;
+        if (b.region) parRegion[b.region] = (parRegion[b.region] || 0) + 1;
+        if (b.ville) villes.add(b.ville);
+      });
       
       res.json({
-        total,
+        total: allBanques.length,
+        banques,
+        caissesPopulaires,
+        microfinance,
+        avecGAB,
+        totalGAB,
+        totalAgences: allBanques.length,
+        importanceSystemique,
+        parType,
+        parCategorie,
+        parRegion,
+        nombreVilles: villes.size,
         localCount: BANQUES_DATA.length,
-        osmCount,
-        banquesOsm: osmCount,
+        osmCount: osmBanques.length,
         source: "OSM + Local"
       });
     } catch (error) {
