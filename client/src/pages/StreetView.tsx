@@ -34,7 +34,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Maximize2,
-  RotateCcw
+  RotateCcw,
+  Video,
+  Square,
+  Circle,
+  Timer
 } from "lucide-react";
 import { useLocation } from "wouter";
 import "leaflet/dist/leaflet.css";
@@ -249,6 +253,294 @@ function TourViewer({
   );
 }
 
+function CameraCapture({
+  onPhotosCapture,
+  onClose,
+  maxPhotos,
+  currentPhotoCount,
+}: {
+  onPhotosCapture: (photos: { data: string; thumbnail: string }[]) => void;
+  onClose: () => void;
+  maxPhotos: number;
+  currentPhotoCount: number;
+}) {
+  const { toast } = useToast();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [capturedPhotos, setCapturedPhotos] = useState<{ data: string; thumbnail: string }[]>([]);
+  const [countdown, setCountdown] = useState(3);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+
+  const remainingSlots = maxPhotos - currentPhotoCount - capturedPhotos.length;
+
+  const startCamera = async () => {
+    try {
+      setCameraError(null);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      setIsStreaming(true);
+    } catch (err) {
+      console.error("Camera error:", err);
+      setCameraError("Impossible d'acceder a la camera. Verifiez les permissions.");
+      toast({
+        title: "Erreur camera",
+        description: "Impossible d'acceder a la camera. Verifiez les permissions dans votre navigateur.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setIsStreaming(false);
+    setIsRecording(false);
+  };
+
+  const createThumbnail = (imageData: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxWidth = 150;
+        const ratio = maxWidth / img.width;
+        canvas.width = maxWidth;
+        canvas.height = img.height * ratio;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg", 0.6));
+        } else {
+          resolve(imageData);
+        }
+      };
+      img.src = imageData;
+    });
+  };
+
+  const capturePhoto = async () => {
+    if (!videoRef.current || !canvasRef.current || remainingSlots <= 0) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.drawImage(video, 0, 0);
+      const imageData = canvas.toDataURL("image/jpeg", 0.8);
+      const thumbnail = await createThumbnail(imageData);
+      
+      setCapturedPhotos(prev => {
+        if (prev.length >= remainingSlots) return prev;
+        return [...prev, { data: imageData, thumbnail }];
+      });
+    }
+  };
+
+  const startAutoCapture = () => {
+    if (remainingSlots <= 0) {
+      toast({ title: "Limite atteinte", description: `Maximum ${maxPhotos} photos`, variant: "destructive" });
+      return;
+    }
+    
+    setIsRecording(true);
+    setCountdown(3);
+    
+    let count = 3;
+    const countdownInterval = setInterval(() => {
+      count--;
+      setCountdown(count);
+      if (count <= 0) {
+        clearInterval(countdownInterval);
+        capturePhoto();
+        
+        intervalRef.current = setInterval(() => {
+          setCapturedPhotos(prev => {
+            if (prev.length >= remainingSlots) {
+              if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+              }
+              setIsRecording(false);
+              return prev;
+            }
+            return prev;
+          });
+          capturePhoto();
+        }, 3000);
+      }
+    }, 1000);
+  };
+
+  const stopAutoCapture = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setIsRecording(false);
+  };
+
+  const handleDone = () => {
+    stopCamera();
+    onPhotosCapture(capturedPhotos);
+    onClose();
+  };
+
+  const removePhoto = (index: number) => {
+    setCapturedPhotos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  useEffect(() => {
+    startCamera();
+    return () => stopCamera();
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-[9999] bg-black flex flex-col">
+      <div className="flex items-center justify-between p-4 bg-black/80">
+        <Button variant="ghost" size="sm" onClick={() => { stopCamera(); onClose(); }} className="text-white gap-2">
+          <X className="h-4 w-4" />
+          Fermer
+        </Button>
+        <div className="flex items-center gap-2 text-white">
+          <Camera className="h-5 w-5" />
+          <span className="font-semibold">Capture 3D</span>
+        </div>
+        <Badge variant="secondary" className="text-sm">
+          {capturedPhotos.length}/{remainingSlots + capturedPhotos.length}
+        </Badge>
+      </div>
+
+      <div className="flex-1 relative">
+        {cameraError ? (
+          <div className="absolute inset-0 flex items-center justify-center text-white text-center p-4">
+            <div>
+              <Camera className="h-16 w-16 mx-auto mb-4 opacity-50" />
+              <p className="text-lg mb-4">{cameraError}</p>
+              <Button onClick={startCamera} variant="outline">
+                Reessayer
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover"
+            />
+            <canvas ref={canvasRef} className="hidden" />
+            
+            {isRecording && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-full flex items-center gap-2 animate-pulse">
+                <Circle className="h-3 w-3 fill-current" />
+                {countdown > 0 ? `Demarrage dans ${countdown}s` : "Capture toutes les 3s"}
+              </div>
+            )}
+
+            {isRecording && countdown <= 0 && (
+              <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full flex items-center gap-2">
+                <Timer className="h-4 w-4" />
+                Prochaine photo dans 3s
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      <div className="p-4 bg-black/80 space-y-4">
+        {capturedPhotos.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {capturedPhotos.map((photo, idx) => (
+              <div key={idx} className="relative flex-shrink-0">
+                <img
+                  src={photo.thumbnail}
+                  alt={`Capture ${idx + 1}`}
+                  className="w-16 h-16 rounded-md object-cover"
+                />
+                <button
+                  onClick={() => removePhoto(idx)}
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center"
+                >
+                  <X className="h-3 w-3 text-white" />
+                </button>
+                <Badge className="absolute bottom-0 left-0 text-xs">{idx + 1}</Badge>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-center justify-center gap-4">
+          {isStreaming && !isRecording && (
+            <>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={capturePhoto}
+                disabled={remainingSlots <= 0}
+                className="gap-2"
+              >
+                <Camera className="h-5 w-5" />
+                Photo manuelle
+              </Button>
+              <Button
+                size="lg"
+                onClick={startAutoCapture}
+                disabled={remainingSlots <= 0}
+                className="gap-2 bg-red-500 hover:bg-red-600"
+              >
+                <Video className="h-5 w-5" />
+                Capture auto (3s)
+              </Button>
+            </>
+          )}
+          
+          {isRecording && (
+            <Button
+              size="lg"
+              variant="destructive"
+              onClick={stopAutoCapture}
+              className="gap-2"
+            >
+              <Square className="h-5 w-5" />
+              Arreter
+            </Button>
+          )}
+        </div>
+
+        {capturedPhotos.length > 0 && (
+          <Button onClick={handleDone} className="w-full gap-2" size="lg">
+            <Plus className="h-5 w-5" />
+            Utiliser {capturedPhotos.length} photos
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function CreateTourDialog({
   open,
   onOpenChange,
@@ -264,8 +556,8 @@ function CreateTourDialog({
   const [quartier, setQuartier] = useState("");
   const [photos, setPhotos] = useState<{ data: string; thumbnail: string }[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
   const MAX_PHOTOS_PER_TOUR = 20;
 
   const createTourMutation = useMutation({
@@ -474,29 +766,16 @@ function CreateTourDialog({
                 className="hidden"
                 data-testid="input-photos"
               />
-              <input
-                ref={cameraInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleFileSelect}
-                className="hidden"
-                data-testid="input-camera"
-              />
               <div className="flex flex-col sm:flex-row gap-2 justify-center">
                 <Button
                   variant="default"
-                  onClick={() => cameraInputRef.current?.click()}
+                  onClick={() => setShowCamera(true)}
                   disabled={isUploading || photos.length >= MAX_PHOTOS_PER_TOUR}
                   className="gap-2"
                   data-testid="button-capture-photo"
                 >
-                  {isUploading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Camera className="h-4 w-4" />
-                  )}
-                  Prendre une photo
+                  <Video className="h-4 w-4" />
+                  Capture 3D (auto)
                 </Button>
                 <Button
                   variant="outline"
@@ -510,7 +789,7 @@ function CreateTourDialog({
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Prenez plusieurs photos du lieu sous differents angles
+                Capture 3D prend des photos toutes les 3 secondes pour creer une vue immersive
               </p>
             </div>
 
@@ -560,6 +839,17 @@ function CreateTourDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {showCamera && (
+        <CameraCapture
+          onPhotosCapture={(newPhotos) => {
+            setPhotos(prev => [...prev, ...newPhotos].slice(0, MAX_PHOTOS_PER_TOUR));
+          }}
+          onClose={() => setShowCamera(false)}
+          maxPhotos={MAX_PHOTOS_PER_TOUR}
+          currentPhotoCount={photos.length}
+        />
+      )}
     </Dialog>
   );
 }
