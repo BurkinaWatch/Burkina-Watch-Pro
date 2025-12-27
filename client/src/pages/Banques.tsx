@@ -131,6 +131,9 @@ export default function Banques() {
   const [mapZoom, setMapZoom] = useState(7);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showGABDetails, setShowGABDetails] = useState(false);
+  const [showBanquesDetails, setShowBanquesDetails] = useState(false);
+  const [showCaissesDetails, setShowCaissesDetails] = useState(false);
+  const [showEBISDetails, setShowEBISDetails] = useState(false);
   const [gabViewMode, setGabViewMode] = useState<"ville" | "banque">("ville");
   const mapRef = useRef<L.Map | null>(null);
 
@@ -231,6 +234,59 @@ export default function Banques() {
     return Object.values(banqueMap).sort((a, b) => b.totalGAB - a.totalGAB);
   }, [banques]);
 
+  const banquesParVille = useMemo(() => {
+    const villeMap: Record<string, { ville: string; region: string; count: number; etablissements: { nom: string; sigle: string; adresse: string; latitude: number; longitude: number }[] }> = {};
+    
+    banques.filter(b => b.type === "Banque").forEach(b => {
+      if (!villeMap[b.ville]) {
+        villeMap[b.ville] = { ville: b.ville, region: b.region, count: 0, etablissements: [] };
+      }
+      villeMap[b.ville].count++;
+      villeMap[b.ville].etablissements.push({
+        nom: b.nom,
+        sigle: b.sigle,
+        adresse: b.adresse,
+        latitude: b.latitude,
+        longitude: b.longitude
+      });
+    });
+    
+    return Object.values(villeMap).sort((a, b) => b.count - a.count);
+  }, [banques]);
+
+  const caissesParVille = useMemo(() => {
+    const villeMap: Record<string, { ville: string; region: string; count: number; etablissements: { nom: string; sigle: string; adresse: string; latitude: number; longitude: number }[] }> = {};
+    
+    banques.filter(b => b.type === "Caisse Populaire").forEach(b => {
+      if (!villeMap[b.ville]) {
+        villeMap[b.ville] = { ville: b.ville, region: b.region, count: 0, etablissements: [] };
+      }
+      villeMap[b.ville].count++;
+      villeMap[b.ville].etablissements.push({
+        nom: b.nom,
+        sigle: b.sigle,
+        adresse: b.adresse,
+        latitude: b.latitude,
+        longitude: b.longitude
+      });
+    });
+    
+    return Object.values(villeMap).sort((a, b) => b.count - a.count);
+  }, [banques]);
+
+  const ebisListe = useMemo(() => {
+    return banques.filter(b => b.importanceSystemique).map(b => ({
+      nom: b.nom,
+      sigle: b.sigle,
+      ville: b.ville,
+      region: b.region,
+      adresse: b.adresse,
+      latitude: b.latitude,
+      longitude: b.longitude,
+      nombreGAB: b.nombreGAB || 0
+    }));
+  }, [banques]);
+
   const handleGABNavigate = (latitude: number, longitude: number) => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
     window.open(url, "_blank");
@@ -314,16 +370,26 @@ export default function Banques() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+          <Card 
+            className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 cursor-pointer hover-elevate"
+            onClick={() => setShowBanquesDetails(!showBanquesDetails)}
+            data-testid="card-banques-details"
+          >
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-blue-600">{stats?.banques || 0}</p>
               <p className="text-xs text-muted-foreground">Banques</p>
+              <p className="text-xs text-blue-600 mt-1">Cliquez pour voir la liste</p>
             </CardContent>
           </Card>
-          <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
+          <Card 
+            className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800 cursor-pointer hover-elevate"
+            onClick={() => setShowCaissesDetails(!showCaissesDetails)}
+            data-testid="card-caisses-details"
+          >
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-green-600">{stats?.caissesPopulaires || 0}</p>
               <p className="text-xs text-muted-foreground">Caisses Populaires</p>
+              <p className="text-xs text-green-600 mt-1">Cliquez pour voir la liste</p>
             </CardContent>
           </Card>
           <Card 
@@ -337,10 +403,15 @@ export default function Banques() {
               <p className="text-xs text-amber-600 mt-1">Cliquez pour voir la liste</p>
             </CardContent>
           </Card>
-          <Card className="bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800">
+          <Card 
+            className="bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 cursor-pointer hover-elevate"
+            onClick={() => setShowEBISDetails(!showEBISDetails)}
+            data-testid="card-ebis-details"
+          >
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-red-600">{stats?.importanceSystemique || 0}</p>
               <p className="text-xs text-muted-foreground">EBIS (Systemique)</p>
+              <p className="text-xs text-red-600 mt-1">Cliquez pour voir la liste</p>
             </CardContent>
           </Card>
         </div>
@@ -451,6 +522,166 @@ export default function Banques() {
                     </div>
                   ))
                 )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {showBanquesDetails && (
+          <Card className="mb-6 border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Landmark className="h-5 w-5 text-blue-600" />
+                  Liste des Banques ({stats?.banques || 0} agences)
+                </CardTitle>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowBanquesDetails(false)}
+                  data-testid="button-close-banques-details"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="max-h-[400px] overflow-y-auto space-y-3 pr-2">
+                {banquesParVille.map((villeData, idx) => (
+                  <div key={idx} className="bg-background rounded-lg p-3 border">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-blue-600" />
+                        <span className="font-semibold">{villeData.ville}</span>
+                        <Badge variant="outline" className="text-xs">{villeData.region}</Badge>
+                      </div>
+                      <Badge className="bg-blue-500 text-white">{villeData.count} agence{villeData.count > 1 ? "s" : ""}</Badge>
+                    </div>
+                    <div className="space-y-1 ml-6">
+                      {villeData.etablissements.map((etab, i) => (
+                        <div 
+                          key={i} 
+                          className="flex items-center justify-between text-sm text-muted-foreground p-1.5 rounded hover-elevate cursor-pointer"
+                          onClick={() => handleGABNavigate(etab.latitude, etab.longitude)}
+                          data-testid={`banque-navigate-${idx}-${i}`}
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <Building2 className="h-3 w-3 shrink-0" />
+                            <span className="font-medium">{etab.sigle}</span>
+                            <span className="text-xs truncate">- {etab.adresse}</span>
+                          </div>
+                          <Navigation className="h-3 w-3 text-primary shrink-0" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {showCaissesDetails && (
+          <Card className="mb-6 border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/20">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-green-600" />
+                  Liste des Caisses Populaires ({stats?.caissesPopulaires || 0} agences)
+                </CardTitle>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowCaissesDetails(false)}
+                  data-testid="button-close-caisses-details"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="max-h-[400px] overflow-y-auto space-y-3 pr-2">
+                {caissesParVille.map((villeData, idx) => (
+                  <div key={idx} className="bg-background rounded-lg p-3 border">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-green-600" />
+                        <span className="font-semibold">{villeData.ville}</span>
+                        <Badge variant="outline" className="text-xs">{villeData.region}</Badge>
+                      </div>
+                      <Badge className="bg-green-500 text-white">{villeData.count} agence{villeData.count > 1 ? "s" : ""}</Badge>
+                    </div>
+                    <div className="space-y-1 ml-6">
+                      {villeData.etablissements.map((etab, i) => (
+                        <div 
+                          key={i} 
+                          className="flex items-center justify-between text-sm text-muted-foreground p-1.5 rounded hover-elevate cursor-pointer"
+                          onClick={() => handleGABNavigate(etab.latitude, etab.longitude)}
+                          data-testid={`caisse-navigate-${idx}-${i}`}
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <Building2 className="h-3 w-3 shrink-0" />
+                            <span className="font-medium">{etab.sigle}</span>
+                            <span className="text-xs truncate">- {etab.adresse}</span>
+                          </div>
+                          <Navigation className="h-3 w-3 text-primary shrink-0" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {showEBISDetails && (
+          <Card className="mb-6 border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/20">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Star className="h-5 w-5 text-red-600" />
+                  EBIS - Etablissements Bancaires d'Importance Systemique ({stats?.importanceSystemique || 0})
+                </CardTitle>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowEBISDetails(false)}
+                  data-testid="button-close-ebis-details"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="max-h-[400px] overflow-y-auto space-y-3 pr-2">
+                {ebisListe.map((banque, idx) => (
+                  <div 
+                    key={idx} 
+                    className="bg-background rounded-lg p-3 border hover-elevate cursor-pointer"
+                    onClick={() => handleGABNavigate(banque.latitude, banque.longitude)}
+                    data-testid={`ebis-navigate-${idx}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Landmark className="h-4 w-4 text-red-600 shrink-0" />
+                          <span className="font-semibold">{banque.sigle}</span>
+                          <Badge className="bg-red-500 text-white text-xs">EBIS</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground truncate">{banque.nom}</p>
+                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                          <MapPin className="h-3 w-3" />
+                          <span>{banque.ville} ({banque.region})</span>
+                          {banque.nombreGAB > 0 && (
+                            <Badge variant="outline" className="text-xs">{banque.nombreGAB} GAB</Badge>
+                          )}
+                        </div>
+                      </div>
+                      <Navigation className="h-4 w-4 text-primary shrink-0" />
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
