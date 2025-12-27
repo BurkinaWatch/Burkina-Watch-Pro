@@ -16,6 +16,200 @@ import { generateChatResponse, isAIAvailable } from "./aiService";
 import { fetchBulletins, clearCache } from "./rssService";
 import { fetchEvents, clearEventsCache } from "./eventsService";
 import { overpassService } from "./overpassService";
+import type { Place } from "@shared/schema";
+
+// ============================================
+// HELPERS POUR TRANSFORMER LES DONNÉES OSM
+// ============================================
+
+function transformOsmToRestaurant(place: Place, index: number) {
+  const tags = place.tags as Record<string, string> || {};
+  return {
+    id: `osm-rest-${place.id}`,
+    nom: place.name,
+    type: mapOsmCuisineToType(tags.cuisine || tags.amenity || "restaurant") as any,
+    adresse: place.address || "Adresse à vérifier",
+    quartier: place.quartier || "Quartier non spécifié",
+    ville: place.ville || "Ville non spécifiée",
+    region: place.region || "Région non spécifiée",
+    latitude: parseFloat(place.latitude),
+    longitude: parseFloat(place.longitude),
+    telephone: place.telephone || undefined,
+    email: place.email || undefined,
+    siteWeb: place.website || undefined,
+    horaires: place.horaires || "Horaires à vérifier",
+    gammePrix: "Moyen" as const,
+    services: [],
+    specialites: tags.cuisine ? tags.cuisine.split(";").map(c => c.trim()) : [],
+    wifi: tags.internet_access === "wlan" || tags.internet_access === "yes",
+    climatisation: false,
+    parking: tags.parking === "yes",
+    terrasse: tags.outdoor_seating === "yes",
+    livraison: tags.delivery === "yes",
+    source: "OSM" as const
+  };
+}
+
+function mapOsmCuisineToType(cuisine: string): string {
+  const cuisineMap: Record<string, string> = {
+    "african": "Africain",
+    "burkinabe": "Burkinabè",
+    "french": "Français",
+    "lebanese": "Libanais",
+    "asian": "Asiatique",
+    "chinese": "Asiatique",
+    "vietnamese": "Asiatique",
+    "japanese": "Asiatique",
+    "fast_food": "Fast-food",
+    "pizza": "Pizzeria",
+    "grill": "Grillades",
+    "cafe": "Café",
+    "coffee": "Café",
+    "pastry": "Pâtisserie",
+    "international": "International",
+    "italian": "Italien",
+    "restaurant": "Africain",
+    "bar": "Maquis"
+  };
+  return cuisineMap[cuisine.toLowerCase()] || "Africain";
+}
+
+function transformOsmToPharmacy(place: Place) {
+  const tags = place.tags as Record<string, string> || {};
+  return {
+    id: `osm-pharm-${place.id}`,
+    nom: place.name,
+    adresse: place.address || "Adresse à vérifier",
+    quartier: place.quartier || "Quartier non spécifié",
+    ville: place.ville || "Ville non spécifiée",
+    region: place.region || "Région non spécifiée",
+    latitude: parseFloat(place.latitude),
+    longitude: parseFloat(place.longitude),
+    telephone: place.telephone || undefined,
+    horaires: place.horaires || "Horaires à vérifier",
+    typeGarde: tags.opening_hours?.includes("24") ? "24h" : "jour" as "jour" | "nuit" | "24h",
+    services: [],
+    source: "OSM" as const
+  };
+}
+
+function transformOsmToBoutique(place: Place) {
+  const tags = place.tags as Record<string, string> || {};
+  const shopType = tags.shop || place.placeType;
+  return {
+    id: `osm-bout-${place.id}`,
+    nom: place.name,
+    categorie: mapOsmShopToCategory(shopType),
+    adresse: place.address || "Adresse à vérifier",
+    quartier: place.quartier || "Quartier non spécifié",
+    ville: place.ville || "Ville non spécifiée",
+    region: place.region || "Région non spécifiée",
+    latitude: parseFloat(place.latitude),
+    longitude: parseFloat(place.longitude),
+    telephone: place.telephone || undefined,
+    horaires: place.horaires || "Horaires à vérifier",
+    produits: [],
+    services: [],
+    source: "OSM" as const
+  };
+}
+
+function mapOsmShopToCategory(shop: string): string {
+  const shopMap: Record<string, string> = {
+    "supermarket": "Supermarché",
+    "convenience": "Alimentation",
+    "grocery": "Alimentation",
+    "butcher": "Alimentation",
+    "bakery": "Alimentation",
+    "electronics": "Électronique",
+    "mobile_phone": "Téléphonie",
+    "clothes": "Mode",
+    "shoes": "Mode",
+    "hardware": "Quincaillerie",
+    "cosmetics": "Cosmétiques",
+    "furniture": "Ameublement",
+    "books": "Librairie",
+    "sports": "Sport",
+    "jewelry": "Bijouterie",
+    "hairdresser": "Cosmétiques",
+    "beauty": "Cosmétiques"
+  };
+  return shopMap[shop.toLowerCase()] || "Divers";
+}
+
+function transformOsmToMarche(place: Place) {
+  const tags = place.tags as Record<string, string> || {};
+  return {
+    id: `osm-march-${place.id}`,
+    nom: place.name,
+    type: "Marché général",
+    adresse: place.address || "Adresse à vérifier",
+    quartier: place.quartier || "Quartier non spécifié",
+    ville: place.ville || "Ville non spécifiée",
+    region: place.region || "Région non spécifiée",
+    latitude: parseFloat(place.latitude),
+    longitude: parseFloat(place.longitude),
+    telephone: place.telephone || undefined,
+    horaires: place.horaires || "Tous les jours",
+    joursOuverture: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"],
+    produits: [],
+    source: "OSM" as const
+  };
+}
+
+function transformOsmToBanque(place: Place) {
+  const tags = place.tags as Record<string, string> || {};
+  return {
+    id: `osm-bank-${place.id}`,
+    nom: place.name,
+    type: place.placeType === "atm" ? "GAB" : "Banque",
+    categorie: "Commerciale",
+    adresse: place.address || "Adresse à vérifier",
+    quartier: place.quartier || "Quartier non spécifié",
+    ville: place.ville || "Ville non spécifiée",
+    region: place.region || "Région non spécifiée",
+    latitude: parseFloat(place.latitude),
+    longitude: parseFloat(place.longitude),
+    telephone: place.telephone || undefined,
+    horaires: place.horaires || "8h-16h",
+    services: [],
+    nombreGAB: place.placeType === "atm" ? 1 : 0,
+    source: "OSM" as const
+  };
+}
+
+function transformOsmToStation(place: Place) {
+  const tags = place.tags as Record<string, string> || {};
+  const brand = tags.brand || tags.operator || tags.name || "Station";
+  return {
+    id: `osm-fuel-${place.id}`,
+    nom: place.name,
+    marque: mapOsmBrandToMarque(brand),
+    adresse: place.address || "Adresse à vérifier",
+    quartier: place.quartier || "Quartier non spécifié",
+    ville: place.ville || "Ville non spécifiée",
+    region: place.region || "Région non spécifiée",
+    latitude: parseFloat(place.latitude),
+    longitude: parseFloat(place.longitude),
+    telephone: place.telephone || undefined,
+    horaires: place.horaires || "6h-22h",
+    is24h: tags.opening_hours?.includes("24") || false,
+    services: [],
+    carburants: ["Essence", "Gasoil"],
+    source: "OSM" as const
+  };
+}
+
+function mapOsmBrandToMarque(brand: string): string {
+  const brandLower = brand.toLowerCase();
+  if (brandLower.includes("total")) return "TotalEnergies";
+  if (brandLower.includes("shell")) return "Shell";
+  if (brandLower.includes("oryx")) return "Oryx";
+  if (brandLower.includes("sob")) return "SOB Petrol";
+  if (brandLower.includes("sonabhy")) return "Sonabhy";
+  if (brandLower.includes("barka")) return "Barka Energies";
+  return "Autre";
+}
 
 // ============================================
 // ENREGISTREMENT DES ROUTES
@@ -1199,16 +1393,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { pharmaciesService } = await import("./pharmaciesService");
       const { region, typeGarde, search } = req.query;
 
-      let pharmacies;
+      // Récupérer les données du service existant
+      let pharmacies: any[] = pharmaciesService.getAllPharmacies();
 
+      // Ajouter les données OSM (pharmacies, hospitals, clinics)
+      try {
+        const osmPharmacies = await overpassService.getPlaces({ placeType: "pharmacy" });
+        const osmHospitals = await overpassService.getPlaces({ placeType: "hospital" });
+        const osmClinics = await overpassService.getPlaces({ placeType: "clinic" });
+        
+        const allOsmPlaces = [...osmPharmacies, ...osmHospitals, ...osmClinics];
+        const osmTransformed = allOsmPlaces.map(p => transformOsmToPharmacy(p));
+        pharmacies = [...pharmacies, ...osmTransformed];
+      } catch (osmError) {
+        console.error("Erreur chargement OSM pharmacies:", osmError);
+      }
+
+      // Appliquer les filtres
       if (search) {
-        pharmacies = pharmaciesService.searchPharmacies(search as string);
-      } else if (region && region !== "all") {
-        pharmacies = pharmaciesService.getPharmaciesByRegion(region as string);
-      } else if (typeGarde) {
-        pharmacies = pharmaciesService.getPharmaciesByTypeGarde(typeGarde as "jour" | "nuit" | "24h");
-      } else {
-        pharmacies = pharmaciesService.getAllPharmacies();
+        const query = (search as string).toLowerCase();
+        pharmacies = pharmacies.filter(p =>
+          p.nom?.toLowerCase().includes(query) ||
+          p.ville?.toLowerCase().includes(query) ||
+          p.quartier?.toLowerCase().includes(query) ||
+          p.adresse?.toLowerCase().includes(query)
+        );
+      }
+
+      if (region && region !== "all") {
+        pharmacies = pharmacies.filter(p => p.region === region);
+      }
+
+      if (typeGarde && typeGarde !== "all") {
+        pharmacies = pharmacies.filter(p => p.typeGarde === typeGarde);
       }
 
       res.set('Cache-Control', 'public, max-age=3600'); // Cache 1 heure
@@ -1258,16 +1475,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { RESTAURANTS_DATA } = await import("./restaurantsData");
       const { region, type, gammePrix, search, livraison, wifi } = req.query;
 
-      let restaurants = [...RESTAURANTS_DATA];
+      // Récupérer les données codées en dur
+      let restaurants: any[] = [...RESTAURANTS_DATA];
+
+      // Ajouter les données OSM (restaurants, fast_food, cafe, bar)
+      try {
+        const osmRestaurants = await overpassService.getPlaces({ placeType: "restaurant" });
+        const osmFastFood = await overpassService.getPlaces({ placeType: "fast_food" });
+        const osmCafe = await overpassService.getPlaces({ placeType: "cafe" });
+        const osmBar = await overpassService.getPlaces({ placeType: "bar" });
+        
+        const allOsmPlaces = [...osmRestaurants, ...osmFastFood, ...osmCafe, ...osmBar];
+        const osmTransformed = allOsmPlaces.map((p, i) => transformOsmToRestaurant(p, i));
+        restaurants = [...restaurants, ...osmTransformed];
+      } catch (osmError) {
+        console.error("Erreur chargement OSM restaurants:", osmError);
+      }
 
       if (search) {
         const query = (search as string).toLowerCase();
         restaurants = restaurants.filter(r =>
           r.nom.toLowerCase().includes(query) ||
-          r.ville.toLowerCase().includes(query) ||
-          r.quartier.toLowerCase().includes(query) ||
-          r.type.toLowerCase().includes(query) ||
-          r.specialites.some(s => s.toLowerCase().includes(query))
+          r.ville?.toLowerCase().includes(query) ||
+          r.quartier?.toLowerCase().includes(query) ||
+          r.type?.toLowerCase().includes(query) ||
+          (r.specialites && r.specialites.some((s: string) => s.toLowerCase().includes(query)))
         );
       }
 
@@ -1318,16 +1550,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { MARCHES_DATA } = await import("./marchesData");
       const { region, type, search } = req.query;
 
-      let marches = [...MARCHES_DATA];
+      // Récupérer les données codées en dur
+      let marches: any[] = [...MARCHES_DATA];
+
+      // Ajouter les données OSM (marketplaces)
+      try {
+        const osmMarches = await overpassService.getPlaces({ placeType: "marketplace" });
+        const osmTransformed = osmMarches.map(p => transformOsmToMarche(p));
+        marches = [...marches, ...osmTransformed];
+      } catch (osmError) {
+        console.error("Erreur chargement OSM marchés:", osmError);
+      }
 
       if (search) {
         const query = (search as string).toLowerCase();
         marches = marches.filter(m =>
           m.nom.toLowerCase().includes(query) ||
-          m.ville.toLowerCase().includes(query) ||
-          m.quartier.toLowerCase().includes(query) ||
-          m.type.toLowerCase().includes(query) ||
-          m.produits.some(p => p.toLowerCase().includes(query))
+          m.ville?.toLowerCase().includes(query) ||
+          m.quartier?.toLowerCase().includes(query) ||
+          m.type?.toLowerCase().includes(query) ||
+          (m.produits && m.produits.some((p: string) => p.toLowerCase().includes(query)))
         );
       }
 
@@ -1366,17 +1608,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { BOUTIQUES_DATA } = await import("./boutiquesData");
       const { region, categorie, search, livraison, climatisation } = req.query;
 
-      let boutiques = [...BOUTIQUES_DATA];
+      // Récupérer les données codées en dur
+      let boutiques: any[] = [...BOUTIQUES_DATA];
+
+      // Ajouter les données OSM (shops)
+      try {
+        const shopTypes = ["supermarket", "convenience", "grocery", "butcher", "bakery", "clothes", "shoes", "electronics", "mobile_phone", "hardware", "furniture", "jewelry", "hairdresser", "beauty", "cosmetics"];
+        for (const shopType of shopTypes) {
+          const osmShops = await overpassService.getPlaces({ placeType: shopType, limit: 500 });
+          const osmTransformed = osmShops.map(p => transformOsmToBoutique(p));
+          boutiques = [...boutiques, ...osmTransformed];
+        }
+      } catch (osmError) {
+        console.error("Erreur chargement OSM boutiques:", osmError);
+      }
 
       if (search) {
         const query = (search as string).toLowerCase();
         boutiques = boutiques.filter(b =>
           b.nom.toLowerCase().includes(query) ||
-          b.ville.toLowerCase().includes(query) ||
-          b.quartier.toLowerCase().includes(query) ||
-          b.categorie.toLowerCase().includes(query) ||
-          b.produits.some(p => p.toLowerCase().includes(query)) ||
-          (b.marques && b.marques.some(m => m.toLowerCase().includes(query)))
+          b.ville?.toLowerCase().includes(query) ||
+          b.quartier?.toLowerCase().includes(query) ||
+          b.categorie?.toLowerCase().includes(query) ||
+          (b.produits && b.produits.some((p: string) => p.toLowerCase().includes(query))) ||
+          (b.marques && b.marques.some((m: string) => m.toLowerCase().includes(query)))
         );
       }
 
@@ -1423,17 +1678,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { BANQUES_DATA } = await import("./banquesData");
       const { region, type, categorie, search, hasGAB, importanceSystemique } = req.query;
 
-      let banques = [...BANQUES_DATA];
+      // Récupérer les données codées en dur
+      let banques: any[] = [...BANQUES_DATA];
+
+      // Ajouter les données OSM (banques et DAB)
+      try {
+        const osmBanks = await overpassService.getPlaces({ placeType: "bank" });
+        const osmAtm = await overpassService.getPlaces({ placeType: "atm" });
+        const osmBureauChange = await overpassService.getPlaces({ placeType: "bureau_de_change" });
+        
+        const allOsmPlaces = [...osmBanks, ...osmAtm, ...osmBureauChange];
+        const osmTransformed = allOsmPlaces.map(p => transformOsmToBanque(p));
+        banques = [...banques, ...osmTransformed];
+      } catch (osmError) {
+        console.error("Erreur chargement OSM banques:", osmError);
+      }
 
       if (search) {
         const query = (search as string).toLowerCase();
         banques = banques.filter(b =>
           b.nom.toLowerCase().includes(query) ||
-          b.sigle.toLowerCase().includes(query) ||
-          b.ville.toLowerCase().includes(query) ||
-          b.quartier.toLowerCase().includes(query) ||
-          b.type.toLowerCase().includes(query) ||
-          b.services.some(s => s.toLowerCase().includes(query))
+          b.sigle?.toLowerCase().includes(query) ||
+          b.ville?.toLowerCase().includes(query) ||
+          b.quartier?.toLowerCase().includes(query) ||
+          b.type?.toLowerCase().includes(query) ||
+          (b.services && b.services.some((s: string) => s.toLowerCase().includes(query)))
         );
       }
 
@@ -1450,7 +1719,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (hasGAB === "true") {
-        banques = banques.filter(b => b.hasGAB);
+        banques = banques.filter(b => b.hasGAB || b.nombreGAB > 0);
       }
 
       if (importanceSystemique === "true") {
@@ -1541,20 +1810,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { stationsService } = await import("./stationsService");
       const { region, marque, ville, search, is24h } = req.query;
 
-      let stations;
+      // Récupérer les données du service existant
+      let stations: any[] = stationsService.getAllStations();
 
+      // Ajouter les données OSM (fuel, car_wash)
+      try {
+        const osmFuel = await overpassService.getPlaces({ placeType: "fuel" });
+        const osmCarWash = await overpassService.getPlaces({ placeType: "car_wash" });
+        
+        const allOsmPlaces = [...osmFuel, ...osmCarWash];
+        const osmTransformed = allOsmPlaces.map(p => transformOsmToStation(p));
+        stations = [...stations, ...osmTransformed];
+      } catch (osmError) {
+        console.error("Erreur chargement OSM stations:", osmError);
+      }
+
+      // Appliquer les filtres
       if (search) {
-        stations = stationsService.searchStations(search as string);
-      } else if (region && region !== "all") {
-        stations = stationsService.getStationsByRegion(region as string);
-      } else if (marque && marque !== "all") {
-        stations = stationsService.getStationsByMarque(marque as string);
-      } else if (ville) {
-        stations = stationsService.getStationsByVille(ville as string);
-      } else if (is24h === "true") {
-        stations = stationsService.getStations24h();
-      } else {
-        stations = stationsService.getAllStations();
+        const query = (search as string).toLowerCase();
+        stations = stations.filter(s =>
+          s.nom?.toLowerCase().includes(query) ||
+          s.ville?.toLowerCase().includes(query) ||
+          s.quartier?.toLowerCase().includes(query) ||
+          s.marque?.toLowerCase().includes(query) ||
+          s.adresse?.toLowerCase().includes(query)
+        );
+      }
+
+      if (region && region !== "all") {
+        stations = stations.filter(s => s.region === region);
+      }
+
+      if (marque && marque !== "all") {
+        stations = stations.filter(s => s.marque === marque);
+      }
+
+      if (ville) {
+        stations = stations.filter(s => s.ville?.toLowerCase().includes((ville as string).toLowerCase()));
+      }
+
+      if (is24h === "true") {
+        stations = stations.filter(s => s.is24h);
       }
 
       res.set('Cache-Control', 'public, max-age=3600');
