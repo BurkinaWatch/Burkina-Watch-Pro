@@ -63,16 +63,18 @@ const regions = [
 ];
 
 const marques = [
-  "TotalEnergies",
+  "Barka Énergies",
   "Shell",
   "Oryx",
   "SOB Petrol",
   "Sonabhy",
-  "Star Oil"
+  "Star Oil",
+  "Nafex",
+  "Vivo Energy"
 ];
 
 function createStationIcon(marque: string, is24h: boolean) {
-  const color = marque === "TotalEnergies" ? "#DC2626" :
+  const color = marque === "Barka Énergies" || marque === "TotalEnergies" ? "#DC2626" :
                 marque === "Shell" ? "#EAB308" :
                 marque === "Oryx" ? "#2563EB" :
                 marque === "SOB Petrol" ? "#16A34A" :
@@ -118,6 +120,7 @@ export default function Stations() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([12.3714, -1.5197]);
   const [mapZoom, setMapZoom] = useState(7);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [show24hDetails, setShow24hDetails] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
 
   const calculateDistance = useCallback((lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -277,7 +280,7 @@ export default function Stations() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
           <PageStatCard
             title="Total stations"
             value={stats?.total || 0}
@@ -300,13 +303,104 @@ export default function Stations() {
             variant="yellow"
           />
           <PageStatCard
+            title="Oryx"
+            value={stats?.parMarque?.["Oryx"] || 0}
+            icon={Gauge}
+            description="Reseau regional"
+            variant="blue"
+          />
+          <PageStatCard
+            title="Sonabhy"
+            value={stats?.parMarque?.["Sonabhy"] || 0}
+            icon={Gauge}
+            description="National petrolier"
+            variant="purple"
+          />
+          <PageStatCard
             title="Ouvertes 24h/24"
             value={stats?.par24h || 0}
             icon={Clock}
-            description="Service continu"
+            description="Cliquez pour la liste"
             variant="green"
+            onClick={() => setShow24hDetails(!show24hDetails)}
+            clickable
           />
         </div>
+
+        {show24hDetails && (
+          <Card className="mb-6 border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/20">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-green-600" />
+                  Stations ouvertes 24h/24
+                </CardTitle>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setShow24hDetails(false)}
+                  data-testid="button-close-24h-details"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {stations.filter(s => s.is24h).length} stations disponibles jour et nuit
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto">
+                {stations.filter(s => s.is24h).map((station) => (
+                  <div 
+                    key={station.id}
+                    className="p-3 bg-background rounded-lg border hover-elevate cursor-pointer"
+                    onClick={() => handleStationClick(station)}
+                    data-testid={`card-24h-station-${station.id}`}
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <h4 className="font-medium text-sm line-clamp-1">{station.nom}</h4>
+                      <Badge className={`${marqueColors[station.marque]} text-xs shrink-0`}>
+                        {station.marque}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                      <MapPin className="h-3 w-3" />
+                      <span className="line-clamp-1">{station.quartier}, {station.ville}</span>
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      {station.telephone && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCall(station.telephone);
+                          }}
+                        >
+                          <Phone className="h-3 w-3 mr-1" />
+                          Appeler
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="flex-1 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleNavigate(station);
+                        }}
+                      >
+                        <Navigation className="h-3 w-3 mr-1" />
+                        Y aller
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 relative z-50">
