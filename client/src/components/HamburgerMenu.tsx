@@ -57,7 +57,6 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
   // Informations & Engagement
   const infoItems = [
     { href: "/a-propos", icon: Info, label: t("nav.about"), color: "text-slate-600 dark:text-slate-400" },
-    { href: "/contribuer", icon: Heart, label: t("nav.contribute"), color: "text-pink-600 dark:text-pink-500" },
     { href: "/conditions", icon: Scale, label: t("nav.conditions"), color: "text-gray-600 dark:text-gray-400" },
   ];
 
@@ -256,6 +255,17 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
                       >
                         <User className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
                         <span className="font-medium">{t("nav.profile")}</span>
+                      </Button>
+                    </Link>
+                    <Link href="/contribuer">
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start gap-3 h-11 rounded-xl hover:bg-pink-50 dark:hover:bg-pink-950/20 hover:scale-[1.02] transition-all duration-200 group"
+                        onClick={() => onOpenChange(false)}
+                        data-testid="menu-contribuer"
+                      >
+                        <Heart className="w-5 h-5 text-pink-600 dark:text-pink-500 group-hover:scale-110 transition-transform" />
+                        <span className="font-medium">{t("nav.contribute")}</span>
                       </Button>
                     </Link>
                     <Button
