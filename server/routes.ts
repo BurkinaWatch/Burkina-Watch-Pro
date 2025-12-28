@@ -1701,20 +1701,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { MARCHES_DATA } = await import("./marchesData");
       
       // Compter les données OSM
-      let osmCount = 0;
+      let osmMarches: any[] = [];
       try {
-        const osmMarches = await overpassService.getPlaces({ placeType: "marketplace" });
-        osmCount = osmMarches.length;
+        osmMarches = await overpassService.getPlaces({ placeType: "marketplace" });
       } catch (e) {}
       
-      const total = MARCHES_DATA.length + osmCount;
-      const regions = [...new Set(MARCHES_DATA.map(m => m.region))].length;
+      const allMarches = [...MARCHES_DATA, ...osmMarches.map(m => ({ ...m, type: "Central" }))];
+      const total = allMarches.length;
+      
+      // Compter par type
+      const parType: Record<string, number> = {};
+      MARCHES_DATA.forEach(m => {
+        const type = m.type || "Central";
+        parType[type] = (parType[type] || 0) + 1;
+      });
+      
+      // Compter par region
+      const parRegion: Record<string, number> = {};
+      MARCHES_DATA.forEach(m => {
+        const region = m.region || "Kadiogo";
+        parRegion[region] = (parRegion[region] || 0) + 1;
+      });
+      
+      // Nombre de villes uniques
+      const villes = new Set(MARCHES_DATA.map(m => m.ville));
+      const nombreVilles = villes.size;
+      
+      // Total commercants
+      const totalCommercants = MARCHES_DATA.reduce((sum, m) => sum + (m.nombreCommerçants || 0), 0);
       
       res.json({
         total,
+        totalCommercants,
+        parType,
+        parRegion,
+        nombreVilles,
         localCount: MARCHES_DATA.length,
-        osmCount,
-        regions,
+        osmCount: osmMarches.length,
         source: "OSM + Local"
       });
     } catch (error) {
