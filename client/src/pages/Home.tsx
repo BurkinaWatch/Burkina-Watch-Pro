@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
@@ -322,7 +322,7 @@ function SecurityNotesDialog() {
         >
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
           <Shield className="w-5 h-5 sm:w-6 sm:h-6 drop-shadow-lg relative z-10 group-hover:rotate-12 transition-transform" />
-          <span className="relative z-10">📋 Notes de sécurité importantes</span>
+          <span className="relative z-10">Notes de securite importantes</span>
           <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
           <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
         </Button>
@@ -344,6 +344,9 @@ function SecurityNotesDialog() {
               Télécharger
             </Button>
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Conseils et bonnes pratiques pour utiliser BurkinaWatch en toute sécurité
+          </DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-[70vh] pr-4">
           <div className="space-y-6 text-sm">
