@@ -46,21 +46,9 @@ const typeColors: Record<string, string> = {
   "Fruits et Légumes": "bg-lime-600 text-white"
 };
 
-const regions = [
-  "Centre",
-  "Hauts-Bassins",
-  "Boucle du Mouhoun",
-  "Centre-Nord",
-  "Centre-Ouest",
-  "Centre-Est",
-  "Centre-Sud",
-  "Est",
-  "Nord",
-  "Sahel",
-  "Sud-Ouest",
-  "Cascades",
-  "Plateau-Central"
-];
+import { REGION_NAMES } from "@/lib/regions";
+
+const regions = REGION_NAMES;
 
 const types = [
   "Central",

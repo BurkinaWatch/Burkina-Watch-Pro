@@ -64,21 +64,9 @@ const prixColors: Record<string, string> = {
   "Luxe": "bg-red-500 text-white"
 };
 
-const regions = [
-  "Centre",
-  "Hauts-Bassins",
-  "Boucle du Mouhoun",
-  "Centre-Nord",
-  "Centre-Ouest",
-  "Centre-Est",
-  "Centre-Sud",
-  "Est",
-  "Nord",
-  "Sahel",
-  "Sud-Ouest",
-  "Cascades",
-  "Plateau-Central"
-];
+import { REGION_NAMES } from "@/lib/regions";
+
+const regions = REGION_NAMES;
 
 const types = [
   "Africain",

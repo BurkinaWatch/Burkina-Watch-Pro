@@ -130,10 +130,9 @@ const BOUTIQUES_DATA: Boutique[] = [
   { id: "div_10", nom: "Bazin et Tissus", adresse: "Avenue de la Nation", ville: "Tenkodogo", quartier: "Centre", region: "Boulgou", telephone: "+226 40 71 44 55", categorie: "divers", horaires: "8h-18h", latitude: 11.7800, longitude: -0.3700 }
 ];
 
-const REGIONS = [
-  "Kadiogo", "Guiriko", "Comoé", "Boulkiemdé", "Yatenga", "Gourma",
-  "Séno", "Boulgou", "Oubritenga", "Sanmatenga", "Mouhoun", "Poni"
-];
+import { REGION_NAMES } from "@/lib/regions";
+
+const REGIONS = REGION_NAMES;
 
 const CATEGORIES = [
   { value: "all", label: "Toutes les catégories" },

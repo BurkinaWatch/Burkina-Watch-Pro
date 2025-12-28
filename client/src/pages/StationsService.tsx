@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import EmergencyPanel from "@/components/EmergencyPanel";
@@ -188,11 +188,9 @@ const STATIONS_DATA: StationService[] = [
   { id: "st_110", nom: "Oryx Kongoussi", adresse: "Route de Ouahigouya", ville: "Kongoussi", quartier: "Secteur 1", region: "Bam", telephone: "+226 24 42 20 20", marque: "oryx", services: ["Carburant"], horaires: "6h-19h", latitude: 13.3270, longitude: -1.5280 }
 ];
 
-const REGIONS = [
-  "Kadiogo", "Houet", "Comoé", "Boulkiemdé", "Yatenga", "Gourma",
-  "Séno", "Boulgou", "Oubritenga", "Sanmatenga", "Mouhoun", "Poni",
-  "Nahouri", "Tuy", "Kénédougou", "Balé", "Zoundwéogo", "Bam"
-];
+import { REGION_NAMES } from "@/lib/regions";
+
+const REGIONS = REGION_NAMES;
 
 const MARQUES = [
   { value: "all", label: "Toutes les marques" },
