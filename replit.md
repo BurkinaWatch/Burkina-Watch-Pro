@@ -53,3 +53,25 @@ The platform features extensive verified data for locations across all 13 region
 - Real business names and phone numbers sourced from 2024 web research
 - Complete service information (24h, parking, WiFi, delivery, etc.)
 - Coverage across all 13 regions of Burkina Faso with 450+ total locations
+
+## OSM Migration Infrastructure (December 2024)
+
+### Data Source Strategy
+- **Primary data source**: OpenStreetMap via Overpass API (`server/overpassService.ts`)
+- **Google Maps**: Used only for navigation links and external map viewing
+- **Community verification**: Crowdsourced confirmation/report system
+
+### Database Fields
+- `source`: Enum (OSM, COMMUNAUTE, OFFICIEL) - indicates data provenance
+- `confidenceScore`: Decimal 0.0-1.0 - reliability score based on source and verification
+- `verificationStatus`: pending/verified/needs_review - community verification state
+
+### Components
+- `server/dataMigrationService.ts`: Progressively migrates hardcoded data to OSM format
+- `client/src/components/SourceBadge.tsx`: Displays source, confidence, and verification status
+- API endpoints: `/api/places/migrate` (admin), `/api/places/migration-status` (admin)
+
+### Confidence Scores
+- OSM data: 0.6 (default)
+- Community-verified: Score increases with confirmations
+- Official data: 0.85-0.9
