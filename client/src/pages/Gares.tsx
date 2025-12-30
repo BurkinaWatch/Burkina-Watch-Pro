@@ -132,7 +132,7 @@ export default function Gares() {
       const matchesSearch = searchQuery === "" || 
         gare.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
         gare.ville.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        gare.adresse.toLowerCase().includes(searchQuery.toLowerCase());
+        (gare.adresse || "").toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCompagnie = selectedCompagnie === "all" || 
         gare.compagnie === selectedCompagnie;
       const matchesRegion = selectedRegion === "all" || 
@@ -471,7 +471,9 @@ export default function Gares() {
                         </Badge>
                       </div>
                       
-                      <p className="text-xs text-muted-foreground">{gare.adresse}</p>
+                      {gare.adresse && (
+                        <p className="text-xs text-muted-foreground">{gare.adresse}</p>
+                      )}
                       
                       {gare.heuresOuverture && (
                         <p className="text-xs flex items-center gap-1">
@@ -544,13 +546,15 @@ export default function Gares() {
                                     )}
                                   </div>
                                 </div>
-                                <div className="flex flex-wrap gap-1">
-                                  {dest.horaires.map((h, j) => (
-                                    <Badge key={j} variant="outline" className="text-xs font-mono">
-                                      {h}
-                                    </Badge>
-                                  ))}
-                                </div>
+                                {dest.horaires && dest.horaires.length > 0 && (
+                                  <div className="flex flex-wrap gap-1">
+                                    {dest.horaires.map((h, j) => (
+                                      <Badge key={j} variant="outline" className="text-xs font-mono">
+                                        {h}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
                                 {dest.compagnies && dest.compagnies.length > 0 && (
                                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                     <Bus className="w-3 h-3" />
