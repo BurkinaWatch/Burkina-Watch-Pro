@@ -2776,6 +2776,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================
+  // ALERTES MÉTÉO EN TEMPS RÉEL
+  // ============================================
+  
+  app.get("/api/weather-alerts", async (req, res) => {
+    try {
+      const { getWeatherData, getActiveAlerts } = await import("./weatherAlertService");
+      
+      const activeOnly = req.query.active === "true";
+      
+      if (activeOnly) {
+        const alerts = await getActiveAlerts();
+        res.json({
+          alerts,
+          count: alerts.length,
+          lastUpdate: new Date().toISOString(),
+        });
+      } else {
+        const data = await getWeatherData();
+        res.json({
+          alerts: data.alerts,
+          count: data.alerts.length,
+          lastUpdate: data.lastUpdate,
+          source: data.source,
+        });
+      }
+    } catch (error) {
+      console.error("Erreur alertes météo:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des alertes météo" });
+    }
+  });
+
+  app.get("/api/weather", async (req, res) => {
+    try {
+      const { getWeatherData, getCityWeather } = await import("./weatherAlertService");
+      
+      const cityName = req.query.city as string;
+      
+      if (cityName) {
+        const cityWeather = await getCityWeather(cityName);
+        if (!cityWeather) {
+          return res.status(404).json({ error: `Ville '${cityName}' non trouvée` });
+        }
+        res.json(cityWeather);
+      } else {
+        const data = await getWeatherData();
+        res.json(data);
+      }
+    } catch (error) {
+      console.error("Erreur données météo:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des données météo" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
