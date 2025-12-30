@@ -1080,7 +1080,7 @@ function CreateTourDialog({
               thumbnail: p.thumbnail,
               latitude: p.latitude,
               longitude: p.longitude,
-              capturedAt: p.capturedAt
+              capturedAt: p.capturedAt instanceof Date ? p.capturedAt.toISOString() : p.capturedAt
             }));
             setPhotos(prev => [...prev, ...photosWithGPS].slice(0, MAX_PHOTOS_PER_TOUR));
           }}
@@ -1173,13 +1173,24 @@ export default function StreetView() {
           <CardContent className="py-4">
             <div className="flex items-start gap-3">
               <Camera className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-              <div>
+              <div className="flex-1">
                 <h4 className="font-semibold text-primary">Contribuez a StreetView Ouaga</h4>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Cliquez sur la carte pour ajouter un tour virtuel. Prenez plusieurs photos d'un lieu
-                  pour creer une visite interactive que tous les utilisateurs pourront explorer.
+                  Prenez plusieurs photos d'un lieu pour creer une visite interactive 360°
+                  que tous les utilisateurs pourront explorer.
                 </p>
               </div>
+              <Button 
+                onClick={() => {
+                  setSelectedPosition({ lat: mapCenter[0], lng: mapCenter[1] });
+                  setShowCreateDialog(true);
+                }}
+                className="gap-2 flex-shrink-0"
+                data-testid="button-start-capture"
+              >
+                <Camera className="h-4 w-4" />
+                Nouvelle capture
+              </Button>
             </div>
           </CardContent>
         </Card>
