@@ -8,7 +8,7 @@ import { insertSignalementSchema, updateSignalementSchema, insertCommentaireSche
 import { fromZodError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { reverseGeocode } from "./geocoding";
-import { sendLocationEmail } from "./resend";
+import { sendLocationEmail, sendEmergencyTrackingStartEmail } from "./resend";
 import { verifySignalement } from "./aiVerification";
 import { moderateContent, logModerationAction } from "./contentModeration";
 import { signalementMutationLimiter } from "./securityHardening";
@@ -983,7 +983,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/tracking/start", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const { latitude, longitude } = req.body || {};
+      
       const session = await storage.startTrackingSession(userId);
+      
+      // Envoyer une notification aux contacts d'urgence
+      try {
+        const user = await storage.getUser(userId);
+        const emergencyContacts = await storage.getEmergencyContacts(userId);
+        
+        if (user && emergencyContacts.length > 0) {
+          const userName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Utilisateur';
+          
+          // Get initial location if provided
+          let initialLocation: { latitude: number; longitude: number; address?: string } | undefined;
+          if (latitude && longitude) {
+            const geocodeResult = await reverseGeocode(latitude, longitude);
+            initialLocation = {
+              latitude,
+              longitude,
+              address: geocodeResult.address
+            };
+          }
+          
+          // Envoyer des emails à tous les contacts avec email
+          const emailPromises = emergencyContacts
+            .filter(contact => contact.email)
+            .map(contact => 
+              sendEmergencyTrackingStartEmail(
+                contact.email!,
+                contact.name,
+                userName,
+                `https://${process.env.REPLIT_DEV_DOMAIN || 'burkina-watch.replit.app'}/tracking-live`,
+                initialLocation
+              ).catch(err => {
+                console.error(`❌ Erreur envoi email à ${contact.email}:`, err);
+                return null;
+              })
+            );
+          
+          await Promise.all(emailPromises);
+          console.log(`✅ Notifications envoyées à ${emailPromises.length} contacts d'urgence pour ${userName}`);
+        }
+      } catch (notificationError) {
+        console.error("⚠️ Erreur lors de l'envoi des notifications (non bloquant):", notificationError);
+        // Ne pas bloquer le démarrage du tracking si les notifications échouent
+      }
+      
       res.status(201).json(session);
     } catch (error) {
       console.error("Error starting tracking session:", error);

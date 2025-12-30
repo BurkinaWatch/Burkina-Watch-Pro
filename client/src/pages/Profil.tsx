@@ -401,13 +401,34 @@ export default function Profil() {
   }, [activeSession, activeSessionPoints]);
 
   const startTrackingMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/tracking/start"),
+    mutationFn: async () => {
+      // Obtenir la position initiale pour l'envoyer aux contacts d'urgence
+      let initialLocation: { latitude: number; longitude: number } | null = null;
+      
+      try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          });
+        });
+        initialLocation = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        };
+      } catch (geoError) {
+        console.warn("Impossible d'obtenir la position initiale:", geoError);
+      }
+      
+      return apiRequest("POST", "/api/tracking/start", initialLocation);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tracking/session"] });
       queryClient.invalidateQueries({ queryKey: ["/api/tracking/sessions"] });
       toast({
         title: "Tracking démarré",
-        description: "Votre position est maintenant suivie en temps réel.",
+        description: "Votre position est maintenant suivie. Vos contacts d'urgence ont été notifiés.",
       });
       setTrackingActive(true);
       setLocationPointsCount(0);
