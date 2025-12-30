@@ -45,6 +45,7 @@ import PharmaciesOSM from "@/pages/PharmaciesOSM";
 import LiveTrack from "@/pages/LiveTrack";
 import Gares from "@/pages/Gares";
 import Weather from "@/pages/Weather";
+import Fiabilite from "@/pages/Fiabilite";
 import NotFound from "@/pages/not-found";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
 
@@ -80,6 +81,7 @@ function Router() {
       <Route path="/gares" component={Gares} />
       <Route path="/meteo" component={Weather} />
       <Route path="/a-propos" component={APropos} />
+      <Route path="/fiabilite" component={Fiabilite} />
       <Route path="/conditions" component={Conditions} />
       <Route path="/notifications" component={Notifications} />
       <Route path="/track/:shareToken" component={LiveTrack} />

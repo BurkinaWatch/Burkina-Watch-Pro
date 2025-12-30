@@ -1964,6 +1964,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----------------------------------------
+  // ROUTES FIABILITE - CONFIRMATION ET SIGNALEMENT
+  // ----------------------------------------
+  
+  // Stocker les confirmations et signalements en mémoire (en production, utiliser la base de données)
+  const placeInteractions: Record<string, { confirmations: number; reports: number; confirmedBy: Set<string>; reportedBy: Set<string> }> = {};
+  
+  app.post("/api/places/:placeType/:placeId/confirm", async (req, res) => {
+    try {
+      const { placeType, placeId } = req.params;
+      const key = `${placeType}-${placeId}`;
+      const userIp = req.ip || req.socket.remoteAddress || "anonymous";
+      
+      if (!placeInteractions[key]) {
+        placeInteractions[key] = { confirmations: 0, reports: 0, confirmedBy: new Set(), reportedBy: new Set() };
+      }
+      
+      // Vérifier si l'utilisateur a déjà confirmé
+      if (placeInteractions[key].confirmedBy.has(userIp)) {
+        return res.status(400).json({ error: "Vous avez deja confirme cette information" });
+      }
+      
+      placeInteractions[key].confirmations++;
+      placeInteractions[key].confirmedBy.add(userIp);
+      
+      res.json({ 
+        success: true, 
+        confirmations: placeInteractions[key].confirmations,
+        reports: placeInteractions[key].reports
+      });
+    } catch (error) {
+      console.error("Erreur confirmation:", error);
+      res.status(500).json({ error: "Erreur lors de la confirmation" });
+    }
+  });
+  
+  app.post("/api/places/:placeType/:placeId/report", async (req, res) => {
+    try {
+      const { placeType, placeId } = req.params;
+      const key = `${placeType}-${placeId}`;
+      const userIp = req.ip || req.socket.remoteAddress || "anonymous";
+      
+      if (!placeInteractions[key]) {
+        placeInteractions[key] = { confirmations: 0, reports: 0, confirmedBy: new Set(), reportedBy: new Set() };
+      }
+      
+      // Vérifier si l'utilisateur a déjà signalé
+      if (placeInteractions[key].reportedBy.has(userIp)) {
+        return res.status(400).json({ error: "Vous avez deja signale cette information" });
+      }
+      
+      placeInteractions[key].reports++;
+      placeInteractions[key].reportedBy.add(userIp);
+      
+      res.json({ 
+        success: true, 
+        confirmations: placeInteractions[key].confirmations,
+        reports: placeInteractions[key].reports
+      });
+    } catch (error) {
+      console.error("Erreur signalement:", error);
+      res.status(500).json({ error: "Erreur lors du signalement" });
+    }
+  });
+  
+  app.get("/api/places/:placeType/:placeId/interactions", async (req, res) => {
+    try {
+      const { placeType, placeId } = req.params;
+      const key = `${placeType}-${placeId}`;
+      
+      const data = placeInteractions[key] || { confirmations: 0, reports: 0 };
+      res.json({ 
+        confirmations: data.confirmations,
+        reports: data.reports
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Erreur" });
+    }
+  });
+
+  // ----------------------------------------
   // ROUTES BANQUES ET CAISSES POPULAIRES
   // ----------------------------------------
   app.get("/api/banques", async (req, res) => {
