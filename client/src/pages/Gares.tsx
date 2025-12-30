@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -79,6 +79,8 @@ interface TransportStats {
   destinationsInternationales: number;
 }
 
+const GARES_PER_PAGE = 50;
+
 export default function Gares() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCompagnie, setSelectedCompagnie] = useState<string>("all");
@@ -86,6 +88,7 @@ export default function Gares() {
   const [departVille, setDepartVille] = useState("");
   const [arriveeVille, setArriveeVille] = useState("");
   const [activeTab, setActiveTab] = useState("compagnies");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [includeOSM, setIncludeOSM] = useState(true);
   
@@ -125,6 +128,16 @@ export default function Gares() {
       return matchesSearch && matchesCompagnie && matchesRegion;
     });
   }, [gares, searchQuery, selectedCompagnie, selectedRegion]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCompagnie, selectedRegion]);
+
+  const totalPages = Math.ceil(filteredGares.length / GARES_PER_PAGE);
+  const paginatedGares = useMemo(() => {
+    const start = (currentPage - 1) * GARES_PER_PAGE;
+    return filteredGares.slice(start, start + GARES_PER_PAGE);
+  }, [filteredGares, currentPage]);
 
   const filteredTrajets = useMemo(() => {
     return trajets.filter(trajet => {
@@ -410,14 +423,19 @@ export default function Gares() {
                     </Select>
                   </div>
                   <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                    <span>{filteredGares.length} gare{filteredGares.length > 1 ? "s" : ""} trouvee{filteredGares.length > 1 ? "s" : ""}</span>
+                    <span>
+                      {filteredGares.length > GARES_PER_PAGE 
+                        ? `Affichage ${(currentPage - 1) * GARES_PER_PAGE + 1}-${Math.min(currentPage * GARES_PER_PAGE, filteredGares.length)} sur ${filteredGares.length} gares`
+                        : `${filteredGares.length} gare${filteredGares.length > 1 ? "s" : ""} trouvee${filteredGares.length > 1 ? "s" : ""}`
+                      }
+                    </span>
                     <span>Source: Donnees verifiees + OpenStreetMap</span>
                   </div>
                 </CardContent>
               </Card>
 
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {filteredGares.map((gare) => (
+                {paginatedGares.map((gare) => (
                   <Card key={gare.id} className="hover-elevate" data-testid={`card-gare-${gare.id}`}>
                     <CardContent className="p-4 space-y-2">
                       <div className="flex items-start justify-between gap-2">
@@ -470,6 +488,69 @@ export default function Gares() {
                 <div className="text-center py-12">
                   <MapPin className="w-12 h-12 mx-auto text-muted-foreground/50 mb-2" />
                   <p className="text-muted-foreground">Aucune gare trouvee</p>
+                </div>
+              )}
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 pt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    data-testid="button-prev-page"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Precedent
+                  </Button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let page: number;
+                      if (totalPages <= 5) {
+                        page = i + 1;
+                      } else if (currentPage <= 3) {
+                        page = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        page = totalPages - 4 + i;
+                      } else {
+                        page = currentPage - 2 + i;
+                      }
+                      return (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(page)}
+                          data-testid={`button-page-${page}`}
+                        >
+                          {page}
+                        </Button>
+                      );
+                    })}
+                    {totalPages > 5 && currentPage < totalPages - 2 && (
+                      <>
+                        <span className="px-1">...</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(totalPages)}
+                          data-testid={`button-page-${totalPages}`}
+                        >
+                          {totalPages}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    data-testid="button-next-page"
+                  >
+                    Suivant
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
                 </div>
               )}
             </TabsContent>
