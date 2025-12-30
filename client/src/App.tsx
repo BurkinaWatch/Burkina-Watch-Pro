@@ -9,6 +9,7 @@ import { StealthModeProvider } from "@/components/StealthModeProvider";
 import { HelmetProvider } from "react-helmet-async";
 import { useAuth } from "@/hooks/useAuth";
 import ChatBot from "@/components/ChatBot";
+import { InteractiveTutorial } from "@/components/InteractiveTutorial";
 import { WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import "./i18n/config";
@@ -125,6 +126,7 @@ function AppContent() {
       <OfflineIndicator />
       <Router />
       <ChatBot />
+      <InteractiveTutorial />
     </>
   );
 }

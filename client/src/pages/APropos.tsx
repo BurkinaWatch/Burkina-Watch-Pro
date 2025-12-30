@@ -1,9 +1,10 @@
-import { ArrowLeft, Shield, Eye, Zap, Users, Heart, Target, Award } from "lucide-react";
+import { ArrowLeft, Shield, Eye, Zap, Users, Heart, Target, Award, HelpCircle } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import { TutorialTrigger } from "@/components/InteractiveTutorial";
 
 export default function APropos() {
   return (
@@ -250,6 +251,23 @@ export default function APropos() {
                 </span>
               </li>
             </ul>
+          </CardContent>
+        </Card>
+
+        {/* Aide et Tutoriel */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3 text-2xl">
+              <HelpCircle className="w-7 h-7 text-primary" />
+              Besoin d'aide ?
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">
+              Si vous etes nouveau sur Burkina Watch, vous pouvez revoir le tutoriel interactif 
+              pour decouvrir toutes les fonctionnalites de l'application.
+            </p>
+            <TutorialTrigger />
           </CardContent>
         </Card>
 
