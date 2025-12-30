@@ -1348,6 +1348,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----------------------------------------
+  // ROUTES ANALYSE DES RISQUES ET RECOMMANDATIONS
+  // ----------------------------------------
+  app.get("/api/risk-zones", async (req, res) => {
+    try {
+      const { analyzeRiskZones } = await import("./riskAnalysisService");
+      const zones = await analyzeRiskZones();
+      res.json(zones);
+    } catch (error) {
+      console.error("Error analyzing risk zones:", error);
+      res.status(500).json({ error: "Erreur lors de l'analyse des zones a risque" });
+    }
+  });
+
+  app.get("/api/recommendations", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { getPersonalizedRecommendations } = await import("./riskAnalysisService");
+      const recommendations = await getPersonalizedRecommendations(userId);
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error getting recommendations:", error);
+      res.status(500).json({ error: "Erreur lors de la generation des recommandations" });
+    }
+  });
+
+  app.get("/api/risk-stats", async (req, res) => {
+    try {
+      const { getRiskStats } = await import("./riskAnalysisService");
+      const stats = await getRiskStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error getting risk stats:", error);
+      res.status(500).json({ error: "Erreur lors de la recuperation des statistiques" });
+    }
+  });
+
+  // ----------------------------------------
   // ROUTES CHATBOT
   // ----------------------------------------
   const chatRequestSchema = insertChatMessageSchema.omit({ role: true });
