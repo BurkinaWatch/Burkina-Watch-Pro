@@ -132,15 +132,15 @@ export default function Gares() {
     return Array.from(new Set(gares.map(g => g.region))).sort();
   }, [gares]);
 
-  // Compteur des gares hors SOTRACO pour l'onglet principal
-  const garesHorsSotraco = useMemo(() => {
-    return gares.filter(g => g.compagnie !== "sotraco").length;
+  // Compteur des gares hors SOTRACO et SITARAIL pour l'onglet principal
+  const garesOngletPrincipal = useMemo(() => {
+    return gares.filter(g => g.compagnie !== "sotraco" && g.compagnie !== "sitarail").length;
   }, [gares]);
 
   const filteredGares = useMemo(() => {
     return gares.filter(gare => {
-      // Exclure les gares SOTRACO de l'onglet principal (elles sont dans l'onglet SOTRACO dédié)
-      if (gare.compagnie === "sotraco") return false;
+      // Exclure les gares SOTRACO et SITARAIL de l'onglet principal (elles ont leurs onglets dédiés)
+      if (gare.compagnie === "sotraco" || gare.compagnie === "sitarail") return false;
       
       const matchesSearch = searchQuery === "" || 
         gare.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -439,7 +439,7 @@ export default function Gares() {
                   >
                     <MapPin className="w-4 h-4 text-green-600" />
                     <span className="font-semibold text-xs">Trouver une gare</span>
-                    <span className="text-[10px] text-muted-foreground hidden sm:block">{garesHorsSotraco} gares</span>
+                    <span className="text-[10px] text-muted-foreground hidden sm:block">{garesOngletPrincipal} gares</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="sitarail" 
