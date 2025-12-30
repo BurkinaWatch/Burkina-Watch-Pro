@@ -24,6 +24,8 @@ import {
   Snowflake,
   Package,
   ChevronLeft,
+  ChevronDown,
+  ChevronUp,
   ExternalLink,
   Navigation
 } from "lucide-react";
@@ -98,9 +100,10 @@ export default function Gares() {
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [departVille, setDepartVille] = useState("");
   const [arriveeVille, setArriveeVille] = useState("");
-  const [activeTab, setActiveTab] = useState("compagnies");
+  const [activeTab, setActiveTab] = useState("gares");
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedGare, setExpandedGare] = useState<string | null>(null);
+  const [showCompagnies, setShowCompagnies] = useState(false);
 
   const [includeOSM, setIncludeOSM] = useState(true);
   
@@ -295,24 +298,23 @@ export default function Gares() {
             </div>
           )}
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="compagnies" data-testid="tab-compagnies">
-                <Building2 className="w-4 h-4 mr-2" />
-                Compagnies
-              </TabsTrigger>
-              <TabsTrigger value="gares" data-testid="tab-gares">
-                <MapPin className="w-4 h-4 mr-2" />
-                Gares
-              </TabsTrigger>
-              <TabsTrigger value="horaires" data-testid="tab-horaires">
-                <Clock className="w-4 h-4 mr-2" />
-                Horaires
-              </TabsTrigger>
-            </TabsList>
+          {/* Section Compagnies avec bouton toggle */}
+          <div className="space-y-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowCompagnies(!showCompagnies)}
+              className="w-full justify-between"
+              data-testid="button-toggle-compagnies"
+            >
+              <div className="flex items-center gap-2">
+                <Building2 className="w-4 h-4" />
+                <span>Decouvrir les {compagnies.length} compagnies de transport</span>
+              </div>
+              {showCompagnies ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </Button>
 
-            <TabsContent value="compagnies" className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
+            {showCompagnies && (
+              <div className="grid gap-4 md:grid-cols-2 animate-in slide-in-from-top-2 duration-300">
                 {compagnies.map((compagnie) => (
                   <Card key={compagnie.id} className="overflow-hidden hover-elevate" data-testid={`card-compagnie-${compagnie.id}`}>
                     <CardHeader className="pb-2">
@@ -395,7 +397,20 @@ export default function Gares() {
                   </Card>
                 ))}
               </div>
-            </TabsContent>
+            )}
+          </div>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="gares" data-testid="tab-gares">
+                <MapPin className="w-4 h-4 mr-2" />
+                Gares
+              </TabsTrigger>
+              <TabsTrigger value="horaires" data-testid="tab-horaires">
+                <Clock className="w-4 h-4 mr-2" />
+                Horaires
+              </TabsTrigger>
+            </TabsList>
 
             <TabsContent value="gares" className="space-y-4">
               <Card className="bg-muted/30">
