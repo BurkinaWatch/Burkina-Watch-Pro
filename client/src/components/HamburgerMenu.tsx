@@ -34,7 +34,6 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
   const servicesItems = [
     { href: "/bulletin", icon: Newspaper, label: t("nav.bulletin"), color: "text-yellow-700 dark:text-yellow-500", badge: t("common.new"), badgeColor: "bg-yellow-500" },
     { href: "/events", icon: Calendar, label: t("nav.events"), color: "text-purple-600 dark:text-purple-500", badge: t("common.new"), badgeColor: "bg-purple-500" },
-    { href: "/gares", icon: Bus, label: "Gares Routieres", color: "text-blue-600 dark:text-blue-500", badge: t("common.new"), badgeColor: "bg-blue-500" },
     { href: "/tracking-live", icon: Navigation, label: t("nav.tracking"), color: "text-cyan-600 dark:text-cyan-500" },
     { href: "/streetview", icon: Camera, label: t("nav.streetview"), color: "text-green-700 dark:text-green-500", badge: t("common.new"), badgeColor: "bg-green-500" },
   ];
@@ -53,6 +52,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     { href: "/boutiques", icon: ShoppingBag, label: "Boutiques", color: "text-pink-600 dark:text-pink-500" },
     { href: "/banques", icon: Landmark, label: "Banques", color: "text-blue-600 dark:text-blue-500" },
     { href: "/stations", icon: Fuel, label: "Stations-Service", color: "text-red-600 dark:text-red-500" },
+    { href: "/gares", icon: Bus, label: "Gares Routieres", color: "text-blue-600 dark:text-blue-500", badge: t("common.new"), badgeColor: "bg-blue-500" },
   ];
 
   // Informations & Engagement
