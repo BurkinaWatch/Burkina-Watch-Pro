@@ -3,14 +3,36 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import EmergencyPanel from "@/components/EmergencyPanel";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw } from "lucide-react";
+import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, AlertCircle, Shield, Calendar, ExternalLink } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+
+interface PharmacieDeGarde {
+  nom: string;
+  telephone: string;
+  groupe: 1 | 2 | 3 | 4;
+  ville: "Ouagadougou" | "Bobo-Dioulasso";
+}
+
+interface PharmaciesDeGardeResponse {
+  date: string;
+  groupeOuagadougou: number;
+  groupeBobo: number;
+  pharmacies: PharmacieDeGarde[];
+  total: number;
+  info: {
+    source: string;
+    lastUpdate: string;
+    description: string;
+    totalPharmacies: number;
+  };
+}
 
 interface Pharmacie {
   id: string;
@@ -2109,12 +2131,19 @@ const REGIONS = [
 export default function Pharmacies() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
+  const [selectedVilleGarde, setSelectedVilleGarde] = useState<"all" | "Ouagadougou" | "Bobo-Dioulasso">("all");
   const [, setLocation] = useLocation();
   const [pharmacies, setPharmacies] = useState<Pharmacie[]>(PHARMACIES_DATA);
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const { toast } = useToast();
   const lastFetchRef = useRef<number>(0);
+
+  const { data: pharmaciesDeGarde, isLoading: isLoadingGarde } = useQuery<PharmaciesDeGardeResponse>({
+    queryKey: ["/api/pharmacies-de-garde"],
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: true,
+  });
 
   // Fonction pour récupérer les pharmacies depuis l'API (avec debounce de 5 secondes)
   const fetchPharmacies = useCallback(async () => {
@@ -2260,12 +2289,137 @@ export default function Pharmacies() {
 
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-            <span className="text-2xl">💊</span>
+            <Shield className="w-8 h-8 text-primary" />
             Pharmacies de Garde
           </h1>
           <p className="text-muted-foreground">
             Liste des pharmacies de garde au Burkina Faso
           </p>
+        </div>
+
+        {/* Section Pharmacies de Garde - Données officielles Orange BF */}
+        <Card className="mb-6 border-2 border-primary/30 bg-primary/5">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <AlertCircle className="w-5 h-5 text-green-600" />
+                  Pharmacies Ouvertes Maintenant
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  {pharmaciesDeGarde?.date ? (
+                    <>Semaine du {new Date(pharmaciesDeGarde.date).toLocaleDateString('fr-FR', { 
+                      day: 'numeric', 
+                      month: 'long', 
+                      year: 'numeric' 
+                    })}</>
+                  ) : (
+                    "Chargement..."
+                  )}
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="gap-1">
+                  <Calendar className="w-3 h-3" />
+                  Source: Orange BF
+                </Badge>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isLoadingGarde ? (
+              <div className="animate-pulse space-y-2">
+                <div className="h-8 bg-muted rounded w-1/3"></div>
+                <div className="h-4 bg-muted rounded w-1/2"></div>
+              </div>
+            ) : pharmaciesDeGarde ? (
+              <>
+                {/* Filtres par ville */}
+                <div className="flex gap-2 mb-4 flex-wrap">
+                  <Button
+                    variant={selectedVilleGarde === "all" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedVilleGarde("all")}
+                    data-testid="button-filter-all"
+                  >
+                    Toutes ({pharmaciesDeGarde.total})
+                  </Button>
+                  <Button
+                    variant={selectedVilleGarde === "Ouagadougou" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedVilleGarde("Ouagadougou")}
+                    data-testid="button-filter-ouaga"
+                  >
+                    Ouagadougou (Groupe {pharmaciesDeGarde.groupeOuagadougou})
+                  </Button>
+                  <Button
+                    variant={selectedVilleGarde === "Bobo-Dioulasso" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedVilleGarde("Bobo-Dioulasso")}
+                    data-testid="button-filter-bobo"
+                  >
+                    Bobo-Dioulasso (Groupe {pharmaciesDeGarde.groupeBobo})
+                  </Button>
+                </div>
+
+                {/* Liste des pharmacies de garde */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto">
+                  {pharmaciesDeGarde.pharmacies
+                    .filter(p => selectedVilleGarde === "all" || p.ville === selectedVilleGarde)
+                    .map((pharmacie, index) => (
+                      <div 
+                        key={`garde-${pharmacie.ville}-${index}`}
+                        className="bg-background rounded-lg p-3 border hover-elevate"
+                        data-testid={`card-pharmacie-garde-${index}`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{pharmacie.nom}</p>
+                            <p className="text-xs text-muted-foreground">{pharmacie.ville}</p>
+                          </div>
+                          <Badge variant="secondary" className="text-xs shrink-0">
+                            G{pharmacie.groupe}
+                          </Badge>
+                        </div>
+                        <div className="mt-2">
+                          <a 
+                            href={`tel:${pharmacie.telephone}`}
+                            className="inline-flex items-center gap-1 text-primary text-sm font-medium"
+                            data-testid={`link-call-pharmacie-${index}`}
+                          >
+                            <Phone className="w-3 h-3" />
+                            {pharmacie.telephone}
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+
+                {/* Info source */}
+                <div className="mt-4 pt-3 border-t flex items-center justify-between gap-2 text-xs text-muted-foreground flex-wrap">
+                  <span>{pharmaciesDeGarde.info.description}</span>
+                  <a 
+                    href="https://www.orange.bf" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-primary"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    orange.bf
+                  </a>
+                </div>
+              </>
+            ) : (
+              <p className="text-muted-foreground">Impossible de charger les pharmacies de garde</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Divider */}
+        <div className="my-6 flex items-center gap-4">
+          <div className="flex-1 h-px bg-border"></div>
+          <span className="text-sm text-muted-foreground">Toutes les pharmacies par region</span>
+          <div className="flex-1 h-px bg-border"></div>
         </div>
 
         <Card className="mb-6">

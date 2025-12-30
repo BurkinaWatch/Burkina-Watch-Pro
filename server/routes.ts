@@ -2706,6 +2706,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================
+  // PHARMACIES DE GARDE - DONNÉES OFFICIELLES
+  // Source: Orange Burkina Faso (https://www.orange.bf)
+  // ============================================
+  app.get("/api/pharmacies-de-garde", async (req, res) => {
+    try {
+      const { 
+        getPharmaciesDeGarde, 
+        getCurrentGardeGroup, 
+        GARDE_INFO,
+        ALL_PHARMACIES_DE_GARDE
+      } = await import("./pharmaciesDeGardeData");
+      
+      const ville = req.query.ville as "Ouagadougou" | "Bobo-Dioulasso" | undefined;
+      const showAll = req.query.all === "true";
+      
+      const today = new Date();
+      const ouagaGroup = getCurrentGardeGroup("Ouagadougou", today);
+      const boboGroup = getCurrentGardeGroup("Bobo-Dioulasso", today);
+      
+      const pharmacies = showAll 
+        ? ALL_PHARMACIES_DE_GARDE 
+        : getPharmaciesDeGarde(ville, today);
+      
+      res.json({
+        date: today.toISOString().split('T')[0],
+        groupeOuagadougou: ouagaGroup,
+        groupeBobo: boboGroup,
+        pharmacies,
+        total: pharmacies.length,
+        info: GARDE_INFO
+      });
+    } catch (error) {
+      console.error("Erreur pharmacies de garde:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des pharmacies de garde" });
+    }
+  });
+
+  app.get("/api/pharmacies-de-garde/groups", async (req, res) => {
+    try {
+      const { 
+        getPharmaciesByGroup, 
+        getGardeDatesForGroup 
+      } = await import("./pharmaciesDeGardeData");
+      
+      const ville = req.query.ville as "Ouagadougou" | "Bobo-Dioulasso";
+      const groupe = parseInt(req.query.groupe as string) as 1 | 2 | 3 | 4;
+      
+      if (!ville || !groupe || groupe < 1 || groupe > 4) {
+        return res.status(400).json({ 
+          error: "Paramètres invalides. Ville et groupe (1-4) requis." 
+        });
+      }
+      
+      const pharmacies = getPharmaciesByGroup(ville, groupe);
+      const prochaineDates = getGardeDatesForGroup(ville, groupe);
+      
+      res.json({
+        ville,
+        groupe,
+        pharmacies,
+        total: pharmacies.length,
+        prochaineDatesDeGarde: prochaineDates.map(d => d.toISOString().split('T')[0])
+      });
+    } catch (error) {
+      console.error("Erreur groupes pharmacies:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération du groupe" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
