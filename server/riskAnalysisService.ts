@@ -11,7 +11,7 @@ interface RiskZone {
   riskScore: number;
   incidentCount: number;
   categories: { categorie: string; count: number }[];
-  lastIncident: Date | null;
+  lastIncident: string | null;
   trend: "hausse" | "stable" | "baisse";
   description: string;
 }
@@ -109,7 +109,13 @@ export async function analyzeRiskZones(): Promise<RiskZone[]> {
   const locationGroups: Record<string, typeof recentSignalements> = {};
   
   for (const s of recentSignalements) {
-    const key = s.localisation || `${parseFloat(s.latitude).toFixed(3)},${parseFloat(s.longitude).toFixed(3)}`;
+    if (!s.latitude || !s.longitude) continue;
+    
+    const lat = parseFloat(s.latitude);
+    const lng = parseFloat(s.longitude);
+    if (isNaN(lat) || isNaN(lng)) continue;
+    
+    const key = s.localisation || `${lat.toFixed(3)},${lng.toFixed(3)}`;
     if (!locationGroups[key]) {
       locationGroups[key] = [];
     }
@@ -151,16 +157,24 @@ export async function analyzeRiskZones(): Promise<RiskZone[]> {
       .sort((a, b) => b.count - a.count);
     
     const firstIncident = incidents[0];
+    const lat = parseFloat(firstIncident.latitude);
+    const lng = parseFloat(firstIncident.longitude);
+    
+    if (isNaN(lat) || isNaN(lng)) continue;
+    
+    const safeLocation = (firstIncident.localisation || location || "Zone inconnue").trim();
+    const safeId = `zone-${safeLocation.replace(/[^a-zA-Z0-9]/g, "-").substring(0, 50)}`;
+    
     const zone: RiskZone = {
-      id: `zone-${location.replace(/[^a-zA-Z0-9]/g, "-")}`,
-      latitude: parseFloat(firstIncident.latitude),
-      longitude: parseFloat(firstIncident.longitude),
-      localisation: firstIncident.localisation || location,
+      id: safeId,
+      latitude: lat,
+      longitude: lng,
+      localisation: safeLocation,
       riskLevel: calculateRiskLevel(riskScore),
       riskScore,
       incidentCount: recentIncidents.length,
       categories,
-      lastIncident: recentIncidents[0]?.createdAt || null,
+      lastIncident: recentIncidents[0]?.createdAt ? recentIncidents[0].createdAt.toISOString() : null,
       trend,
       description: "",
     };

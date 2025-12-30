@@ -10,6 +10,7 @@ import EmergencyPanel from "@/components/EmergencyPanel";
 import SignalementCard from "@/components/SignalementCard";
 import StatCard from "@/components/StatCard";
 import MessageDuJour from "@/components/MessageDuJour";
+import { RiskZonesPanel, RecommendationsPanel } from "@/components/RiskAnalysis";
 import { AlertCircle, Shield, Users, TrendingUp, ArrowRight, Loader2, Heart, AlertTriangle, Search, X, MapPin, Filter, BookOpen, Download, Phone, MessageCircle, Mail } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -1192,6 +1193,11 @@ export default function Home() {
 
         <div className="mt-8 sm:mt-12">
           <MessageDuJour />
+        </div>
+
+        <div className="mt-8 sm:mt-12 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <RiskZonesPanel />
+          <RecommendationsPanel />
         </div>
 
         <Card className="mt-8 sm:mt-12 bg-primary/5 border-primary/20">
