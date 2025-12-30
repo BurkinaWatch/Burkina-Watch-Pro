@@ -1196,13 +1196,13 @@ export default function Home() {
           <MessageDuJour />
         </div>
 
-        <div className="mt-6 sm:mt-8">
-          <WeatherAlertsBanner />
-        </div>
-
         <div className="mt-8 sm:mt-12 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <RiskZonesPanel />
           <RecommendationsPanel />
+        </div>
+
+        <div className="mt-6 sm:mt-8">
+          <WeatherAlertsBanner />
         </div>
 
         <Card className="mt-8 sm:mt-12 bg-primary/5 border-primary/20">
