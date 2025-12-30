@@ -137,6 +137,14 @@ export default function Gares() {
     return gares.filter(g => g.compagnie !== "sotraco" && g.compagnie !== "sitarail").length;
   }, [gares]);
 
+  // Compteur des gares SITARAIL (trains)
+  const garesSitarail = useMemo(() => {
+    return gares.filter(g => g.compagnie === "sitarail").length;
+  }, [gares]);
+
+  // Compteur des lignes SOTRACO (37 lignes: 18 Ouaga + 12 Bobo + 7 Koudougou)
+  const lignesSotraco = 37;
+
   const filteredGares = useMemo(() => {
     return gares.filter(gare => {
       // Exclure les gares SOTRACO et SITARAIL de l'onglet principal (elles ont leurs onglets dédiés)
@@ -283,10 +291,10 @@ export default function Gares() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-muted-foreground">Trajets</p>
-                      <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.totalTrajets}</p>
+                      <p className="text-xs text-muted-foreground">Gares Train</p>
+                      <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{garesSitarail}</p>
                     </div>
-                    <RouteIcon className="w-8 h-8 text-purple-500/50" />
+                    <Train className="w-8 h-8 text-purple-500/50" />
                   </div>
                 </CardContent>
               </Card>
@@ -294,10 +302,10 @@ export default function Gares() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-muted-foreground">Villes</p>
-                      <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.villesDesservies}</p>
+                      <p className="text-xs text-muted-foreground">Lignes SOTRACO</p>
+                      <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{lignesSotraco}</p>
                     </div>
-                    <Users className="w-8 h-8 text-amber-500/50" />
+                    <Bus className="w-8 h-8 text-amber-500/50" />
                   </div>
                 </CardContent>
               </Card>
