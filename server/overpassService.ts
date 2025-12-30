@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { places, placeVerifications, type Place, type InsertPlace, PlaceTypes, VerificationStatuses } from "@shared/schema";
+import { places, placeVerifications, type Place, type InsertPlace, PlaceTypes, VerificationStatuses, DataSources } from "@shared/schema";
 import { eq, and, sql, ilike, or } from "drizzle-orm";
 
 // Multiple Overpass API endpoints for redundancy
@@ -438,6 +438,8 @@ export class OverpassService {
       website: tags.website || tags["contact:website"] || null,
       horaires: tags.opening_hours || null,
       tags: tags as Record<string, unknown>,
+      source: "OSM", // Données provenant d'OpenStreetMap
+      confidenceScore: "0.6", // Score par défaut pour les données OSM
       lastSyncedAt: new Date(),
     };
   }
