@@ -258,68 +258,168 @@ export default function Gares() {
           </div>
 
           {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4" data-testid="container-stats">
+              {/* Compagnies Card */}
               <Card 
-                className={`bg-card hover-elevate active-elevate-2 transition-all cursor-pointer ${showCompagnies ? 'ring-2 ring-primary bg-primary/5' : ''}`}
+                className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group cursor-pointer bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:border-primary/40 ${showCompagnies ? 'ring-2 ring-primary shadow-xl' : ''}`}
                 onClick={() => setShowCompagnies(!showCompagnies)}
                 data-testid="card-stat-compagnies"
               >
-                <CardContent className="p-4">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+                <div className="absolute -right-6 -top-6 opacity-5 pointer-events-none">
+                  <svg width="120" height="120" viewBox="0 0 100 100" className="transform rotate-12">
+                    <path d="M50 10 L70 30 L70 70 L50 90 L30 70 L30 30 Z" fill="#E30613" opacity="0.3"/>
+                    <path d="M50 20 L65 35 L65 65 L50 80 L35 65 L35 35 Z" fill="#FFD100" opacity="0.4"/>
+                    <path d="M50 30 L60 40 L60 60 L50 70 L40 60 L40 40 Z" fill="#007A33" opacity="0.5"/>
+                    <path d="M50 35 L52 42 L59 42 L53 46 L55 53 L50 48 L45 53 L47 46 L41 42 L48 42 Z" fill="#E30613" opacity="0.8"/>
+                  </svg>
+                </div>
+                <CardContent className="p-4 relative z-10">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
                         Compagnies
                         {showCompagnies ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                       </p>
-                      <p className="text-2xl font-bold text-primary">{stats.totalCompagnies}</p>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-bold tracking-tight">{stats.totalCompagnies}</span>
+                        <span className="text-sm font-medium text-green-600">↗</span>
+                      </div>
                     </div>
-                    <Building2 className="w-8 h-8 text-primary/20" />
+                    <div className="p-2.5 rounded-xl bg-primary/10 transition-transform duration-300 group-hover:scale-110">
+                      <Building2 className="w-5 h-5 text-primary" />
+                    </div>
                   </div>
                 </CardContent>
+                <div className="absolute bottom-0 left-0 right-0 h-1 flex">
+                  <div className="flex-1 bg-[#E30613]/30"></div>
+                  <div className="flex-1 bg-[#FFD100]/30"></div>
+                  <div className="flex-1 bg-[#007A33]/30"></div>
+                </div>
               </Card>
-              <Card className="bg-card hover-elevate transition-all">
-                <CardContent className="p-4">
+
+              {/* Gares Card */}
+              <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20 hover:border-green-500/40">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+                <div className="absolute -right-6 -top-6 opacity-5 pointer-events-none">
+                  <svg width="120" height="120" viewBox="0 0 100 100" className="transform rotate-12">
+                    <path d="M50 10 L70 30 L70 70 L50 90 L30 70 L30 30 Z" fill="#007A33" opacity="0.3"/>
+                    <path d="M50 20 L65 35 L65 65 L50 80 L35 65 L35 35 Z" fill="#FFD100" opacity="0.4"/>
+                    <path d="M50 30 L60 40 L60 60 L50 70 L40 60 L40 40 Z" fill="#E30613" opacity="0.5"/>
+                    <path d="M50 35 L52 42 L59 42 L53 46 L55 53 L50 48 L45 53 L47 46 L41 42 L48 42 Z" fill="#FFD100" opacity="0.8"/>
+                  </svg>
+                </div>
+                <CardContent className="p-4 relative z-10">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-muted-foreground">Gares</p>
-                      <p className="text-2xl font-bold text-foreground">{stats.totalGares}</p>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-bold tracking-tight">{stats.totalGares}</span>
+                      </div>
                     </div>
-                    <MapPin className="w-8 h-8 text-muted-foreground/20" />
+                    <div className="p-2.5 rounded-xl bg-green-500/10 transition-transform duration-300 group-hover:scale-110">
+                      <MapPin className="w-5 h-5 text-green-600" />
+                    </div>
                   </div>
                 </CardContent>
+                <div className="absolute bottom-0 left-0 right-0 h-1 flex">
+                  <div className="flex-1 bg-[#007A33]/30"></div>
+                  <div className="flex-1 bg-[#FFD100]/30"></div>
+                  <div className="flex-1 bg-[#E30613]/30"></div>
+                </div>
               </Card>
-              <Card className="bg-card hover-elevate transition-all">
-                <CardContent className="p-4">
+
+              {/* Gares Train Card */}
+              <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20 hover:border-orange-500/40">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+                <div className="absolute -right-6 -top-6 opacity-5 pointer-events-none">
+                  <svg width="120" height="120" viewBox="0 0 100 100" className="transform rotate-12">
+                    <path d="M50 10 L70 30 L70 70 L50 90 L30 70 L30 30 Z" fill="#E30613" opacity="0.3"/>
+                    <path d="M50 20 L65 35 L65 65 L50 80 L35 65 L35 35 Z" fill="#FFD100" opacity="0.4"/>
+                    <path d="M50 30 L60 40 L60 60 L50 70 L40 60 L40 40 Z" fill="#007A33" opacity="0.5"/>
+                    <path d="M50 35 L52 42 L59 42 L53 46 L55 53 L50 48 L45 53 L47 46 L41 42 L48 42 Z" fill="#E30613" opacity="0.8"/>
+                  </svg>
+                </div>
+                <CardContent className="p-4 relative z-10">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-muted-foreground">Gares Train</p>
-                      <p className="text-2xl font-bold text-foreground">{garesSitarail}</p>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-bold tracking-tight">{garesSitarail}</span>
+                      </div>
                     </div>
-                    <Train className="w-8 h-8 text-muted-foreground/20" />
+                    <div className="p-2.5 rounded-xl bg-orange-500/10 transition-transform duration-300 group-hover:scale-110">
+                      <Train className="w-5 h-5 text-orange-600" />
+                    </div>
                   </div>
                 </CardContent>
+                <div className="absolute bottom-0 left-0 right-0 h-1 flex">
+                  <div className="flex-1 bg-[#E30613]/30"></div>
+                  <div className="flex-1 bg-[#FFD100]/30"></div>
+                  <div className="flex-1 bg-[#007A33]/30"></div>
+                </div>
               </Card>
-              <Card className="bg-card hover-elevate transition-all">
-                <CardContent className="p-4">
+
+              {/* Lignes SOTRACO Card */}
+              <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+                <div className="absolute -right-6 -top-6 opacity-5 pointer-events-none">
+                  <svg width="120" height="120" viewBox="0 0 100 100" className="transform rotate-12">
+                    <path d="M50 10 L70 30 L70 70 L50 90 L30 70 L30 30 Z" fill="#007A33" opacity="0.3"/>
+                    <path d="M50 20 L65 35 L65 65 L50 80 L35 65 L35 35 Z" fill="#FFD100" opacity="0.4"/>
+                    <path d="M50 30 L60 40 L60 60 L50 70 L40 60 L40 40 Z" fill="#E30613" opacity="0.5"/>
+                    <path d="M50 35 L52 42 L59 42 L53 46 L55 53 L50 48 L45 53 L47 46 L41 42 L48 42 Z" fill="#FFD100" opacity="0.8"/>
+                  </svg>
+                </div>
+                <CardContent className="p-4 relative z-10">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-muted-foreground">Lignes SOTRACO</p>
-                      <p className="text-2xl font-bold text-foreground">{lignesSotraco}</p>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-bold tracking-tight">{lignesSotraco}</span>
+                      </div>
                     </div>
-                    <Bus className="w-8 h-8 text-muted-foreground/20" />
+                    <div className="p-2.5 rounded-xl bg-emerald-500/10 transition-transform duration-300 group-hover:scale-110">
+                      <Bus className="w-5 h-5 text-emerald-600" />
+                    </div>
                   </div>
                 </CardContent>
+                <div className="absolute bottom-0 left-0 right-0 h-1 flex">
+                  <div className="flex-1 bg-[#007A33]/30"></div>
+                  <div className="flex-1 bg-[#FFD100]/30"></div>
+                  <div className="flex-1 bg-[#E30613]/30"></div>
+                </div>
               </Card>
-              <Card className="bg-card hover-elevate transition-all">
-                <CardContent className="p-4">
+
+              {/* International Card */}
+              <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20 hover:border-blue-500/40">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+                <div className="absolute -right-6 -top-6 opacity-5 pointer-events-none">
+                  <svg width="120" height="120" viewBox="0 0 100 100" className="transform rotate-12">
+                    <path d="M50 10 L70 30 L70 70 L50 90 L30 70 L30 30 Z" fill="#3B82F6" opacity="0.3"/>
+                    <path d="M50 20 L65 35 L65 65 L50 80 L35 65 L35 35 Z" fill="#60A5FA" opacity="0.4"/>
+                    <path d="M50 30 L60 40 L60 60 L50 70 L40 60 L40 40 Z" fill="#93C5FD" opacity="0.5"/>
+                    <path d="M50 35 L52 42 L59 42 L53 46 L55 53 L50 48 L45 53 L47 46 L41 42 L48 42 Z" fill="#3B82F6" opacity="0.8"/>
+                  </svg>
+                </div>
+                <CardContent className="p-4 relative z-10">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-muted-foreground">International</p>
-                      <p className="text-2xl font-bold text-foreground">{stats.destinationsInternationales}</p>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-bold tracking-tight">{stats.destinationsInternationales}</span>
+                      </div>
                     </div>
-                    <Globe className="w-8 h-8 text-muted-foreground/20" />
+                    <div className="p-2.5 rounded-xl bg-blue-500/10 transition-transform duration-300 group-hover:scale-110">
+                      <Globe className="w-5 h-5 text-blue-600" />
+                    </div>
                   </div>
                 </CardContent>
+                <div className="absolute bottom-0 left-0 right-0 h-1 flex">
+                  <div className="flex-1 bg-[#E30613]/30"></div>
+                  <div className="flex-1 bg-[#FFD100]/30"></div>
+                  <div className="flex-1 bg-[#007A33]/30"></div>
+                </div>
               </Card>
             </div>
           )}
