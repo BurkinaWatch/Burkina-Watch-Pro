@@ -82,17 +82,25 @@ interface TransportStats {
 export default function Gares() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCompagnie, setSelectedCompagnie] = useState<string>("all");
+  const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [departVille, setDepartVille] = useState("");
   const [arriveeVille, setArriveeVille] = useState("");
   const [activeTab, setActiveTab] = useState("compagnies");
 
+  const [includeOSM, setIncludeOSM] = useState(true);
+  
   const { data: transportData, isLoading } = useQuery<{
     compagnies: Compagnie[];
     gares: Gare[];
     trajets: Trajet[];
     stats: TransportStats;
   }>({
-    queryKey: ["/api/transport"]
+    queryKey: ["/api/transport", { osm: includeOSM }],
+    queryFn: async () => {
+      const response = await fetch(`/api/transport?osm=${includeOSM}`);
+      if (!response.ok) throw new Error("Failed to fetch transport data");
+      return response.json();
+    }
   });
 
   const compagnies = transportData?.compagnies || [];
@@ -100,17 +108,24 @@ export default function Gares() {
   const trajets = transportData?.trajets || [];
   const stats = transportData?.stats;
 
+  const regions = useMemo(() => {
+    return Array.from(new Set(gares.map(g => g.region))).sort();
+  }, [gares]);
+
   const filteredGares = useMemo(() => {
     return gares.filter(gare => {
       const matchesSearch = searchQuery === "" || 
         gare.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        gare.ville.toLowerCase().includes(searchQuery.toLowerCase());
+        gare.ville.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        gare.adresse.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCompagnie = selectedCompagnie === "all" || 
         gare.compagnie === selectedCompagnie || 
         gare.compagnie === "Publique";
-      return matchesSearch && matchesCompagnie;
+      const matchesRegion = selectedRegion === "all" || 
+        gare.region === selectedRegion;
+      return matchesSearch && matchesCompagnie && matchesRegion;
     });
-  }, [gares, searchQuery, selectedCompagnie]);
+  }, [gares, searchQuery, selectedCompagnie, selectedRegion]);
 
   const filteredTrajets = useMemo(() => {
     return trajets.filter(trajet => {
@@ -359,29 +374,48 @@ export default function Gares() {
             </TabsContent>
 
             <TabsContent value="gares" className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    placeholder="Rechercher une gare ou une ville..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                    data-testid="input-search-gares"
-                  />
-                </div>
-                <Select value={selectedCompagnie} onValueChange={setSelectedCompagnie}>
-                  <SelectTrigger className="w-full sm:w-48" data-testid="select-compagnie">
-                    <SelectValue placeholder="Compagnie" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Toutes les compagnies</SelectItem>
-                    {compagnies.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.nom}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Card className="bg-muted/30">
+                <CardContent className="p-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input
+                        placeholder="Rechercher une gare, ville ou adresse..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10"
+                        data-testid="input-search-gares"
+                      />
+                    </div>
+                    <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                      <SelectTrigger className="w-full sm:w-48" data-testid="select-region">
+                        <SelectValue placeholder="Region" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Toutes les regions ({regions.length})</SelectItem>
+                        {regions.map(region => (
+                          <SelectItem key={region} value={region}>{region}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={selectedCompagnie} onValueChange={setSelectedCompagnie}>
+                      <SelectTrigger className="w-full sm:w-48" data-testid="select-compagnie">
+                        <SelectValue placeholder="Compagnie" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Toutes les compagnies</SelectItem>
+                        {compagnies.map(c => (
+                          <SelectItem key={c.id} value={c.id}>{c.nom}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+                    <span>{filteredGares.length} gare{filteredGares.length > 1 ? "s" : ""} trouvee{filteredGares.length > 1 ? "s" : ""}</span>
+                    <span>Source: Donnees verifiees + OpenStreetMap</span>
+                  </div>
+                </CardContent>
+              </Card>
 
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {filteredGares.map((gare) => (

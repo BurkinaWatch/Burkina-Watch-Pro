@@ -2628,12 +2628,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/transport", async (req, res) => {
     try {
       const { getCompagnies, getGares, getTrajets, getStatistiquesTransport } = await import("./transportData");
+      const { getGaresWithOSM } = await import("./garesOSMService");
+      
+      const includeOSM = req.query.osm === "true";
+      const hardcodedGares = getGares();
+      const allGares = includeOSM ? await getGaresWithOSM(hardcodedGares) : hardcodedGares;
+      
+      const baseStats = getStatistiquesTransport();
+      const stats = {
+        ...baseStats,
+        totalGares: allGares.length,
+        villesDesservies: Array.from(new Set(allGares.map(g => g.ville))).length
+      };
       
       res.json({
         compagnies: getCompagnies(),
-        gares: getGares(),
+        gares: allGares,
         trajets: getTrajets(),
-        stats: getStatistiquesTransport()
+        stats
       });
     } catch (error) {
       console.error("Erreur transport:", error);
