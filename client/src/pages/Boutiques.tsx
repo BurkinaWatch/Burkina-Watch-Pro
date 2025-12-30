@@ -170,6 +170,8 @@ export default function Boutiques() {
 
   const { data: boutiques = [], isLoading, refetch } = useQuery<Boutique[]>({
     queryKey: ["/api/boutiques"],
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const { data: stats } = useQuery<{
