@@ -27,7 +27,9 @@ import {
   ChevronDown,
   ChevronUp,
   ExternalLink,
-  Navigation
+  Navigation,
+  Train,
+  CircleDot
 } from "lucide-react";
 import { Link } from "wouter";
 import { Helmet } from "react-helmet-async";
@@ -417,28 +419,46 @@ export default function Gares() {
                   <Bus className="w-5 h-5 text-primary" />
                   Que recherchez-vous ?
                 </h2>
-                <p className="text-sm text-muted-foreground">Cette page propose deux types d'informations</p>
+                <p className="text-sm text-muted-foreground">Gares routieres, train SITARAIL, bus SOTRACO et grands departs</p>
               </div>
               
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-0">
-                <TabsList className="grid w-full grid-cols-2 h-auto p-1 gap-2 bg-muted/50">
+                <TabsList className="grid w-full grid-cols-4 h-auto p-1 gap-1 bg-muted/50">
                   <TabsTrigger 
                     value="gares" 
-                    className="flex flex-col items-center gap-1 py-3 px-4 data-[state=active]:bg-green-500/20 data-[state=active]:border-green-500 data-[state=active]:border-2"
+                    className="flex flex-col items-center gap-1 py-2 px-2 data-[state=active]:bg-green-500/20 data-[state=active]:border-green-500 data-[state=active]:border-2"
                     data-testid="tab-gares"
                   >
-                    <MapPin className="w-5 h-5 text-green-600" />
-                    <span className="font-semibold">Trouver une gare</span>
-                    <span className="text-xs text-muted-foreground">{stats?.totalGares || 0} gares au Burkina</span>
+                    <MapPin className="w-4 h-4 text-green-600" />
+                    <span className="font-semibold text-xs">Trouver une gare</span>
+                    <span className="text-[10px] text-muted-foreground hidden sm:block">{stats?.totalGares || 0} gares</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="sitarail" 
+                    className="flex flex-col items-center gap-1 py-2 px-2 data-[state=active]:bg-orange-500/20 data-[state=active]:border-orange-500 data-[state=active]:border-2"
+                    data-testid="tab-sitarail"
+                  >
+                    <Train className="w-4 h-4 text-orange-600" />
+                    <span className="font-semibold text-xs">SITARAIL</span>
+                    <span className="text-[10px] text-muted-foreground hidden sm:block">Train</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="sotraco" 
+                    className="flex flex-col items-center gap-1 py-2 px-2 data-[state=active]:bg-emerald-500/20 data-[state=active]:border-emerald-500 data-[state=active]:border-2"
+                    data-testid="tab-sotraco"
+                  >
+                    <Bus className="w-4 h-4 text-emerald-600" />
+                    <span className="font-semibold text-xs">SOTRACO</span>
+                    <span className="text-[10px] text-muted-foreground hidden sm:block">Bus urbain</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="horaires" 
-                    className="flex flex-col items-center gap-1 py-3 px-4 data-[state=active]:bg-purple-500/20 data-[state=active]:border-purple-500 data-[state=active]:border-2"
+                    className="flex flex-col items-center gap-1 py-2 px-2 data-[state=active]:bg-purple-500/20 data-[state=active]:border-purple-500 data-[state=active]:border-2"
                     data-testid="tab-horaires"
                   >
-                    <Clock className="w-5 h-5 text-purple-600" />
-                    <span className="font-semibold">Grands departs</span>
-                    <span className="text-xs text-muted-foreground">Ouaga & Bobo - Horaires & Prix</span>
+                    <Clock className="w-4 h-4 text-purple-600" />
+                    <span className="font-semibold text-xs">Grands departs</span>
+                    <span className="text-[10px] text-muted-foreground hidden sm:block">Horaires & Prix</span>
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -702,6 +722,243 @@ export default function Gares() {
                   </Button>
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="sitarail" className="space-y-4">
+              <Card className="bg-gradient-to-r from-orange-500/10 to-orange-600/5 border-orange-500/20">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-orange-500/20 rounded-lg">
+                      <Train className="w-8 h-8 text-orange-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-lg">SITARAIL - Train Burkina</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Societe Internationale de Transport Africain par Rail. Voyage panoramique a travers le Burkina Faso.
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <Badge variant="outline" className="text-xs">
+                          <Phone className="w-3 h-3 mr-1" />
+                          +226 25 31 15 02
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">192 places</Badge>
+                        <Badge variant="outline" className="text-xs">2e classe</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-orange-600" />
+                    Horaires des trains
+                  </CardTitle>
+                  <CardDescription>Departs les Mardi et Jeudi a 09h00</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="relative">
+                    <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-orange-200 dark:bg-orange-900"></div>
+                    {gares
+                      .filter(g => g.compagnie === "sitarail")
+                      .sort((a, b) => {
+                        const order = ["ouaga", "koudougou", "siby", "bobo", "banfora", "niangoloko"];
+                        const aIdx = order.findIndex(o => a.id.includes(o));
+                        const bIdx = order.findIndex(o => b.id.includes(o));
+                        return aIdx - bIdx;
+                      })
+                      .map((gare, index, arr) => (
+                        <div key={gare.id} className="relative pl-10 pb-6 last:pb-0">
+                          <div className="absolute left-2.5 top-1 w-3 h-3 rounded-full bg-orange-500 border-2 border-background"></div>
+                          <Card className="hover-elevate">
+                            <CardContent className="p-3">
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <h4 className="font-semibold text-sm">{gare.nom}</h4>
+                                  <p className="text-xs text-muted-foreground">{gare.adresse}</p>
+                                  {gare.telephone && (
+                                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                      <Phone className="w-3 h-3" />
+                                      {gare.telephone}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex gap-1">
+                                  {gare.telephone && (
+                                    <a href={`tel:${gare.telephone}`}>
+                                      <Button variant="ghost" size="icon" data-testid={`button-call-sitarail-${gare.id}`}>
+                                        <Phone className="w-4 h-4" />
+                                      </Button>
+                                    </a>
+                                  )}
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={() => openGoogleMaps(gare.coordonnees.lat, gare.coordonnees.lng, gare.nom)}
+                                    data-testid={`button-map-sitarail-${gare.id}`}
+                                  >
+                                    <Navigation className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                              {gare.destinations && gare.destinations.length > 0 && (
+                                <div className="mt-2 pt-2 border-t">
+                                  <div className="flex flex-wrap gap-1">
+                                    {gare.destinations.map((dest, i) => (
+                                      <Badge key={i} variant="secondary" className="text-xs">
+                                        {dest.ville} - {dest.prix?.toLocaleString()} F
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-muted/30">
+                <CardContent className="p-4">
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Banknote className="w-4 h-4 text-green-600" />
+                    Tarifs indicatifs
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    <div className="bg-background rounded-md p-2">
+                      <p className="text-xs text-muted-foreground">Ouaga - Bobo</p>
+                      <p className="font-bold text-green-600">6,000 FCFA</p>
+                    </div>
+                    <div className="bg-background rounded-md p-2">
+                      <p className="text-xs text-muted-foreground">Ouaga - Koudougou</p>
+                      <p className="font-bold text-green-600">3,000 FCFA</p>
+                    </div>
+                    <div className="bg-background rounded-md p-2">
+                      <p className="text-xs text-muted-foreground">Bobo - Banfora</p>
+                      <p className="font-bold text-green-600">3,000 FCFA</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="sotraco" className="space-y-4">
+              <Card className="bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border-emerald-500/20">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-emerald-500/20 rounded-lg">
+                      <Bus className="w-8 h-8 text-emerald-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-lg">SOTRACO - Bus Urbains</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Societe de Transport en Commun de Ouagadougou. Transport public urbain nationalise a 100%.
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <Badge variant="outline" className="text-xs">
+                          <Phone className="w-3 h-3 mr-1" />
+                          +226 25 30 61 52
+                        </Badge>
+                        <Badge className="bg-emerald-500/20 text-emerald-700 border-emerald-500/30 text-xs">Bus Verts</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-emerald-600" />
+                    Lignes et destinations SOTRACO
+                  </CardTitle>
+                  <CardDescription>Transport urbain dans les principales villes</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {gares
+                    .filter(g => g.compagnie === "sotraco")
+                    .map((gare) => (
+                      <Card key={gare.id} className="hover-elevate" data-testid={`card-sotraco-${gare.id}`}>
+                        <CardContent className="p-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <h4 className="font-semibold text-sm flex items-center gap-2">
+                                <CircleDot className="w-3 h-3 text-emerald-600" />
+                                {gare.nom}
+                              </h4>
+                              <p className="text-xs text-muted-foreground">{gare.ville}, {gare.region}</p>
+                              {gare.adresse && (
+                                <p className="text-xs text-muted-foreground mt-1">{gare.adresse}</p>
+                              )}
+                              {gare.heuresOuverture && (
+                                <p className="text-xs flex items-center gap-1 mt-1">
+                                  <Clock className="w-3 h-3 text-emerald-600" />
+                                  {gare.heuresOuverture}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex gap-1">
+                              {gare.telephone && (
+                                <a href={`tel:${gare.telephone}`}>
+                                  <Button variant="ghost" size="icon" data-testid={`button-call-sotraco-${gare.id}`}>
+                                    <Phone className="w-4 h-4" />
+                                  </Button>
+                                </a>
+                              )}
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => openGoogleMaps(gare.coordonnees.lat, gare.coordonnees.lng, gare.nom)}
+                                data-testid={`button-map-sotraco-${gare.id}`}
+                              >
+                                <Navigation className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          {gare.destinations && gare.destinations.length > 0 && (
+                            <div className="mt-2 pt-2 border-t">
+                              <p className="text-xs text-muted-foreground mb-1">Lignes desservies:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {gare.destinations.map((dest, i) => (
+                                  <Badge key={i} variant="outline" className="text-xs">
+                                    {dest.ville}
+                                    {dest.prix && ` - ${dest.prix} F`}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  
+                  {gares.filter(g => g.compagnie === "sotraco").length === 0 && (
+                    <div className="text-center py-8">
+                      <Bus className="w-12 h-12 mx-auto text-muted-foreground/50 mb-2" />
+                      <p className="text-muted-foreground">Donnees SOTRACO en cours de chargement...</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="bg-muted/30">
+                <CardContent className="p-4">
+                  <h4 className="font-semibold mb-2">Tarifs SOTRACO</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-background rounded-md p-2">
+                      <p className="text-xs text-muted-foreground">Ticket urbain</p>
+                      <p className="font-bold text-green-600">200 FCFA</p>
+                    </div>
+                    <div className="bg-background rounded-md p-2">
+                      <p className="text-xs text-muted-foreground">Carte mensuelle</p>
+                      <p className="font-bold text-green-600">5,000 FCFA</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="horaires" className="space-y-4">

@@ -335,7 +335,98 @@ export const garesRoutieres: Gare[] = [
     coordonnees: { lat: 12.4150, lng: -1.4820 },
     telephone: "+226 25 30 61 52",
     compagnie: "sotraco",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h30 - 21h00",
+    services: ["Transport urbain", "Lignes regulieres", "Tarifs accessibles"],
+    destinations: [
+      { ville: "Terminus Nord - Tampouy", horaires: ["05h30", "06h00", "06h30", "07h00"], prix: 200 },
+      { ville: "Terminus Sud - Zone 1", horaires: ["05h30", "06h00", "06h30", "07h00"], prix: 200 },
+      { ville: "Terminus Est - Kamboinsin", horaires: ["06h00", "06h30", "07h00"], prix: 200 }
+    ]
+  },
+  {
+    id: "sotraco-tampouy",
+    nom: "Terminus SOTRACO Tampouy",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "Carrefour Tampouy, Avenue Charles de Gaulle, Secteur 24",
+    coordonnees: { lat: 12.4050, lng: -1.5250 },
+    telephone: "+226 25 30 61 52",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "05h30 - 21h00",
+    destinations: [
+      { ville: "Centre-ville (Rood Woko)", horaires: ["Toutes les 15 min"], prix: 200 },
+      { ville: "Zone 1", horaires: ["Toutes les 20 min"], prix: 200 },
+      { ville: "Kossodo", horaires: ["Toutes les 30 min"], prix: 200 }
+    ]
+  },
+  {
+    id: "sotraco-zone1",
+    nom: "Terminus SOTRACO Zone 1",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "Avenue Kwame N'Krumah, Zone commerciale, Secteur 2",
+    coordonnees: { lat: 12.3580, lng: -1.5200 },
+    telephone: "+226 25 30 61 52",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "05h30 - 21h00",
+    destinations: [
+      { ville: "Tampouy", horaires: ["Toutes les 15 min"], prix: 200 },
+      { ville: "Dapoya", horaires: ["Toutes les 20 min"], prix: 200 },
+      { ville: "Gounghin", horaires: ["Toutes les 20 min"], prix: 200 }
+    ]
+  },
+  {
+    id: "sotraco-roodwoko",
+    nom: "Arret SOTRACO Rood Woko",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "Place du Grand Marche Rood Woko, Centre-ville",
+    coordonnees: { lat: 12.3660, lng: -1.5220 },
+    telephone: "+226 25 30 61 52",
+    compagnie: "sotraco",
+    type: "secondaire",
+    heuresOuverture: "05h30 - 21h00",
+    destinations: [
+      { ville: "Tampouy", horaires: ["Toutes les 15 min"], prix: 200 },
+      { ville: "Zone 1", horaires: ["Toutes les 15 min"], prix: 200 },
+      { ville: "Kossodo", horaires: ["Toutes les 30 min"], prix: 200 }
+    ]
+  },
+  {
+    id: "sotraco-bobo",
+    nom: "Depot SOTRACO Bobo-Dioulasso",
+    ville: "Bobo-Dioulasso",
+    region: "Hauts-Bassins",
+    adresse: "Avenue de la Liberte, Secteur 8, Sarfalao",
+    coordonnees: { lat: 11.1820, lng: -4.2880 },
+    telephone: "+226 20 97 55 00",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "06h00 - 20h00",
+    destinations: [
+      { ville: "Grand Marche", horaires: ["Toutes les 20 min"], prix: 150 },
+      { ville: "Gare routiere", horaires: ["Toutes les 25 min"], prix: 150 },
+      { ville: "CHU Sanou Souro", horaires: ["Toutes les 30 min"], prix: 150 }
+    ]
+  },
+  {
+    id: "sotraco-koudougou",
+    nom: "Point SOTRACO Koudougou",
+    ville: "Koudougou",
+    region: "Centre-Ouest",
+    adresse: "Avenue de la Gare, Centre-ville",
+    coordonnees: { lat: 12.2500, lng: -2.3650 },
+    telephone: "+226 25 44 00 52",
+    compagnie: "sotraco",
+    type: "secondaire",
+    heuresOuverture: "06h00 - 19h00",
+    destinations: [
+      { ville: "Marche central", horaires: ["Toutes les 30 min"], prix: 100 },
+      { ville: "Gare routiere", horaires: ["Toutes les 30 min"], prix: 100 }
+    ]
   },
 
   // ========== REGION HAUTS-BASSINS (Bobo-Dioulasso) ==========
