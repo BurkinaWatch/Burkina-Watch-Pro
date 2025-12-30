@@ -1929,7 +1929,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/boutiques/stats", async (req, res) => {
     try {
-      const { BOUTIQUES_DATA } = await import("./boutiquesData");
+      const { BOUTIQUES_DATA, getBoutiquesStats } = await import("./boutiquesData");
+      
+      // Obtenir les statistiques détaillées
+      const detailedStats = getBoutiquesStats();
       
       // Compter les données OSM (type "shop" dans la base)
       let osmCount = 0;
@@ -1940,11 +1943,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const total = BOUTIQUES_DATA.length + osmCount;
       
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.json({
         total,
         localCount: BOUTIQUES_DATA.length,
         osmCount,
-        source: "OSM + Local"
+        source: "OSM + Local",
+        // Statistiques détaillées
+        avecClimatisation: detailedStats.avecClimatisation,
+        avecLivraison: detailedStats.avecLivraison,
+        avecParking: detailedStats.avecParking,
+        parCategorie: detailedStats.parCategorie,
+        parRegion: detailedStats.parRegion,
+        nombreVilles: detailedStats.nombreVilles
       });
     } catch (error) {
       console.error("Erreur stats boutiques:", error);

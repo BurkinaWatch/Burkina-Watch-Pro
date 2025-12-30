@@ -44,7 +44,7 @@ The platform features extensive verified data for locations across all 13 region
 *   **Pharmacies** (`server/pharmaciesData.ts`): 135+ pharmacies including verified names from Ouagadougou and Bobo-Dioulasso, with services, opening hours, and 24h availability indicators.
 *   **Gas Stations** (`server/stationsService.ts`): 90+ stations including TotalEnergies, Shell, Oryx, SOB Petrol, Sonabhy, and the new **Barka Energies** brand (successor to TotalEnergies' Burkina network as of September 2024).
 *   **Restaurants** (`server/restaurantsData.ts`): 65+ restaurants including famous establishments (Le Verdoyant, Le Bistrot Lyonnais, Le Coq Bleu, Gondwana, Chellas Cafe, Rosa Dei Venti, Royal Garden, L'Art Rouge). Restaurant types include: Africain, Burkinabè, Français, Libanais, Asiatique, Fast-food, Pizzeria, Grillades, Maquis, Café, Pâtisserie, International, Italien, and Fusion.
-*   **Boutiques** (`server/boutiquesData.ts`): 60+ boutiques including **Marina Market** supermarket chain (4 locations in Ouagadougou), KIABI, Village Artisanal, Home Market, and Orange Boutique. Categories include: Supermarché, Alimentation, Électronique, Mode, Quincaillerie, Cosmétiques, Téléphonie, Ameublement, Pharmacie, Librairie, Sport, Bijouterie, Électroménager, and Artisanat.
+*   **Boutiques** (`server/boutiquesData.ts`): 120 boutiques across 23 villes including **Marina Market** supermarket chain (4 locations in Ouagadougou), Carrefour Market, Orca, KIABI, Village Artisanal, Home Market, Décathlon, LG Electronics Store, Samsung Store, Orange Boutique, Moov Africa, and Telecel shops. Categories include: Supermarché (30), Alimentation (10), Électronique (8), Mode (17), Quincaillerie (9), Cosmétiques (6), Téléphonie (15), Ameublement (4), Librairie (4), Sport (3), Bijouterie (6), Électroménager (4), and Artisanat (4). Features: 81 climatisées, 57 avec livraison, 98 avec parking.
 *   **Marchés** (`server/marchesData.ts`): Traditional markets across all regions with operating days and specialties.
 *   **Banques et Caisses Populaires** (`server/banquesData.ts`): 102 financial establishments including all 16 official banks verified from BCEAO/Commission Bancaire UMOA 2024 sources, 60 individual bank agencies (Coris Bank, Ecobank, Vista Bank, UBA, BOA, BICIA-B, Banque Atlantique, etc.), and 40 RCPB caisses populaires across 5 regions (Centre, Ouest, Est, Nord, Sud-Ouest) with official addresses from rcpb.bf. Features include 5 EBIS (systemically important banks: Coris Bank, Ecobank, BOA, Vista Bank, UBA), 826+ GABs. Bank types include: Banque, Caisse Populaire, Microfinance. Categories include: Commerciale, Agricole, Postale, Régionale.
 
@@ -52,7 +52,7 @@ The platform features extensive verified data for locations across all 13 region
 - GPS coordinates verified via OpenStreetMap and Google Maps
 - Real business names and phone numbers sourced from 2024 web research
 - Complete service information (24h, parking, WiFi, delivery, etc.)
-- Coverage across all 13 regions of Burkina Faso with 450+ total locations
+- Coverage across all 13 regions of Burkina Faso with 500+ total locations
 
 ## OSM Migration Infrastructure (December 2024)
 

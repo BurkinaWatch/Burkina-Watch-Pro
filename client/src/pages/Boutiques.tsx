@@ -182,6 +182,8 @@ export default function Boutiques() {
     nombreVilles: number;
   }>({
     queryKey: ["/api/boutiques/stats"],
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const filteredBoutiques = useMemo(() => {
@@ -309,7 +311,7 @@ export default function Boutiques() {
           />
           <PageStatCard
             title="Supermarches"
-            value={stats?.parCategorie?.["Supermarche"] || 0}
+            value={stats?.parCategorie?.["Supermarché"] || 0}
             icon={Store}
             description="Grandes surfaces"
             variant="green"
