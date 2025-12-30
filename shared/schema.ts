@@ -614,6 +614,9 @@ export const places = pgTable("places", {
   horaires: text("horaires"),
   imageUrl: text("image_url"), // URL de l'image (source externe ou stockée)
   tags: jsonb("tags"), // All OSM tags for this place
+  // Nouveaux champs pour la migration OSM
+  source: text("source").notNull().default("OSM"), // OSM, COMMUNAUTE, OFFICIEL
+  confidenceScore: decimal("confidence_score", { precision: 3, scale: 2 }).notNull().default("0.5"), // 0.0 - 1.0
   confirmations: integer("confirmations").notNull().default(0),
   reports: integer("reports").notNull().default(0),
   verificationStatus: text("verification_status").notNull().default("pending"), // pending, verified, needs_review
@@ -626,6 +629,7 @@ export const places = pgTable("places", {
   villeIdx: index("places_ville_idx").on(table.ville),
   regionIdx: index("places_region_idx").on(table.region),
   verificationStatusIdx: index("places_verification_status_idx").on(table.verificationStatus),
+  sourceIdx: index("places_source_idx").on(table.source),
 }));
 
 // Table des vérifications de lieux (confirmations et signalements)
@@ -686,3 +690,12 @@ export const VerificationStatuses = {
 } as const;
 
 export type VerificationStatus = typeof VerificationStatuses[keyof typeof VerificationStatuses];
+
+// Enum pour les sources de données
+export const DataSources = {
+  OSM: "OSM",
+  COMMUNAUTE: "COMMUNAUTE", 
+  OFFICIEL: "OFFICIEL",
+} as const;
+
+export type DataSource = typeof DataSources[keyof typeof DataSources];
