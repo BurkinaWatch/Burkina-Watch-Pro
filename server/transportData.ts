@@ -216,7 +216,16 @@ export const garesRoutieres: Gare[] = [
     coordonnees: { lat: 12.3456, lng: -1.5078 },
     telephone: "+226 25 30 89 12",
     compagnie: "Publique",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h30 - 20h00",
+    services: ["Billetterie", "Toilettes", "Restauration"],
+    destinations: [
+      { ville: "Po", horaires: ["06h00", "08h00", "12h00", "16h00"], duree: "2h30", prix: 3000 },
+      { ville: "Tiebele", horaires: ["07h00", "14h00"], duree: "3h", prix: 3500 },
+      { ville: "Leo", horaires: ["06h30", "10h00", "14h00"], duree: "3h", prix: 3500 },
+      { ville: "Manga", horaires: ["06h00", "09h00", "14h00", "17h00"], duree: "2h", prix: 2500 },
+      { ville: "Kombissiri", horaires: ["06h00", "08h00", "10h00", "12h00", "14h00", "16h00"], duree: "1h", prix: 1000 }
+    ]
   },
   {
     id: "ouaga-est",
@@ -226,7 +235,16 @@ export const garesRoutieres: Gare[] = [
     adresse: "Boulevard Charles de Gaulle, Dassasgho, Secteur 28",
     coordonnees: { lat: 12.3789, lng: -1.4685 },
     compagnie: "Publique",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h00 - 19h00",
+    services: ["Billetterie", "Toilettes"],
+    destinations: [
+      { ville: "Fada N'Gourma", horaires: ["06h00", "08h00", "10h00", "14h00"], duree: "4h", prix: 5000, compagnies: ["STMB"] },
+      { ville: "Koupela", horaires: ["06h00", "07h30", "09h00", "12h00", "15h00"], duree: "2h", prix: 2500 },
+      { ville: "Tenkodogo", horaires: ["06h30", "09h00", "14h00"], duree: "2h30", prix: 3000 },
+      { ville: "Pouytenga", horaires: ["06h00", "08h00", "11h00", "14h00", "16h00"], duree: "2h", prix: 2500 },
+      { ville: "Ziniare", horaires: ["06h00", "07h00", "08h00", "10h00", "12h00", "14h00", "16h00", "18h00"], duree: "45min", prix: 800 }
+    ]
   },
   {
     id: "rahimo-ouaga",
@@ -406,7 +424,15 @@ export const garesRoutieres: Gare[] = [
     coordonnees: { lat: 10.9833, lng: -4.9167 },
     telephone: "+226 20 96 01 15",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "05h30 - 18h00",
+    services: ["Billetterie", "Toilettes"],
+    destinations: [
+      { ville: "Bobo-Dioulasso", horaires: ["06h00", "08h00", "10h00", "14h00", "16h00"], duree: "1h30", prix: 1500, compagnies: ["TCV"] },
+      { ville: "Banfora", horaires: ["07h00", "12h00", "15h00"], duree: "2h30", prix: 2500 },
+      { ville: "Ouagadougou", horaires: ["06h00", "14h00"], duree: "7h", prix: 7500, compagnies: ["TCV"] },
+      { ville: "Sikasso (Mali)", horaires: ["08h00"], duree: "3h", prix: 4500 }
+    ]
   },
   {
     id: "hounde-gare",
@@ -416,7 +442,15 @@ export const garesRoutieres: Gare[] = [
     adresse: "Route Nationale 1, entree est de la ville",
     coordonnees: { lat: 11.4833, lng: -3.5167 },
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "05h00 - 18h00",
+    services: ["Billetterie"],
+    destinations: [
+      { ville: "Bobo-Dioulasso", horaires: ["06h00", "08h00", "10h00", "14h00"], duree: "2h", prix: 2000 },
+      { ville: "Ouagadougou", horaires: ["06h00", "07h00", "14h00"], duree: "3h30", prix: 4000, compagnies: ["STMB", "STAF"] },
+      { ville: "Koudougou", horaires: ["07h00", "12h00", "16h00"], duree: "1h30", prix: 1500 },
+      { ville: "Boromo", horaires: ["06h30", "09h00", "14h00", "16h00"], duree: "1h", prix: 1000 }
+    ]
   },
 
   // ========== REGION CASCADES (Banfora) ==========
@@ -429,7 +463,18 @@ export const garesRoutieres: Gare[] = [
     coordonnees: { lat: 10.6325, lng: -4.7592 },
     telephone: "+226 20 91 00 45",
     compagnie: "Publique",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h00 - 20h00",
+    services: ["Billetterie", "Salle d'attente", "Toilettes", "Restauration"],
+    destinations: [
+      { ville: "Bobo-Dioulasso", horaires: ["06h00", "07h00", "08h00", "10h00", "12h00", "14h00", "16h00"], duree: "2h", prix: 2500, compagnies: ["RAKIETA", "TCV"] },
+      { ville: "Ouagadougou", horaires: ["06h00", "08h00", "14h00", "22h00"], duree: "7h", prix: 8000, compagnies: ["RAHIMO", "TCV", "RAKIETA"] },
+      { ville: "Gaoua", horaires: ["07h00", "14h00"], duree: "3h", prix: 4000 },
+      { ville: "Sindou", horaires: ["06h30", "10h00", "14h00", "16h00"], duree: "1h", prix: 1500 },
+      { ville: "Niangoloko", horaires: ["07h00", "09h00", "12h00", "15h00"], duree: "1h30", prix: 2000 },
+      { ville: "Abidjan (CI)", horaires: ["06h00", "14h00", "22h00"], duree: "7h", prix: 12000, compagnies: ["RAKIETA", "TCV"] },
+      { ville: "Ferkessedougou (CI)", horaires: ["08h00", "14h00"], duree: "3h", prix: 5000 }
+    ]
   },
   {
     id: "rakieta-banfora",
@@ -450,7 +495,15 @@ export const garesRoutieres: Gare[] = [
     adresse: "Route Internationale, frontiere Cote d'Ivoire",
     coordonnees: { lat: 10.2833, lng: -4.9167 },
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 18h00",
+    services: ["Billetterie", "Douane"],
+    destinations: [
+      { ville: "Banfora", horaires: ["07h00", "10h00", "14h00", "16h00"], duree: "1h30", prix: 2000 },
+      { ville: "Bobo-Dioulasso", horaires: ["06h30", "10h00", "14h00"], duree: "3h30", prix: 4000 },
+      { ville: "Ferkessedougou (CI)", horaires: ["08h00", "12h00", "15h00"], duree: "1h30", prix: 3000 },
+      { ville: "Abidjan (CI)", horaires: ["07h00", "14h00"], duree: "6h", prix: 10000 }
+    ]
   },
   {
     id: "sindou-gare",
@@ -460,7 +513,14 @@ export const garesRoutieres: Gare[] = [
     adresse: "Centre-ville, pres des Pics de Sindou",
     coordonnees: { lat: 10.6667, lng: -5.1667 },
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    services: ["Billetterie"],
+    destinations: [
+      { ville: "Banfora", horaires: ["07h00", "10h00", "14h00"], duree: "1h", prix: 1500 },
+      { ville: "Bobo-Dioulasso", horaires: ["06h30", "14h00"], duree: "3h", prix: 3500 },
+      { ville: "Loumana", horaires: ["08h00", "12h00", "15h00"], duree: "30min", prix: 800 }
+    ]
   },
 
   // ========== REGION BOUCLE DU MOUHOUN (Dedougou) ==========
@@ -473,7 +533,17 @@ export const garesRoutieres: Gare[] = [
     coordonnees: { lat: 12.4633, lng: -3.4600 },
     telephone: "+226 20 52 01 18",
     compagnie: "Publique",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h00 - 19h00",
+    services: ["Billetterie", "Salle d'attente", "Toilettes"],
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "07h00", "08h00", "14h00"], duree: "4h", prix: 4500, compagnies: ["STMB"] },
+      { ville: "Bobo-Dioulasso", horaires: ["06h30", "08h00", "14h00"], duree: "3h30", prix: 4000 },
+      { ville: "Boromo", horaires: ["06h00", "08h00", "10h00", "14h00", "16h00"], duree: "1h30", prix: 1500 },
+      { ville: "Nouna", horaires: ["07h00", "10h00", "14h00"], duree: "2h", prix: 2500 },
+      { ville: "Tougan", horaires: ["06h30", "12h00", "15h00"], duree: "2h30", prix: 3000 },
+      { ville: "Koudougou", horaires: ["06h00", "08h00", "14h00"], duree: "2h30", prix: 3000, compagnies: ["STMB"] }
+    ]
   },
   {
     id: "boromo-gare",
@@ -483,7 +553,14 @@ export const garesRoutieres: Gare[] = [
     adresse: "Route Nationale 1, carrefour central",
     coordonnees: { lat: 11.7500, lng: -2.9333 },
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "05h00 - 18h00",
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "07h00", "08h00", "10h00", "14h00"], duree: "2h30", prix: 3000 },
+      { ville: "Bobo-Dioulasso", horaires: ["06h30", "08h00", "12h00", "14h00"], duree: "2h30", prix: 3000 },
+      { ville: "Dedougou", horaires: ["07h00", "10h00", "14h00", "16h00"], duree: "1h30", prix: 1500 },
+      { ville: "Hounde", horaires: ["06h00", "08h00", "10h00", "12h00", "15h00"], duree: "1h", prix: 1000 }
+    ]
   },
   {
     id: "nouna-gare",
@@ -493,7 +570,13 @@ export const garesRoutieres: Gare[] = [
     adresse: "Centre-ville, avenue principale",
     coordonnees: { lat: 12.7333, lng: -3.8667 },
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    destinations: [
+      { ville: "Dedougou", horaires: ["06h30", "10h00", "14h00"], duree: "2h", prix: 2500 },
+      { ville: "Ouagadougou", horaires: ["06h00", "14h00"], duree: "6h", prix: 7000 },
+      { ville: "Solenzo", horaires: ["07h00", "12h00", "15h00"], duree: "1h30", prix: 2000 }
+    ]
   },
   {
     id: "tougan-gare",
@@ -503,7 +586,13 @@ export const garesRoutieres: Gare[] = [
     adresse: "Route de Ouahigouya, centre-ville",
     coordonnees: { lat: 13.0667, lng: -3.0667 },
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    destinations: [
+      { ville: "Ouahigouya", horaires: ["06h30", "10h00", "14h00"], duree: "2h", prix: 2500 },
+      { ville: "Dedougou", horaires: ["07h00", "12h00"], duree: "2h30", prix: 3000 },
+      { ville: "Ouagadougou", horaires: ["06h00", "14h00"], duree: "5h", prix: 5500 }
+    ]
   },
   {
     id: "solenzo-gare",
@@ -526,7 +615,16 @@ export const garesRoutieres: Gare[] = [
     coordonnees: { lat: 11.7800, lng: -0.3694 },
     telephone: "+226 20 70 01 56",
     compagnie: "Publique",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h00 - 19h00",
+    services: ["Billetterie", "Toilettes", "Restauration"],
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "07h00", "08h00", "10h00", "14h00"], duree: "2h30", prix: 3000 },
+      { ville: "Koupela", horaires: ["06h30", "08h00", "10h00", "12h00", "14h00", "16h00"], duree: "45min", prix: 1000 },
+      { ville: "Bittou", horaires: ["07h00", "10h00", "14h00"], duree: "1h30", prix: 2000 },
+      { ville: "Pama", horaires: ["06h30", "14h00"], duree: "3h", prix: 4000 },
+      { ville: "Lome (Togo)", horaires: ["06h00"], duree: "12h", prix: 15000 }
+    ]
   },
   {
     id: "koupela-gare",
@@ -537,7 +635,14 @@ export const garesRoutieres: Gare[] = [
     coordonnees: { lat: 12.1833, lng: -0.3500 },
     telephone: "+226 20 70 40 22",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "05h00 - 18h00",
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "07h00", "08h00", "10h00", "12h00", "14h00", "16h00"], duree: "2h", prix: 2500 },
+      { ville: "Tenkodogo", horaires: ["06h30", "08h00", "10h00", "14h00", "16h00"], duree: "45min", prix: 1000 },
+      { ville: "Fada N'Gourma", horaires: ["06h30", "08h00", "14h00"], duree: "2h", prix: 2500 },
+      { ville: "Pouytenga", horaires: ["07h00", "09h00", "11h00", "14h00", "16h00"], duree: "30min", prix: 800 }
+    ]
   },
   {
     id: "pouytenga-gare",
@@ -547,7 +652,14 @@ export const garesRoutieres: Gare[] = [
     adresse: "Marche international de betail, centre-ville",
     coordonnees: { lat: 12.2500, lng: -0.5833 },
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "05h00 - 18h00",
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "07h00", "08h00", "10h00", "14h00"], duree: "2h", prix: 2500 },
+      { ville: "Koupela", horaires: ["06h30", "08h00", "10h00", "14h00", "16h00"], duree: "30min", prix: 800 },
+      { ville: "Kaya", horaires: ["07h00", "10h00", "14h00"], duree: "1h30", prix: 2000 },
+      { ville: "Tenkodogo", horaires: ["07h00", "12h00", "15h00"], duree: "1h15", prix: 1500 }
+    ]
   },
   {
     id: "garango-gare",
@@ -570,7 +682,16 @@ export const garesRoutieres: Gare[] = [
     coordonnees: { lat: 13.0910, lng: -1.0844 },
     telephone: "+226 25 45 01 32",
     compagnie: "Publique",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h00 - 18h00",
+    services: ["Billetterie", "Salle d'attente", "Toilettes"],
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "07h00", "08h00", "10h00", "12h00", "14h00"], duree: "2h30", prix: 3000, compagnies: ["STMB"] },
+      { ville: "Dori", horaires: ["06h30", "10h00", "14h00"], duree: "3h", prix: 4000 },
+      { ville: "Kongoussi", horaires: ["06h00", "08h00", "10h00", "14h00", "16h00"], duree: "1h", prix: 1500 },
+      { ville: "Djibo", horaires: ["07h00", "14h00"], duree: "3h30", prix: 4500 },
+      { ville: "Pouytenga", horaires: ["06h30", "09h00", "12h00", "15h00"], duree: "1h30", prix: 2000 }
+    ]
   },
   {
     id: "kongoussi-gare",
@@ -603,7 +724,17 @@ export const garesRoutieres: Gare[] = [
     coordonnees: { lat: 12.2525, lng: -2.3628 },
     telephone: "+226 25 44 01 87",
     compagnie: "Publique",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h00 - 20h00",
+    services: ["Billetterie", "Salle d'attente", "Toilettes", "Restauration"],
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "07h00", "08h00", "09h00", "10h00", "12h00", "14h00", "16h00"], duree: "2h", prix: 2500, compagnies: ["STMB", "STAF", "SOTRACO"] },
+      { ville: "Bobo-Dioulasso", horaires: ["06h00", "07h00", "08h00", "14h00"], duree: "3h", prix: 4000, compagnies: ["STMB", "STAF"] },
+      { ville: "Dedougou", horaires: ["06h30", "10h00", "14h00"], duree: "2h30", prix: 3000, compagnies: ["STMB"] },
+      { ville: "Leo", horaires: ["07h00", "12h00", "15h00"], duree: "2h30", prix: 3000 },
+      { ville: "Reo", horaires: ["06h00", "08h00", "10h00", "12h00", "14h00", "16h00"], duree: "30min", prix: 500 },
+      { ville: "Hounde", horaires: ["06h30", "09h00", "14h00"], duree: "1h30", prix: 1500 }
+    ]
   },
   {
     id: "reo-gare",
