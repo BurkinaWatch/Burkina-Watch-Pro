@@ -41,6 +41,7 @@ import {
   auditLogs,
   streetviewPoints,
   virtualTours,
+  places,
   insertSignalementSchema,
   insertCommentaireSchema,
   updateSignalementSchema,
