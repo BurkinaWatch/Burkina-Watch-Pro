@@ -240,11 +240,18 @@ export default function Gares() {
 
           {stats && (
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20">
+              <Card 
+                className={`bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 cursor-pointer hover-elevate transition-all ${showCompagnies ? 'ring-2 ring-blue-500' : ''}`}
+                onClick={() => setShowCompagnies(!showCompagnies)}
+                data-testid="card-stat-compagnies"
+              >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-muted-foreground">Compagnies</p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        Compagnies
+                        {showCompagnies ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      </p>
                       <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.totalCompagnies}</p>
                     </div>
                     <Building2 className="w-8 h-8 text-blue-500/50" />
@@ -298,22 +305,24 @@ export default function Gares() {
             </div>
           )}
 
-          {/* Section Compagnies avec bouton toggle */}
-          <div className="space-y-3">
-            <Button
-              variant="outline"
-              onClick={() => setShowCompagnies(!showCompagnies)}
-              className="w-full justify-between"
-              data-testid="button-toggle-compagnies"
-            >
-              <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4" />
-                <span>Decouvrir les {compagnies.length} compagnies de transport</span>
+          {/* Section Compagnies (affichee quand on clique sur la carte Compagnies) */}
+          {showCompagnies && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-blue-500" />
+                  Les {compagnies.length} compagnies de transport
+                </h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowCompagnies(false)}
+                  data-testid="button-close-compagnies"
+                >
+                  Fermer
+                  <ChevronUp className="w-4 h-4 ml-1" />
+                </Button>
               </div>
-              {showCompagnies ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </Button>
-
-            {showCompagnies && (
               <div className="grid gap-4 md:grid-cols-2 animate-in slide-in-from-top-2 duration-300">
                 {compagnies.map((compagnie) => (
                   <Card key={compagnie.id} className="overflow-hidden hover-elevate" data-testid={`card-compagnie-${compagnie.id}`}>
@@ -397,8 +406,8 @@ export default function Gares() {
                   </Card>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
