@@ -2622,6 +2622,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================
+  // TRANSPORT - GARES ROUTIERES ET HORAIRES
+  // ============================================
+  app.get("/api/transport", async (req, res) => {
+    try {
+      const { getCompagnies, getGares, getTrajets, getStatistiquesTransport } = await import("./transportData");
+      
+      res.json({
+        compagnies: getCompagnies(),
+        gares: getGares(),
+        trajets: getTrajets(),
+        stats: getStatistiquesTransport()
+      });
+    } catch (error) {
+      console.error("Erreur transport:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des données de transport" });
+    }
+  });
+
+  app.get("/api/transport/trajets", async (req, res) => {
+    try {
+      const { searchTrajets, getTrajets } = await import("./transportData");
+      const { depart, arrivee } = req.query;
+      
+      if (depart && arrivee) {
+        res.json(searchTrajets(String(depart), String(arrivee)));
+      } else {
+        res.json(getTrajets());
+      }
+    } catch (error) {
+      console.error("Erreur trajets:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des trajets" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
