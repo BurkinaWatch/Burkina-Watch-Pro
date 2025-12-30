@@ -265,66 +265,118 @@ export const garesRoutieres: Gare[] = [
     nom: "Gare Rahimo Transport Kalgondin",
     ville: "Ouagadougou",
     region: "Centre",
-    adresse: "Rue 30.73, Avenue des Arts, Kalgondin, face a la station Total",
+    adresse: "Rue 30.73, Avenue des Arts, Kalgondin, Secteur 15, face a la station Total, a 200m de la Clinique Les Genets",
     coordonnees: { lat: 12.3789, lng: -1.4965 },
     telephone: "+226 64 86 37 55",
     compagnie: "rahimo",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h00 - 22h00",
+    services: ["Climatisation", "USB", "GPS", "Wifi", "Bagages 25kg inclus", "Salle d'attente VIP"],
+    destinations: [
+      { ville: "Bobo-Dioulasso", horaires: ["06h00", "08h00", "10h00", "14h00", "16h00", "22h00"], duree: "5h", prix: 6000, compagnies: ["RAHIMO"] },
+      { ville: "Banfora", horaires: ["06h30", "14h00", "22h00"], duree: "7h", prix: 8000, compagnies: ["RAHIMO"] },
+      { ville: "Abidjan (CI)", horaires: ["06h00", "14h00", "22h00"], duree: "14h", prix: 20000, compagnies: ["RAHIMO"] },
+      { ville: "Bouake (CI)", horaires: ["06h00", "22h00"], duree: "10h", prix: 15000, compagnies: ["RAHIMO"] },
+      { ville: "Yamoussoukro (CI)", horaires: ["06h00", "22h00"], duree: "12h", prix: 18000, compagnies: ["RAHIMO"] },
+      { ville: "Lome (Togo)", horaires: ["06h00", "18h00"], duree: "18h", prix: 25000, compagnies: ["RAHIMO"] }
+    ]
   },
   {
     id: "tcv-ouaga",
     nom: "Gare TCV Ouagadougou",
     ville: "Ouagadougou",
     region: "Centre",
-    adresse: "Avenue de la Grande-Mosquee, Secteur 5, pres de l'aeroport international",
+    adresse: "Avenue de la Grande-Mosquee, Secteur 5, Koulouba, pres du rond-point des Nations Unies, face a la Banque Atlantique",
     coordonnees: { lat: 12.3680, lng: -1.5165 },
     telephone: "+226 75 79 13 07",
     compagnie: "tcv",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h00 - 23h00",
+    services: ["Climatisation", "Salle d'attente TV", "Wifi", "Colis express", "Billetterie electronique"],
+    destinations: [
+      { ville: "Bobo-Dioulasso", horaires: ["05h30", "06h30", "08h00", "10h00", "12h00", "14h00", "16h00", "22h00"], duree: "5h", prix: 6000, compagnies: ["TCV"] },
+      { ville: "Banfora", horaires: ["06h00", "10h00", "14h00", "22h00"], duree: "7h", prix: 8000, compagnies: ["TCV"] },
+      { ville: "Orodara", horaires: ["06h30", "14h00"], duree: "6h30", prix: 7000, compagnies: ["TCV"] },
+      { ville: "Abidjan (CI)", horaires: ["06h00", "14h00", "22h00"], duree: "14h", prix: 20000, compagnies: ["TCV"] },
+      { ville: "Bamako (Mali)", horaires: ["06h00", "14h00"], duree: "18h", prix: 22000, compagnies: ["TCV"] },
+      { ville: "Lome (Togo)", horaires: ["14h00"], duree: "24h", prix: 30000, compagnies: ["TCV"] },
+      { ville: "Cotonou (Benin)", horaires: ["06h00"], duree: "28h", prix: 35000, compagnies: ["TCV"] }
+    ]
   },
   {
     id: "stmb-ouaga",
     nom: "Gare STMB Ouagadougou",
     ville: "Ouagadougou",
     region: "Centre",
-    adresse: "Rue du Marche, Secteur 11, Zone commerciale du centre",
+    adresse: "Rue du Marche, Secteur 11, Dapoya, Zone commerciale du centre-ville, derriere le Marche Central de Ouaga 2000",
     coordonnees: { lat: 12.3701, lng: -1.5234 },
     telephone: "+226 25 30 63 85",
     compagnie: "stmb",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h00 - 20h00",
+    services: ["Climatisation", "Bagages 30kg inclus", "Salle d'attente", "Colis"],
+    destinations: [
+      { ville: "Bobo-Dioulasso", horaires: ["06h00", "07h30", "09h00", "14h00", "16h00"], duree: "5h", prix: 5500, compagnies: ["STMB"] },
+      { ville: "Ouahigouya", horaires: ["06h00", "08h00", "10h00", "14h00", "16h00"], duree: "3h30", prix: 4000, compagnies: ["STMB"] },
+      { ville: "Koudougou", horaires: ["06h00", "07h00", "08h00", "10h00", "12h00", "14h00", "16h00", "18h00"], duree: "2h", prix: 2500, compagnies: ["STMB"] },
+      { ville: "Fada N'Gourma", horaires: ["06h00", "08h00", "14h00"], duree: "4h", prix: 5000, compagnies: ["STMB"] },
+      { ville: "Kaya", horaires: ["06h30", "08h00", "10h00", "14h00", "16h00"], duree: "2h30", prix: 3000, compagnies: ["STMB"] },
+      { ville: "Dedougou", horaires: ["06h30", "14h00"], duree: "4h30", prix: 5000, compagnies: ["STMB"] }
+    ]
   },
   {
     id: "tsr-ouaga",
     nom: "Gare TSR Ouagadougou",
     ville: "Ouagadougou",
     region: "Centre",
-    adresse: "Avenue Yennenga, Secteur 9, Gounghin",
+    adresse: "Avenue Yennenga, Secteur 9, Gounghin, a cote du Lycee Philippe Zinda Kabore, pres du carrefour de la Patte d'Oie",
     coordonnees: { lat: 12.3650, lng: -1.5320 },
     telephone: "+226 25 36 48 72",
     compagnie: "tsr",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h30 - 21h00",
+    services: ["Climatisation", "Colis", "Bagages inclus"],
+    destinations: [
+      { ville: "Bobo-Dioulasso", horaires: ["06h00", "08h00", "14h00", "16h00"], duree: "5h", prix: 5000, compagnies: ["TSR"] },
+      { ville: "Ouahigouya", horaires: ["06h30", "09h00", "14h00"], duree: "3h30", prix: 3500, compagnies: ["TSR"] },
+      { ville: "Niamey (Niger)", horaires: ["07h00", "15h00"], duree: "8h", prix: 12000, compagnies: ["TSR"] },
+      { ville: "Bamako (Mali)", horaires: ["06h00"], duree: "18h", prix: 20000, compagnies: ["TSR"] }
+    ]
   },
   {
     id: "staf-ouaga",
     nom: "Gare STAF Ouagadougou",
     ville: "Ouagadougou",
     region: "Centre",
-    adresse: "Boulevard de la Resistance, Secteur 14, Koulouba",
+    adresse: "Boulevard de la Resistance, Secteur 14, Koulouba, face au Ministere de l'Economie, a 100m de la Place des Cineastes",
     coordonnees: { lat: 12.3580, lng: -1.5180 },
     telephone: "+226 25 31 55 66",
     compagnie: "staf",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h30 - 20h00",
+    services: ["Climatisation", "Bagages inclus", "Bus neufs"],
+    destinations: [
+      { ville: "Bobo-Dioulasso", horaires: ["06h30", "08h00", "14h00", "16h00"], duree: "5h", prix: 5000, compagnies: ["STAF"] },
+      { ville: "Banfora", horaires: ["07h00", "14h00"], duree: "7h", prix: 7000, compagnies: ["STAF"] },
+      { ville: "Koudougou", horaires: ["06h00", "08h00", "10h00", "12h00", "14h00", "16h00"], duree: "2h", prix: 2000, compagnies: ["STAF"] }
+    ]
   },
   {
     id: "elitis-ouaga",
     nom: "Gare Elitis Express Ouagadougou",
     ville: "Ouagadougou",
     region: "Centre",
-    adresse: "Avenue de l'Independance, Secteur 4, pres de l'Hotel Silmande",
+    adresse: "Avenue de l'Independance, Secteur 4, Koulouba, pres de l'Hotel Silmande, face a la Chambre de Commerce et d'Industrie",
     coordonnees: { lat: 12.3720, lng: -1.5100 },
     telephone: "+226 70 88 99 00",
     compagnie: "elitis",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "06h00 - 20h00",
+    services: ["Luxe", "Climatisation", "Wifi haut debit", "Collation offerte", "Sieges inclinables 180°", "Prises electriques", "Ecrans individuels"],
+    destinations: [
+      { ville: "Bobo-Dioulasso", horaires: ["07h00", "14h00"], duree: "4h30", prix: 12000, compagnies: ["ELITIS"] },
+      { ville: "Banfora", horaires: ["07h00"], duree: "6h30", prix: 15000, compagnies: ["ELITIS"] }
+    ]
   },
   {
     id: "sotraco-depot",
@@ -514,11 +566,19 @@ export const garesRoutieres: Gare[] = [
     nom: "Gare STMB Bobo-Dioulasso",
     ville: "Bobo-Dioulasso",
     region: "Hauts-Bassins",
-    adresse: "Avenue de la Republique, Secteur 3, Tounouma",
+    adresse: "Avenue de la Republique, Secteur 3, Tounouma, a cote de la station Shell, pres du rond-point de l'Independance",
     coordonnees: { lat: 11.1810, lng: -4.2920 },
     telephone: "+226 20 98 44 55",
     compagnie: "stmb",
-    type: "agence"
+    type: "agence",
+    heuresOuverture: "05h30 - 20h00",
+    services: ["Climatisation", "Bagages inclus", "Salle d'attente"],
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "08h00", "10h00", "14h00", "16h00"], duree: "5h", prix: 5500, compagnies: ["STMB"] },
+      { ville: "Dedougou", horaires: ["07h00", "14h00"], duree: "3h30", prix: 4000, compagnies: ["STMB"] },
+      { ville: "Ouahigouya", horaires: ["06h00", "14h00"], duree: "8h", prix: 9000, compagnies: ["STMB"] },
+      { ville: "Koudougou", horaires: ["06h30", "09h00", "14h00", "16h00"], duree: "3h", prix: 3500, compagnies: ["STMB"] }
+    ]
   },
   {
     id: "orodara-gare",
@@ -586,11 +646,20 @@ export const garesRoutieres: Gare[] = [
     nom: "Agence Rakieta Banfora",
     ville: "Banfora",
     region: "Cascades",
-    adresse: "Boulevard Oumarou Kanazoe, Secteur 2, pres du marche",
+    adresse: "Boulevard Oumarou Kanazoe, Secteur 2, face au marche central, pres de la station Total",
     coordonnees: { lat: 10.6350, lng: -4.7550 },
     telephone: "+226 20 91 01 23",
     compagnie: "rakieta",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h30 - 20h00",
+    services: ["Climatisation", "Bagages inclus", "Colis"],
+    destinations: [
+      { ville: "Bobo-Dioulasso", horaires: ["06h00", "07h00", "08h30", "10h00", "12h00", "14h00", "16h00"], duree: "2h", prix: 2500, compagnies: ["RAKIETA"] },
+      { ville: "Ouagadougou", horaires: ["06h00", "08h00", "14h00", "22h00"], duree: "7h", prix: 8000, compagnies: ["RAKIETA"] },
+      { ville: "Abidjan (CI)", horaires: ["06h00", "14h00", "22h00"], duree: "7h", prix: 12000, compagnies: ["RAKIETA"] },
+      { ville: "Niangoloko", horaires: ["07h00", "10h00", "14h00", "16h00"], duree: "1h30", prix: 2000, compagnies: ["RAKIETA"] },
+      { ville: "Sindou", horaires: ["08h00", "12h00", "15h00"], duree: "1h", prix: 1500, compagnies: ["RAKIETA"] }
+    ]
   },
   {
     id: "niangoloko-gare",
@@ -704,10 +773,18 @@ export const garesRoutieres: Gare[] = [
     nom: "Gare Routiere de Solenzo",
     ville: "Solenzo",
     region: "Boucle du Mouhoun",
-    adresse: "Centre-ville, marche central",
+    adresse: "Centre-ville, pres du marche central, face a la pharmacie communale",
     coordonnees: { lat: 12.1833, lng: -4.0333 },
+    telephone: "+226 20 53 70 12",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    destinations: [
+      { ville: "Nouna", horaires: ["07h00", "10h00", "14h00"], duree: "1h30", prix: 2000 },
+      { ville: "Dedougou", horaires: ["06h30", "08h00", "14h00"], duree: "3h", prix: 3500 },
+      { ville: "Bobo-Dioulasso", horaires: ["06h00", "14h00"], duree: "2h30", prix: 3000 },
+      { ville: "Ouagadougou", horaires: ["06h00"], duree: "7h", prix: 7500 }
+    ]
   },
 
   // ========== REGION CENTRE-EST (Tenkodogo) ==========
@@ -771,10 +848,18 @@ export const garesRoutieres: Gare[] = [
     nom: "Gare Routiere de Garango",
     ville: "Garango",
     region: "Centre-Est",
-    adresse: "Centre-ville, route de Tenkodogo",
+    adresse: "Centre-ville, route de Tenkodogo, pres du CEG de Garango, face au marche",
     coordonnees: { lat: 11.8000, lng: -0.5500 },
+    telephone: "+226 20 70 50 18",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    destinations: [
+      { ville: "Tenkodogo", horaires: ["06h30", "08h00", "10h00", "14h00", "16h00"], duree: "40min", prix: 800 },
+      { ville: "Ouagadougou", horaires: ["06h00", "08h00", "14h00"], duree: "3h", prix: 3500 },
+      { ville: "Koupela", horaires: ["07h00", "10h00", "14h00"], duree: "1h", prix: 1200 },
+      { ville: "Zabr", horaires: ["08h00", "12h00", "15h00"], duree: "30min", prix: 500 }
+    ]
   },
 
   // ========== REGION CENTRE-NORD (Kaya) ==========
@@ -803,20 +888,35 @@ export const garesRoutieres: Gare[] = [
     nom: "Gare Routiere de Kongoussi",
     ville: "Kongoussi",
     region: "Centre-Nord",
-    adresse: "Lac Bam, route nationale, centre-ville",
+    adresse: "Lac Bam, route nationale, pres du pont du lac Bam, face a la mairie",
     coordonnees: { lat: 13.3333, lng: -1.5333 },
+    telephone: "+226 25 45 40 15",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    destinations: [
+      { ville: "Kaya", horaires: ["06h30", "08h00", "10h00", "14h00", "16h00"], duree: "1h", prix: 1500 },
+      { ville: "Ouagadougou", horaires: ["06h00", "08h00", "14h00"], duree: "3h30", prix: 4000 },
+      { ville: "Djibo", horaires: ["07h00", "14h00"], duree: "3h", prix: 4000 },
+      { ville: "Yako", horaires: ["07h00", "10h00", "14h00"], duree: "1h30", prix: 2000 }
+    ]
   },
   {
     id: "barsalogho-gare",
     nom: "Gare Routiere de Barsalogho",
     ville: "Barsalogho",
     region: "Centre-Nord",
-    adresse: "Centre-ville, route de Kaya",
+    adresse: "Centre-ville, route de Kaya, pres de la mosquee centrale, face au dispensaire",
     coordonnees: { lat: 13.4167, lng: -1.0667 },
+    telephone: "+226 25 45 50 08",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h30 - 16h00",
+    destinations: [
+      { ville: "Kaya", horaires: ["07h00", "10h00", "14h00"], duree: "45min", prix: 1000 },
+      { ville: "Ouagadougou", horaires: ["06h00", "14h00"], duree: "3h15", prix: 3800 },
+      { ville: "Dori", horaires: ["07h00"], duree: "3h30", prix: 4500 }
+    ]
   },
 
   // ========== REGION CENTRE-OUEST (Koudougou) ==========
@@ -846,30 +946,53 @@ export const garesRoutieres: Gare[] = [
     nom: "Gare Routiere de Reo",
     ville: "Reo",
     region: "Centre-Ouest",
-    adresse: "Centre-ville, route de Koudougou",
+    adresse: "Centre-ville, route de Koudougou, face au marche de Reo, pres de l'eglise catholique",
     coordonnees: { lat: 12.3167, lng: -2.4667 },
+    telephone: "+226 25 44 10 22",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    destinations: [
+      { ville: "Koudougou", horaires: ["06h00", "07h00", "08h00", "10h00", "12h00", "14h00", "16h00"], duree: "30min", prix: 500 },
+      { ville: "Ouagadougou", horaires: ["06h00", "08h00", "14h00"], duree: "2h30", prix: 3000 },
+      { ville: "Tenado", horaires: ["07h00", "10h00", "14h00"], duree: "45min", prix: 700 }
+    ]
   },
   {
     id: "tenado-gare",
     nom: "Gare Routiere de Tenado",
     ville: "Tenado",
     region: "Centre-Ouest",
-    adresse: "Route de Leo, centre-ville",
+    adresse: "Route de Leo, centre-ville, pres du commissariat, face a la banque BICIA",
     coordonnees: { lat: 12.1833, lng: -2.6500 },
+    telephone: "+226 25 44 20 15",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    destinations: [
+      { ville: "Koudougou", horaires: ["06h30", "08h00", "10h00", "14h00"], duree: "1h", prix: 1000 },
+      { ville: "Leo", horaires: ["07h00", "10h00", "14h00"], duree: "1h30", prix: 1800 },
+      { ville: "Ouagadougou", horaires: ["06h00", "14h00"], duree: "3h", prix: 3500 },
+      { ville: "Reo", horaires: ["07h00", "10h00", "14h00", "16h00"], duree: "45min", prix: 700 }
+    ]
   },
   {
     id: "sapouy-gare",
     nom: "Gare Routiere de Sapouy",
     ville: "Sapouy",
     region: "Centre-Ouest",
-    adresse: "Centre-ville, carrefour principal",
+    adresse: "Centre-ville, carrefour principal, face a la mairie, pres du CSPS",
     coordonnees: { lat: 11.5667, lng: -1.7667 },
+    telephone: "+226 25 47 50 08",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "08h00", "14h00"], duree: "2h30", prix: 3000 },
+      { ville: "Leo", horaires: ["07h00", "10h00", "14h00"], duree: "1h30", prix: 2000 },
+      { ville: "Po", horaires: ["07h00", "14h00"], duree: "2h", prix: 2500 },
+      { ville: "Kombissiri", horaires: ["06h30", "09h00", "14h00"], duree: "1h", prix: 1200 }
+    ]
   },
 
   // ========== REGION CENTRE-SUD (Manga) ==========
@@ -878,31 +1001,58 @@ export const garesRoutieres: Gare[] = [
     nom: "Gare Routiere de Manga",
     ville: "Manga",
     region: "Centre-Sud",
-    adresse: "Avenue du Nahouri, Secteur 1, centre administratif",
+    adresse: "Avenue du Nahouri, Secteur 1, centre administratif, face a la prefecture, pres du stade",
     coordonnees: { lat: 11.6667, lng: -1.0667 },
     telephone: "+226 20 77 01 12",
     compagnie: "Publique",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h30 - 18h00",
+    services: ["Billetterie", "Toilettes"],
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "07h00", "08h00", "10h00", "14h00", "16h00"], duree: "2h", prix: 2500 },
+      { ville: "Po", horaires: ["06h30", "09h00", "12h00", "15h00"], duree: "1h", prix: 1200 },
+      { ville: "Tiebele", horaires: ["07h00", "10h00", "14h00"], duree: "1h30", prix: 1800 },
+      { ville: "Kombissiri", horaires: ["06h00", "08h00", "10h00", "14h00", "16h00"], duree: "1h", prix: 1000 },
+      { ville: "Leo", horaires: ["07h00", "14h00"], duree: "2h", prix: 2500 }
+    ]
   },
   {
     id: "po-gare",
     nom: "Gare Routiere de Po",
     ville: "Po",
     region: "Centre-Sud",
-    adresse: "Route du Ghana, frontiere, centre-ville",
+    adresse: "Route du Ghana, frontiere, centre-ville, face au poste de douane, pres du marche",
     coordonnees: { lat: 11.1667, lng: -1.1500 },
+    telephone: "+226 20 77 20 15",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 18h00",
+    services: ["Billetterie", "Douane"],
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "07h00", "08h00", "10h00", "14h00"], duree: "2h30", prix: 3000 },
+      { ville: "Manga", horaires: ["06h30", "08h00", "10h00", "14h00", "16h00"], duree: "1h", prix: 1200 },
+      { ville: "Tiebele", horaires: ["07h00", "10h00", "14h00"], duree: "30min", prix: 500 },
+      { ville: "Navrongo (Ghana)", horaires: ["08h00", "12h00", "15h00"], duree: "1h30", prix: 2500 },
+      { ville: "Bolgatanga (Ghana)", horaires: ["07h00", "14h00"], duree: "2h", prix: 3500 }
+    ]
   },
   {
     id: "kombissiri-gare",
     nom: "Gare Routiere de Kombissiri",
     ville: "Kombissiri",
     region: "Centre-Sud",
-    adresse: "Route de Manga, centre-ville",
+    adresse: "Route de Manga, centre-ville, pres du CEG, face au marche central",
     coordonnees: { lat: 12.0667, lng: -1.3333 },
+    telephone: "+226 20 77 10 08",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "07h00", "08h00", "10h00", "12h00", "14h00", "16h00"], duree: "1h", prix: 1000 },
+      { ville: "Manga", horaires: ["06h30", "08h00", "10h00", "14h00", "16h00"], duree: "1h", prix: 1000 },
+      { ville: "Po", horaires: ["07h00", "10h00", "14h00"], duree: "2h", prix: 2200 },
+      { ville: "Sapouy", horaires: ["07h00", "14h00"], duree: "1h", prix: 1200 }
+    ]
   },
 
   // ========== REGION EST (Fada N'Gourma) ==========
@@ -911,41 +1061,78 @@ export const garesRoutieres: Gare[] = [
     nom: "Gare Routiere de Fada N'Gourma",
     ville: "Fada N'Gourma",
     region: "Est",
-    adresse: "Boulevard de l'Est, Secteur 1, face a la grande mosquee",
+    adresse: "Boulevard de l'Est, Secteur 1, face a la grande mosquee, pres du palais royal du Gulmu",
     coordonnees: { lat: 12.0606, lng: 0.3494 },
     telephone: "+226 20 77 00 45",
     compagnie: "Publique",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h00 - 19h00",
+    services: ["Billetterie", "Salle d'attente", "Toilettes", "Restauration"],
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "07h00", "08h00", "10h00", "14h00"], duree: "4h", prix: 5000, compagnies: ["STMB"] },
+      { ville: "Koupela", horaires: ["06h30", "08h00", "10h00", "14h00", "16h00"], duree: "2h", prix: 2500 },
+      { ville: "Diapaga", horaires: ["07h00", "10h00", "14h00"], duree: "3h", prix: 4000 },
+      { ville: "Pama", horaires: ["06h30", "14h00"], duree: "4h", prix: 5000 },
+      { ville: "Bogande", horaires: ["07h00", "14h00"], duree: "3h30", prix: 4500 },
+      { ville: "Kantchari", horaires: ["07h00", "10h00", "14h00"], duree: "1h30", prix: 2000 },
+      { ville: "Niamey (Niger)", horaires: ["06h00"], duree: "10h", prix: 15000 }
+    ]
   },
   {
     id: "diapaga-gare",
     nom: "Gare Routiere de Diapaga",
     ville: "Diapaga",
     region: "Est",
-    adresse: "Route de Fada, centre-ville, pres du parc W",
+    adresse: "Route de Fada, centre-ville, pres du parc W, face a la mairie, a 5km de l'entree du parc",
     coordonnees: { lat: 12.0667, lng: 1.7833 },
+    telephone: "+226 20 79 80 12",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    destinations: [
+      { ville: "Fada N'Gourma", horaires: ["06h30", "08h00", "14h00"], duree: "3h", prix: 4000 },
+      { ville: "Ouagadougou", horaires: ["06h00", "14h00"], duree: "7h", prix: 9000 },
+      { ville: "Kantchari", horaires: ["07h00", "10h00", "14h00"], duree: "1h30", prix: 2000 },
+      { ville: "Parc W (Entree)", horaires: ["08h00", "14h00"], duree: "30min", prix: 500 }
+    ]
   },
   {
     id: "bogande-gare",
     nom: "Gare Routiere de Bogande",
     ville: "Bogande",
     region: "Est",
-    adresse: "Centre-ville, route de Fada",
+    adresse: "Centre-ville, route de Fada, pres de la prefecture, face au marche",
     coordonnees: { lat: 12.9833, lng: -0.1333 },
+    telephone: "+226 20 79 70 08",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    destinations: [
+      { ville: "Fada N'Gourma", horaires: ["06h30", "10h00", "14h00"], duree: "3h30", prix: 4500 },
+      { ville: "Ouagadougou", horaires: ["06h00", "14h00"], duree: "7h30", prix: 9500 },
+      { ville: "Piela", horaires: ["07h00", "10h00", "14h00"], duree: "1h", prix: 1500 },
+      { ville: "Manni", horaires: ["07h00", "14h00"], duree: "1h30", prix: 2000 }
+    ]
   },
   {
     id: "pama-gare",
     nom: "Gare Routiere de Pama",
     ville: "Pama",
     region: "Est",
-    adresse: "Frontiere Benin, route internationale",
+    adresse: "Frontiere Benin, route internationale, pres du poste de douane, face au commissariat",
     coordonnees: { lat: 11.2500, lng: 0.7000 },
+    telephone: "+226 20 79 60 05",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 18h00",
+    services: ["Billetterie", "Douane"],
+    destinations: [
+      { ville: "Fada N'Gourma", horaires: ["06h30", "10h00", "14h00"], duree: "4h", prix: 5000 },
+      { ville: "Tenkodogo", horaires: ["07h00", "14h00"], duree: "3h", prix: 4000 },
+      { ville: "Ouagadougou", horaires: ["06h00"], duree: "8h", prix: 10000 },
+      { ville: "Natitingou (Benin)", horaires: ["08h00", "14h00"], duree: "3h", prix: 6000 },
+      { ville: "Cotonou (Benin)", horaires: ["06h00"], duree: "12h", prix: 20000 }
+    ]
   },
 
   // ========== REGION NORD (Ouahigouya) ==========
@@ -954,51 +1141,93 @@ export const garesRoutieres: Gare[] = [
     nom: "Gare Routiere de Ouahigouya",
     ville: "Ouahigouya",
     region: "Nord",
-    adresse: "Avenue Yatenga, Secteur 4, pres du palais du Yatenga Naaba",
+    adresse: "Avenue Yatenga, Secteur 4, pres du palais du Yatenga Naaba, face a la place du cinquantenaire",
     coordonnees: { lat: 13.5826, lng: -2.4192 },
     telephone: "+226 20 55 01 78",
     compagnie: "Publique",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h00 - 19h00",
+    services: ["Billetterie", "Salle d'attente", "Toilettes", "Restauration"],
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["05h30", "06h30", "07h30", "08h30", "10h00", "14h00", "16h00"], duree: "3h30", prix: 4000, compagnies: ["STMB", "TSR"] },
+      { ville: "Kaya", horaires: ["07h00", "10h00", "14h00"], duree: "3h", prix: 4000 },
+      { ville: "Tougan", horaires: ["06h30", "10h00", "14h00"], duree: "2h", prix: 2500 },
+      { ville: "Djibo", horaires: ["07h00", "14h00"], duree: "2h30", prix: 3000 },
+      { ville: "Gourcy", horaires: ["06h00", "08h00", "10h00", "12h00", "14h00", "16h00"], duree: "45min", prix: 800 },
+      { ville: "Yako", horaires: ["06h30", "08h00", "10h00", "14h00"], duree: "1h15", prix: 1500 },
+      { ville: "Bobo-Dioulasso", horaires: ["06h00", "14h00"], duree: "8h", prix: 9000 }
+    ]
   },
   {
     id: "gourcy-gare",
     nom: "Gare Routiere de Gourcy",
     ville: "Gourcy",
     region: "Nord",
-    adresse: "Route de Ouahigouya, centre-ville",
+    adresse: "Route de Ouahigouya, centre-ville, pres de l'hopital de district, face au marche",
     coordonnees: { lat: 13.2000, lng: -2.3500 },
+    telephone: "+226 20 55 40 12",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    destinations: [
+      { ville: "Ouahigouya", horaires: ["06h30", "08h00", "10h00", "12h00", "14h00", "16h00"], duree: "45min", prix: 800 },
+      { ville: "Ouagadougou", horaires: ["06h00", "08h00", "14h00"], duree: "4h15", prix: 4800 },
+      { ville: "Yako", horaires: ["07h00", "10h00", "14h00"], duree: "30min", prix: 500 },
+      { ville: "Titao", horaires: ["07h00", "14h00"], duree: "1h30", prix: 2000 }
+    ]
   },
   {
     id: "yako-gare",
     nom: "Gare Routiere de Yako",
     ville: "Yako",
     region: "Nord",
-    adresse: "Route Nationale 2, centre administratif",
+    adresse: "Route Nationale 2, centre administratif, face a la mairie, pres de la station Petrofa",
     coordonnees: { lat: 12.9500, lng: -2.2667 },
+    telephone: "+226 20 55 30 08",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "07h00", "08h00", "10h00", "14h00"], duree: "2h15", prix: 2800 },
+      { ville: "Ouahigouya", horaires: ["06h30", "08h00", "10h00", "14h00", "16h00"], duree: "1h15", prix: 1500 },
+      { ville: "Gourcy", horaires: ["07h00", "10h00", "14h00"], duree: "30min", prix: 500 },
+      { ville: "Kongoussi", horaires: ["07h00", "10h00", "14h00"], duree: "1h30", prix: 2000 }
+    ]
   },
   {
     id: "titao-gare",
     nom: "Gare Routiere de Titao",
     ville: "Titao",
     region: "Nord",
-    adresse: "Centre-ville, route de Djibo",
+    adresse: "Centre-ville, route de Djibo, face au CEG, pres du CSPS",
     coordonnees: { lat: 13.7667, lng: -2.0667 },
+    telephone: "+226 20 55 50 05",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h30 - 16h00",
+    destinations: [
+      { ville: "Ouahigouya", horaires: ["06h30", "10h00", "14h00"], duree: "1h", prix: 1200 },
+      { ville: "Djibo", horaires: ["07h00", "14h00"], duree: "1h30", prix: 2000 },
+      { ville: "Ouagadougou", horaires: ["06h00", "14h00"], duree: "4h30", prix: 5200 },
+      { ville: "Gourcy", horaires: ["07h00", "10h00", "14h00"], duree: "1h30", prix: 2000 }
+    ]
   },
   {
     id: "seguenega-gare",
     nom: "Gare Routiere de Seguenega",
     ville: "Seguenega",
     region: "Nord",
-    adresse: "Centre-ville, marche hebdomadaire",
+    adresse: "Centre-ville, marche hebdomadaire, face au dispensaire, pres de l'ecole primaire",
     coordonnees: { lat: 13.4333, lng: -1.9667 },
+    telephone: "+226 20 55 20 05",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h30 - 16h00",
+    destinations: [
+      { ville: "Ouahigouya", horaires: ["07h00", "10h00", "14h00"], duree: "1h", prix: 1000 },
+      { ville: "Ouagadougou", horaires: ["06h00", "14h00"], duree: "4h", prix: 5000 },
+      { ville: "Kaya", horaires: ["07h00"], duree: "2h30", prix: 3000 }
+    ]
   },
 
   // ========== REGION PLATEAU-CENTRAL (Ziniare) ==========
@@ -1007,21 +1236,38 @@ export const garesRoutieres: Gare[] = [
     nom: "Gare Routiere de Ziniare",
     ville: "Ziniare",
     region: "Plateau-Central",
-    adresse: "Route Nationale 3, centre-ville, pres du Laongo",
+    adresse: "Route Nationale 3, centre-ville, pres du parc de sculptures de Laongo, face a la mairie",
     coordonnees: { lat: 12.5833, lng: -1.3000 },
     telephone: "+226 25 40 60 12",
     compagnie: "Publique",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h30 - 18h00",
+    services: ["Billetterie", "Toilettes"],
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "07h00", "08h00", "09h00", "10h00", "12h00", "14h00", "16h00", "18h00"], duree: "45min", prix: 800 },
+      { ville: "Kaya", horaires: ["06h30", "08h00", "10h00", "14h00"], duree: "1h45", prix: 2200 },
+      { ville: "Koupela", horaires: ["07h00", "10h00", "14h00"], duree: "1h15", prix: 1500 },
+      { ville: "Pouytenga", horaires: ["07h00", "14h00"], duree: "1h30", prix: 1800 },
+      { ville: "Laongo (Sculptures)", horaires: ["08h00", "10h00", "14h00", "16h00"], duree: "15min", prix: 300 }
+    ]
   },
   {
     id: "bousse-gare",
     nom: "Gare Routiere de Bousse",
     ville: "Bousse",
     region: "Plateau-Central",
-    adresse: "Centre-ville, route de Yako",
+    adresse: "Centre-ville, route de Yako, pres du commissariat, face au marche",
     coordonnees: { lat: 12.6667, lng: -1.9000 },
+    telephone: "+226 25 40 50 08",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "07h00", "08h00", "10h00", "14h00"], duree: "1h30", prix: 1800 },
+      { ville: "Yako", horaires: ["06h30", "08h00", "10h00", "14h00", "16h00"], duree: "45min", prix: 800 },
+      { ville: "Kongoussi", horaires: ["07h00", "14h00"], duree: "2h", prix: 2500 },
+      { ville: "Ouahigouya", horaires: ["06h00", "14h00"], duree: "2h30", prix: 3200 }
+    ]
   },
 
   // ========== REGION SAHEL (Dori) ==========
@@ -1030,41 +1276,76 @@ export const garesRoutieres: Gare[] = [
     nom: "Gare Routiere de Dori",
     ville: "Dori",
     region: "Sahel",
-    adresse: "Avenue du Sahel, centre-ville, face au marche aux bestiaux",
+    adresse: "Avenue du Sahel, centre-ville, face au marche aux bestiaux, pres de la grande mosquee",
     coordonnees: { lat: 14.0354, lng: -0.0347 },
     telephone: "+226 20 46 01 23",
     compagnie: "Publique",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h00 - 18h00",
+    services: ["Billetterie", "Salle d'attente", "Toilettes"],
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["05h00", "06h00", "07h00", "14h00"], duree: "5h30", prix: 7000 },
+      { ville: "Kaya", horaires: ["06h00", "10h00", "14h00"], duree: "3h", prix: 4000 },
+      { ville: "Djibo", horaires: ["07h00", "10h00", "14h00"], duree: "2h30", prix: 3500 },
+      { ville: "Gorom-Gorom", horaires: ["07h00", "14h00"], duree: "1h30", prix: 2500 },
+      { ville: "Sebba", horaires: ["07h00", "14h00"], duree: "2h", prix: 3000 },
+      { ville: "Niamey (Niger)", horaires: ["06h00"], duree: "8h", prix: 12000 }
+    ]
   },
   {
     id: "djibo-gare",
     nom: "Gare Routiere de Djibo",
     ville: "Djibo",
     region: "Sahel",
-    adresse: "Centre-ville, route de Ouagadougou",
+    adresse: "Centre-ville, route de Ouagadougou, face a la prefecture, pres du stade municipal",
     coordonnees: { lat: 14.1000, lng: -1.6333 },
+    telephone: "+226 20 46 20 08",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["05h30", "06h30", "14h00"], duree: "5h", prix: 6500 },
+      { ville: "Kaya", horaires: ["06h30", "10h00", "14h00"], duree: "3h30", prix: 4500 },
+      { ville: "Ouahigouya", horaires: ["07h00", "14h00"], duree: "2h30", prix: 3000 },
+      { ville: "Kongoussi", horaires: ["07h00", "14h00"], duree: "3h", prix: 4000 },
+      { ville: "Titao", horaires: ["07h00", "10h00", "14h00"], duree: "1h30", prix: 2000 }
+    ]
   },
   {
     id: "gorom-gorom-gare",
     nom: "Gare Routiere de Gorom-Gorom",
     ville: "Gorom-Gorom",
     region: "Sahel",
-    adresse: "Centre-ville, marche aux chameaux",
+    adresse: "Centre-ville, marche aux chameaux (jeudi), pres de la mosquee centrale",
     coordonnees: { lat: 14.4500, lng: -0.2333 },
+    telephone: "+226 20 46 30 05",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 16h00",
+    destinations: [
+      { ville: "Dori", horaires: ["06h30", "10h00", "14h00"], duree: "1h30", prix: 2500 },
+      { ville: "Ouagadougou", horaires: ["05h00", "14h00"], duree: "7h", prix: 9500 },
+      { ville: "Markoye", horaires: ["07h00", "14h00"], duree: "2h", prix: 3000 }
+    ]
   },
   {
     id: "sebba-gare",
     nom: "Gare Routiere de Sebba",
     ville: "Sebba",
     region: "Sahel",
-    adresse: "Centre-ville, frontiere Niger",
+    adresse: "Centre-ville, route du Niger, pres du poste de douane, face au marche",
     coordonnees: { lat: 13.4333, lng: 0.5167 },
+    telephone: "+226 20 46 40 05",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    services: ["Billetterie", "Douane"],
+    destinations: [
+      { ville: "Dori", horaires: ["06h30", "10h00", "14h00"], duree: "2h", prix: 3000 },
+      { ville: "Ouagadougou", horaires: ["05h00", "14h00"], duree: "7h30", prix: 10000 },
+      { ville: "Fada N'Gourma", horaires: ["07h00"], duree: "5h", prix: 6500 },
+      { ville: "Tera (Niger)", horaires: ["08h00", "14h00"], duree: "2h", prix: 4000 }
+    ]
   },
 
   // ========== REGION SUD-OUEST (Gaoua) ==========
@@ -1073,41 +1354,78 @@ export const garesRoutieres: Gare[] = [
     nom: "Gare Routiere de Gaoua",
     ville: "Gaoua",
     region: "Sud-Ouest",
-    adresse: "Avenue du Poni, Secteur 1, pres des ruines de Loropeni",
+    adresse: "Avenue du Poni, Secteur 1, pres des ruines de Loropeni (25km), face a la prefecture",
     coordonnees: { lat: 10.3250, lng: -3.1750 },
     telephone: "+226 20 87 01 34",
     compagnie: "Publique",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h30 - 18h00",
+    services: ["Billetterie", "Salle d'attente", "Toilettes"],
+    destinations: [
+      { ville: "Bobo-Dioulasso", horaires: ["06h00", "07h00", "14h00"], duree: "4h", prix: 5000 },
+      { ville: "Banfora", horaires: ["06h30", "10h00", "14h00"], duree: "3h", prix: 4000 },
+      { ville: "Ouagadougou", horaires: ["06h00", "14h00"], duree: "9h", prix: 11000 },
+      { ville: "Diebougou", horaires: ["07h00", "10h00", "14h00", "16h00"], duree: "1h30", prix: 2000 },
+      { ville: "Batie", horaires: ["07h00", "14h00"], duree: "2h", prix: 2500 },
+      { ville: "Loropeni (Ruines)", horaires: ["08h00", "14h00"], duree: "30min", prix: 800 },
+      { ville: "Wa (Ghana)", horaires: ["07h00"], duree: "4h", prix: 8000 }
+    ]
   },
   {
     id: "batié-gare",
     nom: "Gare Routiere de Batie",
     ville: "Batie",
     region: "Sud-Ouest",
-    adresse: "Centre-ville, frontiere Ghana",
+    adresse: "Centre-ville, route du Ghana, pres du poste de douane, face au marche",
     coordonnees: { lat: 9.8833, lng: -2.9167 },
+    telephone: "+226 20 87 20 08",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    services: ["Billetterie", "Douane"],
+    destinations: [
+      { ville: "Gaoua", horaires: ["06h30", "10h00", "14h00"], duree: "2h", prix: 2500 },
+      { ville: "Bobo-Dioulasso", horaires: ["06h00", "14h00"], duree: "6h", prix: 7500 },
+      { ville: "Ouagadougou", horaires: ["06h00"], duree: "11h", prix: 13500 },
+      { ville: "Hamile (Ghana)", horaires: ["08h00", "12h00", "15h00"], duree: "30min", prix: 1000 },
+      { ville: "Wa (Ghana)", horaires: ["08h00"], duree: "2h", prix: 4000 }
+    ]
   },
   {
     id: "diebougou-gare",
     nom: "Gare Routiere de Diebougou",
     ville: "Diebougou",
     region: "Sud-Ouest",
-    adresse: "Route de Bobo, centre-ville",
+    adresse: "Route de Bobo, centre-ville, pres de la cathedrale, face au lycee departementale",
     coordonnees: { lat: 10.9667, lng: -3.2500 },
+    telephone: "+226 20 87 10 12",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    destinations: [
+      { ville: "Gaoua", horaires: ["06h30", "09h00", "12h00", "15h00"], duree: "1h30", prix: 2000 },
+      { ville: "Bobo-Dioulasso", horaires: ["06h00", "08h00", "14h00"], duree: "2h30", prix: 3000 },
+      { ville: "Ouagadougou", horaires: ["06h00", "14h00"], duree: "7h30", prix: 9000 },
+      { ville: "Dano", horaires: ["07h00", "10h00", "14h00"], duree: "45min", prix: 800 }
+    ]
   },
   {
     id: "dano-gare",
     nom: "Gare Routiere de Dano",
     ville: "Dano",
     region: "Sud-Ouest",
-    adresse: "Centre-ville, marche central",
+    adresse: "Centre-ville, marche central, face a l'eglise, pres du CSPS",
     coordonnees: { lat: 11.1500, lng: -3.0667 },
+    telephone: "+226 20 87 30 05",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    destinations: [
+      { ville: "Diebougou", horaires: ["06h30", "09h00", "12h00", "15h00"], duree: "45min", prix: 800 },
+      { ville: "Bobo-Dioulasso", horaires: ["06h00", "14h00"], duree: "3h15", prix: 3800 },
+      { ville: "Gaoua", horaires: ["07h00", "14h00"], duree: "2h15", prix: 2800 },
+      { ville: "Ouagadougou", horaires: ["06h00"], duree: "8h15", prix: 9800 }
+    ]
   },
 
   // ========== VILLES SECONDAIRES IMPORTANTES ==========
