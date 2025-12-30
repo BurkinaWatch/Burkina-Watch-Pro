@@ -21,7 +21,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Upload, MapPin, Camera, Loader2, X } from "lucide-react";
+import { Upload, MapPin, Camera, Loader2, X, WifiOff, Cloud } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSignalementSchema, type InsertSignalement } from "@shared/schema";
@@ -35,6 +35,10 @@ import { useEffect, useState, useRef } from "react";
 import { z } from "zod";
 import ModerationDialog from "@/components/ModerationDialog";
 import { useTranslation } from "react-i18next";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { offlineStorage } from "@/lib/offlineStorage";
+import { syncService } from "@/lib/syncService";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const frontendSignalementSchema = insertSignalementSchema.omit({ userId: true });
 type FrontendSignalement = z.infer<typeof frontendSignalementSchema>;
@@ -49,6 +53,8 @@ export default function Publier() {
   const [moderationOpen, setModerationOpen] = useState(false);
   const [moderationData, setModerationData] = useState<any>(null);
   const { t, i18n } = useTranslation();
+  const { isOnline } = useNetworkStatus();
+  const [savedOffline, setSavedOffline] = useState(false);
 
   const form = useForm<FrontendSignalement>({
     resolver: zodResolver(frontendSignalementSchema),
@@ -69,16 +75,63 @@ export default function Publier() {
   const createMutation = useMutation({
     mutationFn: async (data: FrontendSignalement) => {
       console.log("🚀 Mutation démarrée, envoi des données:", data);
+      
+      if (!navigator.onLine) {
+        console.log("📴 Hors ligne - Sauvegarde locale");
+        const offlineData = {
+          titre: data.titre,
+          description: data.description,
+          categorie: data.categorie,
+          latitude: parseFloat(data.latitude),
+          longitude: parseFloat(data.longitude),
+          adresse: data.localisation,
+          urgence: data.niveauUrgence || "moyen",
+          anonyme: data.isAnonymous || false,
+          images: data.medias,
+        };
+        await offlineStorage.saveSignalement(offlineData);
+        return { offline: true };
+      }
+      
       try {
         const res = await apiRequest("POST", "/api/signalements", data);
         console.log("✅ Réponse reçue:", res.status);
         return res.json();
       } catch (error) {
         console.error("❌ Erreur dans mutationFn:", error);
+        if (!navigator.onLine) {
+          const offlineData = {
+            titre: data.titre,
+            description: data.description,
+            categorie: data.categorie,
+            latitude: parseFloat(data.latitude),
+            longitude: parseFloat(data.longitude),
+            adresse: data.localisation,
+            urgence: data.niveauUrgence || "moyen",
+            anonyme: data.isAnonymous || false,
+            images: data.medias,
+          };
+          await offlineStorage.saveSignalement(offlineData);
+          return { offline: true };
+        }
         throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      if (result?.offline) {
+        console.log("📴 Signalement sauvegardé hors ligne");
+        setSavedOffline(true);
+        toast({
+          title: "Sauvegarde hors ligne",
+          description: "Votre signalement sera envoyé automatiquement dès que la connexion sera rétablie.",
+        });
+        form.reset();
+        setTimeout(() => {
+          setLocation("/feed");
+        }, 2000);
+        return;
+      }
+      
       console.log("✅ Mutation réussie");
       queryClient.invalidateQueries({ queryKey: ["/api/signalements"] });
       toast({
@@ -310,6 +363,24 @@ export default function Publier() {
             Signalez un problème ou une situation nécessitant attention
           </p>
         </div>
+
+        {!isOnline && (
+          <Alert className="mb-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/30">
+            <WifiOff className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+              Vous etes hors ligne. Votre signalement sera sauvegarde localement et envoye automatiquement des que la connexion sera retablie.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {savedOffline && (
+          <Alert className="mb-4 border-green-500 bg-green-50 dark:bg-green-950/30">
+            <Cloud className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800 dark:text-green-200">
+              Signalement sauvegarde localement. Il sera envoye automatiquement des que vous serez connecte.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>

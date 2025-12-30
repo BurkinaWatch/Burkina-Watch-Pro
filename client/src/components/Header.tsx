@@ -12,6 +12,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { playNotificationSound } from "@/lib/notificationSound";
+import { OfflineIndicator } from "./OfflineIndicator";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -113,6 +114,7 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
           </div>
 
         <div className="flex items-center gap-2">
+          <OfflineIndicator />
           {isAuthenticated ? (
             <>
               {showNotifications && (
