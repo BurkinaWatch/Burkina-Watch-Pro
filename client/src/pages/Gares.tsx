@@ -678,34 +678,37 @@ export default function Gares() {
               )}
 
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 pt-4">
+                <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-4">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
+                    className="h-8 px-2 sm:px-3 text-xs sm:text-sm"
                     data-testid="button-prev-page"
                   >
-                    <ChevronLeft className="w-4 h-4" />
-                    Precedent
+                    <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />
+                    <span className="hidden xs:inline">Precedent</span>
+                    <span className="xs:hidden">Prec.</span>
                   </Button>
                   <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
                       let page: number;
-                      if (totalPages <= 5) {
+                      if (totalPages <= 3) {
                         page = i + 1;
-                      } else if (currentPage <= 3) {
+                      } else if (currentPage <= 2) {
                         page = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        page = totalPages - 4 + i;
+                      } else if (currentPage >= totalPages - 1) {
+                        page = totalPages - 2 + i;
                       } else {
-                        page = currentPage - 2 + i;
+                        page = currentPage - 1 + i;
                       }
                       return (
                         <Button
                           key={page}
                           variant={currentPage === page ? "default" : "outline"}
                           size="sm"
+                          className="h-8 w-8 p-0 text-xs sm:text-sm"
                           onClick={() => setCurrentPage(page)}
                           data-testid={`button-page-${page}`}
                         >
@@ -713,12 +716,13 @@ export default function Gares() {
                         </Button>
                       );
                     })}
-                    {totalPages > 5 && currentPage < totalPages - 2 && (
+                    {totalPages > 3 && currentPage < totalPages - 1 && (
                       <>
-                        <span className="px-1">...</span>
+                        <span className="px-0.5 text-xs text-muted-foreground">...</span>
                         <Button
                           variant="outline"
                           size="sm"
+                          className="h-8 w-8 p-0 text-xs sm:text-sm"
                           onClick={() => setCurrentPage(totalPages)}
                           data-testid={`button-page-${totalPages}`}
                         >
@@ -732,10 +736,12 @@ export default function Gares() {
                     size="sm"
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
+                    className="h-8 px-2 sm:px-3 text-xs sm:text-sm"
                     data-testid="button-next-page"
                   >
-                    Suivant
-                    <ArrowRight className="w-4 h-4" />
+                    <span className="hidden xs:inline">Suivant</span>
+                    <span className="xs:hidden">Suiv.</span>
+                    <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-0.5 sm:mr-1" />
                   </Button>
                 </div>
               )}
