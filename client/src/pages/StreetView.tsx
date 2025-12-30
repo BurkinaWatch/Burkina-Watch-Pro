@@ -42,7 +42,8 @@ import {
   AlertTriangle,
   Shield,
   Users,
-  Info
+  Info,
+  Navigation
 } from "lucide-react";
 import { useLocation } from "wouter";
 import "leaflet/dist/leaflet.css";
@@ -755,7 +756,7 @@ interface PhotoWithGPS {
 function CreateTourDialog({
   open,
   onOpenChange,
-  position,
+  position: initialPosition,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -768,8 +769,49 @@ function CreateTourDialog({
   const [photos, setPhotos] = useState<PhotoWithGPS[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const MAX_PHOTOS_PER_TOUR = 20;
+
+  useEffect(() => {
+    if (open && !userPosition) {
+      setIsGettingLocation(true);
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            setUserPosition({
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude
+            });
+            setIsGettingLocation(false);
+          },
+          (error) => {
+            console.error("Erreur GPS:", error);
+            toast({
+              title: "Position GPS indisponible",
+              description: "Utilisation de la position par defaut",
+              variant: "destructive"
+            });
+            setUserPosition(initialPosition);
+            setIsGettingLocation(false);
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      } else {
+        setUserPosition(initialPosition);
+        setIsGettingLocation(false);
+      }
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) {
+      setUserPosition(null);
+    }
+  }, [open]);
+
+  const position = userPosition || initialPosition;
 
   const createTourMutation = useMutation({
     mutationFn: async (data: {
@@ -968,11 +1010,27 @@ function CreateTourDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Position GPS</Label>
-            <div className="flex gap-4 text-sm text-muted-foreground">
-              <span>Lat: {position.lat.toFixed(6)}</span>
-              <span>Lng: {position.lng.toFixed(6)}</span>
-            </div>
+            <Label className="flex items-center gap-2">
+              <Navigation className="h-4 w-4 text-primary" />
+              Votre position GPS actuelle
+            </Label>
+            {isGettingLocation ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Localisation en cours...</span>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-4 text-sm p-2 bg-primary/10 rounded-md">
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3 text-primary" />
+                  Lat: <strong>{position.lat.toFixed(6)}</strong>
+                </span>
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3 text-primary" />
+                  Lng: <strong>{position.lng.toFixed(6)}</strong>
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
