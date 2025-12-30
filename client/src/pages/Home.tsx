@@ -13,6 +13,7 @@ import MessageDuJour from "@/components/MessageDuJour";
 import { RiskZonesPanel, RecommendationsPanel } from "@/components/RiskAnalysis";
 import { WeatherAlertsBanner } from "@/components/WeatherAlerts";
 import { AlertCircle, Shield, Users, TrendingUp, ArrowRight, Loader2, Heart, AlertTriangle, Search, X, MapPin, Filter, BookOpen, Download, Phone, MessageCircle, Mail } from "lucide-react";
+import { VoiceSearchButton } from "@/components/VoiceSearchButton";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { Signalement } from "@shared/schema";
@@ -964,21 +965,36 @@ export default function Home() {
                   setSearchHistory([e.target.value.trim(), ...searchHistory].slice(0, 5));
                 }
               }}
-              className="pl-10 pr-10"
+              className="pl-10 pr-20"
+              data-testid="input-search-home"
             />
-            {searchQuery && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7"
-                onClick={() => {
-                  setSearchQuery('');
-                  setShowSearchResults(false);
+            <div className="absolute right-1 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+              <VoiceSearchButton
+                onResult={(transcript) => {
+                  setSearchQuery(transcript);
+                  if (transcript.trim() && !searchHistory.includes(transcript.trim())) {
+                    setSearchHistory([transcript.trim(), ...searchHistory].slice(0, 5));
+                  }
                 }}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            )}
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setShowSearchResults(false);
+                  }}
+                  data-testid="button-clear-search"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Résultats de recherche */}
