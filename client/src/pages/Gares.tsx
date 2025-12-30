@@ -132,8 +132,16 @@ export default function Gares() {
     return Array.from(new Set(gares.map(g => g.region))).sort();
   }, [gares]);
 
+  // Compteur des gares hors SOTRACO pour l'onglet principal
+  const garesHorsSotraco = useMemo(() => {
+    return gares.filter(g => g.compagnie !== "sotraco").length;
+  }, [gares]);
+
   const filteredGares = useMemo(() => {
     return gares.filter(gare => {
+      // Exclure les gares SOTRACO de l'onglet principal (elles sont dans l'onglet SOTRACO dédié)
+      if (gare.compagnie === "sotraco") return false;
+      
       const matchesSearch = searchQuery === "" || 
         gare.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
         gare.ville.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -431,7 +439,7 @@ export default function Gares() {
                   >
                     <MapPin className="w-4 h-4 text-green-600" />
                     <span className="font-semibold text-xs">Trouver une gare</span>
-                    <span className="text-[10px] text-muted-foreground hidden sm:block">{stats?.totalGares || 0} gares</span>
+                    <span className="text-[10px] text-muted-foreground hidden sm:block">{garesHorsSotraco} gares</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="sitarail" 
