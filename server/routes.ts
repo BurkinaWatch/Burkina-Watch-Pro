@@ -2385,8 +2385,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/places/migration-status", async (req, res) => {
+  app.get("/api/places/migration-status", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (user?.role !== "admin") {
+        return res.status(403).json({ error: "Acces non autorise" });
+      }
+      
       const status = await dataMigrationService.getMigrationStatus();
       res.json(status);
     } catch (error) {
