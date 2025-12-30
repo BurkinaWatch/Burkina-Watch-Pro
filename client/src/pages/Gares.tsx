@@ -46,6 +46,14 @@ interface Compagnie {
   avis: string;
 }
 
+interface GareDestination {
+  ville: string;
+  horaires: string[];
+  duree?: string;
+  prix?: number;
+  compagnies?: string[];
+}
+
 interface Gare {
   id: string;
   nom: string;
@@ -56,6 +64,9 @@ interface Gare {
   telephone?: string;
   compagnie: string;
   type: "principale" | "secondaire" | "agence";
+  destinations?: GareDestination[];
+  heuresOuverture?: string;
+  services?: string[];
 }
 
 interface Trajet {
@@ -89,6 +100,7 @@ export default function Gares() {
   const [arriveeVille, setArriveeVille] = useState("");
   const [activeTab, setActiveTab] = useState("compagnies");
   const [currentPage, setCurrentPage] = useState(1);
+  const [expandedGare, setExpandedGare] = useState<string | null>(null);
 
   const [includeOSM, setIncludeOSM] = useState(true);
   
@@ -436,7 +448,12 @@ export default function Gares() {
 
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {paginatedGares.map((gare) => (
-                  <Card key={gare.id} className="hover-elevate" data-testid={`card-gare-${gare.id}`}>
+                  <Card 
+                    key={gare.id} 
+                    className={`hover-elevate cursor-pointer transition-all ${expandedGare === gare.id ? 'ring-2 ring-primary' : ''}`}
+                    onClick={() => setExpandedGare(expandedGare === gare.id ? null : gare.id)}
+                    data-testid={`card-gare-${gare.id}`}
+                  >
                     <CardContent className="p-4 space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <div>
@@ -456,29 +473,107 @@ export default function Gares() {
                       
                       <p className="text-xs text-muted-foreground">{gare.adresse}</p>
                       
+                      {gare.heuresOuverture && (
+                        <p className="text-xs flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-primary" />
+                          <span className="text-muted-foreground">Ouvert:</span> {gare.heuresOuverture}
+                        </p>
+                      )}
+
+                      {gare.destinations && gare.destinations.length > 0 && (
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span className="text-xs text-muted-foreground">Destinations:</span>
+                          {gare.destinations.slice(0, 3).map((dest, i) => (
+                            <Badge key={i} variant="outline" className="text-xs">
+                              {dest.ville}
+                            </Badge>
+                          ))}
+                          {gare.destinations.length > 3 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{gare.destinations.length - 3}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                      
                       <div className="flex items-center justify-between pt-2">
                         <Badge variant="outline" className="text-xs">
                           {gare.compagnie === "Publique" ? "Publique" : getCompagnieNom(gare.compagnie)}
                         </Badge>
                         <div className="flex gap-1">
                           {gare.telephone && (
-                            <a href={`tel:${gare.telephone}`}>
-                              <Button variant="ghost" size="icon" className="h-8 w-8" data-testid={`button-call-gare-${gare.id}`}>
+                            <a href={`tel:${gare.telephone}`} onClick={(e) => e.stopPropagation()}>
+                              <Button variant="ghost" size="icon" data-testid={`button-call-gare-${gare.id}`}>
                                 <Phone className="w-4 h-4" />
                               </Button>
                             </a>
                           )}
                           <Button 
                             variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8"
-                            onClick={() => openGoogleMaps(gare.coordonnees.lat, gare.coordonnees.lng, gare.nom)}
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openGoogleMaps(gare.coordonnees.lat, gare.coordonnees.lng, gare.nom);
+                            }}
                             data-testid={`button-map-gare-${gare.id}`}
                           >
                             <Navigation className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
+
+                      {expandedGare === gare.id && gare.destinations && gare.destinations.length > 0 && (
+                        <div className="mt-3 pt-3 border-t space-y-3" onClick={(e) => e.stopPropagation()}>
+                          <h4 className="font-semibold text-sm flex items-center gap-2">
+                            <RouteIcon className="w-4 h-4 text-primary" />
+                            Destinations et Horaires
+                          </h4>
+                          <div className="space-y-2 max-h-64 overflow-y-auto">
+                            {gare.destinations.map((dest, i) => (
+                              <div key={i} className="bg-muted/30 rounded-md p-2 space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-medium text-sm">{dest.ville}</span>
+                                  <div className="flex items-center gap-2">
+                                    {dest.duree && (
+                                      <span className="text-xs text-muted-foreground">{dest.duree}</span>
+                                    )}
+                                    {dest.prix && (
+                                      <Badge variant="secondary" className="text-xs font-mono">
+                                        {dest.prix.toLocaleString()} F
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {dest.horaires.map((h, j) => (
+                                    <Badge key={j} variant="outline" className="text-xs font-mono">
+                                      {h}
+                                    </Badge>
+                                  ))}
+                                </div>
+                                {dest.compagnies && dest.compagnies.length > 0 && (
+                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <Bus className="w-3 h-3" />
+                                    {dest.compagnies.join(", ")}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          {gare.services && gare.services.length > 0 && (
+                            <div className="pt-2 border-t">
+                              <p className="text-xs text-muted-foreground mb-1">Services:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {gare.services.map((service, i) => (
+                                  <Badge key={i} variant="outline" className="text-xs">
+                                    {service}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}

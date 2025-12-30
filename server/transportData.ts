@@ -1,3 +1,11 @@
+export interface GareDestination {
+  ville: string;
+  horaires: string[];
+  duree?: string;
+  prix?: number;
+  compagnies?: string[];
+}
+
 export interface Gare {
   id: string;
   nom: string;
@@ -8,6 +16,9 @@ export interface Gare {
   telephone?: string;
   compagnie: string;
   type: "principale" | "secondaire" | "agence";
+  destinations?: GareDestination[];
+  heuresOuverture?: string;
+  services?: string[];
 }
 
 export interface Trajet {
@@ -161,7 +172,21 @@ export const garesRoutieres: Gare[] = [
     coordonnees: { lat: 12.4039, lng: -1.5283 },
     telephone: "+226 25 36 07 39",
     compagnie: "Publique",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h00 - 22h00",
+    services: ["Billetterie", "Salle d'attente", "Toilettes", "Restauration", "Parking"],
+    destinations: [
+      { ville: "Bobo-Dioulasso", horaires: ["06h00", "07h00", "08h00", "10h00", "14h00", "16h00", "22h00"], duree: "5h", prix: 6000, compagnies: ["RAHIMO", "TCV", "STMB", "TSR"] },
+      { ville: "Banfora", horaires: ["06h30", "08h00", "14h00", "22h00"], duree: "7h", prix: 8000, compagnies: ["RAHIMO", "TCV", "RAKIETA"] },
+      { ville: "Ouahigouya", horaires: ["06h00", "07h30", "12h00", "15h00"], duree: "3h30", prix: 4000, compagnies: ["STMB", "TSR"] },
+      { ville: "Koudougou", horaires: ["06h00", "07h00", "08h00", "10h00", "12h00", "14h00", "16h00"], duree: "2h", prix: 2500, compagnies: ["STMB", "STAF", "SOTRACO"] },
+      { ville: "Fada N'Gourma", horaires: ["06h00", "08h00", "14h00"], duree: "4h", prix: 5000, compagnies: ["STMB"] },
+      { ville: "Kaya", horaires: ["06h30", "08h00", "12h00", "16h00"], duree: "2h30", prix: 3000, compagnies: ["STMB"] },
+      { ville: "Abidjan (CI)", horaires: ["06h00", "14h00", "22h00"], duree: "14h", prix: 20000, compagnies: ["RAHIMO", "TCV", "RAKIETA"] },
+      { ville: "Lome (Togo)", horaires: ["06h00", "18h00"], duree: "18h", prix: 25000, compagnies: ["TCV"] },
+      { ville: "Niamey (Niger)", horaires: ["07h00", "15h00"], duree: "8h", prix: 12000, compagnies: ["TSR"] },
+      { ville: "Bamako (Mali)", horaires: ["06h00", "14h00"], duree: "18h", prix: 22000, compagnies: ["TCV", "TSR"] }
+    ]
   },
   {
     id: "ouaga-ouest",
@@ -172,7 +197,15 @@ export const garesRoutieres: Gare[] = [
     coordonnees: { lat: 12.3608, lng: -1.5450 },
     telephone: "+226 25 36 42 18",
     compagnie: "Publique",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h00 - 20h00",
+    services: ["Billetterie", "Salle d'attente", "Toilettes"],
+    destinations: [
+      { ville: "Bobo-Dioulasso", horaires: ["06h00", "07h00", "08h30", "14h00"], duree: "5h", prix: 5500, compagnies: ["TCV", "STAF"] },
+      { ville: "Koudougou", horaires: ["06h00", "07h00", "09h00", "11h00", "14h00", "16h00"], duree: "2h", prix: 2000, compagnies: ["SOTRACO", "STAF"] },
+      { ville: "Dedougou", horaires: ["06h30", "08h00", "14h00"], duree: "4h", prix: 4500, compagnies: ["STMB"] },
+      { ville: "Leo", horaires: ["07h00", "14h00"], duree: "3h", prix: 3500 }
+    ]
   },
   {
     id: "ouaga-sud",
@@ -283,7 +316,19 @@ export const garesRoutieres: Gare[] = [
     coordonnees: { lat: 11.1771, lng: -4.2979 },
     telephone: "+226 20 98 15 47",
     compagnie: "Publique",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h00 - 21h00",
+    services: ["Billetterie", "Salle d'attente", "Toilettes", "Restauration", "Consigne bagages"],
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["05h30", "06h30", "07h30", "09h00", "14h00", "16h00"], duree: "5h", prix: 6000, compagnies: ["RAHIMO", "TCV", "STMB"] },
+      { ville: "Banfora", horaires: ["06h00", "08h00", "10h00", "14h00", "17h00"], duree: "2h", prix: 2500, compagnies: ["RAKIETA", "TCV"] },
+      { ville: "Orodara", horaires: ["07h00", "12h00", "16h00"], duree: "1h30", prix: 1500, compagnies: ["TCV"] },
+      { ville: "Gaoua", horaires: ["06h00", "14h00"], duree: "4h", prix: 5000 },
+      { ville: "Dedougou", horaires: ["06h30", "14h00"], duree: "3h30", prix: 4000, compagnies: ["STMB"] },
+      { ville: "Abidjan (CI)", horaires: ["06h00", "14h00", "22h00"], duree: "9h", prix: 15000, compagnies: ["RAKIETA", "TCV"] },
+      { ville: "Bamako (Mali)", horaires: ["06h00", "14h00"], duree: "12h", prix: 18000, compagnies: ["TCV"] },
+      { ville: "Sikasso (Mali)", horaires: ["07h00", "14h00"], duree: "4h", prix: 6000, compagnies: ["TCV"] }
+    ]
   },
   {
     id: "bobo-ouest",
@@ -294,7 +339,13 @@ export const garesRoutieres: Gare[] = [
     coordonnees: { lat: 11.1650, lng: -4.3150 },
     telephone: "+226 20 97 22 33",
     compagnie: "Publique",
-    type: "secondaire"
+    type: "secondaire",
+    heuresOuverture: "05h30 - 19h00",
+    destinations: [
+      { ville: "Banfora", horaires: ["06h00", "08h00", "10h00", "14h00"], duree: "2h", prix: 2000, compagnies: ["RAKIETA"] },
+      { ville: "Sindou", horaires: ["07h00", "14h00"], duree: "3h", prix: 3500 },
+      { ville: "Niangoloko", horaires: ["06h30", "12h00"], duree: "3h30", prix: 4000 }
+    ]
   },
   {
     id: "tcv-bobo",
@@ -305,7 +356,17 @@ export const garesRoutieres: Gare[] = [
     coordonnees: { lat: 11.1785, lng: -4.2950 },
     telephone: "+226 20 97 16 93",
     compagnie: "tcv",
-    type: "principale"
+    type: "principale",
+    heuresOuverture: "05h00 - 22h00",
+    services: ["Climatisation", "Salle d'attente TV", "Wifi", "Colis express"],
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "08h00", "10h00", "14h00", "16h00", "22h00"], duree: "5h", prix: 6000, compagnies: ["TCV"] },
+      { ville: "Banfora", horaires: ["07h00", "12h00", "17h00"], duree: "2h", prix: 2500, compagnies: ["TCV"] },
+      { ville: "Orodara", horaires: ["08h00", "14h00"], duree: "1h30", prix: 1500, compagnies: ["TCV"] },
+      { ville: "Abidjan (CI)", horaires: ["06h00", "14h00", "22h00"], duree: "9h", prix: 15000, compagnies: ["TCV"] },
+      { ville: "Bamako (Mali)", horaires: ["06h00"], duree: "12h", prix: 18000, compagnies: ["TCV"] },
+      { ville: "Lome (Togo)", horaires: ["14h00"], duree: "24h", prix: 30000, compagnies: ["TCV"] }
+    ]
   },
   {
     id: "rahimo-bobo",
@@ -316,7 +377,14 @@ export const garesRoutieres: Gare[] = [
     coordonnees: { lat: 11.1750, lng: -4.3010 },
     telephone: "+226 64 86 37 55",
     compagnie: "rahimo",
-    type: "agence"
+    type: "agence",
+    heuresOuverture: "06h00 - 20h00",
+    services: ["Climatisation", "USB", "GPS", "Wifi"],
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["06h00", "08h00", "14h00", "16h00"], duree: "5h", prix: 6000, compagnies: ["RAHIMO"] },
+      { ville: "Banfora", horaires: ["07h00", "14h00"], duree: "2h", prix: 2500, compagnies: ["RAHIMO"] },
+      { ville: "Abidjan (CI)", horaires: ["06h00", "22h00"], duree: "9h", prix: 15000, compagnies: ["RAHIMO"] }
+    ]
   },
   {
     id: "stmb-bobo",
