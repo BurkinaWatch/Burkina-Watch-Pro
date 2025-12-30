@@ -16,6 +16,7 @@ import { generateChatResponse, isAIAvailable } from "./aiService";
 import { fetchBulletins, clearCache } from "./rssService";
 import { fetchEvents, clearEventsCache } from "./eventsService";
 import { overpassService } from "./overpassService";
+import { dataMigrationService } from "./dataMigrationService";
 import type { Place } from "@shared/schema";
 
 // ============================================
@@ -2355,11 +2356,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Run in background
       overpassService.syncFuelStationsExtended().then(result => {
-        console.log("⛽ Extended fuel sync result:", result);
+        console.log("Extended fuel sync result:", result);
       }).catch(console.error);
     } catch (error) {
       console.error("Erreur sync stations:", error);
       res.status(500).json({ error: "Erreur lors de la synchronisation" });
+    }
+  });
+
+  // Migration routes for hardcoded data to OSM format
+  app.post("/api/places/migrate", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (user?.role !== "admin") {
+        return res.status(403).json({ error: "Acces non autorise" });
+      }
+
+      const stats = await dataMigrationService.migrateAll();
+      res.json({ 
+        message: "Migration des donnees hardcodees terminee",
+        stats 
+      });
+    } catch (error) {
+      console.error("Erreur migration:", error);
+      res.status(500).json({ error: "Erreur lors de la migration" });
+    }
+  });
+
+  app.get("/api/places/migration-status", async (req, res) => {
+    try {
+      const status = await dataMigrationService.getMigrationStatus();
+      res.json(status);
+    } catch (error) {
+      console.error("Erreur status migration:", error);
+      res.status(500).json({ error: "Erreur lors de la recuperation du status" });
     }
   });
 
