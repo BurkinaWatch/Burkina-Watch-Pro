@@ -119,8 +119,7 @@ export default function Gares() {
         gare.ville.toLowerCase().includes(searchQuery.toLowerCase()) ||
         gare.adresse.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCompagnie = selectedCompagnie === "all" || 
-        gare.compagnie === selectedCompagnie || 
-        gare.compagnie === "Publique";
+        gare.compagnie === selectedCompagnie;
       const matchesRegion = selectedRegion === "all" || 
         gare.region === selectedRegion;
       return matchesSearch && matchesCompagnie && matchesRegion;
