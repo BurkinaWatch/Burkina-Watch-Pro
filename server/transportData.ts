@@ -378,106 +378,418 @@ export const garesRoutieres: Gare[] = [
       { ville: "Banfora", horaires: ["07h00"], duree: "6h30", prix: 15000, compagnies: ["ELITIS"] }
     ]
   },
+  // ========== RESEAU SOTRACO - BUS URBAINS ==========
+  // Source officielle: sotraco.bf - Mise a jour Decembre 2024
+  // Contact: +226 52 50 18 18 / +226 25 35 55 55
+  // Email: contact@sotraco.bf
+  // Siege: 2257, Avenue du Sanmatenga, Secteur 19, Ouagadougou
+
+  // ===== TERMINUS CENTRAUX OUAGADOUGOU =====
   {
-    id: "sotraco-depot",
-    nom: "Depot Central SOTRACO",
+    id: "sotraco-naba-koom",
+    nom: "Terminus Naba Koom (Place Naaba Koom)",
     ville: "Ouagadougou",
     region: "Centre",
-    adresse: "Boulevard Thomas Sankara, Zone industrielle de Kossodo",
-    coordonnees: { lat: 12.4150, lng: -1.4820 },
-    telephone: "+226 25 30 61 52",
-    compagnie: "sotraco",
-    type: "principale",
-    heuresOuverture: "05h30 - 21h00",
-    services: ["Transport urbain", "Lignes regulieres", "Tarifs accessibles"],
-    destinations: [
-      { ville: "Terminus Nord - Tampouy", horaires: ["05h30", "06h00", "06h30", "07h00"], prix: 200 },
-      { ville: "Terminus Sud - Zone 1", horaires: ["05h30", "06h00", "06h30", "07h00"], prix: 200 },
-      { ville: "Terminus Est - Kamboinsin", horaires: ["06h00", "06h30", "07h00"], prix: 200 }
-    ]
-  },
-  {
-    id: "sotraco-tampouy",
-    nom: "Terminus SOTRACO Tampouy",
-    ville: "Ouagadougou",
-    region: "Centre",
-    adresse: "Carrefour Tampouy, Avenue Charles de Gaulle, Secteur 24",
-    coordonnees: { lat: 12.4050, lng: -1.5250 },
-    telephone: "+226 25 30 61 52",
-    compagnie: "sotraco",
-    type: "principale",
-    heuresOuverture: "05h30 - 21h00",
-    destinations: [
-      { ville: "Centre-ville (Rood Woko)", horaires: ["Toutes les 15 min"], prix: 200 },
-      { ville: "Zone 1", horaires: ["Toutes les 20 min"], prix: 200 },
-      { ville: "Kossodo", horaires: ["Toutes les 30 min"], prix: 200 }
-    ]
-  },
-  {
-    id: "sotraco-zone1",
-    nom: "Terminus SOTRACO Zone 1",
-    ville: "Ouagadougou",
-    region: "Centre",
-    adresse: "Avenue Kwame N'Krumah, Zone commerciale, Secteur 2",
-    coordonnees: { lat: 12.3580, lng: -1.5200 },
-    telephone: "+226 25 30 61 52",
-    compagnie: "sotraco",
-    type: "principale",
-    heuresOuverture: "05h30 - 21h00",
-    destinations: [
-      { ville: "Tampouy", horaires: ["Toutes les 15 min"], prix: 200 },
-      { ville: "Dapoya", horaires: ["Toutes les 20 min"], prix: 200 },
-      { ville: "Gounghin", horaires: ["Toutes les 20 min"], prix: 200 }
-    ]
-  },
-  {
-    id: "sotraco-roodwoko",
-    nom: "Arret SOTRACO Rood Woko",
-    ville: "Ouagadougou",
-    region: "Centre",
-    adresse: "Place du Grand Marche Rood Woko, Centre-ville",
+    adresse: "Place Naaba Koom, Centre-ville, face a la Maison du Peuple",
     coordonnees: { lat: 12.3660, lng: -1.5220 },
-    telephone: "+226 25 30 61 52",
+    telephone: "+226 52 50 18 18",
     compagnie: "sotraco",
-    type: "secondaire",
-    heuresOuverture: "05h30 - 21h00",
+    type: "principale",
+    heuresOuverture: "04h50 - 23h00",
+    services: ["Terminus central", "Correspondances multiples", "Abri voyageurs", "Information lignes"],
     destinations: [
-      { ville: "Tampouy", horaires: ["Toutes les 15 min"], prix: 200 },
-      { ville: "Zone 1", horaires: ["Toutes les 15 min"], prix: 200 },
-      { ville: "Kossodo", horaires: ["Toutes les 30 min"], prix: 200 }
+      { ville: "L1 - Karpala (via Av. Charles de Gaulle)", horaires: ["05h00-22h00, toutes les 15-20 min"], prix: 200 },
+      { ville: "L2 - Yamtenga (via Patte-d'Oie)", horaires: ["05h00-22h00, toutes les 15-20 min"], prix: 200 },
+      { ville: "L2B - Balkuy (via Ouaga 2000)", horaires: ["05h00-22h00, toutes les 20 min"], prix: 200 },
+      { ville: "L5 - Signonghin Saaba (via Echangeur Est)", horaires: ["05h00-22h00, toutes les 20 min"], prix: 200 },
+      { ville: "L5B - One School Saaba", horaires: ["05h30-21h00, toutes les 25 min"], prix: 200 },
+      { ville: "L6 - Koulweoguin (via Tanghin)", horaires: ["05h00-22h00, toutes les 20 min"], prix: 200 },
+      { ville: "L6B - Voie de contournement (via Kossodo)", horaires: ["05h00-22h00, toutes les 20 min"], prix: 200 },
+      { ville: "L9 - Saaba (via Taabtenga)", horaires: ["05h30-21h30, toutes les 25 min"], prix: 200 },
+      { ville: "L11 - Rimkieta (via Sankaryare)", horaires: ["05h30-21h00, toutes les 20 min"], prix: 200 },
+      { ville: "L15 - Belle Ville Watinoma", horaires: ["06h00-20h00, toutes les 25 min"], prix: 200 },
+      { ville: "L16 - Bassinko (via Echangeur Nord)", horaires: ["06h00-20h00, toutes les 30 min"], prix: 200 },
+      { ville: "Intercommunale Ziniare (via Loumbila)", horaires: ["06h00-19h00, toutes les 45 min"], prix: 300 },
+      { ville: "Intercommunale Koubri", horaires: ["06h30-18h30, toutes les 60 min"], prix: 300 }
     ]
   },
   {
-    id: "sotraco-bobo",
-    nom: "Depot SOTRACO Bobo-Dioulasso",
+    id: "sotraco-zone-ecoles",
+    nom: "Terminus Zone des Ecoles",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "Zone des Ecoles, pres de la DG Police Nationale, Secteur 4",
+    coordonnees: { lat: 12.3720, lng: -1.5100 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "05h00 - 22h00",
+    services: ["Terminus principal", "Correspondances", "Abri voyageurs"],
+    destinations: [
+      { ville: "L3 - Bissighin (via Echangeur Nord)", horaires: ["05h50-21h50, toutes les 20 min"], prix: 200 },
+      { ville: "L4 - Sandogo (via Echangeur Ouest)", horaires: ["05h30-21h30, toutes les 20 min"], prix: 200 },
+      { ville: "L4B - Zagtouli (via Boulmiougou)", horaires: ["06h00-21h00, toutes les 25 min"], prix: 200 },
+      { ville: "L10 - CHU Tengandogo (via Patte-d'Oie)", horaires: ["04h50-22h59, toutes les 20 min"], prix: 200 },
+      { ville: "L12 - Bonheur Ville (via Cissin)", horaires: ["05h30-21h00, toutes les 25 min"], prix: 200 },
+      { ville: "L13 - Kamboinsin (via Echangeur Nord)", horaires: ["06h00-20h30, toutes les 25 min"], prix: 200 },
+      { ville: "L17 - Boassa (via Sandogo)", horaires: ["06h00-20h00, toutes les 30 min"], prix: 200 }
+    ]
+  },
+  {
+    id: "sotraco-siege",
+    nom: "Siege SOTRACO - Arret Kossodo",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "2257, Avenue du Sanmatenga, Secteur 19, Zone industrielle Kossodo",
+    coordonnees: { lat: 12.4150, lng: -1.4820 },
+    telephone: "+226 25 35 55 55",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "07h30 - 16h00 (administratif)",
+    services: ["Siege social", "Abonnements", "Reclamations", "Information", "Depot central"],
+    destinations: [
+      { ville: "L6B vers Naba Koom", horaires: ["Transit - toutes les 20 min"], prix: 200 },
+      { ville: "Intercommunale Ziniare", horaires: ["Transit vers Ziniare"], prix: 300 }
+    ]
+  },
+
+  // ===== LIGNES OUAGADOUGOU - DETAILS COMPLETS =====
+  {
+    id: "sotraco-ligne1-karpala",
+    nom: "Terminus L1 Karpala",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "Karpala, Station SOGEL B, Secteur 30, quartier Bogodogo",
+    coordonnees: { lat: 12.3450, lng: -1.4850 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "05h00 - 22h00",
+    services: ["Terminus de ligne", "Abri voyageurs"],
+    destinations: [
+      { ville: "Ligne 1 vers Naba Koom", horaires: ["05h00-22h00, depart toutes les 15-20 min"], duree: "35-45 min", prix: 200 }
+    ]
+  },
+  {
+    id: "sotraco-ligne2-yamtenga",
+    nom: "Terminus L2 Yamtenga (2 Boutiques)",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "Yamtenga, Lycee Communal, Secteur 29, quartier Bogodogo",
+    coordonnees: { lat: 12.3350, lng: -1.4750 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "05h00 - 22h00",
+    services: ["Terminus de ligne", "Abri voyageurs"],
+    destinations: [
+      { ville: "Ligne 2 vers Naba Koom (via Patte-d'Oie)", horaires: ["05h00-22h00, depart toutes les 15-20 min"], duree: "40-50 min", prix: 200 }
+    ]
+  },
+  {
+    id: "sotraco-ligne2b-balkuy",
+    nom: "Terminus L2B Balkuy",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "Balkuy, Trame d'accueil Ouaga 2000, Zone Sud",
+    coordonnees: { lat: 12.3100, lng: -1.5100 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "05h00 - 22h00",
+    services: ["Terminus de ligne", "Ligne la plus longue (18+ km, 39 arrets)"],
+    destinations: [
+      { ville: "Ligne 2B vers Naba Koom (via Ouaga 2000, Gare Rahimo, CHU Yalgado)", horaires: ["05h00-22h00, depart toutes les 20 min"], duree: "34 min", prix: 200 }
+    ]
+  },
+  {
+    id: "sotraco-ligne3-bissighin",
+    nom: "Terminus L3 Bissighin",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "Bissighin, DRB Bissighin, route de Ouahigouya, Secteur 28",
+    coordonnees: { lat: 12.4200, lng: -1.5450 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "05h50 - 21h50",
+    services: ["Terminus de ligne", "25 arrets", "Abri voyageurs"],
+    destinations: [
+      { ville: "Ligne 3 vers Zone des Ecoles (via Echangeur Nord, Place de la Nation)", horaires: ["05h50-21h50, depart toutes les 20 min"], duree: "34 min", prix: 200 }
+    ]
+  },
+  {
+    id: "sotraco-ligne4-sandogo",
+    nom: "Terminus L4 Sandogo",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "Sandogo, quartier peripherique Ouest, Secteur 26",
+    coordonnees: { lat: 12.3600, lng: -1.5650 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "05h30 - 21h30",
+    services: ["Terminus de ligne", "21 arrets"],
+    destinations: [
+      { ville: "Ligne 4 vers Zone des Ecoles (via Echangeur Ouest, Place de la Nation)", horaires: ["05h30-21h30, depart toutes les 20 min"], duree: "27 min", prix: 200 }
+    ]
+  },
+  {
+    id: "sotraco-ligne5-signonghin",
+    nom: "Terminus L5 Signonghin (Saaba)",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "Sigui Yaar de Bargo, Route de Fada, Station ORYX Signonghin",
+    coordonnees: { lat: 12.3800, lng: -1.4300 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "05h00 - 22h00",
+    services: ["Terminus de ligne", "20 arrets", "Dessert Saaba"],
+    destinations: [
+      { ville: "Ligne 5 vers Naba Koom (via Echangeur Est, CHU Yalgado)", horaires: ["05h00-22h00, depart toutes les 20 min"], duree: "29 min", prix: 200 }
+    ]
+  },
+  {
+    id: "sotraco-ligne6-koulweoguin",
+    nom: "Terminus L6 Koulweoguin",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "Koulweoguin, Chateau d'eau, Secteur 22, quartier Tanghin",
+    coordonnees: { lat: 12.3950, lng: -1.5100 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "04h59 - 22h40",
+    services: ["Terminus de ligne", "Ligne la plus courte (6 km, 13 arrets)"],
+    destinations: [
+      { ville: "Ligne 6 vers Naba Koom (via Marche Tanghin, Paspanga)", horaires: ["04h59-22h40, depart toutes les 15-20 min"], duree: "20 min", prix: 200 }
+    ]
+  },
+  {
+    id: "sotraco-ligne10-tengandogo",
+    nom: "Terminus L10 CHU Tengandogo",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "CHU de Tengandogo, Route de Sapone, Zone Sud",
+    coordonnees: { lat: 12.3150, lng: -1.5250 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "04h50 - 22h59",
+    services: ["Terminus de ligne", "24 arrets", "Acces CHU"],
+    destinations: [
+      { ville: "Ligne 10 vers Zone des Ecoles (via Patte-d'Oie, Lycee Bambata)", horaires: ["04h50-22h59, depart toutes les 20 min"], duree: "33-34 min", prix: 200 }
+    ]
+  },
+
+  // ===== TERMINUS BOBO-DIOULASSO =====
+  {
+    id: "sotraco-bobo-tiefo-amoro",
+    nom: "Terminus Place Tiefo Amoro",
     ville: "Bobo-Dioulasso",
     region: "Hauts-Bassins",
-    adresse: "Avenue de la Liberte, Secteur 8, Sarfalao",
-    coordonnees: { lat: 11.1820, lng: -4.2880 },
-    telephone: "+226 20 97 55 00",
+    adresse: "Place Tiefo Amoro, Centre-ville, pres de l'Avenue de la Nation",
+    coordonnees: { lat: 11.1771, lng: -4.2979 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "05h45 - 20h30 (Lun-Ven) / 07h00 - 19h45 (Week-end)",
+    services: ["Terminus central Bobo", "12 lignes ordinaires", "3 lignes etudiants", "238 km de reseau", "312 arrets"],
+    destinations: [
+      { ville: "L1 - Cite universitaire Belleville (CROUB)", horaires: ["05h45-20h30, toutes les 20 min"], prix: 200 },
+      { ville: "L1B - Cite verte Belleville (via INSSA)", horaires: ["06h00-20h00, toutes les 25 min"], prix: 200 },
+      { ville: "L2 - Station Oryx Route de Ouaga", horaires: ["05h45-20h30, toutes les 20 min"], prix: 200 },
+      { ville: "L2B - Marche de Yegueresso", horaires: ["06h00-20h00, toutes les 25 min"], prix: 200 },
+      { ville: "L3 - Station Petro Sar Route de Bama", horaires: ["06h00-20h00, toutes les 25 min"], prix: 200 },
+      { ville: "L4 - Station Oryx (via Hotel de ville)", horaires: ["06h00-20h00, toutes les 25 min"], prix: 200 },
+      { ville: "L5 - Depot pharmaceutique Farako Ba", horaires: ["06h00-20h00, toutes les 30 min"], prix: 200 },
+      { ville: "L6 - Logements sociaux Ouezzinville", horaires: ["06h00-20h00, toutes les 25 min"], prix: 200 },
+      { ville: "L7 - CSPS Santidougou", horaires: ["06h00-19h30, toutes les 30 min"], prix: 200 },
+      { ville: "L8 - Djoulankolo-logo", horaires: ["06h00-19h30, toutes les 30 min"], prix: 200 },
+      { ville: "L10 - IRA (Institut Regional Agricole)", horaires: ["06h30-19h00, toutes les 30 min"], prix: 200 }
+    ]
+  },
+  {
+    id: "sotraco-bobo-zone-ecoles",
+    nom: "Terminus Zone des Ecoles Bobo",
+    ville: "Bobo-Dioulasso",
+    region: "Hauts-Bassins",
+    adresse: "Zone des Ecoles, Dafra auto-ecole, Secteur 1",
+    coordonnees: { lat: 11.1850, lng: -4.2900 },
+    telephone: "+226 52 50 18 18",
     compagnie: "sotraco",
     type: "principale",
     heuresOuverture: "06h00 - 20h00",
+    services: ["Terminus secondaire", "Correspondances"],
     destinations: [
-      { ville: "Grand Marche", horaires: ["Toutes les 20 min"], prix: 150 },
-      { ville: "Gare routiere", horaires: ["Toutes les 25 min"], prix: 150 },
-      { ville: "CHU Sanou Souro", horaires: ["Toutes les 30 min"], prix: 150 }
+      { ville: "L9 - Marche du 22 (via SNC, Boulevard Independance)", horaires: ["06h00-20h00, toutes les 25 min"], prix: 200 }
+    ]
+  },
+
+  // ===== TERMINUS KOUDOUGOU =====
+  {
+    id: "sotraco-koudougou-central",
+    nom: "Terminus Central TAL-MBI Koudougou",
+    ville: "Koudougou",
+    region: "Centre-Ouest",
+    adresse: "Carrefour TAL-MBI, Quartier Issouka, Centre-ville",
+    coordonnees: { lat: 12.2500, lng: -2.3650 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "06h00 - 19h30",
+    services: ["Terminus central Koudougou", "7 lignes ordinaires", "4 lignes intercommunales", "140 km de reseau", "160 arrets", "12 terminus peripheriques"],
+    destinations: [
+      { ville: "L1 - Terminus Issouka (vers Gare routiere)", horaires: ["06h00-19h30, toutes les 30 min"], prix: 150 },
+      { ville: "L2 - Terminus Secteur 10 (via Universite)", horaires: ["06h00-19h30, toutes les 30 min"], prix: 150 },
+      { ville: "L3 - Terminus Goundi (route de Dedougou)", horaires: ["06h00-19h30, toutes les 30 min"], prix: 150 },
+      { ville: "L4 - Terminus Dapoya", horaires: ["06h30-19h00, toutes les 35 min"], prix: 150 },
+      { ville: "L5 - Terminus RTB (route de Reo)", horaires: ["06h00-19h30, toutes les 30 min"], prix: 150 },
+      { ville: "L6 - Terminus Lycee WendSongda (route de Yako)", horaires: ["06h30-19h00, toutes les 35 min"], prix: 150 },
+      { ville: "Intercommunale Reo", horaires: ["06h30, 10h00, 14h00, 17h00"], duree: "45 min", prix: 300 },
+      { ville: "Intercommunale Sabou", horaires: ["07h00, 11h00, 15h00"], duree: "30 min", prix: 250 },
+      { ville: "Intercommunale Tenado", horaires: ["07h00, 12h00, 16h00"], duree: "40 min", prix: 300 },
+      { ville: "Intercommunale Ramongho", horaires: ["08h00, 13h00"], duree: "35 min", prix: 250 }
     ]
   },
   {
-    id: "sotraco-koudougou",
-    nom: "Point SOTRACO Koudougou",
+    id: "sotraco-koudougou-gare",
+    nom: "Terminus Gare Routiere Koudougou",
     ville: "Koudougou",
     region: "Centre-Ouest",
-    adresse: "Avenue de la Gare, Centre-ville",
-    coordonnees: { lat: 12.2500, lng: -2.3650 },
-    telephone: "+226 25 44 00 52",
+    adresse: "Gare Routiere, Centre-ville, pres de la Banque BDU",
+    coordonnees: { lat: 12.2520, lng: -2.3680 },
+    telephone: "+226 52 50 18 18",
     compagnie: "sotraco",
     type: "secondaire",
     heuresOuverture: "06h00 - 19h00",
+    services: ["Terminus peripherique", "Connexion gare routiere"],
     destinations: [
-      { ville: "Marche central", horaires: ["Toutes les 30 min"], prix: 100 },
-      { ville: "Gare routiere", horaires: ["Toutes les 30 min"], prix: 100 }
+      { ville: "L3 depuis Goundi (via Universite, SONABEL, Mairie)", horaires: ["06h00-19h00, toutes les 30 min"], prix: 150 }
+    ]
+  },
+
+  // ===== TERMINUS OUAHIGOUYA =====
+  {
+    id: "sotraco-ouahigouya-central",
+    nom: "Terminus Central SOTRACO Ouahigouya",
+    ville: "Ouahigouya",
+    region: "Nord",
+    adresse: "Centre-ville Ouahigouya, pres du Grand Marche",
+    coordonnees: { lat: 13.5833, lng: -2.4167 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "06h00 - 19h00",
+    services: ["Terminus central", "Lignes urbaines", "Abri voyageurs"],
+    destinations: [
+      { ville: "Lignes urbaines Ouahigouya", horaires: ["06h00-19h00, frequence variable"], prix: 150 }
+    ]
+  },
+
+  // ===== TERMINUS DEDOUGOU =====
+  {
+    id: "sotraco-dedougou-central",
+    nom: "Terminus SOTRACO Dedougou",
+    ville: "Dedougou",
+    region: "Boucle du Mouhoun",
+    adresse: "Centre-ville Dedougou, pres de la Prefecture",
+    coordonnees: { lat: 12.4633, lng: -3.4600 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "06h30 - 18h30",
+    services: ["Service operationnel depuis dec. 2021", "2 lignes etudiants", "Transport scolaire"],
+    destinations: [
+      { ville: "Ligne etudiante 1 - Universites et Lycees", horaires: ["06h30-08h00, 12h00-13h00, 17h00-18h30"], prix: 100 },
+      { ville: "Ligne etudiante 2 - Quartiers residentiels", horaires: ["06h30-08h00, 12h00-13h00, 17h00-18h30"], prix: 100 }
+    ]
+  },
+
+  // ===== LIGNES SPECIALES UNIVERSITAIRES OUAGADOUGOU =====
+  {
+    id: "sotraco-uo1-kossodo",
+    nom: "Ligne Speciale UO1 - Cite Kossodo",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "Cite universitaire de Kossodo, pres de la Mosquee de vendredi",
+    coordonnees: { lat: 12.4100, lng: -1.4750 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "secondaire",
+    heuresOuverture: "06h30 - 19h00",
+    services: ["Transport etudiant", "Ligne speciale UO1"],
+    destinations: [
+      { ville: "UO1 via SIAO (Tan Aliz, Echangeur Est, LTO, ISIG)", horaires: ["06h30, 07h00, 07h30, 12h00, 13h00, 17h00, 18h00"], prix: 100 }
+    ]
+  },
+  {
+    id: "sotraco-uts-saaba",
+    nom: "Lignes Speciales UTS (Universite Thomas Sankara)",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "Campus Universite Thomas Sankara, Route de Fada, Saaba",
+    coordonnees: { lat: 12.3900, lng: -1.4200 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "secondaire",
+    heuresOuverture: "06h00 - 19h30",
+    services: ["Transport etudiant", "3 axes vers UTS", "Dessert campus universitaire"],
+    destinations: [
+      { ville: "Axe 1: UO1 - CHU Charles de Gaulle - Echangeur Est - Saaba - Peage - UTS", horaires: ["06h30, 07h00, 12h30, 17h30"], prix: 100 },
+      { ville: "Axe 2: SIAO - CHU Charles de Gaulle - Echangeur Est - Saaba - Peage - UTS", horaires: ["06h30, 07h00, 12h30, 17h30"], prix: 100 },
+      { ville: "Axe 3: CHU Yalgado - ENAREF - Echangeur Est - Saaba - Peage - UTS", horaires: ["06h30, 07h00, 12h30, 17h30"], prix: 100 }
+    ]
+  },
+
+  // ===== LIGNES INTERCOMMUNALES =====
+  {
+    id: "sotraco-intercommunale-ziniare",
+    nom: "Ligne Intercommunale Ouagadougou - Ziniare",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "Depart: Terminus Naba Koom - Arrivee: Ex-gare routiere Ziniare",
+    coordonnees: { lat: 12.5833, lng: -1.3000 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "06h00 - 19h00",
+    services: ["Ligne intercommunale", "Dessert Loumbila", "Connexion Plateau-Central"],
+    destinations: [
+      { ville: "Ziniare via CHR Ziniare, Bangrin, Nongana, Loumbila, Nioko II, Kossodo, Siege SOTRACO, CHU Yalgado", horaires: ["06h00, 07h00, 08h00, 10h00, 12h00, 14h00, 16h00, 18h00"], duree: "1h15", prix: 300 }
+    ]
+  },
+  {
+    id: "sotraco-intercommunale-koubri",
+    nom: "Ligne Intercommunale Ouagadougou - Koubri",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "Depart: Gare routiere Ouaga - Arrivee: Marche de Koubri",
+    coordonnees: { lat: 12.2000, lng: -1.3667 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "06h30 - 18h30",
+    services: ["Ligne intercommunale", "Dessert Balkuy et peripherie Sud"],
+    destinations: [
+      { ville: "Koubri via Mairie Koubri, College St Antoine, Kiendpalgo, Balkuy, Nongtaaba, Ouaga 2000, Camp Baba SY, CCVA, Gare routiere", horaires: ["06h30, 08h00, 10h00, 12h00, 14h00, 16h00, 18h00"], duree: "1h", prix: 300 }
+    ]
+  },
+  {
+    id: "sotraco-intercommunale-pabre",
+    nom: "Ligne Intercommunale Ouagadougou - Pabre",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "Depart: Memorial Thomas Sankara - Arrivee: Mosquee de Pabre",
+    coordonnees: { lat: 12.5167, lng: -1.5667 },
+    telephone: "+226 52 50 18 18",
+    compagnie: "sotraco",
+    type: "principale",
+    heuresOuverture: "06h30 - 18h00",
+    services: ["Ligne intercommunale", "Dessert Kossoghin et PMK"],
+    destinations: [
+      { ville: "Pabre via CARFO Paspanga, RTB, Nations Unies, Place de la Nation, Lycee Kolog Naba, CMA Paul VI, Seminaire Kossoghin, LAC, PMK, Mosquee Pabre", horaires: ["06h30, 08h00, 10h30, 13h00, 15h30, 17h30"], duree: "50 min", prix: 250 }
     ]
   },
 
