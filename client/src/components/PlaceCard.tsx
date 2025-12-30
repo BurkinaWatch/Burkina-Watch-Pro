@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, Clock, Navigation, Globe, Mail, ExternalLink, Locate } from "lucide-react";
 import type { Place } from "@shared/schema";
+import { SourceBadge } from "./SourceBadge";
 
 interface PlaceWithDistance extends Place {
   distance?: number;
@@ -78,6 +79,16 @@ export function PlaceCard({ place }: PlaceCardProps) {
         {brand && (
           <p className="text-xs text-muted-foreground">{brand}</p>
         )}
+        <div className="mt-2">
+          <SourceBadge 
+            source={place.source || "OSM"}
+            confidenceScore={place.confidenceScore}
+            verificationStatus={place.verificationStatus}
+            confirmations={place.confirmations}
+            reports={place.reports}
+            size="sm"
+          />
+        </div>
       </CardHeader>
       
       <CardContent className="space-y-3">
