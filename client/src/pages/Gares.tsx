@@ -417,7 +417,7 @@ export default function Gares() {
               </TabsTrigger>
               <TabsTrigger value="horaires" data-testid="tab-horaires">
                 <Clock className="w-4 h-4 mr-2" />
-                Horaires
+                Grands departs Ouaga & Bobo
               </TabsTrigger>
             </TabsList>
 
