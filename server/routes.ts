@@ -420,7 +420,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Broadcast notification to all users about new post
       if (signalement.userId !== "demo-user") {
         const notifType = signalement.isSOS ? "urgence" : "info";
-        const notifTitle = signalement.isSOS ? "🚨 Nouveau SOS" : "📍 Nouveau signalement";
+        const notifTitle = signalement.isSOS ? "Nouveau SOS" : "Nouveau signalement";
         const notifDesc = signalement.isSOS
           ? `Un nouveau signal d'urgence a été publié: ${signalement.titre}`
           : `Nouveau signalement publié: ${signalement.titre}`;
@@ -432,6 +432,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           signalement.id,
           userId // Exclude the author
         );
+
+        // Send push notifications to nearby users (non-blocking)
+        import("./pushService").then(({ notifyNewSignalement }) => {
+          notifyNewSignalement(signalement.id).then((count) => {
+            if (count > 0) {
+              console.log(`Push notifications sent to ${count} nearby users for signalement ${signalement.id}`);
+            }
+          }).catch(err => console.error("Push notification error:", err));
+        }).catch(err => console.error("Push service import error:", err));
       }
 
       // Renvoyer le signalement sans les données base64 volumineuses
@@ -850,6 +859,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error deleting all notifications:", error);
       res.status(500).json({ error: "Erreur lors de la suppression des notifications" });
     }
+  });
+
+  // ----------------------------------------
+  // ROUTES PUSH NOTIFICATIONS
+  // ----------------------------------------
+  app.post("/api/push/subscribe", async (req: any, res) => {
+    try {
+      const { endpoint, keys, latitude, longitude, radiusKm } = req.body;
+      const userId = req.user?.claims?.sub || null;
+      
+      if (!endpoint || !keys?.p256dh || !keys?.auth) {
+        return res.status(400).json({ error: "Données d'abonnement invalides" });
+      }
+
+      const { saveSubscription } = await import("./pushService");
+      await saveSubscription(userId, { endpoint, keys }, latitude, longitude, radiusKm);
+      
+      res.json({ message: "Abonnement aux notifications activé" });
+    } catch (error) {
+      console.error("Error subscribing to push:", error);
+      res.status(500).json({ error: "Erreur lors de l'abonnement" });
+    }
+  });
+
+  app.post("/api/push/unsubscribe", async (req: any, res) => {
+    try {
+      const { endpoint } = req.body;
+      
+      if (!endpoint) {
+        return res.status(400).json({ error: "Endpoint requis" });
+      }
+
+      const { removeSubscription } = await import("./pushService");
+      await removeSubscription(endpoint);
+      
+      res.json({ message: "Désabonnement réussi" });
+    } catch (error) {
+      console.error("Error unsubscribing from push:", error);
+      res.status(500).json({ error: "Erreur lors du désabonnement" });
+    }
+  });
+
+  app.post("/api/push/update-location", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { endpoint, latitude, longitude, radiusKm } = req.body;
+      
+      if (!endpoint || latitude === undefined || longitude === undefined) {
+        return res.status(400).json({ error: "Données de localisation invalides" });
+      }
+
+      const { db } = await import("./db");
+      const { pushSubscriptions } = await import("@shared/schema");
+      const { eq, and } = await import("drizzle-orm");
+      
+      const [subscription] = await db.select().from(pushSubscriptions)
+        .where(and(
+          eq(pushSubscriptions.endpoint, endpoint),
+          eq(pushSubscriptions.userId, userId)
+        ));
+      
+      if (!subscription) {
+        return res.status(403).json({ error: "Subscription non autorisée" });
+      }
+
+      const { updateSubscriptionLocation } = await import("./pushService");
+      await updateSubscriptionLocation(endpoint, latitude, longitude, radiusKm);
+      
+      res.json({ message: "Localisation mise à jour" });
+    } catch (error) {
+      console.error("Error updating push location:", error);
+      res.status(500).json({ error: "Erreur lors de la mise à jour" });
+    }
+  });
+
+  app.get("/api/push/vapid-key", (req, res) => {
+    const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || '';
+    res.json({ vapidPublicKey });
   });
 
   // ----------------------------------------

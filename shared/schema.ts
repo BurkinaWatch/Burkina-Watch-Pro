@@ -196,6 +196,33 @@ export const refreshTokens = pgTable("refresh_tokens", {
   userIdIdx: index("refresh_tokens_user_id_idx").on(table.userId),
 }));
 
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  radiusKm: integer("radius_km").default(5),
+  alertCategories: text("alert_categories").array(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  userIdIdx: index("push_subscriptions_user_id_idx").on(table.userId),
+  locationIdx: index("push_subscriptions_location_idx").on(table.latitude, table.longitude),
+}));
+
+export const insertPushSubscriptionSchema = createInsertSchema(pushSubscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema>;
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+
 
 export const upsertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
