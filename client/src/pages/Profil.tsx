@@ -400,6 +400,33 @@ export default function Profil() {
     }
   }, [activeSession, activeSessionPoints]);
 
+  const openWhatsAppForContacts = (latitude: number, longitude: number) => {
+    const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+    const userName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Un utilisateur';
+    const message = `ALERTE SECURITE - ${userName} a active le suivi de localisation en direct sur Burkina Watch.\n\nPosition actuelle:\n${googleMapsLink}\n\nDate: ${new Date().toLocaleString('fr-FR')}\n\nCe message a ete envoye automatiquement.`;
+    
+    // Ouvrir WhatsApp pour chaque contact avec un numéro de téléphone
+    if (emergencyContacts && emergencyContacts.length > 0) {
+      const contactsWithPhone = emergencyContacts.filter(c => c.phone);
+      
+      if (contactsWithPhone.length > 0) {
+        // Ouvrir le premier contact immédiatement
+        const firstContact = contactsWithPhone[0];
+        const phone = firstContact.phone.replace(/[^0-9]/g, '');
+        const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+        
+        // Pour les contacts supplémentaires, informer l'utilisateur
+        if (contactsWithPhone.length > 1) {
+          toast({
+            title: "Contacts supplémentaires",
+            description: `Envoyez aussi le message à vos ${contactsWithPhone.length - 1} autre(s) contact(s) via WhatsApp.`,
+          });
+        }
+      }
+    }
+  };
+
   const startTrackingMutation = useMutation({
     mutationFn: async () => {
       // Obtenir la position initiale pour l'envoyer aux contacts d'urgence
@@ -417,6 +444,9 @@ export default function Profil() {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude
         };
+        
+        // Ouvrir WhatsApp avec le message pré-rempli
+        openWhatsAppForContacts(position.coords.latitude, position.coords.longitude);
       } catch (geoError) {
         console.warn("Impossible d'obtenir la position initiale:", geoError);
       }
