@@ -71,6 +71,7 @@ interface Gare {
   destinations?: GareDestination[];
   heuresOuverture?: string;
   services?: string[];
+  imageUrl?: string;
 }
 
 interface Trajet {
@@ -900,38 +901,50 @@ export default function Gares() {
                       <Card key={gare.id} className="hover-elevate" data-testid={`card-sotraco-${gare.id}`}>
                         <CardContent className="p-3">
                           <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <h4 className="font-semibold text-sm flex items-center gap-2">
-                                <CircleDot className="w-3 h-3 text-emerald-600" />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold text-sm flex items-center gap-2 truncate">
+                                <CircleDot className="w-3 h-3 text-emerald-600 shrink-0" />
                                 {gare.nom}
                               </h4>
-                              <p className="text-xs text-muted-foreground">{gare.ville}, {gare.region}</p>
+                              <p className="text-xs text-muted-foreground truncate">{gare.ville}, {gare.region}</p>
                               {gare.adresse && (
-                                <p className="text-xs text-muted-foreground mt-1">{gare.adresse}</p>
+                                <p className="text-xs text-muted-foreground mt-1 truncate">{gare.adresse}</p>
                               )}
                               {gare.heuresOuverture && (
-                                <p className="text-xs flex items-center gap-1 mt-1">
-                                  <Clock className="w-3 h-3 text-emerald-600" />
+                                <p className="text-xs flex items-center gap-1 mt-1 truncate">
+                                  <Clock className="w-3 h-3 text-emerald-600 shrink-0" />
                                   {gare.heuresOuverture}
                                 </p>
                               )}
                             </div>
-                            <div className="flex gap-1">
-                              {gare.telephone && (
-                                <a href={`tel:${gare.telephone}`}>
-                                  <Button variant="ghost" size="icon" data-testid={`button-call-sotraco-${gare.id}`}>
-                                    <Phone className="w-4 h-4" />
-                                  </Button>
-                                </a>
+                            <div className="flex flex-col gap-2 shrink-0">
+                              {gare.imageUrl && (
+                                <div className="w-16 h-16 rounded-md overflow-hidden bg-muted">
+                                  <img 
+                                    src={gare.imageUrl} 
+                                    alt={gare.nom}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
                               )}
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                onClick={() => openGoogleMaps(gare.coordonnees.lat, gare.coordonnees.lng, gare.nom)}
-                                data-testid={`button-map-sotraco-${gare.id}`}
-                              >
-                                <Navigation className="w-4 h-4" />
-                              </Button>
+                              <div className="flex gap-1">
+                                {gare.telephone && (
+                                  <a href={`tel:${gare.telephone}`}>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" data-testid={`button-call-sotraco-${gare.id}`}>
+                                      <Phone className="w-4 h-4" />
+                                    </Button>
+                                  </a>
+                                )}
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => openGoogleMaps(gare.coordonnees.lat, gare.coordonnees.lng, gare.nom)}
+                                  data-testid={`button-map-sotraco-${gare.id}`}
+                                >
+                                  <Navigation className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
                           {gare.destinations && gare.destinations.length > 0 && (

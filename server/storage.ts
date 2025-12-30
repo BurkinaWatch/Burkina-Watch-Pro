@@ -561,6 +561,7 @@ export class DbStorage implements IStorage {
     sosCount: number;
     totalUsers: number;
     onlineUsers: number;
+    totalGares: number;
   }> {
     const [totalSignalementsResult] = await db
       .select({ count: sql<number>`count(*)::int` })
@@ -575,6 +576,11 @@ export class DbStorage implements IStorage {
       .select({ count: sql<number>`count(distinct email)::int` })
       .from(users);
 
+    const [totalGaresResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(places)
+      .where(eq(places.placeType, "bus_station"));
+
     // Compter les utilisateurs en ligne
     const onlineUsers = await this.countOnlineUsers();
 
@@ -583,6 +589,7 @@ export class DbStorage implements IStorage {
       sosCount: sosCountResult?.count || 0,
       totalUsers: totalUsersResult?.count || 0,
       onlineUsers,
+      totalGares: totalGaresResult?.count || 0,
     };
   }
 

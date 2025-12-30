@@ -585,6 +585,7 @@ export const places = pgTable("places", {
   email: text("email"),
   website: text("website"),
   horaires: text("horaires"),
+  imageUrl: text("image_url"), // URL de l'image (source externe ou stockée)
   tags: jsonb("tags"), // All OSM tags for this place
   confirmations: integer("confirmations").notNull().default(0),
   reports: integer("reports").notNull().default(0),
