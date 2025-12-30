@@ -623,14 +623,15 @@ function CameraCapture({
                   Reessayer
                 </Button>
                 {window.self !== window.top && (
-                  <Button 
-                    onClick={() => window.open(window.location.href, '_blank')}
-                    variant="default"
-                    className="gap-2"
+                  <a
+                    href={window.location.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium bg-primary text-primary-foreground px-4 py-2"
                   >
                     <Globe className="h-4 w-4" />
                     Ouvrir dans un nouvel onglet
-                  </Button>
+                  </a>
                 )}
               </div>
             </div>
@@ -650,14 +651,15 @@ function CameraCapture({
                   Reessayer
                 </Button>
                 {window.self !== window.top && (
-                  <Button 
-                    onClick={() => window.open(window.location.href, '_blank')}
-                    variant="default"
-                    className="gap-2"
+                  <a
+                    href={window.location.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium bg-primary text-primary-foreground px-4 py-2"
                   >
                     <Globe className="h-4 w-4" />
                     Ouvrir dans un nouvel onglet
-                  </Button>
+                  </a>
                 )}
               </div>
             </div>
