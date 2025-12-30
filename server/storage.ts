@@ -1233,6 +1233,33 @@ L'équipe Burkina Watch
       .set({ viewCount: sql`${virtualTours.viewCount} + 1` })
       .where(eq(virtualTours.id, tourId));
   }
+
+  async incrementTourReportCount(tourId: string): Promise<{ reportCount: number; status: string }> {
+    const REPORT_THRESHOLD = 3;
+    
+    const [tour] = await db
+      .select({ reportCount: virtualTours.reportCount, status: virtualTours.status })
+      .from(virtualTours)
+      .where(eq(virtualTours.id, tourId))
+      .limit(1);
+    
+    if (!tour) {
+      throw new Error("Tour not found");
+    }
+    
+    const newReportCount = (tour.reportCount || 0) + 1;
+    const newStatus = newReportCount >= REPORT_THRESHOLD ? "signale" : tour.status;
+    
+    await db
+      .update(virtualTours)
+      .set({ 
+        reportCount: newReportCount,
+        status: newStatus
+      })
+      .where(eq(virtualTours.id, tourId));
+    
+    return { reportCount: newReportCount, status: newStatus };
+  }
 }
 
 export const storage = new DbStorage();

@@ -389,6 +389,10 @@ export type NiveauUrgence = typeof niveauxUrgence[number];
 // VIRTUAL TOURS / STREETVIEW - Contributions citoyennes
 // ============================================
 
+// Statuts des tours virtuels
+export const virtualTourStatuses = ["en_traitement", "disponible", "signale"] as const;
+export type VirtualTourStatus = typeof virtualTourStatuses[number];
+
 // Tours virtuels (séries de photos d'un lieu)
 export const virtualTours = pgTable("virtual_tours", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -400,7 +404,9 @@ export const virtualTours = pgTable("virtual_tours", {
   photoCount: integer("photo_count").notNull().default(0),
   coverPhotoId: text("cover_photo_id"),
   isPublished: boolean("is_published").notNull().default(true),
+  status: text("status").notNull().default("disponible"), // en_traitement, disponible, signale
   viewCount: integer("view_count").notNull().default(0),
+  reportCount: integer("report_count").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

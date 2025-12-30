@@ -2747,8 +2747,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Nom et coordonnées requis" });
       }
 
-      if (!photos || !Array.isArray(photos) || photos.length === 0) {
-        return res.status(400).json({ error: "Au moins une photo requise" });
+      const MIN_PHOTOS_REQUIRED = 5;
+      if (!photos || !Array.isArray(photos) || photos.length < MIN_PHOTOS_REQUIRED) {
+        return res.status(400).json({ error: `Minimum ${MIN_PHOTOS_REQUIRED} photos requises` });
       }
 
       // Limite du nombre de photos par tour
@@ -2772,12 +2773,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Préparer les photos pour la création
-      const photoData = photos.map((photo: { imageData: string; thumbnailData?: string }) => ({
+      // Préparer les photos pour la création avec GPS par photo
+      const photoData = photos.map((photo: { 
+        imageData: string; 
+        thumbnailData?: string;
+        latitude?: number;
+        longitude?: number;
+        capturedAt?: string;
+      }) => ({
         imageData: photo.imageData,
         thumbnailData: photo.thumbnailData || null,
-        latitude: latitude.toString(),
-        longitude: longitude.toString(),
+        latitude: photo.latitude?.toString() || latitude.toString(),
+        longitude: photo.longitude?.toString() || longitude.toString(),
+        capturedAt: photo.capturedAt ? new Date(photo.capturedAt) : new Date(),
         heading: null,
         pitch: null,
         deviceInfo: null,
@@ -2801,6 +2809,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erreur création tour virtuel:", error);
       res.status(500).json({ error: "Erreur lors de la création du tour" });
+    }
+  });
+
+  // Signaler un tour virtuel
+  app.post("/api/virtual-tours/:id/report", signalementMutationLimiter, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const result = await storage.incrementTourReportCount(id);
+      
+      if (result.status === "signale") {
+        console.log(`⚠️ Tour ${id} marqué comme signalé après ${result.reportCount} signalements`);
+      }
+      
+      console.log(`📢 Signalement tour virtuel: ${id} (total: ${result.reportCount})`);
+      res.json({ 
+        success: true, 
+        message: "Signalement enregistré",
+        reportCount: result.reportCount,
+        status: result.status
+      });
+    } catch (error: any) {
+      if (error.message === "Tour not found") {
+        return res.status(404).json({ error: "Tour non trouvé" });
+      }
+      console.error("Erreur signalement tour:", error);
+      res.status(500).json({ error: "Erreur lors du signalement" });
     }
   });
 

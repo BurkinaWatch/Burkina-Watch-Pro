@@ -38,7 +38,11 @@ import {
   Video,
   Square,
   Circle,
-  Timer
+  Timer,
+  AlertTriangle,
+  Shield,
+  Users,
+  Info
 } from "lucide-react";
 import { useLocation } from "wouter";
 import "leaflet/dist/leaflet.css";
@@ -105,12 +109,31 @@ function TourViewer({
   tour: VirtualTourWithPhotos; 
   onClose: () => void;
 }) {
+  const { toast } = useToast();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const photos = tour.photos.sort((a, b) => a.orderIndex - b.orderIndex);
+  
+  const handleReport = async () => {
+    try {
+      await apiRequest("POST", `/api/virtual-tours/${tour.id}/report`);
+      toast({
+        title: "Signalement enregistre",
+        description: "Merci pour votre vigilance. Nous allons verifier ce contenu.",
+      });
+      setShowReportDialog(false);
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'enregistrer le signalement. Reessayez plus tard.",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     if (isPlaying && photos.length > 1) {
@@ -145,6 +168,12 @@ function TourViewer({
 
   return (
     <div className={`fixed inset-0 z-50 bg-black flex flex-col ${isFullscreen ? '' : 'p-4 md:p-8'}`}>
+      {/* Citizen disclaimer banner */}
+      <div className="bg-amber-500/90 text-black px-4 py-2 flex items-center justify-center gap-2 text-sm">
+        <Users className="h-4 w-4" />
+        <span>Vue citoyenne - Cette vue a ete creee par des citoyens et peut ne pas refleter l'etat actuel</span>
+      </div>
+      
       <div className="flex items-center justify-between p-4 text-white">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={onClose} className="text-white">
@@ -152,13 +181,29 @@ function TourViewer({
           </Button>
           <div>
             <h2 className="font-semibold">{tour.name}</h2>
-            <p className="text-sm text-white/70">{tour.quartier || "Ouagadougou"}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-white/70">{tour.quartier || "Ouagadougou"}</p>
+              <Badge variant="outline" className="text-xs bg-primary/20 border-primary text-primary-foreground">
+                <Shield className="h-3 w-3 mr-1" />
+                Vue citoyenne
+              </Badge>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="bg-white/20">
             {currentIndex + 1} / {photos.length}
           </Badge>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setShowReportDialog(true)}
+            className="text-white"
+            title="Signaler un probleme"
+            data-testid="button-report-tour"
+          >
+            <AlertTriangle className="h-5 w-5" />
+          </Button>
           <Button 
             variant="ghost" 
             size="icon" 
@@ -169,6 +214,31 @@ function TourViewer({
           </Button>
         </div>
       </div>
+      
+      {/* Report dialog */}
+      {showReportDialog && (
+        <div className="absolute inset-0 z-60 bg-black/80 flex items-center justify-center p-4">
+          <div className="bg-card rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Signaler un probleme
+            </h3>
+            <p className="text-muted-foreground text-sm mb-4">
+              Si ce contenu est inapproprie, obsolete ou contient des informations personnelles visibles, 
+              vous pouvez le signaler. Notre equipe verifiera et prendra les mesures necessaires.
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowReportDialog(false)} className="flex-1">
+                Annuler
+              </Button>
+              <Button variant="destructive" onClick={handleReport} className="flex-1 gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Signaler
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 relative flex items-center justify-center overflow-hidden">
         <img
@@ -253,13 +323,57 @@ function TourViewer({
   );
 }
 
+const MIN_PHOTOS_REQUIRED = 5;
+
+interface CapturedPhoto {
+  data: string;
+  thumbnail: string;
+  latitude?: number;
+  longitude?: number;
+  capturedAt: Date;
+}
+
+function RotationGuide({ photoCount, minRequired }: { photoCount: number; minRequired: number }) {
+  const progress = Math.min((photoCount / minRequired) * 100, 100);
+  const segments = 8;
+  const filledSegments = Math.floor((photoCount / minRequired) * segments);
+  
+  return (
+    <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-black/70 rounded-lg p-3 text-white text-center">
+      <div className="flex items-center justify-center gap-2 mb-2">
+        <RotateCcw className="h-5 w-5 animate-spin" style={{ animationDuration: '3s' }} />
+        <span className="text-sm font-medium">Tournez lentement sur 360</span>
+      </div>
+      <div className="flex gap-1 justify-center mb-2">
+        {Array.from({ length: segments }).map((_, i) => (
+          <div
+            key={i}
+            className={`w-6 h-2 rounded-full transition-colors ${
+              i < filledSegments ? 'bg-primary' : 'bg-white/30'
+            }`}
+          />
+        ))}
+      </div>
+      <p className="text-xs text-white/70">
+        {photoCount < minRequired 
+          ? `${photoCount}/${minRequired} photos (min. ${minRequired} requises)`
+          : `${photoCount} photos capturees`
+        }
+      </p>
+      {progress >= 100 && (
+        <Badge className="mt-2 bg-primary">Pret a publier</Badge>
+      )}
+    </div>
+  );
+}
+
 function CameraCapture({
   onPhotosCapture,
   onClose,
   maxPhotos,
   currentPhotoCount,
 }: {
-  onPhotosCapture: (photos: { data: string; thumbnail: string }[]) => void;
+  onPhotosCapture: (photos: CapturedPhoto[]) => void;
   onClose: () => void;
   maxPhotos: number;
   currentPhotoCount: number;
@@ -272,15 +386,56 @@ function CameraCapture({
   
   const [isStreaming, setIsStreaming] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [capturedPhotos, setCapturedPhotos] = useState<{ data: string; thumbnail: string }[]>([]);
+  const [capturedPhotos, setCapturedPhotos] = useState<CapturedPhoto[]>([]);
   const [countdown, setCountdown] = useState(3);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [geoLocation, setGeoLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [geoError, setGeoError] = useState<string | null>(null);
 
   const remainingSlots = maxPhotos - currentPhotoCount - capturedPhotos.length;
+  const hasMinPhotos = capturedPhotos.length >= MIN_PHOTOS_REQUIRED;
+
+  const requestGeolocation = (): Promise<{ lat: number; lng: number }> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Geolocalisation non supportee"));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          reject(error);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    });
+  };
 
   const startCamera = async () => {
     try {
       setCameraError(null);
+      setGeoError(null);
+      
+      // Request geolocation first
+      try {
+        const location = await requestGeolocation();
+        setGeoLocation(location);
+      } catch (geoErr) {
+        console.error("Geolocation error:", geoErr);
+        setGeoError("La geolocalisation est requise pour creer un tour. Activez-la dans les parametres.");
+        toast({
+          title: "Geolocalisation requise",
+          description: "Activez la geolocalisation pour capturer des photos geolocalisees.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
         audio: false,
@@ -350,9 +505,29 @@ function CameraCapture({
       const imageData = canvas.toDataURL("image/jpeg", 0.8);
       const thumbnail = await createThumbnail(imageData);
       
+      // Get current geolocation for this photo
+      let currentLat = geoLocation?.lat;
+      let currentLng = geoLocation?.lng;
+      try {
+        const location = await requestGeolocation();
+        currentLat = location.lat;
+        currentLng = location.lng;
+        setGeoLocation(location);
+      } catch (e) {
+        // Use last known location
+      }
+      
+      const newPhoto: CapturedPhoto = {
+        data: imageData,
+        thumbnail,
+        latitude: currentLat,
+        longitude: currentLng,
+        capturedAt: new Date(),
+      };
+      
       setCapturedPhotos(prev => {
         if (prev.length >= remainingSlots) return prev;
-        return [...prev, { data: imageData, thumbnail }];
+        return [...prev, newPhoto];
       });
     }
   };
@@ -432,7 +607,17 @@ function CameraCapture({
       </div>
 
       <div className="flex-1 relative">
-        {cameraError ? (
+        {geoError ? (
+          <div className="absolute inset-0 flex items-center justify-center text-white text-center p-4">
+            <div>
+              <MapPin className="h-16 w-16 mx-auto mb-4 opacity-50" />
+              <p className="text-lg mb-4">{geoError}</p>
+              <Button onClick={startCamera} variant="outline">
+                Reessayer
+              </Button>
+            </div>
+          </div>
+        ) : cameraError ? (
           <div className="absolute inset-0 flex items-center justify-center text-white text-center p-4">
             <div>
               <Camera className="h-16 w-16 mx-auto mb-4 opacity-50" />
@@ -453,6 +638,11 @@ function CameraCapture({
             />
             <canvas ref={canvasRef} className="hidden" />
             
+            {/* Rotation guide overlay */}
+            {isStreaming && !isRecording && (
+              <RotationGuide photoCount={capturedPhotos.length} minRequired={MIN_PHOTOS_REQUIRED} />
+            )}
+            
             {isRecording && (
               <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-full flex items-center gap-2 animate-pulse">
                 <Circle className="h-3 w-3 fill-current" />
@@ -461,10 +651,7 @@ function CameraCapture({
             )}
 
             {isRecording && countdown <= 0 && (
-              <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full flex items-center gap-2">
-                <Timer className="h-4 w-4" />
-                Prochaine photo dans 3s
-              </div>
+              <RotationGuide photoCount={capturedPhotos.length} minRequired={MIN_PHOTOS_REQUIRED} />
             )}
           </>
         )}
@@ -531,14 +718,38 @@ function CameraCapture({
         </div>
 
         {capturedPhotos.length > 0 && (
-          <Button onClick={handleDone} className="w-full gap-2" size="lg">
-            <Plus className="h-5 w-5" />
-            Utiliser {capturedPhotos.length} photos
-          </Button>
+          <div className="space-y-2">
+            {!hasMinPhotos && (
+              <p className="text-center text-amber-400 text-sm">
+                Minimum {MIN_PHOTOS_REQUIRED} photos requises ({MIN_PHOTOS_REQUIRED - capturedPhotos.length} restantes)
+              </p>
+            )}
+            <Button 
+              onClick={handleDone} 
+              className="w-full gap-2" 
+              size="lg"
+              disabled={!hasMinPhotos}
+              data-testid="button-validate-photos"
+            >
+              <Plus className="h-5 w-5" />
+              {hasMinPhotos 
+                ? `Valider ${capturedPhotos.length} photos` 
+                : `${capturedPhotos.length}/${MIN_PHOTOS_REQUIRED} photos`
+              }
+            </Button>
+          </div>
         )}
       </div>
     </div>
   );
+}
+
+interface PhotoWithGPS {
+  data: string;
+  thumbnail: string;
+  latitude?: number;
+  longitude?: number;
+  capturedAt?: string;
 }
 
 function CreateTourDialog({
@@ -554,7 +765,7 @@ function CreateTourDialog({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [quartier, setQuartier] = useState("");
-  const [photos, setPhotos] = useState<{ data: string; thumbnail: string }[]>([]);
+  const [photos, setPhotos] = useState<PhotoWithGPS[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -567,7 +778,7 @@ function CreateTourDialog({
       quartier: string;
       latitude: number;
       longitude: number;
-      photos: { imageData: string; thumbnailData: string }[];
+      photos: { imageData: string; thumbnailData: string; latitude?: number; longitude?: number; capturedAt?: string }[];
     }) => {
       return apiRequest("POST", "/api/virtual-tours", data);
     },
@@ -682,8 +893,12 @@ function CreateTourDialog({
       toast({ title: "Erreur", description: "Donnez un nom au tour", variant: "destructive" });
       return;
     }
-    if (photos.length === 0) {
-      toast({ title: "Erreur", description: "Ajoutez au moins une photo", variant: "destructive" });
+    if (photos.length < MIN_PHOTOS_REQUIRED) {
+      toast({ 
+        title: "Photos insuffisantes", 
+        description: `Minimum ${MIN_PHOTOS_REQUIRED} photos requises (${photos.length} actuellement)`, 
+        variant: "destructive" 
+      });
       return;
     }
 
@@ -693,7 +908,13 @@ function CreateTourDialog({
       quartier: quartier.trim(),
       latitude: position.lat,
       longitude: position.lng,
-      photos: photos.map(p => ({ imageData: p.data, thumbnailData: p.thumbnail })),
+      photos: photos.map(p => ({ 
+        imageData: p.data, 
+        thumbnailData: p.thumbnail,
+        latitude: p.latitude,
+        longitude: p.longitude,
+        capturedAt: p.capturedAt
+      })),
     });
   };
 
@@ -820,30 +1041,48 @@ function CreateTourDialog({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={createTourMutation.isPending || photos.length === 0}
-            className="gap-2"
-            data-testid="button-create-tour"
-          >
-            {createTourMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-            Creer le tour ({photos.length} photos)
-          </Button>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          {photos.length < MIN_PHOTOS_REQUIRED && photos.length > 0 && (
+            <p className="text-sm text-amber-500 flex items-center gap-1 mr-auto">
+              <Info className="h-4 w-4" />
+              Minimum {MIN_PHOTOS_REQUIRED} photos ({MIN_PHOTOS_REQUIRED - photos.length} restantes)
+            </p>
+          )}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Annuler
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={createTourMutation.isPending || photos.length < MIN_PHOTOS_REQUIRED}
+              className="gap-2"
+              data-testid="button-create-tour"
+            >
+              {createTourMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+              {photos.length >= MIN_PHOTOS_REQUIRED
+                ? `Creer le tour (${photos.length} photos)`
+                : `${photos.length}/${MIN_PHOTOS_REQUIRED} photos`
+              }
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
 
       {showCamera && (
         <CameraCapture
           onPhotosCapture={(newPhotos) => {
-            setPhotos(prev => [...prev, ...newPhotos].slice(0, MAX_PHOTOS_PER_TOUR));
+            const photosWithGPS: PhotoWithGPS[] = newPhotos.map(p => ({
+              data: p.data,
+              thumbnail: p.thumbnail,
+              latitude: p.latitude,
+              longitude: p.longitude,
+              capturedAt: p.capturedAt
+            }));
+            setPhotos(prev => [...prev, ...photosWithGPS].slice(0, MAX_PHOTOS_PER_TOUR));
           }}
           onClose={() => setShowCamera(false)}
           maxPhotos={MAX_PHOTOS_PER_TOUR}
