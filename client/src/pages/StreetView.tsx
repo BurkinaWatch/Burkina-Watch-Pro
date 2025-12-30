@@ -610,12 +610,29 @@ function CameraCapture({
       <div className="flex-1 relative">
         {geoError ? (
           <div className="absolute inset-0 flex items-center justify-center text-white text-center p-4">
-            <div>
+            <div className="max-w-md">
               <MapPin className="h-16 w-16 mx-auto mb-4 opacity-50" />
-              <p className="text-lg mb-4">{geoError}</p>
-              <Button onClick={startCamera} variant="outline">
-                Reessayer
-              </Button>
+              <p className="text-lg mb-2">{geoError}</p>
+              {window.self !== window.top && (
+                <p className="text-sm text-white/70 mb-4">
+                  La geolocalisation est bloquee dans l'apercu integre. Ouvrez l'application dans un nouvel onglet.
+                </p>
+              )}
+              <div className="flex flex-col gap-2 items-center">
+                <Button onClick={startCamera} variant="outline">
+                  Reessayer
+                </Button>
+                {window.self !== window.top && (
+                  <Button 
+                    onClick={() => window.open(window.location.href, '_blank')}
+                    variant="default"
+                    className="gap-2"
+                  >
+                    <Globe className="h-4 w-4" />
+                    Ouvrir dans un nouvel onglet
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         ) : cameraError ? (
