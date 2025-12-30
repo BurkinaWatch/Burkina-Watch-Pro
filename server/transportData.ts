@@ -158,6 +158,20 @@ export const compagniesTransport: Compagnie[] = [
     destinations: ["Bobo-Dioulasso", "Banfora"],
     note: 4.3,
     avis: "Premium - Confort superieur"
+  },
+  {
+    id: "sitarail",
+    nom: "SITARAIL",
+    nomComplet: "Societe Internationale de Transport Africain par Rail",
+    description: "Compagnie ferroviaire gerant la ligne Abidjan-Ouagadougou. Service voyageurs national uniquement depuis 2020 (ligne internationale suspendue). Voyage panoramique a travers le Burkina.",
+    fondee: 1995,
+    siege: "Abidjan / Ouagadougou",
+    telephone: ["+226 25 31 15 02", "+226 25 31 15 03"],
+    email: "info@sitarail.com",
+    services: ["2e classe", "192 places", "Bagages inclus", "Vue panoramique", "Restauration a bord"],
+    destinations: ["Ouagadougou", "Koudougou", "Siby", "Bobo-Dioulasso", "Banfora", "Niangoloko"],
+    note: 3.8,
+    avis: "Experience unique - Plus lent que le bus mais scenique"
   }
 ];
 
@@ -1196,6 +1210,117 @@ export const garesRoutieres: Gare[] = [
     telephone: "+226 70 88 99 01",
     compagnie: "elitis",
     type: "agence"
+  },
+
+  // ========== GARES FERROVIAIRES SITARAIL ==========
+  {
+    id: "sitarail-ouaga",
+    nom: "Gare Ferroviaire SITARAIL Ouagadougou",
+    ville: "Ouagadougou",
+    region: "Centre",
+    adresse: "Place de la Gare, Centre-ville, Secteur 4, a cote du Conseil de l'Entente",
+    coordonnees: { lat: 12.37362, lng: -1.52657 },
+    telephone: "+226 25 31 07 39",
+    compagnie: "sitarail",
+    type: "principale",
+    heuresOuverture: "06h00 - 18h00",
+    services: ["Billetterie", "Salle d'attente", "Toilettes", "Consigne bagages", "Parking"],
+    destinations: [
+      { ville: "Koudougou", horaires: ["09h00 (Mardi)", "09h00 (Jeudi)"], duree: "2h30", prix: 3000, compagnies: ["SITARAIL"] },
+      { ville: "Siby", horaires: ["09h00 (Mardi)", "09h00 (Jeudi)"], duree: "4h", prix: 3000, compagnies: ["SITARAIL"] },
+      { ville: "Bobo-Dioulasso", horaires: ["09h00 (Mardi)", "09h00 (Jeudi)"], duree: "7h", prix: 6000, compagnies: ["SITARAIL"] },
+      { ville: "Banfora", horaires: ["09h00 (Mardi)"], duree: "9h", prix: 6000, compagnies: ["SITARAIL"] },
+      { ville: "Niangoloko", horaires: ["09h00 (Mardi)"], duree: "10h", prix: 6000, compagnies: ["SITARAIL"] }
+    ]
+  },
+  {
+    id: "sitarail-koudougou",
+    nom: "Gare Ferroviaire SITARAIL Koudougou",
+    ville: "Koudougou",
+    region: "Centre-Ouest",
+    adresse: "Route de Ouagadougou, Centre-ville, pres du marche central",
+    coordonnees: { lat: 12.2520, lng: -2.3610 },
+    telephone: "+226 25 44 07 65",
+    compagnie: "sitarail",
+    type: "principale",
+    heuresOuverture: "06h00 - 17h00",
+    services: ["Billetterie", "Salle d'attente", "Toilettes"],
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["11h30 (Jeudi) - arret retour"], duree: "2h30", prix: 3000, compagnies: ["SITARAIL"] },
+      { ville: "Bobo-Dioulasso", horaires: ["11h30 (Mardi, Jeudi) - transit"], duree: "4h30", prix: 3000, compagnies: ["SITARAIL"] }
+    ]
+  },
+  {
+    id: "sitarail-siby",
+    nom: "Gare Ferroviaire SITARAIL Siby",
+    ville: "Siby",
+    region: "Hauts-Bassins",
+    adresse: "Centre-ville de Siby, le long de la voie ferree",
+    coordonnees: { lat: 11.5500, lng: -3.5333 },
+    telephone: "+226 20 53 00 12",
+    compagnie: "sitarail",
+    type: "secondaire",
+    heuresOuverture: "07h00 - 16h00",
+    services: ["Billetterie", "Abri"],
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["13h00 (Jeudi) - arret retour"], duree: "4h", prix: 3000, compagnies: ["SITARAIL"] },
+      { ville: "Bobo-Dioulasso", horaires: ["13h00 (Mardi, Jeudi) - transit"], duree: "3h", prix: 3000, compagnies: ["SITARAIL"] }
+    ]
+  },
+  {
+    id: "sitarail-bobo",
+    nom: "Gare Ferroviaire SITARAIL Bobo-Dioulasso",
+    ville: "Bobo-Dioulasso",
+    region: "Hauts-Bassins",
+    adresse: "Place de la Gare, Avenue de la Liberte, Secteur 1, BP 5699, pres du centre-ville historique",
+    coordonnees: { lat: 11.1785, lng: -4.2920 },
+    telephone: "+226 20 98 15 47",
+    compagnie: "sitarail",
+    type: "principale",
+    heuresOuverture: "06h00 - 18h00",
+    services: ["Billetterie", "Salle d'attente climatisee", "Toilettes", "Restauration", "Consigne bagages", "Parking"],
+    destinations: [
+      { ville: "Ouagadougou", horaires: ["09h00 (Jeudi)"], duree: "7h", prix: 6000, compagnies: ["SITARAIL"] },
+      { ville: "Koudougou", horaires: ["09h00 (Jeudi) - transit"], duree: "4h30", prix: 3000, compagnies: ["SITARAIL"] },
+      { ville: "Banfora", horaires: ["09h00 (Mardi) - transit depuis Ouaga"], duree: "2h", prix: 3000, compagnies: ["SITARAIL"] },
+      { ville: "Niangoloko", horaires: ["09h00 (Mardi) - transit depuis Ouaga"], duree: "3h30", prix: 3000, compagnies: ["SITARAIL"] }
+    ]
+  },
+  {
+    id: "sitarail-banfora",
+    nom: "Gare Ferroviaire SITARAIL Banfora",
+    ville: "Banfora",
+    region: "Cascades",
+    adresse: "Route de la Gare, Centre-ville, pres des Cascades de Karfiguela",
+    coordonnees: { lat: 10.6310, lng: -4.7650 },
+    telephone: "+226 20 91 02 34",
+    compagnie: "sitarail",
+    type: "secondaire",
+    heuresOuverture: "06h00 - 17h00",
+    services: ["Billetterie", "Salle d'attente", "Toilettes"],
+    destinations: [
+      { ville: "Bobo-Dioulasso", horaires: ["Transit vers Ouaga (Mardi retour)"], duree: "2h", prix: 3000, compagnies: ["SITARAIL"] },
+      { ville: "Niangoloko", horaires: ["Transit depuis Ouaga (Mardi)"], duree: "1h30", prix: 3000, compagnies: ["SITARAIL"] },
+      { ville: "Ouagadougou", horaires: ["Transit retour (Mercredi matin)"], duree: "9h", prix: 6000, compagnies: ["SITARAIL"] }
+    ]
+  },
+  {
+    id: "sitarail-niangoloko",
+    nom: "Gare Ferroviaire SITARAIL Niangoloko",
+    ville: "Niangoloko",
+    region: "Cascades",
+    adresse: "Frontiere Burkina-Cote d'Ivoire, Centre-ville de Niangoloko, poste frontiere",
+    coordonnees: { lat: 9.9667, lng: -4.9167 },
+    telephone: "+226 20 91 05 00",
+    compagnie: "sitarail",
+    type: "principale",
+    heuresOuverture: "06h00 - 18h00",
+    services: ["Billetterie", "Douane", "Police des frontieres", "Toilettes", "Change"],
+    destinations: [
+      { ville: "Banfora", horaires: ["Retour vers Ouaga (Mercredi matin)"], duree: "1h30", prix: 3000, compagnies: ["SITARAIL"] },
+      { ville: "Bobo-Dioulasso", horaires: ["Retour vers Ouaga (Mercredi matin)"], duree: "3h30", prix: 3000, compagnies: ["SITARAIL"] },
+      { ville: "Ouagadougou", horaires: ["Retour vers Ouaga (Mercredi matin)"], duree: "10h", prix: 6000, compagnies: ["SITARAIL"] }
+    ]
   }
 ];
 
@@ -1455,6 +1580,62 @@ export const trajets: Trajet[] = [
     prix: 12000,
     frequence: "Quotidien",
     jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  // ========== TRAJETS FERROVIAIRES SITARAIL ==========
+  {
+    id: "sitarail-ouaga-bobo",
+    compagnieId: "sitarail",
+    depart: "Ouagadougou",
+    arrivee: "Bobo-Dioulasso",
+    horaires: ["09:00"],
+    duree: "7h",
+    prix: 6000,
+    frequence: "2 fois/semaine",
+    jours: ["Mardi", "Jeudi"]
+  },
+  {
+    id: "sitarail-bobo-ouaga",
+    compagnieId: "sitarail",
+    depart: "Bobo-Dioulasso",
+    arrivee: "Ouagadougou",
+    horaires: ["09:00"],
+    duree: "7h",
+    prix: 6000,
+    frequence: "1 fois/semaine",
+    jours: ["Jeudi"]
+  },
+  {
+    id: "sitarail-ouaga-niangoloko",
+    compagnieId: "sitarail",
+    depart: "Ouagadougou",
+    arrivee: "Niangoloko",
+    horaires: ["09:00"],
+    duree: "10h",
+    prix: 6000,
+    frequence: "1 fois/semaine",
+    jours: ["Mardi"]
+  },
+  {
+    id: "sitarail-ouaga-koudougou",
+    compagnieId: "sitarail",
+    depart: "Ouagadougou",
+    arrivee: "Koudougou",
+    horaires: ["09:00"],
+    duree: "2h30",
+    prix: 3000,
+    frequence: "2 fois/semaine",
+    jours: ["Mardi", "Jeudi"]
+  },
+  {
+    id: "sitarail-ouaga-banfora",
+    compagnieId: "sitarail",
+    depart: "Ouagadougou",
+    arrivee: "Banfora",
+    horaires: ["09:00"],
+    duree: "9h",
+    prix: 6000,
+    frequence: "1 fois/semaine",
+    jours: ["Mardi"]
   }
 ];
 
