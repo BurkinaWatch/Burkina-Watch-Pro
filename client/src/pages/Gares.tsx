@@ -260,7 +260,7 @@ export default function Gares() {
           {stats && (
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <Card 
-                className={`bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 cursor-pointer hover-elevate transition-all ${showCompagnies ? 'ring-2 ring-blue-500' : ''}`}
+                className={`bg-card hover-elevate active-elevate-2 transition-all cursor-pointer ${showCompagnies ? 'ring-2 ring-primary bg-primary/5' : ''}`}
                 onClick={() => setShowCompagnies(!showCompagnies)}
                 data-testid="card-stat-compagnies"
               >
@@ -271,53 +271,53 @@ export default function Gares() {
                         Compagnies
                         {showCompagnies ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                       </p>
-                      <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.totalCompagnies}</p>
+                      <p className="text-2xl font-bold text-primary">{stats.totalCompagnies}</p>
                     </div>
-                    <Building2 className="w-8 h-8 text-blue-500/50" />
+                    <Building2 className="w-8 h-8 text-primary/20" />
                   </div>
                 </CardContent>
               </Card>
-              <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20">
+              <Card className="bg-card hover-elevate transition-all">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-muted-foreground">Gares</p>
-                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.totalGares}</p>
+                      <p className="text-2xl font-bold text-foreground">{stats.totalGares}</p>
                     </div>
-                    <MapPin className="w-8 h-8 text-green-500/50" />
+                    <MapPin className="w-8 h-8 text-muted-foreground/20" />
                   </div>
                 </CardContent>
               </Card>
-              <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20">
+              <Card className="bg-card hover-elevate transition-all">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-muted-foreground">Gares Train</p>
-                      <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{garesSitarail}</p>
+                      <p className="text-2xl font-bold text-foreground">{garesSitarail}</p>
                     </div>
-                    <Train className="w-8 h-8 text-purple-500/50" />
+                    <Train className="w-8 h-8 text-muted-foreground/20" />
                   </div>
                 </CardContent>
               </Card>
-              <Card className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-amber-500/20">
+              <Card className="bg-card hover-elevate transition-all">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-muted-foreground">Lignes SOTRACO</p>
-                      <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{lignesSotraco}</p>
+                      <p className="text-2xl font-bold text-foreground">{lignesSotraco}</p>
                     </div>
-                    <Bus className="w-8 h-8 text-amber-500/50" />
+                    <Bus className="w-8 h-8 text-muted-foreground/20" />
                   </div>
                 </CardContent>
               </Card>
-              <Card className="bg-gradient-to-br from-red-500/10 to-red-600/5 border-red-500/20">
+              <Card className="bg-card hover-elevate transition-all">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-muted-foreground">International</p>
-                      <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.destinationsInternationales}</p>
+                      <p className="text-2xl font-bold text-foreground">{stats.destinationsInternationales}</p>
                     </div>
-                    <Globe className="w-8 h-8 text-red-500/50" />
+                    <Globe className="w-8 h-8 text-muted-foreground/20" />
                   </div>
                 </CardContent>
               </Card>
