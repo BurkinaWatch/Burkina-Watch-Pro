@@ -439,42 +439,42 @@ export default function Gares() {
               </div>
               
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-0">
-                <TabsList className="grid w-full grid-cols-4 h-auto p-1 gap-1 bg-muted/50">
+                <TabsList className="grid w-full grid-cols-4 h-auto p-1 gap-0.5 sm:gap-1 bg-muted/50">
                   <TabsTrigger 
                     value="gares" 
-                    className="flex flex-col items-center gap-1 py-2 px-2 data-[state=active]:bg-green-500/20 data-[state=active]:border-green-500 data-[state=active]:border-2"
+                    className="flex flex-col items-center gap-0.5 sm:gap-1 py-1.5 sm:py-2 px-1 sm:px-2 data-[state=active]:bg-green-500/20 data-[state=active]:border-green-500 data-[state=active]:border-2 min-w-0"
                     data-testid="tab-gares"
                   >
-                    <MapPin className="w-4 h-4 text-green-600" />
-                    <span className="font-semibold text-xs">Trouver une gare</span>
-                    <span className="text-[10px] text-muted-foreground hidden sm:block">{garesOngletPrincipal} gares</span>
+                    <MapPin className="w-4 h-4 text-green-600 shrink-0" />
+                    <span className="font-semibold text-[10px] sm:text-xs truncate max-w-full">Gares</span>
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground hidden sm:block">{garesOngletPrincipal} gares</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="sitarail" 
-                    className="flex flex-col items-center gap-1 py-2 px-2 data-[state=active]:bg-orange-500/20 data-[state=active]:border-orange-500 data-[state=active]:border-2"
+                    className="flex flex-col items-center gap-0.5 sm:gap-1 py-1.5 sm:py-2 px-1 sm:px-2 data-[state=active]:bg-orange-500/20 data-[state=active]:border-orange-500 data-[state=active]:border-2 min-w-0"
                     data-testid="tab-sitarail"
                   >
-                    <Train className="w-4 h-4 text-orange-600" />
-                    <span className="font-semibold text-xs">SITARAIL</span>
-                    <span className="text-[10px] text-muted-foreground hidden sm:block">Train</span>
+                    <Train className="w-4 h-4 text-orange-600 shrink-0" />
+                    <span className="font-semibold text-[10px] sm:text-xs truncate max-w-full">SITARAIL</span>
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground hidden sm:block">Train</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="sotraco" 
-                    className="flex flex-col items-center gap-1 py-2 px-2 data-[state=active]:bg-emerald-500/20 data-[state=active]:border-emerald-500 data-[state=active]:border-2"
+                    className="flex flex-col items-center gap-0.5 sm:gap-1 py-1.5 sm:py-2 px-1 sm:px-2 data-[state=active]:bg-emerald-500/20 data-[state=active]:border-emerald-500 data-[state=active]:border-2 min-w-0"
                     data-testid="tab-sotraco"
                   >
-                    <Bus className="w-4 h-4 text-emerald-600" />
-                    <span className="font-semibold text-xs">SOTRACO</span>
-                    <span className="text-[10px] text-muted-foreground hidden sm:block">Bus urbain</span>
+                    <Bus className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span className="font-semibold text-[10px] sm:text-xs truncate max-w-full">SOTRACO</span>
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground hidden sm:block">Bus urbain</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="horaires" 
-                    className="flex flex-col items-center gap-1 py-2 px-2 data-[state=active]:bg-purple-500/20 data-[state=active]:border-purple-500 data-[state=active]:border-2"
+                    className="flex flex-col items-center gap-0.5 sm:gap-1 py-1.5 sm:py-2 px-1 sm:px-2 data-[state=active]:bg-purple-500/20 data-[state=active]:border-purple-500 data-[state=active]:border-2 min-w-0"
                     data-testid="tab-horaires"
                   >
-                    <Clock className="w-4 h-4 text-purple-600" />
-                    <span className="font-semibold text-xs">Grands departs</span>
-                    <span className="text-[10px] text-muted-foreground hidden sm:block">Horaires & Prix</span>
+                    <Clock className="w-4 h-4 text-purple-600 shrink-0" />
+                    <span className="font-semibold text-[10px] sm:text-xs truncate max-w-full">Departs</span>
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground hidden sm:block">Horaires & Prix</span>
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -935,14 +935,14 @@ export default function Gares() {
                             </div>
                           </div>
                           {gare.destinations && gare.destinations.length > 0 && (
-                            <div className="mt-2 pt-2 border-t">
+                            <div className="mt-2 pt-2 border-t overflow-hidden">
                               <p className="text-xs text-muted-foreground mb-1">Lignes desservies:</p>
-                              <div className="flex flex-wrap gap-1">
+                              <div className="flex flex-col gap-0.5 max-h-48 overflow-y-auto">
                                 {gare.destinations.map((dest, i) => (
-                                  <Badge key={i} variant="outline" className="text-xs">
+                                  <div key={i} className="text-xs text-muted-foreground truncate">
                                     {dest.ville}
                                     {dest.prix && ` - ${dest.prix} F`}
-                                  </Badge>
+                                  </div>
                                 ))}
                               </div>
                             </div>
