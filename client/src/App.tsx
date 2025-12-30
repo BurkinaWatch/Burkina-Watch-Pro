@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -8,6 +9,8 @@ import { StealthModeProvider } from "@/components/StealthModeProvider";
 import { HelmetProvider } from "react-helmet-async";
 import { useAuth } from "@/hooks/useAuth";
 import ChatBot from "@/components/ChatBot";
+import { WifiOff } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import "./i18n/config";
 import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
@@ -41,7 +44,6 @@ import PharmaciesOSM from "@/pages/PharmaciesOSM";
 import LiveTrack from "@/pages/LiveTrack";
 import Gares from "@/pages/Gares";
 import NotFound from "@/pages/not-found";
-import { Loader2 } from "lucide-react";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
 
 function Router() {
@@ -83,6 +85,34 @@ function Router() {
   );
 }
 
+function OfflineIndicator() {
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  if (!isOffline) return null;
+
+  return (
+    <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-2">
+      <Badge variant="destructive" className="flex items-center gap-2 px-3 py-1 shadow-lg whitespace-nowrap">
+        <WifiOff className="w-4 h-4" />
+        <span>Mode hors-ligne - Données mises en cache</span>
+      </Badge>
+    </div>
+  );
+}
+
 function AppContent() {
   const { isAuthenticated } = useAuth();
   useOnlineStatus(isAuthenticated);
@@ -90,6 +120,7 @@ function AppContent() {
   return (
     <>
       <Toaster />
+      <OfflineIndicator />
       <Router />
       <ChatBot />
     </>

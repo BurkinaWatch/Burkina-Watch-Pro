@@ -1,4 +1,6 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { persistQueryClient } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -47,11 +49,32 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      staleTime: 1000 * 60 * 60 * 24, // 24 hours (for offline mode)
+      gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days
+      retry: (failureCount, error: any) => {
+        // Retry only if it's a network error (potential connectivity issue)
+        if (error instanceof Error && error.message.includes("Failed to fetch")) {
+          return failureCount < 3;
+        }
+        return false;
+      },
     },
     mutations: {
       retry: false,
     },
   },
 });
+
+// Configure offline persistence
+if (typeof window !== "undefined") {
+  const localStoragePersister = createSyncStoragePersister({
+    storage: window.localStorage,
+  });
+
+  persistQueryClient({
+    queryClient,
+    persister: localStoragePersister,
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    buster: "v1", // Cache buster
+  });
+}
