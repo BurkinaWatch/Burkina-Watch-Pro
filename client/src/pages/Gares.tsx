@@ -409,17 +409,43 @@ export default function Gares() {
             </div>
           )}
 
+          {/* Section de navigation principale avec titre explicatif */}
+          <Card className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-primary/30">
+            <CardContent className="p-4">
+              <div className="text-center mb-3">
+                <h2 className="text-lg font-bold flex items-center justify-center gap-2">
+                  <Bus className="w-5 h-5 text-primary" />
+                  Que recherchez-vous ?
+                </h2>
+                <p className="text-sm text-muted-foreground">Cette page propose deux types d'informations</p>
+              </div>
+              
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-0">
+                <TabsList className="grid w-full grid-cols-2 h-auto p-1 gap-2 bg-muted/50">
+                  <TabsTrigger 
+                    value="gares" 
+                    className="flex flex-col items-center gap-1 py-3 px-4 data-[state=active]:bg-green-500/20 data-[state=active]:border-green-500 data-[state=active]:border-2"
+                    data-testid="tab-gares"
+                  >
+                    <MapPin className="w-5 h-5 text-green-600" />
+                    <span className="font-semibold">Trouver une gare</span>
+                    <span className="text-xs text-muted-foreground">{stats?.totalGares || 0} gares au Burkina</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="horaires" 
+                    className="flex flex-col items-center gap-1 py-3 px-4 data-[state=active]:bg-purple-500/20 data-[state=active]:border-purple-500 data-[state=active]:border-2"
+                    data-testid="tab-horaires"
+                  >
+                    <Clock className="w-5 h-5 text-purple-600" />
+                    <span className="font-semibold">Grands departs</span>
+                    <span className="text-xs text-muted-foreground">Ouaga & Bobo - Horaires & Prix</span>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </CardContent>
+          </Card>
+
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="gares" data-testid="tab-gares">
-                <MapPin className="w-4 h-4 mr-2" />
-                Gares
-              </TabsTrigger>
-              <TabsTrigger value="horaires" data-testid="tab-horaires">
-                <Clock className="w-4 h-4 mr-2" />
-                Grands departs Ouaga & Bobo
-              </TabsTrigger>
-            </TabsList>
 
             <TabsContent value="gares" className="space-y-4">
               <Card className="bg-muted/30">
