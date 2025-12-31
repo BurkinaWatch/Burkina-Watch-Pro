@@ -93,7 +93,7 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
               <div className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full animate-ping" />
               <div className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
               <Menu className="h-5 w-5 group-hover:text-primary transition-colors" />
-              <span className="font-bold text-sm uppercase tracking-wider hidden xs:inline-block">
+              <span className="font-bold text-[11px] xs:text-xs sm:text-sm uppercase tracking-wider block">
                 {t("header.menu") || "Menu"}
               </span>
             </Button>
