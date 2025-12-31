@@ -553,7 +553,8 @@ export class OverpassService {
     verificationStatus?: string;
     limit?: number;
     offset?: number;
-  } = {}): Promise<Place[]> {
+  } = {}): Promise<{ places: Place[]; lastUpdated: Date | null }> {
+    // 1. Essayer de récupérer depuis la base de données
     let query = db.select().from(places);
     const conditions = [];
 
@@ -585,7 +586,23 @@ export class OverpassService {
       .limit(options.limit || 10000)
       .offset(options.offset || 0);
 
-    return results;
+    // Trouver la date de mise à jour la plus récente
+    let latestUpdate: Date | null = null;
+    if (results.length > 0) {
+      latestUpdate = results.reduce((latest, current) => {
+        const currentSync = current.lastSyncedAt;
+        if (!latest || (currentSync && currentSync > latest)) return currentSync;
+        return latest;
+      }, null as Date | null);
+    }
+
+    // 2. Si pas de données et que c'est un type spécifique, tenter une sync d'urgence
+    if (results.length === 0 && options.placeType && !this.syncInProgress) {
+      console.log(`[Overpass] Aucune donnée pour ${options.placeType}, lancement d'une sync d'urgence...`);
+      this.syncPlaceType(options.placeType).catch(err => console.error("Erreur sync d'urgence:", err));
+    }
+
+    return { places: results, lastUpdated: latestUpdate };
   }
 
   async getPlaceById(id: string): Promise<Place | null> {
