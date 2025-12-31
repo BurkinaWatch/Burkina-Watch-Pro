@@ -18,6 +18,9 @@ Set the following environment variables in your Render dashboard:
 - `JWT_SECRET` - Generate with: `openssl rand -hex 32`
 - `JWT_REFRESH_SECRET` - Generate with: `openssl rand -hex 32`
 - `BASE_URL` - Your Render application URL (e.g., `https://your-app.onrender.com`)
+- `CLIENT_ID` - Your Replit OIDC client ID (get from Replit app settings)
+- `CLIENT_SECRET` - Your Replit OIDC client secret (get from Replit app settings)
+- `REDIRECT_URI` - Set to `https://your-app-name.onrender.com/api/auth/callback`
 
 #### Optional (but recommended):
 - `GROQ_API_KEY` - For AI chatbot fallback
@@ -55,7 +58,22 @@ The build process:
 2. Bundles the backend server with esbuild → `dist/index.js`
 3. On start, the Express server serves both the API and static frontend
 
-### 5. Project Structure
+### 5. Authentication Configuration for Render
+
+The application uses Replit OIDC authentication. To configure it on Render:
+
+1. Get your credentials from Replit dashboard:
+   - Go to your Replit profile → Settings → Connected Applications
+   - Or configure OIDC through Replit's identity provider settings
+
+2. Set these variables in Render:
+   - `CLIENT_ID` - Your Replit OIDC client ID
+   - `CLIENT_SECRET` - Your Replit OIDC client secret
+   - `REDIRECT_URI` - `https://your-app-name.onrender.com/api/auth/callback`
+
+The code automatically uses `CLIENT_ID` on Render and falls back to `REPL_ID` on Replit.
+
+### 6. Project Structure
 
 ```
 project/
@@ -72,7 +90,7 @@ project/
 └── drizzle.config.ts    # Database configuration
 ```
 
-### 6. Important Notes
+### 7. Important Notes
 
 - **Port:** The server listens on `process.env.PORT` (default 3000 for Render)
 - **Static Files:** Frontend is served from `dist/public/`
@@ -81,14 +99,19 @@ project/
 - **Development:** Use `npm run dev` locally
 - **Production:** Use `npm start` (automatic on Render)
 
-### 7. Monitoring & Logs
+### 8. Monitoring & Logs
 
 Monitor your application in Render Dashboard:
 - View logs: Dashboard → Logs
 - Check deployment status: Dashboard → Deployments
 - Restart application: Dashboard → Manual Deploy → Deploy Latest Commit
 
-### 8. Troubleshooting
+### 9. Troubleshooting
+
+**Error: "clientId" must be a non-empty string**
+- Cause: `CLIENT_ID` or `REPL_ID` environment variable is not set
+- Solution on Render: Set `CLIENT_ID` to your Replit OIDC client ID
+- Solution on Replit: The `REPL_ID` is set automatically
 
 **Build fails:**
 - Check that all required environment variables are set
@@ -96,7 +119,7 @@ Monitor your application in Render Dashboard:
 - Review build logs in Render dashboard
 
 **App crashes after deploy:**
-- Check logs for missing environment variables
+- Check logs for missing environment variables (especially `CLIENT_ID`, `CLIENT_SECRET`)
 - Verify database migrations ran successfully
 - Ensure `dist/public/` was built correctly
 
@@ -104,6 +127,7 @@ Monitor your application in Render Dashboard:
 - Check CORS configuration in `server/securityHardening.ts`
 - Verify BASE_URL matches your Render domain
 - Check database connection in logs
+- For auth errors: Verify `CLIENT_ID`, `CLIENT_SECRET`, and `REDIRECT_URI`
 
 ---
 

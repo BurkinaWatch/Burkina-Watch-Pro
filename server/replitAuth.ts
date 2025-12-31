@@ -10,9 +10,18 @@ import { storage } from "./storage";
 
 const getOidcConfig = memoize(
   async () => {
+    // Utiliser CLIENT_ID pour Render/production, sinon REPL_ID pour Replit
+    const clientId = process.env.CLIENT_ID || process.env.REPL_ID;
+    
+    if (!clientId) {
+      throw new Error(
+        "Missing authentication configuration: CLIENT_ID (Render) or REPL_ID (Replit) must be set"
+      );
+    }
+
     return await client.discovery(
       new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      process.env.REPL_ID!
+      clientId
     );
   },
   { maxAge: 3600 * 1000 }
@@ -135,9 +144,10 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/logout", (req, res) => {
     req.logout(() => {
+      const clientId = process.env.CLIENT_ID || process.env.REPL_ID;
       res.redirect(
         client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
+          client_id: clientId!,
           post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
         }).href
       );
