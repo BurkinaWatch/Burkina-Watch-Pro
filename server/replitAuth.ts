@@ -8,8 +8,14 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
+// Désactivé en production Railway pour éviter le crash OIDC
+const isProduction = process.env.NODE_ENV === "production" && !process.env.REPL_ID;
+
 const getOidcConfig = memoize(
   async () => {
+    if (isProduction) {
+      return null;
+    }
     return await client.discovery(
       new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
       process.env.REPL_ID!
@@ -28,13 +34,13 @@ export function getSession() {
     tableName: "sessions",
   });
   return session({
-    secret: process.env.SESSION_SECRET!,
+    secret: process.env.SESSION_SECRET || "default_secret_for_dev_only",
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: isProduction,
       maxAge: sessionTtl,
     },
   });
@@ -68,7 +74,17 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  if (isProduction) {
+    console.log("⚠️ Replit Auth désactivé en production Railway");
+    
+    // Mock user pour éviter les crashs si nécessaire ou laisser tel quel
+    passport.serializeUser((user: any, cb) => cb(null, user));
+    passport.deserializeUser((user: any, cb) => cb(null, user));
+    return;
+  }
+
   const config = await getOidcConfig();
+  if (!config) return;
 
   const verify: VerifyFunction = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
@@ -146,6 +162,15 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  // En production sans Replit, on autorise l'accès ou on utilise un utilisateur de démo
+  if (isProduction) {
+    if (!req.user) {
+      // Optionnel: Créer un utilisateur fictif pour Railway si l'auth est requise partout
+      (req as any).user = { claims: { sub: "railway-user" } };
+    }
+    return next();
+  }
+
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user || !user.expires_at) {
