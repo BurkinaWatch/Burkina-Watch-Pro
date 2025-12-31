@@ -81,23 +81,92 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
     <>
       <HamburgerMenu open={menuOpen} onOpenChange={setMenuOpen} />
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex h-16 items-center px-4 md:px-6">
+        <div className="flex h-16 items-center justify-between px-4 md:px-6">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMenuOpen(true)}
+              className="relative group hover:bg-gradient-to-r hover:from-primary/20 hover:to-destructive/20 transition-all duration-300 hover:scale-110 hover:shadow-lg border-2 border-transparent hover:border-primary/30"
+              data-testid="button-hamburger-menu"
+            >
+              <div className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full animate-ping" />
+              <div className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full" />
+              <Menu className="h-6 w-6 group-hover:text-primary transition-colors" />
+            </Button>
+            <Link href="/">
+              <button
+                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+              >
+                <BurkinaWatchLogo size={40} />
+                <div className="flex flex-col min-w-0">
+                  <h1 className="text-sm sm:text-base md:text-xl font-extrabold text-red-600 dark:text-red-400 tracking-tight">{t("header.title")}</h1>
+                  <p className="text-xs sm:text-sm font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                    <span className="text-red-500 dark:text-red-400">{t("header.slogan.see")}</span>
+                    <span className="hidden sm:inline"> </span>
+                    <span className="text-yellow-500 dark:text-yellow-300">{t("header.slogan.act")}</span>
+                    <span className="hidden sm:inline"> </span>
+                    <span className="text-green-500 dark:text-green-400">{t("header.slogan.protect")}</span>
+                  </p>
+                </div>
+              </button>
+            </Link>
+          </div>
+
+        <div className="flex items-center gap-2">
+          <OfflineIndicator />
+          {isAuthenticated ? (
+            <>
+              {showNotifications && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  data-testid="button-notifications"
+                  className="relative"
+                  onClick={handleNotificationClick}
+                >
+                  <Bell className="w-5 h-5" />
+                  <UnreadBadge />
+                </Button>
+              )}
+              <Link href="/profil">
+                <Button variant="ghost" size="icon" data-testid="button-profile-link">
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={user?.profileImageUrl || ""} style={{ objectFit: "cover" }} />
+                    <AvatarFallback className="text-xs">{getInitials()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </Link>
+            </>
+          ) : (
+            <Button
+              size="sm"
+              onClick={handleLogin}
+              data-testid="button-login"
+              className="bg-yellow-600 hover:bg-yellow-700 text-white gap-2"
+            >
+              <LogIn className="w-4 h-4" />
+              <span className="hidden sm:inline">{t("header.loginButton")}</span>
+            </Button>
+          )}
+          <LanguageSelector />
           <Button
             variant="ghost"
-            size="default"
-            onClick={() => setMenuOpen(true)}
-            className="relative group hover:bg-gradient-to-r hover:from-primary/20 hover:to-destructive/20 transition-all duration-300 hover:scale-105 hover:shadow-lg border-2 border-transparent hover:border-primary/30 gap-2 px-3"
-            data-testid="button-hamburger-menu"
+            size="icon"
+            onClick={toggleStealthMode}
+            data-testid="button-stealth-toggle"
+            title={isStealthMode ? t("header.stealthMode.off") : t("header.stealthMode.on")}
           >
-            <div className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full animate-ping" />
-            <div className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
-            <Menu className="h-5 w-5 group-hover:text-primary transition-colors" />
-            <span className="font-bold text-[11px] xs:text-xs sm:text-sm uppercase tracking-wider block">
-              {t("header.menu") || "Menu"}
-            </span>
+            {isStealthMode ? (
+              <EyeOff className="w-5 h-5 text-gray-500" />
+            ) : (
+              <Eye className="w-5 h-5" />
+            )}
           </Button>
+          {/* The theme toggle button is removed to enforce dark mode */}
         </div>
-      </header>
+      </div>
+    </header>
     </>
   );
 }
