@@ -1,0 +1,45 @@
+Prépare le projet BurkinaWatch pour un déploiement stable sur Render, sans modifier le fonctionnement existant de l’application.
+
+Objectif :
+Rendre le projet entièrement compatible avec Render (Node.js), tout en conservant strictement les fonctionnalités actuelles.
+
+Instructions :
+
+1. Organisation du projet
+   - Vérifier et structurer clairement les dossiers frontend, backend et assets.
+   - S’assurer que les fichiers de build (dist / build) sont bien générés et utilisés uniquement en production.
+   - Ne pas supprimer ni renommer les fichiers existants nécessaires au fonctionnement actuel.
+
+2. Serveur backend
+   - Adapter le serveur pour écouter sur process.env.PORT avec un fallback sur 3000.
+   - Vérifier que le serveur démarre correctement via `npm start` sans dépendances globales.
+
+3. Scripts npm
+   - Vérifier le fichier package.json.
+   - Corriger les scripts :
+     - build : utiliser `npx vite build` (ou équivalent) pour éviter toute dépendance globale.
+     - start : lancer le serveur compilé ou le point d’entrée existant.
+   - Ne pas modifier la logique métier.
+
+4. Dépendances
+   - Vérifier que toutes les dépendances nécessaires (vite, esbuild, etc.) sont listées dans dependencies ou devDependencies.
+   - Supprimer uniquement les dépendances inutilisées si cela n’impacte pas l’application.
+
+5. Variables d’environnement
+   - S’assurer que toutes les clés sensibles utilisent process.env.
+   - Fournir des valeurs par défaut sécurisées pour le développement.
+   - Ne jamais hardcoder de secrets.
+
+6. Production readiness
+   - Vérifier que le projet peut être buildé et démarré sur un environnement vierge (Render).
+   - Ajouter uniquement les ajustements nécessaires à la stabilité (logs, erreurs explicites).
+   - Ne pas changer l’UX, le design ou les fonctionnalités.
+
+7. Vérification finale
+   - Simuler un build + start comme sur Render.
+   - Confirmer que l’application fonctionne à l’identique après les ajustements.
+
+Ne pas refactoriser inutilement.
+Ne pas introduire de nouvelles fonctionnalités.
+Ne pas casser ce qui fonctionne déjà.
+Optimiser uniquement pour la compatibilité Render.

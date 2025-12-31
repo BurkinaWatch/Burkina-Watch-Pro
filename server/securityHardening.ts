@@ -110,10 +110,13 @@ export function applySecurityMiddlewares(app: Express) {
 
   app.use("/api/chatbot", chatbotLimiter);
 
-  // CORS configuration stricte
+  // CORS configuration - Allow same origin and configured domains
   const allowedOrigins = [
-    "http://localhost:5000",
-    "http://localhost:3000",
+    // Development
+    process.env.NODE_ENV === "development" && "http://localhost:5000",
+    process.env.NODE_ENV === "development" && "http://localhost:3000",
+    // Production domains
+    process.env.BASE_URL || "",
     process.env.REPLIT_DOMAINS?.split(",")[0] || "",
     process.env.FRONTEND_URL || "",
   ].filter(Boolean);
