@@ -1,11 +1,12 @@
 // ============================================
 // IMPORTS
 // ============================================
-import type { Express, Request, Response, NextFunction } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertSignalementSchema, updateSignalementSchema, insertCommentaireSchema, updateUserProfileSchema, insertLocationPointSchema, insertEmergencyContactSchema, insertChatMessageSchema } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { reverseGeocode } from "./geocoding";
 import { sendLocationEmail, sendEmergencyTrackingStartEmail } from "./resend";
 import { verifySignalement } from "./aiVerification";
@@ -17,24 +18,6 @@ import { fetchEvents, clearEventsCache } from "./eventsService";
 import { overpassService } from "./overpassService";
 import { dataMigrationService } from "./dataMigrationService";
 import type { Place } from "@shared/schema";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
-
-const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-for-dev-only";
-
-// JWT Middleware
-export function authenticateToken(req: any, res: Response, next: NextFunction) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) return res.status(401).json({ message: "Token manquant" });
-
-  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
-    if (err) return res.status(403).json({ message: "Token invalide" });
-    req.user = user;
-    next();
-  });
-}
 
 // ============================================
 // HELPERS POUR TRANSFORMER LES DONNÉES OSM
@@ -233,67 +216,12 @@ function mapOsmBrandToMarque(brand: string): string {
 // ENREGISTREMENT DES ROUTES
 // ============================================
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Health check for Railway
-  app.get("/", (_req, res) => res.send("OK"));
+  await setupAuth(app);
 
   // ----------------------------------------
-  // ROUTES D'AUTHENTIFICATION JWT
+  // ROUTES D'AUTHENTIFICATION
   // ----------------------------------------
-  app.post("/auth/register", async (req, res) => {
-    try {
-      const { email, password, firstName, lastName } = req.body;
-      if (!email || !password) return res.status(400).json({ message: "Email et mot de passe requis" });
-
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser) return res.status(400).json({ message: "Utilisateur déjà existant" });
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const user = await storage.upsertUser({
-        id: Math.random().toString(36).substring(2, 15),
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        authProvider: "email"
-      });
-
-      const { password: _, ...userWithoutPassword } = user;
-      res.status(201).json(userWithoutPassword);
-    } catch (error) {
-      res.status(500).json({ message: "Erreur lors de l'inscription" });
-    }
-  });
-
-  app.post("/auth/login", async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      const user = await storage.getUserByEmail(email);
-
-      if (!user || !user.password) {
-        return res.status(401).json({ message: "Identifiants invalides" });
-      }
-
-      const isValid = await bcrypt.compare(password, user.password);
-      if (!isValid) return res.status(401).json({ message: "Identifiants invalides" });
-
-      const token = jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
-      res.json({ token });
-    } catch (error) {
-      res.status(500).json({ message: "Erreur lors de la connexion" });
-    }
-  });
-
-  app.get("/auth/me", authenticateToken, async (req: any, res) => {
-    const user = await storage.getUser(req.user.sub);
-    if (!user) return res.status(404).json({ message: "Utilisateur non trouvé" });
-    const { password: _, ...userWithoutPassword } = user;
-    res.json(userWithoutPassword);
-  });
-
-  // ----------------------------------------
-  // ANCIENNES ROUTES (compatibilité ou migration)
-  // ----------------------------------------
-  app.get("/api/auth/user", authenticateToken, async (req: any, res) => {
+  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub || "demo-user";
       const user = await storage.getUser(userId);
@@ -316,9 +244,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/auth/user", authenticateToken, async (req: any, res) => {
+  app.patch("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const validationResult = updateUserProfileSchema.safeParse(req.body);
 
       if (!validationResult.success) {
@@ -350,9 +278,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Sync user points based on signalements
-  app.post("/api/auth/user/sync-points", authenticateToken, async (req: any, res) => {
+  app.post("/api/auth/user/sync-points", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const result = await storage.syncUserPointsFromSignalements(userId);
       res.json(result);
     } catch (error: any) {
@@ -362,14 +290,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Award points to user
-  app.post("/api/users/:userId/award-points", authenticateToken, async (req: any, res) => {
+  app.post("/api/users/:userId/award-points", isAuthenticated, async (req: any, res) => {
     try {
       const { userId } = req.params;
       const { points, reason } = req.body;
 
       // Only allow awarding points to self or if admin
-      const user = await storage.getUser(req.user.sub);
-      if (userId !== req.user.sub && user?.role !== "admin") {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (userId !== req.user.claims.sub && user?.role !== "admin") {
         return res.status(403).json({ error: "Non autorisé" });
       }
 
@@ -431,9 +359,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/signalements", authenticateToken, signalementMutationLimiter, async (req: any, res: Response) => {
+  app.post("/api/signalements", isAuthenticated, signalementMutationLimiter, async (req: any, res: Response) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
 
       // 🔍 Modération du contenu
       const moderationResult = await moderateContent(
@@ -540,9 +468,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/auth/user/signalements", authenticateToken, async (req: any, res) => {
+  app.get("/api/auth/user/signalements", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const signalements = await storage.getUserSignalements(userId);
       res.json(signalements);
     } catch (error) {
@@ -564,7 +492,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Demo mode: Allow editing signalements created by demo-user
       // Authenticated mode: Only the owner can edit their own signalements
-      const userId = req.user?.sub || "demo-user";
+      const userId = req.user?.claims?.sub || "demo-user";
 
       // Security check: Only allow editing if:
       // 1. Signalement belongs to demo-user (demo mode), OR
@@ -688,10 +616,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/signalements/:id/statut", authenticateToken, async (req: any, res) => {
+  app.patch("/api/signalements/:id/statut", isAuthenticated, async (req: any, res) => {
     try {
       const { statut } = req.body;
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
 
       if (!statut || !["en_attente", "en_cours", "resolu", "rejete"].includes(statut)) {
         return res.status(400).json({ error: "Statut invalide" });
@@ -739,9 +667,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/signalements/:id/like", authenticateToken, async (req: any, res) => {
+  app.post("/api/signalements/:id/like", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const signalement = await storage.getSignalement(req.params.id);
 
       if (!signalement) {
@@ -807,9 +735,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/commentaires", authenticateToken, async (req: any, res: Response) => {
+  app.post("/api/commentaires", isAuthenticated, async (req: any, res: Response) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const { signalementId, contenu, auteur } = req.body;
 
       // 🔍 Modération du commentaire
@@ -861,9 +789,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   // ROUTES NOTIFICATIONS
   // ----------------------------------------
-  app.get("/api/notifications", authenticateToken, async (req: any, res) => {
+  app.get("/api/notifications", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const notifications = await storage.getUserNotifications(userId);
       res.json(notifications);
     } catch (error) {
@@ -872,9 +800,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/notifications/unread-count", authenticateToken, async (req: any, res) => {
+  app.get("/api/notifications/unread-count", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const count = await storage.getUnreadNotificationsCount(userId);
       res.json({ count });
     } catch (error) {
@@ -883,7 +811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/notifications/:id/read", authenticateToken, async (req: any, res) => {
+  app.patch("/api/notifications/:id/read", isAuthenticated, async (req: any, res) => {
     try {
       const notification = await storage.markNotificationAsRead(req.params.id);
       if (!notification) {
@@ -896,9 +824,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/notifications/mark-all-read", authenticateToken, async (req: any, res) => {
+  app.post("/api/notifications/mark-all-read", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       await storage.markAllNotificationsAsRead(userId);
       res.json({ message: "Toutes les notifications ont été marquées comme lues" });
     } catch (error) {
@@ -907,9 +835,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/notifications/:id", authenticateToken, async (req: any, res) => {
+  app.delete("/api/notifications/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const notificationId = req.params.id;
 
       const notification = await storage.getNotificationById(notificationId);
@@ -935,9 +863,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/notifications", authenticateToken, async (req: any, res) => {
+  app.delete("/api/notifications", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       await storage.deleteAllUserNotifications(userId);
       res.json({ message: "Toutes les notifications ont été supprimées" });
     } catch (error) {
@@ -986,9 +914,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/push/update-location", authenticateToken, async (req: any, res) => {
+  app.post("/api/push/update-location", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const { endpoint, latitude, longitude, radiusKm } = req.body;
       
       if (!endpoint || latitude === undefined || longitude === undefined) {
@@ -1064,9 +992,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   // ROUTES TRACKING GPS
   // ----------------------------------------
-  app.post("/api/tracking/start", authenticateToken, async (req: any, res) => {
+  app.post("/api/tracking/start", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const { latitude, longitude } = req.body || {};
       
       const session = await storage.startTrackingSession(userId);
@@ -1122,9 +1050,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Stop tracking session
-  app.post("/api/tracking/stop", authenticateToken, async (req: any, res) => {
+  app.post("/api/tracking/stop", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
 
       // Récupérer la session active
       const activeSession = await storage.getActiveTrackingSession(userId);
@@ -1234,9 +1162,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return gpxHeader + '\n' + gpxPoints + gpxFooter;
   }
 
-  app.get("/api/tracking/session", authenticateToken, async (req: any, res) => {
+  app.get("/api/tracking/session", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const session = await storage.getActiveTrackingSession(userId);
 
       if (!session) {
@@ -1250,9 +1178,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/tracking/location", authenticateToken, async (req: any, res) => {
+  app.post("/api/tracking/location", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const activeSession = await storage.getActiveTrackingSession(userId);
 
       if (!activeSession) {
@@ -1278,9 +1206,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/tracking/sessions", authenticateToken, async (req: any, res) => {
+  app.get("/api/tracking/sessions", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const sessions = await storage.getUserTrackingSessions(userId);
 
       const sessionsWithTrajectory = await Promise.all(
@@ -1331,9 +1259,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/tracking/sessions/:id/points", authenticateToken, async (req: any, res) => {
+  app.get("/api/tracking/sessions/:id/points", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const sessionId = req.params.id;
 
       const session = await storage.getActiveTrackingSession(userId);
@@ -1354,9 +1282,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/tracking/sessions/:id", authenticateToken, async (req: any, res) => {
+  app.delete("/api/tracking/sessions/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const sessionId = req.params.id;
 
       const sessions = await storage.getUserTrackingSessions(userId);
@@ -1380,9 +1308,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // New routes for emergency contacts and panic alerts
-  app.get("/api/emergency-contacts", authenticateToken, async (req: any, res) => {
+  app.get("/api/emergency-contacts", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const contacts = await storage.getEmergencyContacts(userId);
       res.json(contacts);
     } catch (error) {
@@ -1391,9 +1319,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/emergency-contacts", authenticateToken, async (req: any, res) => {
+  app.post("/api/emergency-contacts", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const validationResult = insertEmergencyContactSchema.safeParse({
         ...req.body,
         userId,
@@ -1412,7 +1340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/emergency-contacts/:id", authenticateToken, async (req: any, res) => {
+  app.delete("/api/emergency-contacts/:id", isAuthenticated, async (req: any, res) => {
     try {
       const success = await storage.deleteEmergencyContact(req.params.id);
       if (!success) {
@@ -1425,9 +1353,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/panic-alert", authenticateToken, async (req: any, res) => {
+  app.post("/api/panic-alert", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const { latitude, longitude, address } = req.body;
 
       const contacts = await storage.getEmergencyContacts(userId);
@@ -1554,9 +1482,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/panic-alerts", authenticateToken, async (req: any, res) => {
+  app.get("/api/panic-alerts", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const alerts = await storage.getUserPanicAlerts(userId);
       res.json(alerts);
     } catch (error) {
@@ -1579,9 +1507,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/recommendations", authenticateToken, async (req: any, res) => {
+  app.get("/api/recommendations", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       const { getPersonalizedRecommendations } = await import("./riskAnalysisService");
       const recommendations = await getPersonalizedRecommendations(userId);
       res.json(recommendations);
@@ -2501,7 +2429,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/places/:id/verifications", authenticateToken, async (req: any, res) => {
+  app.get("/api/places/:id/verifications", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) {
@@ -2553,7 +2481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/places/sync", authenticateToken, async (req: any, res) => {
+  app.post("/api/places/sync", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       const user = await storage.getUser(userId);
@@ -2586,7 +2514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Migration routes for hardcoded data to OSM format
-  app.post("/api/places/migrate", authenticateToken, async (req: any, res) => {
+  app.post("/api/places/migrate", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       const user = await storage.getUser(userId);
@@ -2606,7 +2534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/places/migration-status", authenticateToken, async (req: any, res) => {
+  app.get("/api/places/migration-status", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       const user = await storage.getUser(userId);
@@ -2728,9 +2656,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Marquer un utilisateur comme en ligne
-  app.post("/api/user/online", authenticateToken, async (req: any, res) => {
+  app.post("/api/user/online", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       await storage.userConnected(userId);
       res.json({ success: true });
     } catch (error) {
@@ -2740,9 +2668,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Marquer un utilisateur comme hors ligne
-  app.post("/api/user/offline", authenticateToken, async (req: any, res) => {
+  app.post("/api/user/offline", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.sub;
+      const userId = req.user.claims.sub;
       await storage.userDisconnected(userId);
       res.json({ success: true });
     } catch (error) {
@@ -3026,9 +2954,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.post("/api/ouaga3d/trigger-ingestion", authenticateToken, async (req: any, res) => {
+  app.post("/api/ouaga3d/trigger-ingestion", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.sub);
+      const user = await storage.getUser(req.user.claims.sub);
       if (user?.role !== "admin") {
         return res.status(403).json({ error: "Accès réservé aux administrateurs" });
       }
