@@ -313,16 +313,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   app.get("/api/stats", async (req, res) => {
     try {
-      const [stats, fuelCount, pharmacyCount] = await Promise.all([
-        storage.getStats(),
-        overpassService.getFuelStationCount(),
-        overpassService.getPlaces({ placeType: "pharmacy" }).then(p => p.length)
-      ]);
+      const stats = await storage.getStats();
+      const fuelResponse = await overpassService.getPlaces({ placeType: "fuel" });
+      const pharmacyResponse = await overpassService.getPlaces({ placeType: "pharmacy" });
       
       res.json({
         ...stats,
-        totalPharmacies: pharmacyCount,
-        totalStations: fuelCount
+        totalPharmacies: pharmacyResponse.places.length,
+        totalStations: fuelResponse.places.length
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -1655,7 +1653,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/pharmacies", async (req, res) => {
     try {
       const { region, typeGarde, search } = req.query;
-      const dbPlaces = await overpassService.getPlaces({ placeType: "pharmacy" });
+      const { places: dbPlaces, lastUpdated } = await overpassService.getPlaces({ placeType: "pharmacy" });
       let pharmacies = dbPlaces.map(transformOsmToPharmacy);
 
       if (search) {
@@ -1675,7 +1673,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.set('Cache-Control', 'public, max-age=3600');
-      res.json(pharmacies);
+      res.json({
+        pharmacies,
+        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
+      });
     } catch (error) {
       console.error("Error fetching pharmacies:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des pharmacies" });
@@ -1704,7 +1705,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/restaurants", async (req, res) => {
     try {
       const { region, type, gammePrix, search, livraison, wifi } = req.query;
-      const dbPlaces = await overpassService.getPlaces({ placeType: "restaurant" });
+      const { places: dbPlaces, lastUpdated } = await overpassService.getPlaces({ placeType: "restaurant" });
       let restaurants = dbPlaces.map((p, i) => transformOsmToRestaurant(p, i));
 
       if (search) {
@@ -1724,7 +1725,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.set('Cache-Control', 'public, max-age=3600');
-      res.json(restaurants);
+      res.json({
+        restaurants,
+        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
+      });
     } catch (error) {
       console.error("Error fetching restaurants:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des restaurants" });
@@ -1735,7 +1739,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/stations", async (req, res) => {
     try {
       const { region, marque, ville, search, is24h } = req.query;
-      const dbPlaces = await overpassService.getPlaces({ placeType: "fuel" });
+      const { places: dbPlaces, lastUpdated } = await overpassService.getPlaces({ placeType: "fuel" });
       let stations = dbPlaces.map(transformOsmToStation);
 
       if (search) {
@@ -1751,7 +1755,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.set('Cache-Control', 'public, max-age=3600');
-      res.json(stations);
+      res.json({
+        stations,
+        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
+      });
     } catch (error) {
       console.error("Error fetching stations:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des stations" });
@@ -1785,7 +1792,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/boutiques", async (req, res) => {
     try {
       const { region, categorie, search } = req.query;
-      const shops = await overpassService.getPlaces({ placeType: "shop" });
+      const { places: shops, lastUpdated } = await overpassService.getPlaces({ placeType: "shop" });
       let boutiques = shops.map(transformOsmToBoutique);
 
       if (search) {
@@ -1796,7 +1803,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         boutiques = boutiques.filter(b => b.region === region);
       }
 
-      res.json(boutiques);
+      res.json({
+        boutiques,
+        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
+      });
     } catch (error) {
       console.error("Error fetching shops:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des boutiques" });
@@ -1807,7 +1817,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/marches", async (req, res) => {
     try {
       const { region, search } = req.query;
-      const dbPlaces = await overpassService.getPlaces({ placeType: "marketplace" });
+      const { places: dbPlaces, lastUpdated } = await overpassService.getPlaces({ placeType: "marketplace" });
       let marches = dbPlaces.map(transformOsmToMarche);
 
       if (search) {
@@ -1818,7 +1828,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         marches = marches.filter(m => m.region === region);
       }
 
-      res.json(marches);
+      res.json({
+        marches,
+        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
+      });
     } catch (error) {
       console.error("Error fetching markets:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des marchés" });
