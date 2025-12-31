@@ -232,7 +232,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: "railway@example.com",
           firstName: "Railway",
           lastName: "User",
-          role: "admin"
+          role: "admin",
+          points: 0
         });
       }
       
