@@ -1234,9 +1234,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return gpxHeader + '\n' + gpxPoints + gpxFooter;
   }
 
-  app.get("/api/tracking/session", isAuthenticated, async (req: any, res) => {
+  app.get("/api/tracking/session", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.sub;
       const session = await storage.getActiveTrackingSession(userId);
 
       if (!session) {
@@ -1250,9 +1250,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/tracking/location", isAuthenticated, async (req: any, res) => {
+  app.post("/api/tracking/location", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.sub;
       const activeSession = await storage.getActiveTrackingSession(userId);
 
       if (!activeSession) {
@@ -1278,9 +1278,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/tracking/sessions", isAuthenticated, async (req: any, res) => {
+  app.get("/api/tracking/sessions", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.sub;
       const sessions = await storage.getUserTrackingSessions(userId);
 
       const sessionsWithTrajectory = await Promise.all(
@@ -1331,9 +1331,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/tracking/sessions/:id/points", isAuthenticated, async (req: any, res) => {
+  app.get("/api/tracking/sessions/:id/points", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.sub;
       const sessionId = req.params.id;
 
       const session = await storage.getActiveTrackingSession(userId);
@@ -1354,9 +1354,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/tracking/sessions/:id", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/tracking/sessions/:id", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.sub;
       const sessionId = req.params.id;
 
       const sessions = await storage.getUserTrackingSessions(userId);
@@ -1380,9 +1380,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // New routes for emergency contacts and panic alerts
-  app.get("/api/emergency-contacts", isAuthenticated, async (req: any, res) => {
+  app.get("/api/emergency-contacts", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.sub;
       const contacts = await storage.getEmergencyContacts(userId);
       res.json(contacts);
     } catch (error) {
@@ -1391,9 +1391,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/emergency-contacts", isAuthenticated, async (req: any, res) => {
+  app.post("/api/emergency-contacts", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.sub;
       const validationResult = insertEmergencyContactSchema.safeParse({
         ...req.body,
         userId,
@@ -1412,7 +1412,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/emergency-contacts/:id", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/emergency-contacts/:id", authenticateToken, async (req: any, res) => {
     try {
       const success = await storage.deleteEmergencyContact(req.params.id);
       if (!success) {
@@ -1425,9 +1425,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/panic-alert", isAuthenticated, async (req: any, res) => {
+  app.post("/api/panic-alert", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.sub;
       const { latitude, longitude, address } = req.body;
 
       const contacts = await storage.getEmergencyContacts(userId);
@@ -1554,9 +1554,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/panic-alerts", isAuthenticated, async (req: any, res) => {
+  app.get("/api/panic-alerts", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.sub;
       const alerts = await storage.getUserPanicAlerts(userId);
       res.json(alerts);
     } catch (error) {
@@ -1579,9 +1579,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/recommendations", isAuthenticated, async (req: any, res) => {
+  app.get("/api/recommendations", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.sub;
       const { getPersonalizedRecommendations } = await import("./riskAnalysisService");
       const recommendations = await getPersonalizedRecommendations(userId);
       res.json(recommendations);
@@ -2501,7 +2501,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/places/:id/verifications", isAuthenticated, async (req: any, res) => {
+  app.get("/api/places/:id/verifications", authenticateToken, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) {
@@ -2553,7 +2553,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/places/sync", isAuthenticated, async (req: any, res) => {
+  app.post("/api/places/sync", authenticateToken, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       const user = await storage.getUser(userId);
@@ -2586,7 +2586,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Migration routes for hardcoded data to OSM format
-  app.post("/api/places/migrate", isAuthenticated, async (req: any, res) => {
+  app.post("/api/places/migrate", authenticateToken, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       const user = await storage.getUser(userId);
@@ -2606,7 +2606,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/places/migration-status", isAuthenticated, async (req: any, res) => {
+  app.get("/api/places/migration-status", authenticateToken, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       const user = await storage.getUser(userId);
@@ -2728,9 +2728,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Marquer un utilisateur comme en ligne
-  app.post("/api/user/online", isAuthenticated, async (req: any, res) => {
+  app.post("/api/user/online", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.sub;
       await storage.userConnected(userId);
       res.json({ success: true });
     } catch (error) {
@@ -2740,9 +2740,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Marquer un utilisateur comme hors ligne
-  app.post("/api/user/offline", isAuthenticated, async (req: any, res) => {
+  app.post("/api/user/offline", authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.sub;
       await storage.userDisconnected(userId);
       res.json({ success: true });
     } catch (error) {
@@ -3026,9 +3026,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.post("/api/ouaga3d/trigger-ingestion", isAuthenticated, async (req: any, res) => {
+  app.post("/api/ouaga3d/trigger-ingestion", authenticateToken, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.sub);
       if (user?.role !== "admin") {
         return res.status(403).json({ error: "Accès réservé aux administrateurs" });
       }
