@@ -85,14 +85,17 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
-              size="icon"
+              size="default"
               onClick={() => setMenuOpen(true)}
-              className="relative group hover:bg-gradient-to-r hover:from-primary/20 hover:to-destructive/20 transition-all duration-300 hover:scale-110 hover:shadow-lg border-2 border-transparent hover:border-primary/30"
+              className="relative group hover:bg-gradient-to-r hover:from-primary/20 hover:to-destructive/20 transition-all duration-300 hover:scale-105 hover:shadow-lg border-2 border-transparent hover:border-primary/30 gap-2 px-3"
               data-testid="button-hamburger-menu"
             >
-              <div className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full animate-ping" />
-              <div className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full" />
-              <Menu className="h-6 w-6 group-hover:text-primary transition-colors" />
+              <div className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full animate-ping" />
+              <div className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+              <Menu className="h-5 w-5 group-hover:text-primary transition-colors" />
+              <span className="font-bold text-sm uppercase tracking-wider hidden xs:inline-block">
+                {t("header.menu") || "Menu"}
+              </span>
             </Button>
             <Link href="/">
               <button
