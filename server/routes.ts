@@ -2234,8 +2234,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Ajouter les données OSM (fuel, car_wash)
       try {
-        const osmFuel = await overpassService.getPlaces({ placeType: "fuel" });
-        const osmCarWash = await overpassService.getPlaces({ placeType: "car_wash" });
+        const resultFuel = await overpassService.getPlaces({ placeType: "fuel" });
+        const resultCarWash = await overpassService.getPlaces({ placeType: "car_wash" });
+        
+        const osmFuel = resultFuel.places || [];
+        const osmCarWash = resultCarWash.places || [];
         
         const allOsmPlaces = [...osmFuel, ...osmCarWash];
         const osmTransformed = allOsmPlaces.map(p => transformOsmToStation(p));
