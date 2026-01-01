@@ -614,7 +614,7 @@ export class OverpassService {
       query = query.where(and(...conditions)) as typeof query;
     }
 
-    const results = await query
+    let results = await query
       .limit(options.limit || 10000)
       .offset(options.offset || 0);
 
@@ -628,7 +628,8 @@ export class OverpassService {
       }, null as Date | null);
     }
 
-    // Fallback: Si la DB est vide pour ce type, on tente une sync bloquante la première fois
+    // Fallback: Si la DB est vide pour ce type, on tente une sync bloquante
+    // Sauf pour bus_station qui sera géré différemment si besoin
     if (results.length === 0 && options.placeType) {
       console.log(`[Overpass] DB empty for ${options.placeType}, forced sync...`);
       try {
@@ -638,24 +639,23 @@ export class OverpassService {
         const now = new Date();
         const lastSyncKey = `last_sync_${options.placeType}`;
         await storage.setMetadata(lastSyncKey, now.toISOString());
+        
+        // Re-query after sync
+        results = await db.select().from(places)
+          .where(eq(places.placeType, options.placeType))
+          .limit(options.limit || 10000)
+          .offset(options.offset || 0);
+          
+        if (results.length > 0) {
+          latestUpdate = results.reduce((latest, current) => {
+            const currentSync = current.lastSyncedAt;
+            if (!latest || (currentSync && currentSync > latest)) return currentSync;
+            return latest;
+          }, null as Date | null);
+        }
       } catch (err) {
         console.error(`[Overpass] Forced sync failed for ${options.placeType}:`, err);
       }
-      
-      // Re-query after sync (even if failed, we return what we have)
-      const refreshedResults = await db.select().from(places)
-        .where(eq(places.placeType, options.placeType))
-        .limit(options.limit || 10000)
-        .offset(options.offset || 0);
-        
-      if (refreshedResults.length > 0) {
-        latestUpdate = refreshedResults.reduce((latest, current) => {
-          const currentSync = current.lastSyncedAt;
-          if (!latest || (currentSync && currentSync > latest)) return currentSync;
-          return latest;
-        }, null as Date | null);
-      }
-      return { places: refreshedResults, lastUpdated: latestUpdate };
     }
 
     return { places: results, lastUpdated: latestUpdate };
