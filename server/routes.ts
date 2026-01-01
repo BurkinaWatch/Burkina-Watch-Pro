@@ -1705,6 +1705,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+
   // Restaurants
   app.get("/api/restaurants", async (req, res) => {
     try {
@@ -2032,94 +2034,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Restaurants
-  app.get("/api/restaurants", async (req, res) => {
-    try {
-      const { region, type, search } = req.query;
-      const result = await overpassService.getPlaces({ placeType: "restaurant" });
-      const dbPlaces = result.places || [];
-      const lastUpdated = result.lastUpdated;
-      
-      console.log(`[API] Restaurants found in DB: ${dbPlaces.length}`);
-      
-      // Fallback si la DB est vide
-      let finalPlaces = dbPlaces;
-      if (finalPlaces.length === 0) {
-        console.log("[API] Aucun restaurant trouvé dans la DB, tentative de synchronisation forcée...");
-        const forcedSync = await overpassService.syncPlaceType("restaurant");
-        console.log(`[API] Sync forcée terminée: ${forcedSync.added} ajoutés`);
-        const retry = await overpassService.getPlaces({ placeType: "restaurant" });
-        finalPlaces = retry.places;
-      }
 
-      let restaurants = finalPlaces.map((p, i) => transformOsmToRestaurant(p, i));
-
-      if (search) {
-        const query = (search as string).toLowerCase();
-        restaurants = restaurants.filter(r =>
-          r.nom.toLowerCase().includes(query) ||
-          r.ville?.toLowerCase().includes(query) ||
-          r.quartier?.toLowerCase().includes(query) ||
-          r.type?.toLowerCase().includes(query)
-        );
-      }
-      if (region && region !== "all") {
-        restaurants = restaurants.filter(r => r.region === region);
-      }
-      if (type && type !== "all") {
-        restaurants = restaurants.filter(r => r.type === type);
-      }
-
-      res.set('Cache-Control', 'public, max-age=3600');
-      res.json({
-        restaurants,
-        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
-      });
-    } catch (error) {
-      console.error("Error fetching restaurants:", error);
-      res.status(500).json({ error: "Erreur lors de la récupération des restaurants" });
-    }
-  });
-
-  app.get("/api/restaurants/stats", async (req, res) => {
-    try {
-      const result = await overpassService.getPlaces({ placeType: "restaurant" });
-      const restaurants = result.places || [];
-      
-      const parType: Record<string, number> = {};
-      const parRegion: Record<string, number> = {};
-      const villes = new Set<string>();
-      let avecLivraison = 0;
-      let avecWifi = 0;
-      
-      restaurants.forEach((r, i) => {
-        const transformed = transformOsmToRestaurant(r, i);
-        parType[transformed.type] = (parType[transformed.type] || 0) + 1;
-        if (transformed.region) {
-          parRegion[transformed.region] = (parRegion[transformed.region] || 0) + 1;
-        }
-        if (transformed.ville) {
-          villes.add(transformed.ville);
-        }
-        if (transformed.livraison) avecLivraison++;
-        if (transformed.wifi) avecWifi++;
-      });
-
-      res.json({
-        total: restaurants.length,
-        avecLivraison,
-        avecWifi,
-        parType,
-        parRegion,
-        nombreVilles: villes.size,
-        lastUpdate: new Date(),
-        source: "PostgreSQL"
-      });
-    } catch (error) {
-      console.error("Erreur stats restaurants:", error);
-      res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
-    }
-  });
 
   // ----------------------------------------
   // ROUTES MARCHÉS
