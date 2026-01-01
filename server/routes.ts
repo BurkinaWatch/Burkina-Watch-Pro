@@ -1934,6 +1934,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----------------------------------------
+  // ROUTES RESTAURANTS
+  // ----------------------------------------
+  app.get("/api/restaurants", async (req, res) => {
+    try {
+      const { region, ville, type, search } = req.query;
+      const places = await overpassService.getPlaces({
+        placeType: "restaurant",
+        region: region as string,
+        ville: ville as string,
+        search: search as string,
+      });
+
+      const restaurants = places.places.map((p, i) => transformOsmToRestaurant(p, i));
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json(restaurants);
+    } catch (error) {
+      console.error("Erreur récupération restaurants:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des restaurants" });
+    }
+  });
+
+  // ----------------------------------------
+  // ROUTES MARCHÉS
+  // ----------------------------------------
+  app.get("/api/marches", async (req, res) => {
+    try {
+      const { region, ville, search } = req.query;
+      const places = await overpassService.getPlaces({
+        placeType: "marketplace",
+        region: region as string,
+        ville: ville as string,
+        search: search as string,
+      });
+
+      const marches = places.places.map(p => transformOsmToMarche(p));
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json(marches);
+    } catch (error) {
+      console.error("Erreur récupération marchés:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des marchés" });
+    }
+  });
+
+  // ----------------------------------------
+  // ROUTES BOUTIQUES
+  // ----------------------------------------
+  app.get("/api/boutiques", async (req, res) => {
+    try {
+      const { region, ville, categorie, search } = req.query;
+      const places = await overpassService.getPlaces({
+        placeType: "shop",
+        region: region as string,
+        ville: ville as string,
+        search: search as string,
+      });
+
+      let boutiques = places.places.map(p => transformOsmToBoutique(p));
+      
+      if (categorie && categorie !== "all") {
+        boutiques = boutiques.filter(b => b.categorie === categorie);
+      }
+
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json(boutiques);
+    } catch (error) {
+      console.error("Erreur récupération boutiques:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des boutiques" });
+    }
+  });
+
+  // ----------------------------------------
   // ROUTES BANQUES ET CAISSES POPULAIRES
   // ----------------------------------------
   app.get("/api/banques", async (req, res) => {
