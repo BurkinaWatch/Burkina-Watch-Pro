@@ -2959,5 +2959,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
 
+  // Initial sync on startup if needed
+  const overpassService = OverpassService.getInstance();
+  const importantTypes = ["pharmacy", "restaurant", "fuel", "shop", "marketplace"];
+  
+  // Start background sync for critical data
+  setTimeout(() => {
+    Promise.all(importantTypes.map(type => overpassService.getPlaces({ placeType: type })))
+      .then(() => console.log("✅ Initial data sync check completed"))
+      .catch(err => console.error("❌ Initial sync error:", err));
+  }, 5000);
+
   return httpServer;
 }

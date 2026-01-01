@@ -554,7 +554,23 @@ export class OverpassService {
     limit?: number;
     offset?: number;
   } = {}): Promise<{ places: Place[]; lastUpdated: Date | null }> {
-    // 1. Essayer de récupérer depuis la base de données
+    // Check if we need to refresh (once per day or if empty)
+    if (options.placeType) {
+      const now = new Date();
+      const lastSyncKey = `last_sync_${options.placeType}`;
+      const lastSyncStr = await storage.getMetadata(lastSyncKey);
+      const lastSyncDate = lastSyncStr ? new Date(lastSyncStr) : null;
+      
+      const oneDay = 24 * 60 * 60 * 1000;
+      if (!lastSyncDate || (now.getTime() - lastSyncDate.getTime() > oneDay)) {
+        console.log(`[Overpass] Refreshing ${options.placeType} (last sync: ${lastSyncDate})`);
+        this.syncPlaceType(options.placeType).then(() => {
+          storage.setMetadata(lastSyncKey, now.toISOString());
+        }).catch(err => console.error(`Error refreshing ${options.placeType}:`, err));
+      }
+    }
+
+    // 1. Lire exclusivement depuis la base de données
     let query = db.select().from(places);
     const conditions = [];
 
@@ -586,7 +602,7 @@ export class OverpassService {
       .limit(options.limit || 10000)
       .offset(options.offset || 0);
 
-    // Trouver la date de mise à jour la plus récente
+    // Trouver la date de mise à jour la plus récente dans les résultats
     let latestUpdate: Date | null = null;
     if (results.length > 0) {
       latestUpdate = results.reduce((latest, current) => {
@@ -596,10 +612,24 @@ export class OverpassService {
       }, null as Date | null);
     }
 
-    // 2. Si pas de données et que c'est un type spécifique, tenter une sync d'urgence
-    if (results.length === 0 && options.placeType && !this.syncInProgress) {
-      console.log(`[Overpass] Aucune donnée pour ${options.placeType}, lancement d'une sync d'urgence...`);
-      this.syncPlaceType(options.placeType).catch(err => console.error("Erreur sync d'urgence:", err));
+    // Fallback: Si la DB est vide pour ce type, on tente une sync bloquante la première fois
+    if (results.length === 0 && options.placeType) {
+      console.log(`[Overpass] DB empty for ${options.placeType}, forced sync...`);
+      await this.syncPlaceType(options.placeType);
+      
+      // Re-query after sync
+      const refreshedResults = await query
+        .limit(options.limit || 10000)
+        .offset(options.offset || 0);
+        
+      if (refreshedResults.length > 0) {
+        latestUpdate = refreshedResults.reduce((latest, current) => {
+          const currentSync = current.lastSyncedAt;
+          if (!latest || (currentSync && currentSync > latest)) return currentSync;
+          return latest;
+        }, null as Date | null);
+      }
+      return { places: refreshedResults, lastUpdated: latestUpdate };
     }
 
     return { places: results, lastUpdated: latestUpdate };
