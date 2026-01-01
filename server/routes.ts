@@ -1712,6 +1712,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await overpassService.getPlaces({ placeType: "restaurant" });
       const dbPlaces = result.places || [];
       const lastUpdated = result.lastUpdated;
+      
+      console.log(`[API] Restaurants found in DB: ${dbPlaces.length}`);
+      
       let restaurants = dbPlaces.map((p, i) => transformOsmToRestaurant(p, i));
 
       if (search) {
@@ -1986,6 +1989,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await overpassService.getPlaces({ placeType: "restaurant" });
       const dbPlaces = result.places || [];
       const lastUpdated = result.lastUpdated;
+      
+      console.log(`[API] Restaurants found in DB: ${dbPlaces.length}`);
+      
       let restaurants = dbPlaces.map((p, i) => transformOsmToRestaurant(p, i));
 
       if (search) {
