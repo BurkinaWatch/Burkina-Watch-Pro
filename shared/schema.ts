@@ -3,6 +3,8 @@ import { pgTable, text, varchar, timestamp, boolean, integer, decimal, jsonb, in
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export * from "./models/auth";
+
 export const sessions = pgTable(
   "sessions",
   {
