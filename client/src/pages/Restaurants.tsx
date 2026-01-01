@@ -200,7 +200,8 @@ export default function Restaurants() {
   });
 
   const filteredRestaurants = useMemo(() => {
-    let result = restaurants;
+    const restaurantsArray = Array.isArray(restaurants) ? restaurants : [];
+    let result = restaurantsArray;
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -449,7 +450,7 @@ export default function Restaurants() {
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
                 <MapUpdater center={mapCenter} zoom={mapZoom} />
-                {filteredRestaurants.map(restaurant => (
+                {Array.isArray(filteredRestaurants) && filteredRestaurants.map(restaurant => (
                   <Marker
                     key={restaurant.id}
                     position={[restaurant.latitude, restaurant.longitude]}
@@ -502,7 +503,7 @@ export default function Restaurants() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredRestaurants.map(restaurant => (
+            {Array.isArray(filteredRestaurants) && filteredRestaurants.map(restaurant => (
               <Card 
                 key={restaurant.id} 
                 className={`cursor-pointer transition-all hover-elevate ${

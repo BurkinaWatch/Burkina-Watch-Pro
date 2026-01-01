@@ -2198,7 +2198,8 @@ export default function Pharmacies() {
   }, [fetchPharmacies]);
 
   const filteredPharmacies = useMemo(() => {
-    let filtered = pharmacies;
+    const pharmaciesArray = Array.isArray(pharmacies) ? pharmacies : [];
+    let filtered = pharmaciesArray;
 
     if (selectedRegion !== "all") {
       filtered = filtered.filter(p => p.region === selectedRegion);
@@ -2473,7 +2474,7 @@ export default function Pharmacies() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 gap-4">
-            {filteredPharmacies.map((pharmacie) => (
+            {Array.isArray(filteredPharmacies) && filteredPharmacies.map((pharmacie) => (
               <Card key={pharmacie.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-4">

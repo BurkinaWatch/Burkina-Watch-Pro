@@ -165,7 +165,8 @@ export default function Marches() {
   });
 
   const filteredMarches = useMemo(() => {
-    let result = marches;
+    const marchesArray = Array.isArray(marches) ? marches : [];
+    let result = marchesArray;
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -377,7 +378,7 @@ export default function Marches() {
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
                 <MapUpdater center={mapCenter} zoom={mapZoom} />
-                {filteredMarches.map(marche => (
+                {Array.isArray(filteredMarches) && filteredMarches.map(marche => (
                   <Marker
                     key={marche.id}
                     position={[marche.latitude, marche.longitude]}
@@ -425,7 +426,7 @@ export default function Marches() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredMarches.map(marche => (
+            {Array.isArray(filteredMarches) && filteredMarches.map(marche => (
               <Card 
                 key={marche.id} 
                 className={`cursor-pointer transition-all hover-elevate ${

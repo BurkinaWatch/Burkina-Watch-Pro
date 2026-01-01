@@ -23,3 +23,4 @@ Additional completed tasks:
 [x] 21. Reinstalled dependencies and verified workflow running (Dec 31, 2025)
 [x] 22. Final reinstall and verification - all services running correctly (Dec 31, 2025)
 [x] 23. Reinstalled tsx and verified application running (Jan 1, 2026)
+[x] 24. Fixed ".map is not a function" errors in Pharmacies, Restaurants, Marchés, and Boutiques pages by adding array checks to useMemo hooks.
