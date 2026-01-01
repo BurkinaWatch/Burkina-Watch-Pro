@@ -1818,7 +1818,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/marches", async (req, res) => {
     try {
       const { region, search } = req.query;
-      const { places: dbPlaces, lastUpdated } = await overpassService.getPlaces({ placeType: "marketplace" });
+      let { places: dbPlaces, lastUpdated } = await overpassService.getPlaces({ placeType: "marketplace" });
+      
+      // Log for debugging
+      console.log(`[API] Requête Marchés: ${dbPlaces.length} lieux trouvés dans la DB`);
+      
+      if (dbPlaces.length === 0) {
+        console.log("[API] Aucun marché trouvé dans la DB, tentative de synchronisation forcée...");
+        const forcedSync = await overpassService.syncPlaceType("marketplace");
+        console.log(`[API] Sync forcée terminée: ${forcedSync.added} ajoutés`);
+        
+        const retry = await overpassService.getPlaces({ placeType: "marketplace" });
+        dbPlaces = retry.places;
+        lastUpdated = retry.lastUpdated;
+      }
+
       let marches = dbPlaces.map(transformOsmToMarche);
 
       if (search) {
@@ -2971,6 +2985,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         await overpassService.getPlaces({ placeType: type });
         console.log(`✅ Sync check completed for ${type}`);
+        // Add a small delay between initial syncs to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 5000));
       } catch (err) {
         console.error(`❌ Sync error for ${type}:`, err);
       }

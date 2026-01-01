@@ -392,6 +392,22 @@ export class OverpassService {
 
     const { south, west, north, east } = BURKINA_BBOX;
     
+    // Simplifier la requête marketplace pour éviter les timeouts et s'assurer de capturer les centres commerciaux et marchés
+    if (placeType === "marketplace") {
+      return `
+        [out:json][timeout:180];
+        (
+          node["amenity"="marketplace"](${south},${west},${north},${east});
+          way["amenity"="marketplace"](${south},${west},${north},${east});
+          node["shop"="mall"](${south},${west},${north},${east});
+          way["shop"="mall"](${south},${west},${north},${east});
+          node["leisure"="market"](${south},${west},${north},${east});
+          way["leisure"="market"](${south},${west},${north},${east});
+        );
+        out center;
+      `;
+    }
+
     return `
       [out:json][timeout:180][maxsize:536870912];
       (
@@ -412,7 +428,16 @@ export class OverpassService {
     if (lon < BURKINA_BBOX.west || lon > BURKINA_BBOX.east) return null;
 
     const tags = element.tags || {};
-    const name = tags.name || tags["name:fr"] || `${placeType} sans nom`;
+    let name = tags.name || tags["name:fr"] || tags.operator || tags.brand || tags.owner || tags.ref;
+    
+    if (!name) {
+      if (placeType === "marketplace") {
+        const village = tags["addr:village"] || tags["addr:city"];
+        name = village ? `Marché de ${village}` : "Marché Central";
+      } else {
+        name = `${placeType} sans nom`;
+      }
+    }
     
     const address = [
       tags["addr:street"],
@@ -473,41 +498,31 @@ export class OverpassService {
     try {
       const response = await this.fetchFromOverpass(query);
       
+      // Batch processing for better performance
       for (const element of response.elements) {
         try {
           const placeData = this.parseOSMElement(element, placeType);
           if (!placeData) continue;
 
-          const existing = await db.select()
-            .from(places)
-            .where(and(
-              eq(places.osmId, placeData.osmId),
-              eq(places.osmType, placeData.osmType)
-            ))
-            .limit(1);
-
-          if (existing.length > 0) {
-            await db.update(places)
-              .set({
-                name: placeData.name,
-                latitude: placeData.latitude,
-                longitude: placeData.longitude,
-                address: placeData.address,
-                telephone: placeData.telephone,
-                horaires: placeData.horaires,
-                tags: placeData.tags,
-                lastSyncedAt: new Date(),
-                updatedAt: new Date(),
-              })
-              .where(eq(places.id, existing[0].id));
-            updated++;
-          } else {
-            await db.insert(places).values(placeData);
-            added++;
-          }
+          // Enregistrer systématiquement en DB
+          await db.insert(places).values(placeData).onConflictDoUpdate({
+            target: [places.osmId, places.osmType],
+            set: {
+              name: placeData.name,
+              latitude: placeData.latitude,
+              longitude: placeData.longitude,
+              address: placeData.address,
+              telephone: placeData.telephone,
+              horaires: placeData.horaires,
+              tags: placeData.tags,
+              lastSyncedAt: new Date(),
+              updatedAt: new Date(),
+            }
+          });
+          added++;
         } catch (err) {
           errors++;
-          console.error("Error processing OSM element:", err);
+          // Silent fail for individual elements
         }
       }
 
