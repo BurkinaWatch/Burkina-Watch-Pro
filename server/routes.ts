@@ -1654,7 +1654,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/pharmacies", async (req, res) => {
     try {
       const { region, typeGarde, search } = req.query;
-      const { places: dbPlaces, lastUpdated } = await overpassService.getPlaces({ placeType: "pharmacy" });
+      const result = await overpassService.getPlaces({ placeType: "pharmacy" });
+      const dbPlaces = result.places || [];
+      const lastUpdated = result.lastUpdated;
       let pharmacies = dbPlaces.map(transformOsmToPharmacy);
 
       if (search) {
@@ -1686,7 +1688,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/pharmacies/stats", async (req, res) => {
     try {
-      const pharmacies = await overpassService.getPlaces({ placeType: "pharmacy" });
+      const result = await overpassService.getPlaces({ placeType: "pharmacy" });
+      const pharmacies = result.places || [];
       const total = pharmacies.length;
       const par24h = pharmacies.filter(p => (p.tags as any)?.opening_hours?.includes("24")).length;
       
@@ -1706,7 +1709,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/restaurants", async (req, res) => {
     try {
       const { region, type, gammePrix, search, livraison, wifi } = req.query;
-      const { places: dbPlaces, lastUpdated } = await overpassService.getPlaces({ placeType: "restaurant" });
+      const result = await overpassService.getPlaces({ placeType: "restaurant" });
+      const dbPlaces = result.places || [];
+      const lastUpdated = result.lastUpdated;
       let restaurants = dbPlaces.map((p, i) => transformOsmToRestaurant(p, i));
 
       if (search) {
@@ -1740,7 +1745,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/stations", async (req, res) => {
     try {
       const { region, marque, ville, search, is24h } = req.query;
-      const { places: dbPlaces, lastUpdated } = await overpassService.getPlaces({ placeType: "fuel" });
+      const result = await overpassService.getPlaces({ placeType: "fuel" });
+      const dbPlaces = result.places || [];
+      const lastUpdated = result.lastUpdated;
       let stations = dbPlaces.map(transformOsmToStation);
 
       if (search) {
@@ -1770,8 +1777,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/banques", async (req, res) => {
     try {
       const { region, search } = req.query;
-      const banks = await overpassService.getPlaces({ placeType: "bank" });
-      const atms = await overpassService.getPlaces({ placeType: "atm" });
+      const resultBanks = await overpassService.getPlaces({ placeType: "bank" });
+      const resultAtms = await overpassService.getPlaces({ placeType: "atm" });
+      const banks = resultBanks.places || [];
+      const atms = resultAtms.places || [];
       let allBanks = [...banks, ...atms].map(transformOsmToBanque);
 
       if (search) {
@@ -1793,7 +1802,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/boutiques", async (req, res) => {
     try {
       const { region, categorie, search } = req.query;
-      const { places: shops, lastUpdated } = await overpassService.getPlaces({ placeType: "shop" });
+      const result = await overpassService.getPlaces({ placeType: "shop" });
+      const shops = result.places || [];
+      const lastUpdated = result.lastUpdated;
       let boutiques = shops.map(transformOsmToBoutique);
 
       if (search) {
@@ -1933,20 +1944,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ----------------------------------------
-  // ROUTES RESTAURANTS
-  // ----------------------------------------
+  // Restaurants
   app.get("/api/restaurants", async (req, res) => {
     try {
       const { region, ville, type, search } = req.query;
-      const places = await overpassService.getPlaces({
+      const result = await overpassService.getPlaces({
         placeType: "restaurant",
         region: region as string,
         ville: ville as string,
         search: search as string,
       });
+      const dbPlaces = result.places || [];
 
-      const restaurants = places.places.map((p, i) => transformOsmToRestaurant(p, i));
+      const restaurants = dbPlaces.map((p, i) => transformOsmToRestaurant(p, i));
       res.set('Cache-Control', 'public, max-age=3600');
       res.json(restaurants);
     } catch (error) {
@@ -1961,14 +1971,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/marches", async (req, res) => {
     try {
       const { region, ville, search } = req.query;
-      const places = await overpassService.getPlaces({
+      const result = await overpassService.getPlaces({
         placeType: "marketplace",
         region: region as string,
         ville: ville as string,
         search: search as string,
       });
+      const dbPlaces = result.places || [];
 
-      const marches = places.places.map(p => transformOsmToMarche(p));
+      const marches = dbPlaces.map(p => transformOsmToMarche(p));
       res.set('Cache-Control', 'public, max-age=3600');
       res.json(marches);
     } catch (error) {
@@ -1983,14 +1994,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/boutiques", async (req, res) => {
     try {
       const { region, ville, categorie, search } = req.query;
-      const places = await overpassService.getPlaces({
+      const result = await overpassService.getPlaces({
         placeType: "shop",
         region: region as string,
         ville: ville as string,
         search: search as string,
       });
+      const dbPlaces = result.places || [];
 
-      let boutiques = places.places.map(p => transformOsmToBoutique(p));
+      let boutiques = dbPlaces.map(p => transformOsmToBoutique(p));
       
       if (categorie && categorie !== "all") {
         boutiques = boutiques.filter(b => b.categorie === categorie);
@@ -2017,9 +2029,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Ajouter les données OSM (banques, bureaux de change, transferts d'argent)
       try {
-        const osmBanks = await overpassService.getPlaces({ placeType: "bank" });
-        const osmBureauChange = await overpassService.getPlaces({ placeType: "bureau_de_change" });
-        const osmMoneyTransfer = await overpassService.getPlaces({ placeType: "money_transfer" });
+        const resultBanks = await overpassService.getPlaces({ placeType: "bank" });
+        const resultBureauChange = await overpassService.getPlaces({ placeType: "bureau_de_change" });
+        const resultMoneyTransfer = await overpassService.getPlaces({ placeType: "money_transfer" });
+        
+        const osmBanks = resultBanks.places || [];
+        const osmBureauChange = resultBureauChange.places || [];
+        const osmMoneyTransfer = resultMoneyTransfer.places || [];
         
         const allOsmPlaces = [...osmBanks, ...osmBureauChange, ...osmMoneyTransfer];
         const osmTransformed = allOsmPlaces.map(p => transformOsmToBanque(p));
@@ -2075,9 +2091,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Récupérer les données OSM
       let osmBanques: any[] = [];
       try {
-        const osmBanks = await overpassService.getPlaces({ placeType: "bank" });
-        const osmBureauChange = await overpassService.getPlaces({ placeType: "bureau_de_change" });
-        const osmMoneyTransfer = await overpassService.getPlaces({ placeType: "money_transfer" });
+        const resultBanks = await overpassService.getPlaces({ placeType: "bank" });
+        const resultBureauChange = await overpassService.getPlaces({ placeType: "bureau_de_change" });
+        const resultMoneyTransfer = await overpassService.getPlaces({ placeType: "money_transfer" });
+
+        const osmBanks = resultBanks.places || [];
+        const osmBureauChange = resultBureauChange.places || [];
+        const osmMoneyTransfer = resultMoneyTransfer.places || [];
+
         osmBanques = [...osmBanks, ...osmBureauChange, ...osmMoneyTransfer].map(p => transformOsmToBanque(p));
       } catch (e) {}
       
