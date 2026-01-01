@@ -1947,20 +1947,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Restaurants
   app.get("/api/restaurants", async (req, res) => {
     try {
-      const { region, ville, type, search } = req.query;
-      const result = await overpassService.getPlaces({
-        placeType: "restaurant",
-        region: region as string,
-        ville: ville as string,
-        search: search as string,
-      });
+      const { region, type, gammePrix, search, livraison, wifi } = req.query;
+      const result = await overpassService.getPlaces({ placeType: "restaurant" });
       const dbPlaces = result.places || [];
+      const lastUpdated = result.lastUpdated;
+      let restaurants = dbPlaces.map((p, i) => transformOsmToRestaurant(p, i));
 
-      const restaurants = dbPlaces.map((p, i) => transformOsmToRestaurant(p, i));
+      if (search) {
+        const query = (search as string).toLowerCase();
+        restaurants = restaurants.filter(r =>
+          r.nom.toLowerCase().includes(query) ||
+          r.ville?.toLowerCase().includes(query) ||
+          r.quartier?.toLowerCase().includes(query) ||
+          r.type?.toLowerCase().includes(query)
+        );
+      }
+      if (region && region !== "all") {
+        restaurants = restaurants.filter(r => r.region === region);
+      }
+      if (type && type !== "all") {
+        restaurants = restaurants.filter(r => r.type === type);
+      }
+
       res.set('Cache-Control', 'public, max-age=3600');
-      res.json(restaurants);
+      res.json({
+        restaurants,
+        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
+      });
     } catch (error) {
-      console.error("Erreur récupération restaurants:", error);
+      console.error("Error fetching restaurants:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des restaurants" });
     }
   });

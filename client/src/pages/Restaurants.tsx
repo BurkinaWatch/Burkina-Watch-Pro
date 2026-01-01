@@ -184,9 +184,12 @@ export default function Restaurants() {
     }
   }, [showNearestOnly, userLocation, toast]);
 
-  const { data: restaurants = [], isLoading, refetch } = useQuery<Restaurant[]>({
+  const { data, isLoading, refetch } = useQuery<{ restaurants: Restaurant[], lastUpdated: string }>({
     queryKey: ["/api/restaurants"],
   });
+  
+  const restaurants = data?.restaurants || [];
+  const lastUpdated = data?.lastUpdated;
 
   const { data: stats } = useQuery<{
     total: number;
