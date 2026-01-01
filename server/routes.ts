@@ -2965,11 +2965,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const importantTypes = ["pharmacy", "restaurant", "fuel", "shop", "marketplace"];
   
   // Start background sync for critical data
-  setTimeout(() => {
-    Promise.all(importantTypes.map(type => overpassService.getPlaces({ placeType: type })))
-      .then(() => console.log("✅ Initial data sync check completed"))
-      .catch(err => console.error("❌ Initial sync error:", err));
-  }, 5000);
+  setTimeout(async () => {
+    console.log("🚀 Starting initial data sync check...");
+    for (const type of importantTypes) {
+      try {
+        await overpassService.getPlaces({ placeType: type });
+        console.log(`✅ Sync check completed for ${type}`);
+      } catch (err) {
+        console.error(`❌ Sync error for ${type}:`, err);
+      }
+    }
+    console.log("🏁 All initial data sync checks completed");
+  }, 2000);
 
   return httpServer;
 }

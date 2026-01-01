@@ -616,10 +616,20 @@ export class OverpassService {
     // Fallback: Si la DB est vide pour ce type, on tente une sync bloquante la première fois
     if (results.length === 0 && options.placeType) {
       console.log(`[Overpass] DB empty for ${options.placeType}, forced sync...`);
-      await this.syncPlaceType(options.placeType);
+      try {
+        await this.syncPlaceType(options.placeType);
+        
+        // Update metadata after successful sync
+        const now = new Date();
+        const lastSyncKey = `last_sync_${options.placeType}`;
+        await storage.setMetadata(lastSyncKey, now.toISOString());
+      } catch (err) {
+        console.error(`[Overpass] Forced sync failed for ${options.placeType}:`, err);
+      }
       
-      // Re-query after sync
-      const refreshedResults = await query
+      // Re-query after sync (even if failed, we return what we have)
+      const refreshedResults = await db.select().from(places)
+        .where(eq(places.placeType, options.placeType))
         .limit(options.limit || 10000)
         .offset(options.offset || 0);
         
