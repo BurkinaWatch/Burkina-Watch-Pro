@@ -121,6 +121,8 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
   }, [refetch]);
 
   const filteredPlaces = useMemo((): PlaceWithDistance[] => {
+    if (!Array.isArray(places)) return [];
+    
     let result = places.filter(place => {
       const matchesSearch = !searchTerm || 
         place.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -151,11 +153,13 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
 
   const regionCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    places.forEach(place => {
-      if (place.region) {
-        counts[place.region] = (counts[place.region] || 0) + 1;
-      }
-    });
+    if (Array.isArray(places)) {
+      places.forEach(place => {
+        if (place.region) {
+          counts[place.region] = (counts[place.region] || 0) + 1;
+        }
+      });
+    }
     return counts;
   }, [places]);
 
