@@ -160,6 +160,7 @@ export default function Stations() {
   });
 
   const filteredStations = useMemo(() => {
+    if (!Array.isArray(stations)) return [];
     let result = stations;
 
     if (searchQuery) {

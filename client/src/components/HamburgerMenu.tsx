@@ -295,10 +295,10 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
             </div>
             <p className="text-xs text-center font-bold text-foreground">
-              Burkina Watch v1.0
+              Burkina Watch v1.2
             </p>
             <p className="text-xs text-center text-muted-foreground mt-1">
-              Initiative citoyenne 🇧🇫
+              🇧🇫
             </p>
           </div>
         </div>

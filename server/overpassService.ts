@@ -1,6 +1,7 @@
 import { db } from "./db";
 import { places, placeVerifications, type Place, type InsertPlace, PlaceTypes, VerificationStatuses, DataSources } from "@shared/schema";
 import { eq, and, sql, ilike, or } from "drizzle-orm";
+import { storage } from "./storage";
 
 // Multiple Overpass API endpoints for redundancy
 const OVERPASS_ENDPOINTS = [
@@ -391,6 +392,22 @@ export class OverpassService {
 
     const { south, west, north, east } = BURKINA_BBOX;
     
+    // Simplifier la requête marketplace pour éviter les timeouts et s'assurer de capturer les centres commerciaux et marchés
+    if (placeType === "marketplace") {
+      return `
+        [out:json][timeout:180];
+        (
+          node["amenity"="marketplace"](${south},${west},${north},${east});
+          way["amenity"="marketplace"](${south},${west},${north},${east});
+          node["shop"="mall"](${south},${west},${north},${east});
+          way["shop"="mall"](${south},${west},${north},${east});
+          node["leisure"="market"](${south},${west},${north},${east});
+          way["leisure"="market"](${south},${west},${north},${east});
+        );
+        out center;
+      `;
+    }
+
     return `
       [out:json][timeout:180][maxsize:536870912];
       (
@@ -411,7 +428,16 @@ export class OverpassService {
     if (lon < BURKINA_BBOX.west || lon > BURKINA_BBOX.east) return null;
 
     const tags = element.tags || {};
-    const name = tags.name || tags["name:fr"] || `${placeType} sans nom`;
+    let name = tags.name || tags["name:fr"] || tags.operator || tags.brand || tags.owner || tags.ref;
+    
+    if (!name) {
+      if (placeType === "marketplace") {
+        const village = tags["addr:village"] || tags["addr:city"];
+        name = village ? `Marché de ${village}` : "Marché Central";
+      } else {
+        name = `${placeType} sans nom`;
+      }
+    }
     
     const address = [
       tags["addr:street"],
@@ -472,41 +498,31 @@ export class OverpassService {
     try {
       const response = await this.fetchFromOverpass(query);
       
+      // Batch processing for better performance
       for (const element of response.elements) {
         try {
           const placeData = this.parseOSMElement(element, placeType);
           if (!placeData) continue;
 
-          const existing = await db.select()
-            .from(places)
-            .where(and(
-              eq(places.osmId, placeData.osmId),
-              eq(places.osmType, placeData.osmType)
-            ))
-            .limit(1);
-
-          if (existing.length > 0) {
-            await db.update(places)
-              .set({
-                name: placeData.name,
-                latitude: placeData.latitude,
-                longitude: placeData.longitude,
-                address: placeData.address,
-                telephone: placeData.telephone,
-                horaires: placeData.horaires,
-                tags: placeData.tags,
-                lastSyncedAt: new Date(),
-                updatedAt: new Date(),
-              })
-              .where(eq(places.id, existing[0].id));
-            updated++;
-          } else {
-            await db.insert(places).values(placeData);
-            added++;
-          }
+          // Enregistrer systématiquement en DB
+          await db.insert(places).values(placeData).onConflictDoUpdate({
+            target: [places.osmId, places.osmType],
+            set: {
+              name: placeData.name,
+              latitude: placeData.latitude,
+              longitude: placeData.longitude,
+              address: placeData.address,
+              telephone: placeData.telephone,
+              horaires: placeData.horaires,
+              tags: placeData.tags,
+              lastSyncedAt: new Date(),
+              updatedAt: new Date(),
+            }
+          });
+          added++;
         } catch (err) {
           errors++;
-          console.error("Error processing OSM element:", err);
+          // Silent fail for individual elements
         }
       }
 
@@ -553,7 +569,24 @@ export class OverpassService {
     verificationStatus?: string;
     limit?: number;
     offset?: number;
-  } = {}): Promise<Place[]> {
+  } = {}): Promise<{ places: Place[]; lastUpdated: Date | null }> {
+    // Check if we need to refresh (once per day or if empty)
+    if (options.placeType) {
+      const now = new Date();
+      const lastSyncKey = `last_sync_${options.placeType}`;
+      const lastSyncStr = await storage.getMetadata(lastSyncKey);
+      const lastSyncDate = lastSyncStr ? new Date(lastSyncStr) : null;
+      
+      const oneDay = 24 * 60 * 60 * 1000;
+      if (!lastSyncDate || (now.getTime() - lastSyncDate.getTime() > oneDay)) {
+        console.log(`[Overpass] Refreshing ${options.placeType} (last sync: ${lastSyncDate})`);
+        this.syncPlaceType(options.placeType).then(() => {
+          storage.setMetadata(lastSyncKey, now.toISOString());
+        }).catch(err => console.error(`Error refreshing ${options.placeType}:`, err));
+      }
+    }
+
+    // 1. Lire exclusivement depuis la base de données
     let query = db.select().from(places);
     const conditions = [];
 
@@ -581,11 +614,51 @@ export class OverpassService {
       query = query.where(and(...conditions)) as typeof query;
     }
 
-    const results = await query
+    let results = await query
       .limit(options.limit || 10000)
       .offset(options.offset || 0);
 
-    return results;
+    // Trouver la date de mise à jour la plus récente dans les résultats
+    let latestUpdate: Date | null = null;
+    if (results.length > 0) {
+      latestUpdate = results.reduce((latest, current) => {
+        const currentSync = current.lastSyncedAt;
+        if (!latest || (currentSync && currentSync > latest)) return currentSync;
+        return latest;
+      }, null as Date | null);
+    }
+
+    // Fallback: Si la DB est vide pour ce type, on tente une sync bloquante
+    // Sauf pour bus_station qui sera géré différemment si besoin
+    if (results.length === 0 && options.placeType) {
+      console.log(`[Overpass] DB empty for ${options.placeType}, forced sync...`);
+      try {
+        await this.syncPlaceType(options.placeType);
+        
+        // Update metadata after successful sync
+        const now = new Date();
+        const lastSyncKey = `last_sync_${options.placeType}`;
+        await storage.setMetadata(lastSyncKey, now.toISOString());
+        
+        // Re-query after sync
+        results = await db.select().from(places)
+          .where(eq(places.placeType, options.placeType))
+          .limit(options.limit || 10000)
+          .offset(options.offset || 0);
+          
+        if (results.length > 0) {
+          latestUpdate = results.reduce((latest, current) => {
+            const currentSync = current.lastSyncedAt;
+            if (!latest || (currentSync && currentSync > latest)) return currentSync;
+            return latest;
+          }, null as Date | null);
+        }
+      } catch (err) {
+        console.error(`[Overpass] Forced sync failed for ${options.placeType}:`, err);
+      }
+    }
+
+    return { places: results, lastUpdated: latestUpdate };
   }
 
   async getPlaceById(id: string): Promise<Place | null> {
