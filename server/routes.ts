@@ -7,6 +7,7 @@ import { storage } from "./storage";
 import { insertSignalementSchema, updateSignalementSchema, insertCommentaireSchema, updateUserProfileSchema, insertLocationPointSchema, insertEmergencyContactSchema, insertChatMessageSchema } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { OverpassService } from "./overpassService";
 import { reverseGeocode } from "./geocoding";
 import { sendLocationEmail, sendEmergencyTrackingStartEmail } from "./resend";
 import { verifySignalement } from "./aiVerification";

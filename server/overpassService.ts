@@ -1,6 +1,7 @@
 import { db } from "./db";
 import { places, placeVerifications, type Place, type InsertPlace, PlaceTypes, VerificationStatuses, DataSources } from "@shared/schema";
 import { eq, and, sql, ilike, or } from "drizzle-orm";
+import { storage } from "./storage";
 
 // Multiple Overpass API endpoints for redundancy
 const OVERPASS_ENDPOINTS = [
