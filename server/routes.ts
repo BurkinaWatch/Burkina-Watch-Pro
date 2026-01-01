@@ -1744,7 +1744,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Stations-service
   app.get("/api/stations", async (req, res) => {
     try {
-      const { region, marque, ville, search, is24h } = req.query;
+      const { region, search } = req.query;
       const result = await overpassService.getPlaces({ placeType: "fuel" });
       const dbPlaces = result.places || [];
       const lastUpdated = result.lastUpdated;
@@ -1770,6 +1770,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching stations:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des stations" });
+    }
+  });
+
+  app.get("/api/stations/stats", async (req, res) => {
+    try {
+      const result = await overpassService.getPlaces({ placeType: "fuel" });
+      const stations = result.places || [];
+      
+      const parMarque: Record<string, number> = {};
+      const parRegion: Record<string, number> = {};
+      const villes = new Set<string>();
+      
+      stations.forEach(s => {
+        const transformed = transformOsmToStation(s);
+        parMarque[transformed.marque] = (parMarque[transformed.marque] || 0) + 1;
+        if (transformed.region) {
+          parRegion[transformed.region] = (parRegion[transformed.region] || 0) + 1;
+        }
+        if (transformed.ville) {
+          villes.add(transformed.ville);
+        }
+      });
+
+      res.json({
+        total: stations.length,
+        par24h: stations.filter(s => (s.tags as any)?.opening_hours?.includes("24")).length,
+        parMarque,
+        parRegion,
+        nombreVilles: villes.size,
+        lastUpdate: new Date(),
+        source: "PostgreSQL"
+      });
+    } catch (error) {
+      console.error("Erreur stats stations:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
     }
   });
 
