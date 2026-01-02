@@ -30,6 +30,11 @@ interface PlaceWithDistance extends Place {
   distance?: number;
 }
 
+interface ApiResponse {
+  places: Place[];
+  total: number;
+}
+
 export function PlacesListPage({ placeType, title, description, icon }: PlacesListPageProps) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -94,7 +99,7 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
     }
   }, [showNearestOnly, userLocation, toast]);
 
-  const { data: places = [], isLoading, refetch, isRefetching } = useQuery<Place[]>({
+  const { data, isLoading, refetch, isRefetching } = useQuery<ApiResponse | Place[]>({
     queryKey: ['/api/places', placeType],
     queryFn: async () => {
       const response = await fetch(`/api/places?placeType=${encodeURIComponent(placeType)}`);
@@ -103,6 +108,16 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
     },
     staleTime: 5 * 60 * 1000,
   });
+
+  // Extract places from response (handling both Array and Wrapper object formats)
+  const places = useMemo(() => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (data && typeof data === 'object' && 'places' in data && Array.isArray(data.places)) {
+      return data.places;
+    }
+    return [];
+  }, [data]);
 
   useEffect(() => {
     const handleVisibility = () => {
@@ -121,8 +136,6 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
   }, [refetch]);
 
   const filteredPlaces = useMemo((): PlaceWithDistance[] => {
-    if (!Array.isArray(places)) return [];
-    
     let result = places.filter(place => {
       const matchesSearch = !searchTerm || 
         place.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -153,13 +166,11 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
 
   const regionCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    if (Array.isArray(places)) {
-      places.forEach(place => {
-        if (place.region) {
-          counts[place.region] = (counts[place.region] || 0) + 1;
-        }
-      });
-    }
+    places.forEach(place => {
+      if (place.region) {
+        counts[place.region] = (counts[place.region] || 0) + 1;
+      }
+    });
     return counts;
   }, [places]);
 
@@ -267,7 +278,6 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
           </Button>
         </div>
 
-        {/* Bouton Les plus proches */}
         <div className="flex gap-2 mb-4">
           <Button
             variant={showNearestOnly ? "default" : "outline"}
