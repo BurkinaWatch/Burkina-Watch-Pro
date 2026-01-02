@@ -3,8 +3,19 @@
 // ============================================
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { storage } from "./storage";
-import { insertSignalementSchema, updateSignalementSchema, insertCommentaireSchema, updateUserProfileSchema, insertLocationPointSchema, insertEmergencyContactSchema, insertChatMessageSchema } from "@shared/schema";
+import { 
+  places,
+  insertSignalementSchema, 
+  updateSignalementSchema, 
+  insertCommentaireSchema, 
+  updateUserProfileSchema, 
+  insertLocationPointSchema, 
+  insertEmergencyContactSchema, 
+  insertChatMessageSchema 
+} from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { OverpassService } from "./overpassService";
@@ -1717,31 +1728,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`[API] Restaurants found in DB for type ${type || 'all'}: ${dbPlaces.length}`);
       
-      // Fallback si la DB est vide
+      // Fallback si la DB est vide : Lancer la sync en arrière-plan sans bloquer
       let finalPlaces = dbPlaces;
       if (finalPlaces.length === 0 && !search && (!region || region === "all") && (!type || type === "all")) {
-        console.log("[API] Aucun restaurant trouvé dans la DB, tentative de synchronisation forcée...");
-        try {
-          const forcedSync = await overpassService.syncPlaceType("restaurant");
-          const forcedSyncFastFood = await overpassService.syncPlaceType("fast_food");
-          console.log(`[API] Sync forcée terminée: ${forcedSync.added + forcedSyncFastFood.added} ajoutés`);
-          const retry = await overpassService.getPlaces({ placeType: "restaurant" });
-          finalPlaces = retry.places;
-        } catch (syncError) {
-          console.error("[API] Erreur lors de la sync forcée:", syncError);
-        }
+        console.log("[API] Aucun restaurant trouvé dans la DB, lancement de la synchronisation en arrière-plan...");
+        // On ne met pas 'await' ici pour ne pas faire attendre l'utilisateur 30s+
+        overpassService.syncPlaceType("restaurant").then(res => {
+          if (res.added > 0) console.log(`[Background Sync] Added ${res.added} restaurants`);
+        }).catch(err => console.error("Background sync error (restaurant):", err));
+        
+        overpassService.syncPlaceType("fast_food").then(res => {
+          if (res.added > 0) console.log(`[Background Sync] Added ${res.added} fast_food`);
+        }).catch(err => console.error("Background sync error (fast_food):", err));
       }
 
-      // Combiner restaurant et fast_food pour l'affichage si nécessaire
+      // Combiner restaurant et fast_food pour l'affichage
       if ((!type || type === "all")) {
         try {
-          const fastFoodResult = await overpassService.getPlaces({ placeType: "fast_food" });
-          // Utiliser un Set pour éviter les doublons par ID
-          const existingIds = new Set(finalPlaces.map(p => p.id));
-          const uniqueFastFood = fastFoodResult.places.filter(p => !existingIds.has(p.id));
+          // IMPORTANT: Ne pas faire de getPlaces qui pourrait déclencher une sync bloquante ici
+          // On utilise une requête directe très rapide
+          const fastFoodResult = await db.select().from(places).where(eq(places.placeType, "fast_food")).limit(500);
+          const existingIds = new Set(finalPlaces.map((p: any) => p.id));
+          const uniqueFastFood = fastFoodResult.filter((p: any) => !existingIds.has(p.id));
           finalPlaces = [...finalPlaces, ...uniqueFastFood];
-        } catch (ffError) {
-          console.error("[API] Erreur lors de la récupération des fast-foods:", ffError);
+        } catch (e) {
+          console.error("Error fetching fast_food from DB:", e);
         }
       }
 

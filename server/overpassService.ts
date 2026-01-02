@@ -571,19 +571,24 @@ export class OverpassService {
     offset?: number;
   } = {}): Promise<{ places: Place[]; lastUpdated: Date | null }> {
     // Check if we need to refresh (once per day or if empty)
+    // IMPORTANT: On ne bloque JAMAIS l'appel utilisateur par une synchronisation
     if (options.placeType) {
+      const pType = options.placeType;
       const now = new Date();
-      const lastSyncKey = `last_sync_${options.placeType}`;
-      const lastSyncStr = await storage.getMetadata(lastSyncKey);
-      const lastSyncDate = lastSyncStr ? new Date(lastSyncStr) : null;
+      const lastSyncKey = `last_sync_${pType}`;
       
-      const oneDay = 24 * 60 * 60 * 1000;
-      if (!lastSyncDate || (now.getTime() - lastSyncDate.getTime() > oneDay)) {
-        console.log(`[Overpass] Refreshing ${options.placeType} (last sync: ${lastSyncDate})`);
-        this.syncPlaceType(options.placeType).then(() => {
-          storage.setMetadata(lastSyncKey, now.toISOString());
-        }).catch(err => console.error(`Error refreshing ${options.placeType}:`, err));
-      }
+      // On récupère la date de dernière sync de manière asynchrone
+      storage.getMetadata(lastSyncKey).then(lastSyncStr => {
+        const lastSyncDate = lastSyncStr ? new Date(lastSyncStr) : null;
+        const oneDay = 24 * 60 * 60 * 1000;
+        
+        if (!lastSyncDate || (now.getTime() - lastSyncDate.getTime() > oneDay)) {
+          console.log(`[Overpass] Refreshing ${pType} in background (last sync: ${lastSyncDate})`);
+          this.syncPlaceType(pType).then(() => {
+            storage.setMetadata(lastSyncKey, now.toISOString());
+          }).catch(err => console.error(`Error refreshing ${pType}:`, err));
+        }
+      }).catch(err => console.error("Error getting metadata:", err));
     }
 
     // 1. Lire exclusivement depuis la base de données
