@@ -1603,11 +1603,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         appContext.signalements = recentSignalements;
         
         // Importer les données statiques
-        const { PHARMACIES_DATA } = await import('../client/src/pages/Pharmacies');
-        const { urgencesData } = await import('../client/src/pages/Urgences');
+        const { PHARMACIES_DATA } = await import('./pharmaciesData');
+        const { EMERGENCY_SERVICES } = await import('./urgenciesService');
         
         appContext.pharmacies = PHARMACIES_DATA;
-        appContext.urgences = urgencesData;
+        appContext.urgences = EMERGENCY_SERVICES;
       } catch (contextError) {
         console.error("Erreur récupération contexte:", contextError);
         // Continuer même si le contexte n'est pas disponible
