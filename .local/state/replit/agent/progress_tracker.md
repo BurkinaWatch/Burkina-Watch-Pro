@@ -24,3 +24,5 @@ Additional completed tasks:
 [x] 22. Final reinstall and verification - all services running correctly (Dec 31, 2025)
 [x] 23. Reinstalled tsx and verified application running (Jan 1, 2026)
 [x] 24. Fixed ".map is not a function" errors in Pharmacies, Restaurants, Marchés, and Boutiques pages by adding array checks to useMemo hooks.
+[x] 25. Reinstalled tsx, pushed database schema, and verified application running (Jan 1, 2026)
+[x] 26. Configured Stations-Service to use PostgreSQL database via OverpassService (matching Gares Routieres implementation)

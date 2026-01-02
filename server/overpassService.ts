@@ -2,6 +2,11 @@ import { db } from "./db";
 import { places, placeVerifications, type Place, type InsertPlace, PlaceTypes, VerificationStatuses, DataSources } from "@shared/schema";
 import { eq, and, sql, ilike, or } from "drizzle-orm";
 import { storage } from "./storage";
+import { RESTAURANTS_DATA } from "./restaurantsData";
+import { PHARMACIES_DATA } from "./pharmaciesData";
+import { BANQUES_DATA } from "./banquesData";
+import { MARCHES_DATA } from "./marchesData";
+import { BOUTIQUES_DATA } from "./boutiquesData";
 
 // Multiple Overpass API endpoints for redundancy
 const OVERPASS_ENDPOINTS = [
@@ -561,6 +566,149 @@ export class OverpassService {
     }
   }
 
+  private getFallbackPlaces(placeType: string): any[] {
+    switch (placeType) {
+      case "restaurant":
+      case "fast_food":
+      case "cafe":
+        return RESTAURANTS_DATA.map(r => ({
+          id: parseInt(r.id.replace(/\D/g, '')),
+          osmId: r.id,
+          osmType: "node",
+          placeType,
+          name: r.nom,
+          latitude: String(r.latitude),
+          longitude: String(r.longitude),
+          address: r.adresse,
+          quartier: r.quartier,
+          ville: r.ville,
+          region: r.region,
+          telephone: r.telephone,
+          email: r.email,
+          website: r.siteWeb,
+          horaires: r.horaires,
+          tags: { cuisine: r.type, price_level: r.gammePrix },
+          source: "Fallback",
+          confidenceScore: "0.5",
+          lastSyncedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          verificationStatus: "verified"
+        }));
+      case "pharmacy":
+        return PHARMACIES_DATA.map(p => ({
+          id: parseInt(p.id.replace(/\D/g, '')),
+          osmId: p.id,
+          osmType: "node",
+          placeType: "pharmacy",
+          name: p.nom,
+          latitude: String(p.latitude),
+          longitude: String(p.longitude),
+          address: p.adresse,
+          quartier: p.quartier,
+          ville: p.ville,
+          region: p.region,
+          telephone: p.telephone,
+          email: p.email,
+          horaires: p.horaires,
+          tags: { is24h: p.is24h ? "yes" : "no" },
+          source: "Fallback",
+          confidenceScore: "0.5",
+          lastSyncedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          verificationStatus: "verified"
+        }));
+      case "bank":
+      case "atm":
+        return BANQUES_DATA.map(b => ({
+          id: parseInt(b.id.replace(/\D/g, '')),
+          osmId: b.id,
+          osmType: "node",
+          placeType: b.hasGAB ? "bank" : "atm",
+          name: b.nom,
+          latitude: String(b.latitude),
+          longitude: String(b.longitude),
+          address: b.adresse,
+          quartier: b.quartier,
+          ville: b.ville,
+          region: b.region,
+          telephone: b.telephone,
+          email: b.email,
+          website: b.siteWeb,
+          horaires: b.horaires,
+          tags: { sigle: b.sigle, type: b.type },
+          source: "Fallback",
+          confidenceScore: "0.5",
+          lastSyncedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          verificationStatus: "verified"
+        }));
+      case "marketplace":
+        return MARCHES_DATA.map(m => ({
+          id: parseInt(m.id.replace(/\D/g, '')),
+          osmId: m.id,
+          osmType: "node",
+          placeType: "marketplace",
+          name: m.nom,
+          latitude: String(m.latitude),
+          longitude: String(m.longitude),
+          address: m.adresse,
+          quartier: m.quartier,
+          ville: m.ville,
+          region: m.region,
+          telephone: m.telephone,
+          horaires: m.horaires,
+          tags: { type: m.type, products: m.produits.join(", ") },
+          source: "Fallback",
+          confidenceScore: "0.5",
+          lastSyncedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          verificationStatus: "verified"
+        }));
+      case "supermarket":
+      case "convenience":
+      case "clothes":
+      case "shoes":
+      case "electronics":
+      case "mobile_phone":
+      case "hardware":
+      case "cosmetics":
+      case "furniture":
+      case "books":
+      case "sports":
+      case "jewelry":
+        return BOUTIQUES_DATA.map(b => ({
+          id: parseInt(b.id.replace(/\D/g, '')),
+          osmId: b.id,
+          osmType: "node",
+          placeType: b.categorie.toLowerCase(),
+          name: b.nom,
+          latitude: String(b.latitude),
+          longitude: String(b.longitude),
+          address: b.adresse,
+          quartier: b.quartier,
+          ville: b.ville,
+          region: b.region,
+          telephone: b.telephone,
+          email: b.email,
+          website: b.siteWeb,
+          horaires: b.horaires,
+          tags: { category: b.categorie, brands: b.marques?.join(", ") },
+          source: "Fallback",
+          confidenceScore: "0.5",
+          lastSyncedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          verificationStatus: "verified"
+        }));
+      default:
+        return [];
+    }
+  }
+
   async getPlaces(options: {
     placeType?: string;
     region?: string;
@@ -571,19 +719,24 @@ export class OverpassService {
     offset?: number;
   } = {}): Promise<{ places: Place[]; lastUpdated: Date | null }> {
     // Check if we need to refresh (once per day or if empty)
+    // IMPORTANT: On ne bloque JAMAIS l'appel utilisateur par une synchronisation
     if (options.placeType) {
+      const pType = options.placeType;
       const now = new Date();
-      const lastSyncKey = `last_sync_${options.placeType}`;
-      const lastSyncStr = await storage.getMetadata(lastSyncKey);
-      const lastSyncDate = lastSyncStr ? new Date(lastSyncStr) : null;
+      const lastSyncKey = `last_sync_${pType}`;
       
-      const oneDay = 24 * 60 * 60 * 1000;
-      if (!lastSyncDate || (now.getTime() - lastSyncDate.getTime() > oneDay)) {
-        console.log(`[Overpass] Refreshing ${options.placeType} (last sync: ${lastSyncDate})`);
-        this.syncPlaceType(options.placeType).then(() => {
-          storage.setMetadata(lastSyncKey, now.toISOString());
-        }).catch(err => console.error(`Error refreshing ${options.placeType}:`, err));
-      }
+      // On récupère la date de dernière sync de manière asynchrone
+      storage.getMetadata(lastSyncKey).then(lastSyncStr => {
+        const lastSyncDate = lastSyncStr ? new Date(lastSyncStr) : null;
+        const oneDay = 24 * 60 * 60 * 1000;
+        
+        if (!lastSyncDate || (now.getTime() - lastSyncDate.getTime() > oneDay)) {
+          console.log(`[Overpass] Refreshing ${pType} in background (last sync: ${lastSyncDate})`);
+          this.syncPlaceType(pType).then(() => {
+            storage.setMetadata(lastSyncKey, now.toISOString());
+          }).catch(err => console.error(`Error refreshing ${pType}:`, err));
+        }
+      }).catch(err => console.error("Error getting metadata:", err));
     }
 
     // 1. Lire exclusivement depuis la base de données
@@ -617,6 +770,26 @@ export class OverpassService {
     let results = await query
       .limit(options.limit || 10000)
       .offset(options.offset || 0);
+
+    // 2. Si aucun résultat en DB, utiliser les données fallback
+    if (results.length === 0 && options.placeType) {
+      console.log(`[Overpass] No DB results for ${options.placeType}, using fallback data`);
+      const fallbackResults = this.getFallbackPlaces(options.placeType);
+      
+      // Filter fallbacks locally based on search/region/ville if provided
+      results = fallbackResults.filter(p => {
+        let match = true;
+        if (options.region && p.region !== options.region) match = false;
+        if (options.ville && p.ville !== options.ville) match = false;
+        if (options.search) {
+          const s = options.search.toLowerCase();
+          match = p.name.toLowerCase().includes(s) || 
+                  (p.ville && p.ville.toLowerCase().includes(s)) ||
+                  (p.address && p.address.toLowerCase().includes(s));
+        }
+        return match;
+      }) as Place[];
+    }
 
     // Trouver la date de mise à jour la plus récente dans les résultats
     let latestUpdate: Date | null = null;
