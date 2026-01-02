@@ -48,6 +48,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
   const vieQuotidienneItems = [
     { href: "/pharmacies", icon: Cross, label: "Pharmacies", color: "text-green-600 dark:text-green-500" },
     { href: "/restaurants", icon: Utensils, label: "Restaurants", color: "text-amber-600 dark:text-amber-500" },
+    { href: "/cine", icon: Film, label: "Programme Ciné", color: "text-pink-600 dark:text-pink-500" },
     { href: "/marches", icon: Store, label: "Marches", color: "text-amber-700 dark:text-amber-400" },
     { href: "/boutiques", icon: ShoppingBag, label: "Boutiques", color: "text-pink-600 dark:text-pink-500" },
     { href: "/banques", icon: Landmark, label: "Banques", color: "text-blue-600 dark:text-blue-500" },
