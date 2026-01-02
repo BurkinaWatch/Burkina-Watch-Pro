@@ -26,3 +26,4 @@ Additional completed tasks:
 [x] 24. Fixed ".map is not a function" errors in Pharmacies, Restaurants, Marchés, and Boutiques pages by adding array checks to useMemo hooks.
 [x] 25. Reinstalled tsx, pushed database schema, and verified application running (Jan 1, 2026)
 [x] 26. Configured Stations-Service to use PostgreSQL database via OverpassService (matching Gares Routieres implementation)
+[x] 27. Reinstalled tsx, pushed database schema, fixed Film icon import error in HamburgerMenu.tsx, verified application running (Jan 2, 2026)
