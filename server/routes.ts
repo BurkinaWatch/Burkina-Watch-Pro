@@ -1715,16 +1715,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dbPlaces = result.places || [];
       const lastUpdated = result.lastUpdated;
       
-      console.log(`[API] Restaurants found in DB: ${dbPlaces.length}`);
+      console.log(`[API] Restaurants found in DB for type ${type || 'all'}: ${dbPlaces.length}`);
       
       // Fallback si la DB est vide
       let finalPlaces = dbPlaces;
-      if (finalPlaces.length === 0) {
+      if (finalPlaces.length === 0 && !search && (!region || region === "all") && (!type || type === "all")) {
         console.log("[API] Aucun restaurant trouvé dans la DB, tentative de synchronisation forcée...");
-        const forcedSync = await overpassService.syncPlaceType("restaurant");
-        console.log(`[API] Sync forcée terminée: ${forcedSync.added} ajoutés`);
-        const retry = await overpassService.getPlaces({ placeType: "restaurant" });
-        finalPlaces = retry.places;
+        try {
+          const forcedSync = await overpassService.syncPlaceType("restaurant");
+          const forcedSyncFastFood = await overpassService.syncPlaceType("fast_food");
+          console.log(`[API] Sync forcée terminée: ${forcedSync.added + forcedSyncFastFood.added} ajoutés`);
+          const retry = await overpassService.getPlaces({ placeType: "restaurant" });
+          finalPlaces = retry.places;
+        } catch (syncError) {
+          console.error("[API] Erreur lors de la sync forcée:", syncError);
+        }
+      }
+
+      // Combiner restaurant et fast_food pour l'affichage si nécessaire
+      if ((!type || type === "all")) {
+        try {
+          const fastFoodResult = await overpassService.getPlaces({ placeType: "fast_food" });
+          // Utiliser un Set pour éviter les doublons par ID
+          const existingIds = new Set(finalPlaces.map(p => p.id));
+          const uniqueFastFood = fastFoodResult.places.filter(p => !existingIds.has(p.id));
+          finalPlaces = [...finalPlaces, ...uniqueFastFood];
+        } catch (ffError) {
+          console.error("[API] Erreur lors de la récupération des fast-foods:", ffError);
+        }
       }
 
       let restaurants = finalPlaces.map((p, i) => transformOsmToRestaurant(p, i));
