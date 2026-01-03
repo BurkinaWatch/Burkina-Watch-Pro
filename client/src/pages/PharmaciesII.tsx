@@ -3,11 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, Clock, ExternalLink, Navigation, Building2, Globe, RefreshCcw, ArrowLeft, Crosshair, PlusSquare, ShieldCheck, Info, Accessibility } from "lucide-react";
+import { Search, MapPin, Phone, Clock, ExternalLink, Navigation, Building2, Globe, RefreshCcw, ArrowLeft, Crosshair, PlusSquare, ShieldCheck, Info, Accessibility, Pill, Activity } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Place } from "@shared/schema";
-import PageStatCard from "@/components/PageStatCard";
 import { useLocation } from "wouter";
 import {
   Select,
@@ -49,6 +48,13 @@ export default function PharmaciesII() {
     return Array.from(r).sort();
   }, [places]);
 
+  const onDutyCount = useMemo(() => {
+    return places.filter(p => {
+      const tags = (p.tags as any) || {};
+      return tags.is_on_duty || tags.opening_hours === "24/7";
+    }).length;
+  }, [places]);
+
   const filteredPharmacies = useMemo(() => {
     if (!places || !Array.isArray(places)) return [];
     return places.filter((p: Place) => {
@@ -86,28 +92,62 @@ export default function PharmaciesII() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <PageStatCard 
-            title="Total" 
-            value={places.length} 
-            icon={Building2} 
-            variant="green"
-            description="Lieux répertoriés"
-          />
-          <PageStatCard 
-            title="Régions" 
-            value={regions.length} 
-            icon={MapPin} 
-            variant="blue"
-            description="Couverture nationale"
-          />
-          <PageStatCard 
-            title="Source" 
-            value="OSM+" 
-            icon={Globe} 
-            variant="amber"
-            description="Données temps réel"
-          />
+        {/* Stats Grid - Nouveau Modèle selon l'image */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Pharmacies Card */}
+          <Card className="bg-red-500/10 border-red-500/20 hover:bg-red-500/15 transition-all group overflow-visible">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest opacity-80">Pharmacies</p>
+                <h3 className="text-3xl font-black text-white">{places.length}</h3>
+              </div>
+              <div className="p-2.5 bg-red-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                <Pill className="h-5 w-5 text-red-500" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* De Garde Card */}
+          <Card className="bg-green-500/10 border-green-500/20 hover:bg-green-500/15 transition-all group overflow-visible">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-green-400 uppercase tracking-widest opacity-80">De Garde</p>
+                <h3 className="text-3xl font-black text-white">{onDutyCount}</h3>
+              </div>
+              <div className="p-2.5 bg-green-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                <ShieldCheck className="h-5 w-5 text-green-500" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Villes Card */}
+          <Card className="bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/15 transition-all group overflow-visible">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest opacity-80">Villes</p>
+                <h3 className="text-3xl font-black text-white">{regions.length}</h3>
+              </div>
+              <div className="p-2.5 bg-blue-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                <MapPin className="h-5 w-5 text-blue-500" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Urgence SOS Card */}
+          <Card 
+            className="bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/15 transition-all group overflow-visible cursor-pointer"
+            onClick={() => setLocation("/sos")}
+          >
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest opacity-80">Urgence</p>
+                <h3 className="text-3xl font-black text-white tracking-tighter italic">SOS</h3>
+              </div>
+              <div className="p-2.5 bg-amber-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                <Activity className="h-5 w-5 text-amber-500" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="flex flex-col md:flex-row gap-4">
