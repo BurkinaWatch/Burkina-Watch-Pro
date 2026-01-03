@@ -11,16 +11,26 @@ import type { Place } from "@shared/schema";
 export default function PharmaciesII() {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: places, isLoading } = useQuery<Place[]>({
+  const { data: placesData, isLoading } = useQuery<{
+    places: Place[];
+    total: number;
+    lastUpdated: string | null;
+    source: string;
+  }>({
     queryKey: ["/api/places", "pharmacy"],
   });
 
+  const places = useMemo(() => {
+    return placesData?.places || [];
+  }, [placesData]);
+
   const filteredPharmacies = useMemo(() => {
     if (!places || !Array.isArray(places)) return [];
-    return places.filter((p) =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    return places.filter((p: Place) =>
+      (p.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (p.quartier && p.quartier.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (p.ville && p.ville.toLowerCase().includes(searchTerm.toLowerCase()))
+      (p.ville && p.ville.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (p.address && p.address.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [places, searchTerm]);
 
@@ -63,7 +73,7 @@ export default function PharmaciesII() {
           </div>
         ) : filteredPharmacies.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredPharmacies.map((pharmacy) => (
+            {filteredPharmacies.map((pharmacy: Place) => (
               <Card key={pharmacy.id} className="hover-elevate transition-all border-muted/40 overflow-hidden">
                 <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
                   <div className="space-y-1">
@@ -103,7 +113,9 @@ export default function PharmaciesII() {
                       variant="outline" 
                       size="sm" 
                       className="flex-1 text-xs h-8"
-                      onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${pharmacy.latitude},${pharmacy.longitude}`, '_blank')}
+                      onClick={() => {
+                        window.open(`https://www.google.com/maps/dir/?api=1&destination=${pharmacy.latitude},${pharmacy.longitude}`, '_blank');
+                      }}
                     >
                       <Navigation className="h-3 w-3 mr-1" />
                       Itinéraire
@@ -112,7 +124,9 @@ export default function PharmaciesII() {
                       variant="ghost" 
                       size="icon" 
                       className="h-8 w-8 text-muted-foreground hover:text-primary"
-                      onClick={() => window.open(`https://www.google.com/maps?q=${pharmacy.latitude},${pharmacy.longitude}`, '_blank')}
+                      onClick={() => {
+                        window.open(`https://www.google.com/maps?q=${pharmacy.latitude},${pharmacy.longitude}`, '_blank');
+                      }}
                     >
                       <ExternalLink className="h-4 w-4" />
                     </Button>
