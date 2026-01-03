@@ -2450,7 +2450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const transformedPlaces = response.places.map(transformOsmToHopital);
         return res.json({
           places: transformedPlaces,
-          total: response.total
+          total: response.places.length
         });
       }
 
