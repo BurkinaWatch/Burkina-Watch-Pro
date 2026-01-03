@@ -2004,16 +2004,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/marches", async (req, res) => {
     try {
       const { region, search } = req.query;
-      let { places: dbPlaces, lastUpdated } = await overpassService.getPlaces({ placeType: "marketplace" });
+      let result = await overpassService.getPlaces({ placeType: "marketplace" });
+      let dbPlaces = result.places || [];
+      let lastUpdated = result.lastUpdated;
       
-      // Log for debugging
       console.log(`[API] Requête Marchés: ${dbPlaces.length} lieux trouvés dans la DB`);
       
       if (dbPlaces.length === 0) {
-        console.log("[API] Aucun marché trouvé dans la DB, tentative de synchronisation forcée...");
-        const forcedSync = await overpassService.syncPlaceType("marketplace");
-        console.log(`[API] Sync forcée terminée: ${forcedSync.added} ajoutés`);
-        
+        console.log("[API] Aucun marché trouvé dans la DB, utilisation des données de secours...");
+        const fallbackData = overpassService["getFallbackPlaces"]("marketplace");
+        // Injecter les données de secours dans la DB pour les prochaines requêtes
+        for (const p of fallbackData) {
+          try {
+            await db.insert(places).values(p).onConflictDoNothing();
+          } catch (e) {}
+        }
         const retry = await overpassService.getPlaces({ placeType: "marketplace" });
         dbPlaces = retry.places;
         lastUpdated = retry.lastUpdated;

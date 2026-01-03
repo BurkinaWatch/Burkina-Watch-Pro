@@ -571,6 +571,34 @@ export class OverpassService {
 
   private getFallbackPlaces(placeType: string): any[] {
     switch (placeType) {
+      case "marketplace":
+        return MARCHES_DATA.map(m => ({
+          id: parseInt(m.id.replace(/\D/g, '') || "0"),
+          osmId: m.id,
+          osmType: "node",
+          placeType: "marketplace",
+          name: m.nom,
+          latitude: String(m.latitude),
+          longitude: String(m.longitude),
+          address: m.adresse,
+          quartier: m.quartier,
+          ville: m.ville,
+          region: m.region,
+          telephone: m.telephone,
+          horaires: m.horaires,
+          tags: { 
+            capacity: m.nombreCommerçants?.toString(), 
+            area: m.superficie,
+            opening_hours: m.horaires,
+            marketplace: m.type === "Hebdomadaire" ? "periodic" : "neighborhood"
+          },
+          source: "Fallback",
+          confidenceScore: "0.5",
+          lastSyncedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          verificationStatus: "verified"
+        }));
       case "restaurant":
       case "fast_food":
       case "cafe":
