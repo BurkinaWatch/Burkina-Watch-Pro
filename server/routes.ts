@@ -2196,6 +2196,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----------------------------------------
+  // ROUTES UNIVERSITES
+  // ----------------------------------------
+  app.get("/api/universites", async (req, res) => {
+    try {
+      const { region, search } = req.query;
+      let result = await overpassService.getPlaces({ placeType: "university" });
+      let dbPlaces = result.places || [];
+      let lastUpdated = result.lastUpdated;
+
+      if (dbPlaces.length === 0) {
+        console.log("[API] Aucune université trouvée dans la DB, injection du fallback...");
+        const fallbackData = overpassService["getFallbackPlaces"]("university");
+        for (const p of fallbackData) {
+          try {
+            await db.insert(places).values(p).onConflictDoNothing();
+          } catch (e) {}
+        }
+        const retry = await overpassService.getPlaces({ placeType: "university" });
+        dbPlaces = retry.places;
+        lastUpdated = retry.lastUpdated;
+      }
+
+      res.json({
+        universites: dbPlaces,
+        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Erreur récupération universités:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des universités" });
+    }
+  });
+
+  // ----------------------------------------
   // ROUTES BANQUES ET CAISSES POPULAIRES
   // ----------------------------------------
   app.get("/api/banques", async (req, res) => {

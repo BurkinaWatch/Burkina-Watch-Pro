@@ -655,6 +655,31 @@ export class OverpassService {
           updatedAt: new Date(),
           verificationStatus: "verified"
         }));
+      case "university":
+        return UNIVERSITES_DATA.map(u => ({
+          id: parseInt(u.id.replace(/\D/g, '') || "0"),
+          osmId: u.id,
+          osmType: "node",
+          placeType: "university",
+          name: u.nom,
+          latitude: String(u.latitude),
+          longitude: String(u.longitude),
+          address: u.adresse,
+          ville: u.ville,
+          region: u.region,
+          telephone: u.telephone,
+          website: u.siteWeb,
+          tags: { 
+            type: u.type,
+            courses: u.filières.join(", ")
+          },
+          source: "Fallback",
+          confidenceScore: "0.9",
+          lastSyncedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          verificationStatus: "verified"
+        }));
       case "pharmacy":
         return PHARMACIES_DATA.map(p => ({
           id: parseInt(p.id.replace(/\D/g, '')),
