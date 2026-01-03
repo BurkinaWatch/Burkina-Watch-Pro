@@ -42,6 +42,7 @@ import Boutiques from "@/pages/Boutiques";
 import Banques from "@/pages/Banques";
 import Stations from "@/pages/Stations";
 import PharmaciesOSM from "@/pages/PharmaciesOSM";
+import PharmaciesII from "@/pages/PharmaciesII";
 import LiveTrack from "@/pages/LiveTrack";
 import Gares from "@/pages/Gares";
 import Hopitaux from "@/pages/Hopitaux";
@@ -69,6 +70,7 @@ function Router() {
       <Route path="/tracking-live" component={TrackingLive} />
       <Route path="/contribuer" component={Contribuer} />
       <Route path="/pharmacies" component={PharmaciesOSM} />
+      <Route path="/pharmacies-ii" component={PharmaciesII} />
       <Route path="/pharmacies-garde" component={Pharmacies} />
       <Route path="/urgences" component={Urgences} />
       <Route path="/bulletin" component={Bulletin} />
