@@ -3,15 +3,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, Clock, ExternalLink, Navigation } from "lucide-react";
+import { Search, MapPin, Phone, Clock, ExternalLink, Navigation, Building2, Globe, RefreshCcw, ArrowLeft, Crosshair, PlusSquare } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Place } from "@shared/schema";
+import PageStatCard from "@/components/PageStatCard";
+import { useLocation } from "wouter";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function PharmaciesII() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRegion, setSelectedRegion] = useState("all");
+  const [, setLocation] = useLocation();
 
-  const { data: placesData, isLoading } = useQuery<{
+  const { data: placesData, isLoading, refetch } = useQuery<{
     places: Place[];
     total: number;
     lastUpdated: string | null;
@@ -24,42 +35,128 @@ export default function PharmaciesII() {
     return placesData?.places || [];
   }, [placesData]);
 
+  const regions = useMemo(() => {
+    const r = new Set<string>();
+    places.forEach(p => {
+      if (p.ville) r.add(p.ville);
+    });
+    return Array.from(r).sort();
+  }, [places]);
+
   const filteredPharmacies = useMemo(() => {
     if (!places || !Array.isArray(places)) return [];
-    return places.filter((p: Place) =>
-      (p.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.quartier && p.quartier.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (p.ville && p.ville.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (p.address && p.address.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-  }, [places, searchTerm]);
+    return places.filter((p: Place) => {
+      const matchesSearch = (p.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.quartier && p.quartier.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (p.ville && p.ville.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (p.address && p.address.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesRegion = selectedRegion === "all" || p.ville === selectedRegion;
+      
+      return matchesSearch && matchesRegion;
+    });
+  }, [places, searchTerm, selectedRegion]);
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <div className="p-4 space-y-4 border-b bg-card">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Pharmacies II (Base de Données)</h1>
-          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-            {filteredPharmacies.length} pharmacies
-          </Badge>
+    <div className="flex flex-col h-full bg-background text-foreground">
+      {/* Header Section from Image */}
+      <div className="p-6 space-y-6">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setLocation("/")}
+            className="hover:bg-accent"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-500/20 rounded-lg">
+              <PlusSquare className="h-6 w-6 text-green-500" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Pharmacies</h1>
+              <p className="text-sm text-muted-foreground">Pharmacies du Burkina Faso via OpenStreetMap</p>
+            </div>
+          </div>
         </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Rechercher une pharmacie, un quartier ou une ville..."
-            className="pl-9"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            data-testid="input-search-pharmacy"
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <PageStatCard 
+            title="Total" 
+            value={places.length} 
+            icon={Building2} 
+            variant="green"
+            description="Lieux répertoriés"
           />
+          <PageStatCard 
+            title="Régions" 
+            value={regions.length} 
+            icon={MapPin} 
+            variant="blue"
+            description="Couverture nationale"
+          />
+          <PageStatCard 
+            title="OpenStreetMap" 
+            value="OSM" 
+            icon={Globe} 
+            variant="amber"
+            description="Source des données"
+          />
+        </div>
+
+        {/* Search and Filters */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher un lieu..."
+              className="pl-9 h-11 bg-muted/30 border-muted-foreground/20"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              data-testid="input-search-pharmacy"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+              <SelectTrigger className="w-[200px] h-11 bg-muted/30 border-muted-foreground/20">
+                <SelectValue placeholder="Toutes les régions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les régions</SelectItem>
+                {regions.map(region => (
+                  <SelectItem key={region} value={region}>{region}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button 
+              variant="outline" 
+              className="h-11 gap-2 bg-muted/30 border-muted-foreground/20"
+              onClick={() => refetch()}
+            >
+              <RefreshCcw className="h-4 w-4" />
+              Actualiser
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <Button variant="secondary" className="w-fit gap-2 h-9 rounded-md px-4">
+            <Crosshair className="h-4 w-4" />
+            Les plus proches
+          </Button>
+          <p className="text-sm text-muted-foreground font-medium">
+            {filteredPharmacies.length} lieux trouvés
+          </p>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto px-6 pb-6">
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, i) => (
-              <Card key={i} className="overflow-hidden">
+              <Card key={i} className="overflow-hidden bg-muted/10">
                 <CardHeader className="p-4 space-y-2">
                   <Skeleton className="h-5 w-3/4" />
                   <Skeleton className="h-4 w-1/2" />
@@ -74,10 +171,10 @@ export default function PharmaciesII() {
         ) : filteredPharmacies.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredPharmacies.map((pharmacy: Place) => (
-              <Card key={pharmacy.id} className="hover-elevate transition-all border-muted/40 overflow-hidden">
+              <Card key={pharmacy.id} className="hover-elevate transition-all border-muted/40 overflow-hidden bg-muted/5 group">
                 <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
                   <div className="space-y-1">
-                    <CardTitle className="text-lg font-bold leading-tight line-clamp-2">
+                    <CardTitle className="text-lg font-bold leading-tight line-clamp-2 group-hover:text-primary transition-colors">
                       {pharmacy.name}
                     </CardTitle>
                     <div className="flex items-center text-sm text-muted-foreground">
@@ -96,7 +193,7 @@ export default function PharmaciesII() {
                     {pharmacy.telephone && (
                       <div className="flex items-center gap-2 text-sm">
                         <Phone className="h-4 w-4 text-primary shrink-0" />
-                        <a href={`tel:${pharmacy.telephone}`} className="hover:text-primary transition-colors">
+                        <a href={`tel:${pharmacy.telephone}`} className="hover:underline text-primary/90">
                           {pharmacy.telephone}
                         </a>
                       </div>
@@ -108,11 +205,11 @@ export default function PharmaciesII() {
                     </div>
                   </div>
 
-                  <div className="flex gap-2 pt-2 border-t mt-4">
+                  <div className="flex gap-2 pt-2 border-t border-muted/30 mt-4">
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex-1 text-xs h-8"
+                      className="flex-1 text-xs h-8 hover:bg-primary hover:text-primary-foreground"
                       onClick={() => {
                         window.open(`https://www.google.com/maps/dir/?api=1&destination=${pharmacy.latitude},${pharmacy.longitude}`, '_blank');
                       }}
@@ -123,7 +220,7 @@ export default function PharmaciesII() {
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
                       onClick={() => {
                         window.open(`https://www.google.com/maps?q=${pharmacy.latitude},${pharmacy.longitude}`, '_blank');
                       }}
@@ -140,9 +237,9 @@ export default function PharmaciesII() {
             <div className="bg-muted rounded-full p-4 mb-4">
               <Search className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-medium">Aucune pharmacie trouvée</h3>
+            <h3 className="text-lg font-medium">Aucun lieu trouvé</h3>
             <p className="text-muted-foreground max-w-xs mt-1">
-              Essayez de modifier vos critères de recherche ou vérifiez l'orthographe.
+              Essayez de modifier vos critères de recherche ou la région.
             </p>
           </div>
         )}
