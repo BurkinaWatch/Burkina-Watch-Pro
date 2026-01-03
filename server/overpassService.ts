@@ -65,6 +65,7 @@ const PLACE_TYPE_QUERIES: Record<string, string> = {
   
   // Commerce
   marketplace: `["amenity"="marketplace"]`,
+  shop: `["shop"~"supermarket|convenience|grocery|butcher|bakery|clothes|shoes|electronics|mobile_phone|computer|hardware|furniture|cosmetics|beauty|hairdresser"]`,
   supermarket: `["shop"="supermarket"]`,
   convenience: `["shop"="convenience"]`,
   grocery: `["shop"="grocery"]`,
@@ -413,18 +414,17 @@ export class OverpassService {
     }
 
     // Simplifier la requête marketplace pour éviter les timeouts et s'assurer de capturer les centres commerciaux et marchés
-    if (placeType === "marketplace") {
+    if (placeType === "marketplace" || placeType === "shop") {
+      const tags = placeType === "marketplace" 
+        ? `"amenity"="marketplace"|"leisure"="market"|"place"="market"|"shop"="mall"`
+        : `"shop"~"supermarket|convenience|grocery|butcher|bakery|clothes|shoes|electronics|mobile_phone|computer|hardware|furniture|cosmetics|beauty|hairdresser"`;
+      
       return `
         [out:json][timeout:180];
         (
-          node["amenity"="marketplace"](${south},${west},${north},${east});
-          way["amenity"="marketplace"](${south},${west},${north},${east});
-          node["shop"="mall"](${south},${west},${north},${east});
-          way["shop"="mall"](${south},${west},${north},${east});
-          node["leisure"="market"](${south},${west},${north},${east});
-          way["leisure"="market"](${south},${west},${north},${east});
-          node["place"="market"](${south},${west},${north},${east});
-          way["place"="market"](${south},${west},${north},${east});
+          node[${tags}](${south},${west},${north},${east});
+          way[${tags}](${south},${west},${north},${east});
+          relation[${tags}](${south},${west},${north},${east});
         );
         out center;
       `;
@@ -470,7 +470,7 @@ export class OverpassService {
     const ville = tags["addr:city"] || this.guessCity(lat, lon);
     const region = this.guessRegion(ville);
 
-    const result = {
+    return {
       osmId: String(element.id),
       osmType: element.type,
       placeType,
@@ -619,6 +619,16 @@ export class OverpassService {
   }
 
   private getFallbackPlaces(placeType: string): any[] {
+    if (placeType === "shop") return BOUTIQUES_DATA.map(b => ({
+      ...b,
+      osmId: b.id,
+      osmType: "node",
+      placeType: "shop",
+      latitude: String(b.latitude),
+      longitude: String(b.longitude),
+      tags: { shop: b.categorie.toLowerCase() }
+    }));
+    
     switch (placeType) {
       case "hospital":
       case "clinic":

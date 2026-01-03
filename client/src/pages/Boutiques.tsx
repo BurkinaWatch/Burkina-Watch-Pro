@@ -170,13 +170,13 @@ export default function Boutiques() {
     }
   }, [showNearestOnly, userLocation, toast]);
 
-  const { data, isLoading, refetch } = useQuery<{ boutiques: Boutique[], lastUpdated: string }>({
+  const { data: boutiquesData, isLoading, refetch } = useQuery<{ boutiques: Boutique[], lastUpdated: string }>({
     queryKey: ["/api/boutiques"],
     staleTime: 0,
     gcTime: 0,
   });
 
-  const boutiques = data?.boutiques || [];
+  const boutiques = boutiquesData?.boutiques || [];
 
   const { data: stats } = useQuery<{
     total: number;
