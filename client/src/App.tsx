@@ -42,8 +42,11 @@ import Boutiques from "@/pages/Boutiques";
 import Banques from "@/pages/Banques";
 import Stations from "@/pages/Stations";
 import PharmaciesOSM from "@/pages/PharmaciesOSM";
+import PharmaciesII from "@/pages/PharmaciesII";
 import LiveTrack from "@/pages/LiveTrack";
 import Gares from "@/pages/Gares";
+import Hopitaux from "@/pages/Hopitaux";
+import Universites from "@/pages/Universites";
 import Cine from "@/pages/Cine";
 import Weather from "@/pages/Weather";
 import Fiabilite from "@/pages/Fiabilite";
@@ -67,6 +70,7 @@ function Router() {
       <Route path="/tracking-live" component={TrackingLive} />
       <Route path="/contribuer" component={Contribuer} />
       <Route path="/pharmacies" component={PharmaciesOSM} />
+      <Route path="/pharmacies-ii" component={PharmaciesII} />
       <Route path="/pharmacies-garde" component={Pharmacies} />
       <Route path="/urgences" component={Urgences} />
       <Route path="/bulletin" component={Bulletin} />
@@ -79,6 +83,8 @@ function Router() {
       <Route path="/boutiques" component={Boutiques} />
       <Route path="/banques" component={Banques} />
       <Route path="/stations" component={Stations} />
+      <Route path="/hopitaux" component={Hopitaux} />
+      <Route path="/universites" component={Universites} />
       <Route path="/gares" component={Gares} />
       <Route path="/cine" component={Cine} />
       <Route path="/meteo" component={Weather} />

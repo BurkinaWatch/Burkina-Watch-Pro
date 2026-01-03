@@ -27,3 +27,5 @@ Additional completed tasks:
 [x] 25. Reinstalled tsx, pushed database schema, and verified application running (Jan 1, 2026)
 [x] 26. Configured Stations-Service to use PostgreSQL database via OverpassService (matching Gares Routieres implementation)
 [x] 27. Reinstalled tsx, pushed database schema, fixed Film icon import error in HamburgerMenu.tsx, verified application running (Jan 2, 2026)
+[x] 28. Reinstalled tsx and verified application running (Jan 3, 2026)
+[x] 29. Reinstalled tsx, verified application running with all services initialized (Jan 3, 2026)

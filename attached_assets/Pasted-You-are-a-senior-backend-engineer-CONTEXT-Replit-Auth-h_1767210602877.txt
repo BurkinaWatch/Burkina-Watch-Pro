@@ -1,0 +1,81 @@
+You are a senior backend engineer.
+
+CONTEXT:
+- Replit Auth has already been removed.
+- The application deploys successfully on Railway.
+- User login functionality is currently missing or broken.
+- The goal is to implement a portable authentication system without touching Replit-specific services.
+
+GOAL:
+Add a complete JWT-based authentication system that works on Railway and any standard Node.js environment.
+
+STRICT CONSTRAINTS:
+- Do NOT reference or reinstall Replit Auth.
+- Do NOT break the current Railway deployment.
+- Do NOT require any manual code edits after implementation.
+- Do NOT hardcode any port number.
+- The server must listen on process.env.PORT and bind to 0.0.0.0.
+- Database errors must not prevent the server from starting.
+
+STACK:
+- Node.js
+- Express
+- PostgreSQL (existing connection / ORM)
+- bcrypt
+- jsonwebtoken
+
+IMPLEMENT THE FOLLOWING:
+
+1. DATABASE
+- Ensure a `users` table exists:
+  - id (primary key)
+  - email (unique)
+  - password (bcrypt hash)
+  - created_at (timestamp)
+
+2. AUTH ROUTES
+Create REST endpoints:
+
+POST /auth/register
+- email, password
+- Hash password using bcrypt
+- Store user
+- Return success
+
+POST /auth/login
+- Validate credentials
+- Generate JWT (7 days expiry)
+- Return token
+
+GET /auth/me
+- Protected route
+- Requires Authorization: Bearer <token>
+- Return user id and email
+
+3. JWT SECURITY
+- Implement JWT middleware
+- Reject invalid or missing tokens
+- Never expose password hashes
+
+4. SERVER SAFETY
+- Server must start even if PostgreSQL is unavailable
+- Log DB errors without crashing
+
+5. HEALTH CHECK
+- Implement GET / returning "OK"
+
+6. ENVIRONMENT VARIABLES
+- Read JWT_SECRET from process.env.JWT_SECRET
+- Read PORT from process.env.PORT
+- Compatible with Railway
+
+7. DEPENDENCIES
+- Ensure bcrypt and jsonwebtoken are added to package.json
+- Remove any unused auth-related code
+
+FINAL REQUIREMENT:
+- App must work locally, on Replit, and on Railway without changes.
+- Authentication must be fully functional.
+- No manual edits required.
+
+Proceed to implement now.

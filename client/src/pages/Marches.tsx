@@ -150,9 +150,11 @@ export default function Marches() {
     }
   }, [showNearestOnly, userLocation, toast]);
 
-  const { data: marches = [], isLoading, refetch } = useQuery<Marche[]>({
+  const { data, isLoading, refetch } = useQuery<{ marches: Marche[], lastUpdated: string }>({
     queryKey: ["/api/marches"],
   });
+
+  const marches = data?.marches || [];
 
   const { data: stats } = useQuery<{
     total: number;

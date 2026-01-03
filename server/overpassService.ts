@@ -117,6 +117,7 @@ const PLACE_TYPE_QUERIES: Record<string, string> = {
   kindergarten: `["amenity"="kindergarten"]`,
   library: `["amenity"="library"]`,
   driving_school: `["amenity"="driving_school"]`,
+  research_institute: `["amenity"="research_institute"]`,
   
   // Culture et loisirs
   cinema: `["amenity"="cinema"]`,
@@ -408,6 +409,8 @@ export class OverpassService {
           way["shop"="mall"](${south},${west},${north},${east});
           node["leisure"="market"](${south},${west},${north},${east});
           way["leisure"="market"](${south},${west},${north},${east});
+          node["place"="market"](${south},${west},${north},${east});
+          way["place"="market"](${south},${west},${north},${east});
         );
         out center;
       `;
@@ -568,6 +571,34 @@ export class OverpassService {
 
   private getFallbackPlaces(placeType: string): any[] {
     switch (placeType) {
+      case "marketplace":
+        return MARCHES_DATA.map(m => ({
+          id: parseInt(m.id.replace(/\D/g, '') || "0"),
+          osmId: m.id,
+          osmType: "node",
+          placeType: "marketplace",
+          name: m.nom,
+          latitude: String(m.latitude),
+          longitude: String(m.longitude),
+          address: m.adresse,
+          quartier: m.quartier,
+          ville: m.ville,
+          region: m.region,
+          telephone: m.telephone,
+          horaires: m.horaires,
+          tags: { 
+            capacity: m.nombreCommerçants?.toString(), 
+            area: m.superficie,
+            opening_hours: m.horaires,
+            marketplace: m.type === "Hebdomadaire" ? "periodic" : "neighborhood"
+          },
+          source: "Fallback",
+          confidenceScore: "0.5",
+          lastSyncedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          verificationStatus: "verified"
+        }));
       case "restaurant":
       case "fast_food":
       case "cafe":
@@ -590,6 +621,60 @@ export class OverpassService {
           tags: { cuisine: r.type, price_level: r.gammePrix },
           source: "Fallback",
           confidenceScore: "0.5",
+          lastSyncedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          verificationStatus: "verified"
+        }));
+      case "shop":
+        return BOUTIQUES_DATA.map(b => ({
+          id: parseInt(b.id.replace(/\D/g, '') || "0"),
+          osmId: b.id,
+          osmType: "node",
+          placeType: "shop",
+          name: b.nom,
+          latitude: String(b.latitude),
+          longitude: String(b.longitude),
+          address: b.adresse,
+          quartier: b.quartier,
+          ville: b.ville,
+          region: b.region,
+          telephone: b.telephone,
+          horaires: b.horaires,
+          tags: { 
+            category: b.categorie,
+            services: b.services.join(", "),
+            products: b.produits.join(", "),
+            delivery: b.livraison ? "yes" : "no",
+            air_conditioning: b.climatisation ? "yes" : "no"
+          },
+          source: "Fallback",
+          confidenceScore: "0.8",
+          lastSyncedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          verificationStatus: "verified"
+        }));
+      case "university":
+        return UNIVERSITES_DATA.map(u => ({
+          id: parseInt(u.id.replace(/\D/g, '') || "0"),
+          osmId: u.id,
+          osmType: "node",
+          placeType: "university",
+          name: u.nom,
+          latitude: String(u.latitude),
+          longitude: String(u.longitude),
+          address: u.adresse,
+          ville: u.ville,
+          region: u.region,
+          telephone: u.telephone,
+          website: u.siteWeb,
+          tags: { 
+            type: u.type,
+            courses: u.filières.join(", ")
+          },
+          source: "Fallback",
+          confidenceScore: "0.9",
           lastSyncedAt: new Date(),
           createdAt: new Date(),
           updatedAt: new Date(),

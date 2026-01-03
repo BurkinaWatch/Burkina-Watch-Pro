@@ -152,10 +152,25 @@ function mapOsmShopToCategory(shop: string): string {
 
 function transformOsmToMarche(place: Place) {
   const tags = place.tags as Record<string, string> || {};
+  
+  // Extraire les jours d'ouverture à partir d'opening_hours si disponible
+  let joursOuverture = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+  if (tags.opening_hours) {
+    if (tags.opening_hours.toLowerCase().includes("daily") || tags.opening_hours.includes("24/7")) {
+      joursOuverture = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+    }
+  }
+
+  // Extraire les produits courants à partir des tags shop, product, etc.
+  const produits = [];
+  if (tags.shop === "supermarket") produits.push("Alimentation générale");
+  if (tags.craft) produits.push("Artisanat");
+  if (tags.amenity === "marketplace") produits.push("Fruits et légumes", "Viande", "Produits locaux");
+  
   return {
     id: `osm-march-${place.id}`,
     nom: place.name,
-    type: "Marché général",
+    type: tags.marketplace === "periodic" ? "Hebdomadaire" : "Quartier",
     adresse: place.address || "Adresse à vérifier",
     quartier: place.quartier || "Quartier non spécifié",
     ville: place.ville || "Ville non spécifiée",
@@ -163,9 +178,11 @@ function transformOsmToMarche(place: Place) {
     latitude: parseFloat(place.latitude),
     longitude: parseFloat(place.longitude),
     telephone: place.telephone || undefined,
-    horaires: place.horaires || "Tous les jours",
-    joursOuverture: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"],
-    produits: [],
+    horaires: place.horaires || (tags.opening_hours || "07:00 - 18:00"),
+    joursOuverture: joursOuverture,
+    produits: produits.length > 0 ? produits : ["Produits divers"],
+    nombreCommercants: parseInt(tags.capacity || "0") || undefined,
+    superficie: tags.area ? `${tags.area} m²` : undefined,
     source: "OSM" as const
   };
 }
@@ -209,6 +226,45 @@ function transformOsmToStation(place: Place) {
     is24h: tags.opening_hours?.includes("24") || false,
     services: [],
     carburants: ["Essence", "Gasoil"],
+    source: "OSM" as const
+  };
+}
+
+function transformOsmToHopital(place: Place) {
+  const tags = place.tags as Record<string, string> || {};
+  return {
+    id: `osm-hosp-${place.id}`,
+    nom: place.name,
+    adresse: place.address || "Adresse à vérifier",
+    quartier: place.quartier || "Quartier non spécifié",
+    ville: place.ville || "Ville non spécifiée",
+    region: place.region || "Région non spécifiée",
+    latitude: parseFloat(place.latitude),
+    longitude: parseFloat(place.longitude),
+    telephone: place.telephone || undefined,
+    horaires: place.horaires || "24h/24",
+    services: tags.amenity === "hospital" ? ["Urgences", "Consultations", "Hospitalisation"] : ["Soins de base"],
+    source: "OSM" as const
+  };
+}
+
+function transformOsmToUniversity(place: Place) {
+  const tags = place.tags as Record<string, string> || {};
+  const faculties = tags.description || tags.subject || "Filières générales et techniques";
+  return {
+    id: `osm-uni-${place.id}`,
+    nom: place.name,
+    adresse: place.address || "Adresse à vérifier",
+    quartier: place.quartier || "Quartier non spécifié",
+    ville: place.ville || "Ville non spécifiée",
+    region: place.region || "Région non spécifiée",
+    latitude: parseFloat(place.latitude),
+    longitude: parseFloat(place.longitude),
+    telephone: place.telephone || undefined,
+    email: place.email || undefined,
+    website: place.website || undefined,
+    services: faculties.split(';').map(f => f.trim()),
+    type: tags.amenity === "university" ? "Université" : "Institut / École Supérieure",
     source: "OSM" as const
   };
 }
@@ -1948,16 +2004,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/marches", async (req, res) => {
     try {
       const { region, search } = req.query;
-      let { places: dbPlaces, lastUpdated } = await overpassService.getPlaces({ placeType: "marketplace" });
+      let result = await overpassService.getPlaces({ placeType: "marketplace" });
+      let dbPlaces = result.places || [];
+      let lastUpdated = result.lastUpdated;
       
-      // Log for debugging
       console.log(`[API] Requête Marchés: ${dbPlaces.length} lieux trouvés dans la DB`);
       
       if (dbPlaces.length === 0) {
-        console.log("[API] Aucun marché trouvé dans la DB, tentative de synchronisation forcée...");
-        const forcedSync = await overpassService.syncPlaceType("marketplace");
-        console.log(`[API] Sync forcée terminée: ${forcedSync.added} ajoutés`);
-        
+        console.log("[API] Aucun marché trouvé dans la DB, utilisation des données de secours...");
+        const fallbackData = overpassService["getFallbackPlaces"]("marketplace");
+        // Injecter les données de secours dans la DB pour les prochaines requêtes
+        for (const p of fallbackData) {
+          try {
+            await db.insert(places).values(p).onConflictDoNothing();
+          } catch (e) {}
+        }
         const retry = await overpassService.getPlaces({ placeType: "marketplace" });
         dbPlaces = retry.places;
         lastUpdated = retry.lastUpdated;
@@ -2093,26 +2154,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   app.get("/api/boutiques", async (req, res) => {
     try {
-      const { region, ville, categorie, search } = req.query;
-      const result = await overpassService.getPlaces({
-        placeType: "shop",
-        region: region as string,
-        ville: ville as string,
-        search: search as string,
-      });
-      const dbPlaces = result.places || [];
+      const { region, search, categorie } = req.query;
+      let result = await overpassService.getPlaces({ placeType: "shop" });
+      let dbPlaces = result.places || [];
+      let lastUpdated = result.lastUpdated;
 
-      let boutiques = dbPlaces.map(p => transformOsmToBoutique(p));
+      if (dbPlaces.length === 0) {
+        console.log("[API] Aucune boutique trouvée dans la DB, injection du fallback...");
+        const fallbackData = overpassService["getFallbackPlaces"]("shop");
+        for (const p of fallbackData) {
+          try {
+            await db.insert(places).values(p).onConflictDoNothing();
+          } catch (e) {}
+        }
+        const retry = await overpassService.getPlaces({ placeType: "shop" });
+        dbPlaces = retry.places;
+        lastUpdated = retry.lastUpdated;
+      }
+
+      let boutiques = dbPlaces.map(transformOsmToBoutique);
       
       if (categorie && categorie !== "all") {
         boutiques = boutiques.filter(b => b.categorie === categorie);
       }
+      if (region && region !== "all") {
+        boutiques = boutiques.filter(b => b.region === region);
+      }
+      if (search) {
+        const query = (search as string).toLowerCase();
+        boutiques = boutiques.filter(b => b.nom.toLowerCase().includes(query));
+      }
 
-      res.set('Cache-Control', 'public, max-age=3600');
-      res.json(boutiques);
+      res.json({
+        boutiques,
+        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
+      });
     } catch (error) {
       console.error("Erreur récupération boutiques:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des boutiques" });
+    }
+  });
+
+  // ----------------------------------------
+  // ROUTES UNIVERSITES
+  // ----------------------------------------
+  app.get("/api/universites", async (req, res) => {
+    try {
+      const { region, search } = req.query;
+      let result = await overpassService.getPlaces({ placeType: "university" });
+      let dbPlaces = result.places || [];
+      let lastUpdated = result.lastUpdated;
+
+      if (dbPlaces.length === 0) {
+        console.log("[API] Aucune université trouvée dans la DB, injection du fallback...");
+        const fallbackData = overpassService["getFallbackPlaces"]("university");
+        for (const p of fallbackData) {
+          try {
+            await db.insert(places).values(p).onConflictDoNothing();
+          } catch (e) {}
+        }
+        const retry = await overpassService.getPlaces({ placeType: "university" });
+        dbPlaces = retry.places;
+        lastUpdated = retry.lastUpdated;
+      }
+
+      res.json({
+        universites: dbPlaces,
+        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Erreur récupération universités:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des universités" });
     }
   });
 
@@ -2417,7 +2529,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { placeType, region, ville, search, verificationStatus, limit, offset } = req.query;
       
-      const places = await overpassService.getPlaces({
+      const response = await overpassService.getPlaces({
         placeType: placeType as string,
         region: region as string,
         ville: ville as string,
@@ -2427,8 +2539,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
         offset: offset ? parseInt(offset as string) : undefined,
       });
 
+      // Transformation spécifique pour les hôpitaux et cliniques
+      if (placeType === "hospital" || placeType === "clinic") {
+        const transformedPlaces = response.places.map(transformOsmToHopital);
+        return res.json({
+          places: transformedPlaces,
+          total: response.places.length,
+          lastUpdated: response.lastUpdated,
+          source: "PostgreSQL"
+        });
+      }
+
+      // Transformation spécifique pour les universités
+      if (placeType === "university" || placeType === "college") {
+        const transformedPlaces = response.places.map(transformOsmToUniversity);
+        return res.json({
+          places: transformedPlaces,
+          total: response.places.length,
+          lastUpdated: response.lastUpdated,
+          source: "PostgreSQL"
+        });
+      }
+
+      // Transformation spécifique pour les restaurants
+      if (placeType === "restaurant" || placeType === "fast_food" || placeType === "cafe") {
+        const transformedPlaces = response.places.map(transformOsmToRestaurant);
+        return res.json({
+          places: transformedPlaces,
+          total: response.places.length,
+          lastUpdated: response.lastUpdated,
+          source: "PostgreSQL"
+        });
+      }
+
+      // Transformation spécifique pour les pharmacies
+      if (placeType === "pharmacy") {
+        return res.json({
+          places: response.places,
+          total: response.places.length,
+          lastUpdated: response.lastUpdated,
+          source: "PostgreSQL"
+        });
+      }
+
+      // Transformation spécifique pour les restaurants
+      if (placeType === "restaurant" || placeType === "fast_food" || placeType === "cafe") {
+        const transformedPlaces = response.places.map(transformOsmToRestaurant);
+        return res.json({
+          places: transformedPlaces,
+          total: response.places.length,
+          lastUpdated: response.lastUpdated,
+          source: "PostgreSQL"
+        });
+      }
+
       res.set('Cache-Control', 'public, max-age=300');
-      res.json(places);
+      res.json(response);
     } catch (error) {
       console.error("Erreur récupération places:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des lieux" });

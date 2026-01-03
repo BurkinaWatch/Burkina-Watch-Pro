@@ -52,12 +52,6 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
   const [location, setLocation] = useLocation();
   const { t } = useTranslation();
 
-  const { data: unreadCount } = useQuery<{ count: number }>({
-    queryKey: ["/api/notifications/unread-count"],
-    enabled: isAuthenticated,
-    refetchInterval: 30000, // Poll every 30 seconds
-  });
-
   const handleNotificationClick = () => {
     if (location === "/notifications") {
       setLocation("/");
