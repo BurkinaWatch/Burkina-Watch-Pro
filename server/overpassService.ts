@@ -101,10 +101,11 @@ const PLACE_TYPE_QUERIES: Record<string, string> = {
   bathroom_furnishing: `["shop"="bathroom_furnishing"]`,
   
   // Services financiers
-  bank: `["amenity"="bank"]`,
+  bank: `["amenity"~"bank|microfinance"]`,
   atm: `["amenity"="atm"]`,
   bureau_de_change: `["amenity"="bureau_de_change"]`,
   money_transfer: `["amenity"="money_transfer"]`,
+  caisses_populaires: `["amenity"~"bank|microfinance"]["name"~"Caisse Populaire|RCPB|Caisse"]`,
   
   // Hébergement
   hotel: `["tourism"="hotel"]`,
@@ -431,13 +432,17 @@ export class OverpassService {
     }
 
     // Simplifier la requête banques et caisses pour capturer plus de données à travers tout le pays
-    if (placeType === "bank" || placeType === "atm") {
+    if (placeType === "bank" || placeType === "atm" || placeType === "caisses_populaires") {
+      const tags = placeType === "caisses_populaires" 
+        ? `"amenity"~"bank|microfinance"]["name"~"Caisse Populaire|RCPB|Caisse"`
+        : `"amenity"~"bank|atm|bureau_de_change|microfinance"`;
+      
       return `
         [out:json][timeout:180][maxsize:536870912];
         (
-          node["amenity"~"bank|atm|bureau_de_change"](${south},${west},${north},${east});
-          way["amenity"~"bank|atm|bureau_de_change"](${south},${west},${north},${east});
-          relation["amenity"~"bank|atm|bureau_de_change"](${south},${west},${north},${east});
+          node[${tags}](${south},${west},${north},${east});
+          way[${tags}](${south},${west},${north},${east});
+          relation[${tags}](${south},${west},${north},${east});
         );
         out center;
       `;
@@ -465,6 +470,12 @@ export class OverpassService {
     const tags = element.tags || {};
     let name = tags.name || tags["name:fr"] || tags.operator || tags.brand || tags.owner || tags.ref;
     
+    // Détection automatique du type basé sur le nom
+    let finalPlaceType = placeType;
+    if (name?.toLowerCase().includes("caisse populaire") || name?.toLowerCase().includes("rcpb")) {
+      finalPlaceType = "caisses_populaires";
+    }
+
     if (!name) {
       if (placeType === "marketplace") {
         const village = tags["addr:village"] || tags["addr:city"];

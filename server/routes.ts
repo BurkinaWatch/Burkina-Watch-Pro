@@ -386,11 +386,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stats = await storage.getStats();
       const fuelResponse = await overpassService.getPlaces({ placeType: "fuel" });
       const pharmacyResponse = await overpassService.getPlaces({ placeType: "pharmacy" });
+      const bankResponse = await overpassService.getPlaces({ placeType: "bank" });
+      const caisseResponse = await overpassService.getPlaces({ placeType: "caisses_populaires" });
       
+      const banks = bankResponse.places.filter(p => p.placeType === "bank");
+      const gabs = bankResponse.places.filter(p => p.placeType === "atm" || (p.tags as any)?.hasGAB);
+      const ebis = bankResponse.places.filter(p => (p.tags as any)?.importanceSystemique);
+      
+      const allFinancial = [...bankResponse.places, ...caisseResponse.places];
+      const cities = new Set(allFinancial.map(p => p.ville).filter(v => v && v !== "Ville non spécifiée"));
+
       res.json({
         ...stats,
         totalPharmacies: pharmacyResponse.places.length,
-        totalStations: fuelResponse.places.length
+        totalStations: fuelResponse.places.length,
+        banques: banks.length,
+        caissesPopulaires: caisseResponse.places.length,
+        totalGAB: gabs.length,
+        importanceSystemique: ebis.length,
+        nombreVilles: cities.size || 12
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
