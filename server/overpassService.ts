@@ -494,6 +494,19 @@ export class OverpassService {
     const ville = tags["addr:city"] || this.guessCity(lat, lon) || "Ville non spécifiée";
     const region = this.guessRegion(ville) || "Région non spécifiée";
 
+    // Enrichissement des tags pour les pharmacies
+    const enrichedTags = {
+      ...tags,
+      is_on_duty: tags["emergency"] === "yes" || tags["on_duty"] === "yes" || tags["opening_hours"] === "24/7",
+      has_emergency_service: tags["emergency"] === "yes",
+      dispensing: tags["dispensing"] === "yes",
+      wheelchair: tags["wheelchair"],
+      operator: tags["operator"],
+      brand: tags["brand"],
+      importanceSystemique: tags.importance === "high" || tags.rank === "1" || name?.toLowerCase().includes("boa") || name?.toLowerCase().includes("ecobank") || name?.toLowerCase().includes("coris") || name?.toLowerCase().includes("uba"),
+      hasGAB: tags.atm === "yes" || finalPlaceType === "atm" || tags.amenity === "atm",
+    };
+
     return {
       osmId: String(element.id),
       osmType: element.type,
@@ -505,17 +518,13 @@ export class OverpassService {
       quartier: tags["addr:suburb"] || tags["addr:neighbourhood"] || "Quartier non spécifié",
       ville,
       region,
-      telephone: tags.phone || tags["contact:phone"] || null,
+      telephone: tags.phone || tags["contact:phone"] || tags["phone:mobile"] || null,
       email: tags.email || tags["contact:email"] || null,
       website: tags.website || tags["contact:website"] || null,
       horaires: tags.opening_hours || null,
-      tags: {
-        ...tags,
-        hasGAB: tags.atm === "yes" || finalPlaceType === "atm" || tags.amenity === "atm",
-        importanceSystemique: tags.importance === "high" || tags.rank === "1" || name?.toLowerCase().includes("boa") || name?.toLowerCase().includes("ecobank") || name?.toLowerCase().includes("coris") || name?.toLowerCase().includes("uba")
-      } as Record<string, unknown>,
+      tags: enrichedTags as Record<string, unknown>,
       source: "OSM", 
-      confidenceScore: "0.6",
+      confidenceScore: "0.8",
       lastSyncedAt: new Date(),
     };
   }

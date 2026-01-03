@@ -31,7 +31,11 @@ export class PharmaciesService {
 
   // Récupérer les pharmacies par type de garde
   getPharmaciesByTypeGarde(typeGarde: "jour" | "nuit" | "24h") {
-    return PHARMACIES_DATA.filter(p => p.typeGarde === typeGarde);
+    return PHARMACIES_DATA.filter(p => {
+      if (typeGarde === "24h") return p.is24h;
+      if (typeGarde === "nuit") return p.gardeNuit;
+      return !p.is24h && !p.gardeNuit; // jour
+    });
   }
 
   // Récupérer les pharmacies 24h/24
