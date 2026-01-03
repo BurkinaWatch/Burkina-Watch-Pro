@@ -2488,10 +2488,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Transformation spécifique pour les restaurants
+      if (placeType === "restaurant" || placeType === "fast_food" || placeType === "cafe") {
+        const transformedPlaces = response.places.map(transformOsmToRestaurant);
+        return res.json({
+          places: transformedPlaces,
+          total: response.places.length,
+          lastUpdated: response.lastUpdated,
+          source: "PostgreSQL"
+        });
+      }
+
       // Transformation spécifique pour les pharmacies
       if (placeType === "pharmacy") {
         return res.json({
           places: response.places,
+          total: response.places.length,
+          lastUpdated: response.lastUpdated,
+          source: "PostgreSQL"
+        });
+      }
+
+      // Transformation spécifique pour les restaurants
+      if (placeType === "restaurant" || placeType === "fast_food" || placeType === "cafe") {
+        const transformedPlaces = response.places.map(transformOsmToRestaurant);
+        return res.json({
+          places: transformedPlaces,
           total: response.places.length,
           lastUpdated: response.lastUpdated,
           source: "PostgreSQL"
