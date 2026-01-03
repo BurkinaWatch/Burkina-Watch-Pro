@@ -178,19 +178,29 @@ export default function Boutiques() {
 
   const boutiques = boutiquesData?.boutiques || [];
 
-  const { data: stats } = useQuery<{
-    total: number;
-    avecClimatisation: number;
-    avecLivraison: number;
-    avecParking: number;
-    parCategorie: Record<string, number>;
-    parRegion: Record<string, number>;
-    nombreVilles: number;
-  }>({
-    queryKey: ["/api/boutiques/stats"],
-    staleTime: 0,
-    gcTime: 0,
-  });
+  const stats = useMemo(() => {
+    const boutiquesArray = Array.isArray(boutiques) ? boutiques : [];
+    const total = boutiquesArray.length;
+    const avecClimatisation = boutiquesArray.filter(b => b.climatisation).length;
+    const avecLivraison = boutiquesArray.filter(b => b.livraison).length;
+    const avecParking = boutiquesArray.filter(b => b.parking).length;
+    const parCategorie: Record<string, number> = {};
+    const villesSet = new Set<string>();
+
+    boutiquesArray.forEach(b => {
+      parCategorie[b.categorie] = (parCategorie[b.categorie] || 0) + 1;
+      if (b.ville) villesSet.add(b.ville);
+    });
+
+    return {
+      total,
+      avecClimatisation,
+      avecLivraison,
+      avecParking,
+      parCategorie,
+      nombreVilles: villesSet.size
+    };
+  }, [boutiques]);
 
   const filteredBoutiques = useMemo(() => {
     const boutiquesArray = Array.isArray(boutiques) ? boutiques : [];
