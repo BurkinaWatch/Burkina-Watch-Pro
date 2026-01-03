@@ -497,7 +497,7 @@ export class OverpassService {
     return {
       osmId: String(element.id),
       osmType: element.type,
-      placeType,
+      placeType: finalPlaceType,
       name,
       latitude: String(lat),
       longitude: String(lon),
@@ -511,8 +511,8 @@ export class OverpassService {
       horaires: tags.opening_hours || null,
       tags: {
         ...tags,
-        hasGAB: tags.atm === "yes" || placeType === "atm" || tags.amenity === "atm",
-        importanceSystemique: tags.importance === "high" || tags.rank === "1" || tags.operator?.toLowerCase().includes("boa") || tags.operator?.toLowerCase().includes("ecobank") || tags.operator?.toLowerCase().includes("coris") || tags.operator?.toLowerCase().includes("uba")
+        hasGAB: tags.atm === "yes" || finalPlaceType === "atm" || tags.amenity === "atm",
+        importanceSystemique: tags.importance === "high" || tags.rank === "1" || name?.toLowerCase().includes("boa") || name?.toLowerCase().includes("ecobank") || name?.toLowerCase().includes("coris") || name?.toLowerCase().includes("uba")
       } as Record<string, unknown>,
       source: "OSM", 
       confidenceScore: "0.6",
