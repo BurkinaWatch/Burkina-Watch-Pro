@@ -2488,6 +2488,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Transformation spécifique pour les pharmacies
+      if (placeType === "pharmacy") {
+        return res.json({
+          places: response.places,
+          total: response.places.length,
+          lastUpdated: response.lastUpdated,
+          source: "PostgreSQL"
+        });
+      }
+
       res.set('Cache-Control', 'public, max-age=300');
       res.json(response);
     } catch (error) {
