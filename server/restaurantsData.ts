@@ -23,6 +23,7 @@ export interface Restaurant {
   terrasse: boolean;
   livraison: boolean;
   source: "Vérifié" | "OSM";
+  plats?: string[];
 }
 
 export const typeColors: Record<string, string> = {
@@ -60,6 +61,7 @@ export const RESTAURANTS_DATA: Restaurant[] = [
     gammePrix: "Haut de gamme",
     services: ["Réservation", "Événements", "Buffet"],
     specialites: ["Cuisine française", "Plats internationaux", "Desserts maison"],
+    plats: ["Filet de capitaine", "Poulet bicyclette au vin", "Crêpe Suzette"],
     capacite: 150,
     wifi: true,
     climatisation: true,
@@ -84,6 +86,7 @@ export const RESTAURANTS_DATA: Restaurant[] = [
     gammePrix: "Haut de gamme",
     services: ["Réservation", "Événements privés", "Bar"],
     specialites: ["Cuisine française", "Fruits de mer", "Steaks"],
+    plats: ["Homard à la thermidor", "Entrecôte marchand de vin", "Sole meunière"],
     capacite: 80,
     wifi: true,
     climatisation: true,
@@ -107,6 +110,7 @@ export const RESTAURANTS_DATA: Restaurant[] = [
     gammePrix: "Moyen",
     services: ["Service rapide", "À emporter"],
     specialites: ["Riz sauce", "Poulet braisé", "Tô", "Babenda"],
+    plats: ["Tô à la sauce gombo", "Gonré", "Babenda traditionnel", "Poulet sauté"],
     capacite: 60,
     wifi: false,
     climatisation: false,
@@ -130,6 +134,7 @@ export const RESTAURANTS_DATA: Restaurant[] = [
     gammePrix: "Économique",
     services: ["Vente à emporter", "Livraison"],
     specialites: ["Frites", "Hamburgers", "Poulet frit"],
+    plats: ["Patate Burger", "Ailes de poulet épicées", "Frites maison XXL"],
     capacite: 40,
     wifi: true,
     climatisation: true,
@@ -153,6 +158,7 @@ export const RESTAURANTS_DATA: Restaurant[] = [
     gammePrix: "Haut de gamme",
     services: ["Dîner sur place", "Pizzeria"],
     specialites: ["Pizzas au feu de bois", "Pâtes fraîches", "Lasagnes"],
+    plats: ["Pizza Regina", "Tagliatelles à la bolognaise", "Lasagnes à la viande"],
     capacite: 70,
     wifi: true,
     climatisation: true,

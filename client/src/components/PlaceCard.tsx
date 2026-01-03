@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Phone, Clock, Navigation, Globe, Mail, ExternalLink, Locate, Activity, ShieldCheck } from "lucide-react";
+import { MapPin, Phone, Clock, Navigation, Globe, Mail, ExternalLink, Locate, Activity, ShieldCheck, UtensilsCrossed } from "lucide-react";
 import type { Place } from "@shared/schema";
 import { SourceBadge } from "./SourceBadge";
 
@@ -34,6 +34,9 @@ export function PlaceCard({ place }: PlaceCardProps) {
   const typeColor = PLACE_TYPE_COLORS[place.placeType] || "bg-muted text-muted-foreground";
   
   const tags = (place.tags || {}) as Record<string, string>;
+  
+  // Liste des plats vendus (si disponible dans les tags)
+  const plats = tags.plats || tags.menu || tags.dishes;
   
   // Extraire les spécialités et services pour l'affichage enrichi
   const specialites = tags.specialites || tags.cuisine || tags.speciality;
@@ -142,6 +145,16 @@ export function PlaceCard({ place }: PlaceCardProps) {
           <div className="flex items-start gap-2 text-sm text-muted-foreground">
             <ShieldCheck className="w-4 h-4 flex-shrink-0 mt-0.5 text-primary/70" />
             <span className="text-xs line-clamp-2 italic">{String(services)}</span>
+          </div>
+        )}
+
+        {plats && (
+          <div className="flex items-start gap-2 text-sm text-muted-foreground">
+            <UtensilsCrossed className="w-4 h-4 flex-shrink-0 mt-0.5 text-primary/70" />
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-semibold">Au menu :</span>
+              <span className="text-xs line-clamp-2">{String(plats)}</span>
+            </div>
           </div>
         )}
         

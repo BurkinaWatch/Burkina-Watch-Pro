@@ -399,6 +399,19 @@ export class OverpassService {
 
     const { south, west, north, east } = BURKINA_BBOX;
     
+    // Simplifier la requête restaurant pour capturer plus de données à travers tout le pays
+    if (placeType === "restaurant" || placeType === "fast_food" || placeType === "cafe") {
+      return `
+        [out:json][timeout:180];
+        (
+          node["amenity"~"restaurant|fast_food|cafe|bar"](${south},${west},${north},${east});
+          way["amenity"~"restaurant|fast_food|cafe|bar"](${south},${west},${north},${east});
+          relation["amenity"~"restaurant|fast_food|cafe|bar"](${south},${west},${north},${east});
+        );
+        out center;
+      `;
+    }
+
     // Simplifier la requête marketplace pour éviter les timeouts et s'assurer de capturer les centres commerciaux et marchés
     if (placeType === "marketplace") {
       return `
@@ -473,8 +486,8 @@ export class OverpassService {
       website: tags.website || tags["contact:website"] || null,
       horaires: tags.opening_hours || null,
       tags: tags as Record<string, unknown>,
-      source: "OSM", // Données provenant d'OpenStreetMap
-      confidenceScore: "0.6", // Score par défaut pour les données OSM
+      source: placeType === "restaurant" ? name : "OSM", // Utiliser le nom pour les restaurants, OSM pour le reste
+      confidenceScore: "0.6",
       lastSyncedAt: new Date(),
     };
   }
@@ -608,7 +621,6 @@ export class OverpassService {
         return [];
       case "marketplace":
         return MARCHES_DATA.map(m => ({
-          id: parseInt(m.id.replace(/\D/g, '') || "0"),
           osmId: m.id,
           osmType: "node",
           placeType: "marketplace",
@@ -627,8 +639,8 @@ export class OverpassService {
             opening_hours: m.horaires,
             marketplace: m.type === "Hebdomadaire" ? "periodic" : "neighborhood"
           },
-          source: "Fallback",
-          confidenceScore: "0.5",
+          source: m.nom,
+          confidenceScore: "0.9",
           lastSyncedAt: new Date(),
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -638,7 +650,6 @@ export class OverpassService {
       case "fast_food":
       case "cafe":
         return RESTAURANTS_DATA.map(r => ({
-          id: parseInt(r.id.replace(/\D/g, '')),
           osmId: r.id,
           osmType: "node",
           placeType,
@@ -653,9 +664,15 @@ export class OverpassService {
           email: r.email,
           website: r.siteWeb,
           horaires: r.horaires,
-          tags: { cuisine: r.type, price_level: r.gammePrix },
-          source: "Fallback",
-          confidenceScore: "0.5",
+          tags: { 
+            cuisine: r.type, 
+            price_level: r.gammePrix,
+            plats: r.plats?.join(", "),
+            services: r.services?.join(", "),
+            specialites: r.specialites?.join(", ")
+          },
+          source: r.nom,
+          confidenceScore: "1.0",
           lastSyncedAt: new Date(),
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -663,7 +680,6 @@ export class OverpassService {
         }));
       case "shop":
         return BOUTIQUES_DATA.map(b => ({
-          id: parseInt(b.id.replace(/\D/g, '') || "0"),
           osmId: b.id,
           osmType: "node",
           placeType: "shop",
@@ -683,8 +699,8 @@ export class OverpassService {
             delivery: b.livraison ? "yes" : "no",
             air_conditioning: b.climatisation ? "yes" : "no"
           },
-          source: "Fallback",
-          confidenceScore: "0.8",
+          source: b.nom,
+          confidenceScore: "0.9",
           lastSyncedAt: new Date(),
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -707,7 +723,7 @@ export class OverpassService {
             type: u.type,
             courses: u.filières.join(", ")
           },
-          source: "Fallback",
+          source: u.nom,
           confidenceScore: "0.9",
           lastSyncedAt: new Date(),
           createdAt: new Date(),
@@ -716,7 +732,6 @@ export class OverpassService {
         }));
       case "pharmacy":
         return PHARMACIES_DATA.map(p => ({
-          id: parseInt(p.id.replace(/\D/g, '')),
           osmId: p.id,
           osmType: "node",
           placeType: "pharmacy",
@@ -731,8 +746,8 @@ export class OverpassService {
           email: p.email,
           horaires: p.horaires,
           tags: { is24h: p.is24h ? "yes" : "no" },
-          source: "Fallback",
-          confidenceScore: "0.5",
+          source: p.nom,
+          confidenceScore: "0.9",
           lastSyncedAt: new Date(),
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -741,7 +756,6 @@ export class OverpassService {
       case "bank":
       case "atm":
         return BANQUES_DATA.map(b => ({
-          id: parseInt(b.id.replace(/\D/g, '')),
           osmId: b.id,
           osmType: "node",
           placeType: b.hasGAB ? "bank" : "atm",
@@ -757,8 +771,8 @@ export class OverpassService {
           website: b.siteWeb,
           horaires: b.horaires,
           tags: { sigle: b.sigle, type: b.type },
-          source: "Fallback",
-          confidenceScore: "0.5",
+          source: b.nom,
+          confidenceScore: "0.9",
           lastSyncedAt: new Date(),
           createdAt: new Date(),
           updatedAt: new Date(),
