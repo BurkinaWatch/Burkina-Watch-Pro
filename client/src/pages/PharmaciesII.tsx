@@ -75,7 +75,7 @@ export default function PharmaciesII() {
               <PlusSquare className="h-6 w-6 text-green-500" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Pharmacies</h1>
+              <h1 className="text-2xl font-bold tracking-tight">Pharmacies II</h1>
               <p className="text-sm text-muted-foreground">Pharmacies du Burkina Faso via OpenStreetMap</p>
             </div>
           </div>
