@@ -1,5 +1,5 @@
 
-import { PHARMACIES_DATA } from "../client/src/pages/Pharmacies";
+import { PHARMACIES_DATA } from "./pharmaciesData";
 
 // Service de gestion des pharmacies de garde du Burkina Faso
 // Base de données élargie: 150+ pharmacies couvrant toutes les 17 régions

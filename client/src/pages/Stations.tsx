@@ -145,9 +145,11 @@ export default function Stations() {
     }
   }, [showNearestOnly, userLocation, toast]);
 
-  const { data: stations = [], isLoading, refetch } = useQuery<StationService[]>({
+  const { data, isLoading, refetch } = useQuery<{ stations: StationService[], lastUpdated: string }>({
     queryKey: ["/api/stations"],
   });
+
+  const stations = data?.stations || [];
 
   const { data: stats } = useQuery<{
     total: number;
@@ -160,6 +162,7 @@ export default function Stations() {
   });
 
   const filteredStations = useMemo(() => {
+    if (!Array.isArray(stations)) return [];
     let result = stations;
 
     if (searchQuery) {

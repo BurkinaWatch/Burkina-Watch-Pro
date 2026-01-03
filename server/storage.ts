@@ -154,9 +154,22 @@ export interface IStorage {
   getVirtualTourWithPhotos(tourId: string): Promise<VirtualTourWithPhotos | undefined>;
   createVirtualTour(tour: InsertVirtualTour, photos: InsertStreetviewPoint[]): Promise<VirtualTour>;
   incrementTourViewCount(tourId: string): Promise<void>;
+  // --- Metadata methods for sync tracking ---
+  getMetadata(key: string): Promise<string | undefined>;
+  setMetadata(key: string, value: string): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
+  private metadata: Record<string, string> = {};
+
+  async getMetadata(key: string): Promise<string | undefined> {
+    return this.metadata[key];
+  }
+
+  async setMetadata(key: string, value: string): Promise<void> {
+    this.metadata[key] = value;
+  }
+
   async getUser(id: string): Promise<User | undefined> {
     const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
     return result[0];

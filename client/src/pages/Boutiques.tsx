@@ -191,7 +191,8 @@ export default function Boutiques() {
   });
 
   const filteredBoutiques = useMemo(() => {
-    let result = boutiques;
+    const boutiquesArray = Array.isArray(boutiques) ? boutiques : [];
+    let result = boutiquesArray;
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -440,7 +441,7 @@ export default function Boutiques() {
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
                 <MapUpdater center={mapCenter} zoom={mapZoom} />
-                {filteredBoutiques.map(boutique => (
+                {Array.isArray(filteredBoutiques) && filteredBoutiques.map(boutique => (
                   <Marker
                     key={boutique.id}
                     position={[boutique.latitude, boutique.longitude]}
@@ -488,7 +489,7 @@ export default function Boutiques() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredBoutiques.map(boutique => (
+            {Array.isArray(filteredBoutiques) && filteredBoutiques.map(boutique => (
               <Card 
                 key={boutique.id} 
                 className={`cursor-pointer transition-all hover-elevate ${

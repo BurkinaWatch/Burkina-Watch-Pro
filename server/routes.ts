@@ -3,10 +3,22 @@
 // ============================================
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { storage } from "./storage";
-import { insertSignalementSchema, updateSignalementSchema, insertCommentaireSchema, updateUserProfileSchema, insertLocationPointSchema, insertEmergencyContactSchema, insertChatMessageSchema } from "@shared/schema";
+import { 
+  places,
+  insertSignalementSchema, 
+  updateSignalementSchema, 
+  insertCommentaireSchema, 
+  updateUserProfileSchema, 
+  insertLocationPointSchema, 
+  insertEmergencyContactSchema, 
+  insertChatMessageSchema 
+} from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { OverpassService } from "./overpassService";
 import { reverseGeocode } from "./geocoding";
 import { sendLocationEmail, sendEmergencyTrackingStartEmail } from "./resend";
 import { verifySignalement } from "./aiVerification";
@@ -201,6 +213,45 @@ function transformOsmToStation(place: Place) {
   };
 }
 
+function transformOsmToHopital(place: Place) {
+  const tags = place.tags as Record<string, string> || {};
+  return {
+    id: `osm-hosp-${place.id}`,
+    nom: place.name,
+    adresse: place.address || "Adresse à vérifier",
+    quartier: place.quartier || "Quartier non spécifié",
+    ville: place.ville || "Ville non spécifiée",
+    region: place.region || "Région non spécifiée",
+    latitude: parseFloat(place.latitude),
+    longitude: parseFloat(place.longitude),
+    telephone: place.telephone || undefined,
+    horaires: place.horaires || "24h/24",
+    services: tags.amenity === "hospital" ? ["Urgences", "Consultations", "Hospitalisation"] : ["Soins de base"],
+    source: "OSM" as const
+  };
+}
+
+function transformOsmToUniversity(place: Place) {
+  const tags = place.tags as Record<string, string> || {};
+  const faculties = tags.description || tags.subject || "Filières générales et techniques";
+  return {
+    id: `osm-uni-${place.id}`,
+    nom: place.name,
+    adresse: place.address || "Adresse à vérifier",
+    quartier: place.quartier || "Quartier non spécifié",
+    ville: place.ville || "Ville non spécifiée",
+    region: place.region || "Région non spécifiée",
+    latitude: parseFloat(place.latitude),
+    longitude: parseFloat(place.longitude),
+    telephone: place.telephone || undefined,
+    email: place.email || undefined,
+    website: place.website || undefined,
+    services: faculties.split(';').map(f => f.trim()),
+    type: tags.amenity === "university" ? "Université" : "Institut / École Supérieure",
+    source: "OSM" as const
+  };
+}
+
 function mapOsmBrandToMarque(brand: string): string {
   const brandLower = brand.toLowerCase();
   if (brandLower.includes("total")) return "TotalEnergies";
@@ -314,7 +365,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/stats", async (req, res) => {
     try {
       const stats = await storage.getStats();
-      res.json(stats);
+      const fuelResponse = await overpassService.getPlaces({ placeType: "fuel" });
+      const pharmacyResponse = await overpassService.getPlaces({ placeType: "pharmacy" });
+      
+      res.json({
+        ...stats,
+        totalPharmacies: pharmacyResponse.places.length,
+        totalStations: fuelResponse.places.length
+      });
     } catch (error) {
       console.error("Error fetching stats:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
@@ -1584,11 +1642,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         appContext.signalements = recentSignalements;
         
         // Importer les données statiques
-        const { PHARMACIES_DATA } = await import('../client/src/pages/Pharmacies');
-        const { urgencesData } = await import('../client/src/pages/Urgences');
+        const { PHARMACIES_DATA } = await import('./pharmaciesData');
+        const { EMERGENCY_SERVICES } = await import('./urgenciesService');
         
         appContext.pharmacies = PHARMACIES_DATA;
-        appContext.urgences = urgencesData;
+        appContext.urgences = EMERGENCY_SERVICES;
       } catch (contextError) {
         console.error("Erreur récupération contexte:", contextError);
         // Continuer même si le contexte n'est pas disponible
@@ -1639,30 +1697,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----------------------------------------
-  // ROUTES PHARMACIES
+  // ROUTES VIE QUOTIDIENNE (PostgreSQL based)
   // ----------------------------------------
+
+  // Pharmacies
   app.get("/api/pharmacies", async (req, res) => {
     try {
-      const { pharmaciesService } = await import("./pharmaciesService");
       const { region, typeGarde, search } = req.query;
+      const result = await overpassService.getPlaces({ placeType: "pharmacy" });
+      const dbPlaces = result.places || [];
+      const lastUpdated = result.lastUpdated;
+      let pharmacies = dbPlaces.map(transformOsmToPharmacy);
 
-      // Récupérer les données du service existant
-      let pharmacies: any[] = pharmaciesService.getAllPharmacies();
-
-      // Ajouter les données OSM (pharmacies, hospitals, clinics)
-      try {
-        const osmPharmacies = await overpassService.getPlaces({ placeType: "pharmacy" });
-        const osmHospitals = await overpassService.getPlaces({ placeType: "hospital" });
-        const osmClinics = await overpassService.getPlaces({ placeType: "clinic" });
-        
-        const allOsmPlaces = [...osmPharmacies, ...osmHospitals, ...osmClinics];
-        const osmTransformed = allOsmPlaces.map(p => transformOsmToPharmacy(p));
-        pharmacies = [...pharmacies, ...osmTransformed];
-      } catch (osmError) {
-        console.error("Erreur chargement OSM pharmacies:", osmError);
-      }
-
-      // Appliquer les filtres
       if (search) {
         const query = (search as string).toLowerCase();
         pharmacies = pharmacies.filter(p =>
@@ -1672,42 +1718,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
           p.adresse?.toLowerCase().includes(query)
         );
       }
-
       if (region && region !== "all") {
         pharmacies = pharmacies.filter(p => p.region === region);
       }
-
       if (typeGarde && typeGarde !== "all") {
         pharmacies = pharmacies.filter(p => p.typeGarde === typeGarde);
       }
 
-      res.set('Cache-Control', 'public, max-age=3600'); // Cache 1 heure
-      res.json(pharmacies);
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json({
+        pharmacies,
+        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
+      });
     } catch (error) {
-      console.error("Erreur récupération pharmacies:", error);
+      console.error("Error fetching pharmacies:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des pharmacies" });
     }
   });
 
   app.get("/api/pharmacies/stats", async (req, res) => {
     try {
-      const { pharmaciesService } = await import("./pharmaciesService");
-      const localStats = pharmaciesService.getStats();
-      
-      // Compter les données OSM
-      let osmCount = 0;
-      try {
-        const osmPharmacies = await overpassService.getPlaces({ placeType: "pharmacy" });
-        const osmHospitals = await overpassService.getPlaces({ placeType: "hospital" });
-        const osmClinics = await overpassService.getPlaces({ placeType: "clinic" });
-        osmCount = osmPharmacies.length + osmHospitals.length + osmClinics.length;
-      } catch (e) {}
+      const result = await overpassService.getPlaces({ placeType: "pharmacy" });
+      const pharmacies = result.places || [];
+      const total = pharmacies.length;
+      const par24h = pharmacies.filter(p => (p.tags as any)?.opening_hours?.includes("24")).length;
       
       res.json({
-        ...localStats,
-        total: localStats.total + osmCount,
-        osmCount,
-        source: "OSM + Local"
+        total,
+        par24h,
+        lastUpdate: new Date(),
+        source: "PostgreSQL"
       });
     } catch (error) {
       console.error("Erreur stats pharmacies:", error);
@@ -1715,50 +1755,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/pharmacies/refresh", async (req, res) => {
-    try {
-      const { pharmaciesService } = await import("./pharmaciesService");
-      pharmaciesService.markAsUpdated();
-      const stats = pharmaciesService.getStats();
-      res.json({ 
-        message: "Données des pharmacies actualisées",
-        ...stats
-      });
-    } catch (error) {
-      console.error("Erreur actualisation pharmacies:", error);
-      res.status(500).json({ error: "Erreur lors de l'actualisation" });
-    }
-  });
 
-  // Route de santé
-  app.get("/api/health", (req, res) => {
-    res.json({ status: "ok" });
-  });
 
-  // ----------------------------------------
-  // ROUTES RESTAURANTS
-  // ----------------------------------------
+  // Restaurants
   app.get("/api/restaurants", async (req, res) => {
     try {
-      const { RESTAURANTS_DATA } = await import("./restaurantsData");
-      const { region, type, gammePrix, search, livraison, wifi } = req.query;
-
-      // Récupérer les données codées en dur
-      let restaurants: any[] = [...RESTAURANTS_DATA];
-
-      // Ajouter les données OSM (restaurants, fast_food, cafe, bar)
-      try {
-        const osmRestaurants = await overpassService.getPlaces({ placeType: "restaurant" });
-        const osmFastFood = await overpassService.getPlaces({ placeType: "fast_food" });
-        const osmCafe = await overpassService.getPlaces({ placeType: "cafe" });
-        const osmBar = await overpassService.getPlaces({ placeType: "bar" });
+      const { region, type, search } = req.query;
+      const result = await overpassService.getPlaces({ placeType: "restaurant" });
+      const dbPlaces = result.places || [];
+      const lastUpdated = result.lastUpdated;
+      
+      console.log(`[API] Restaurants found in DB for type ${type || 'all'}: ${dbPlaces.length}`);
+      
+      // Fallback si la DB est vide : Lancer la sync en arrière-plan sans bloquer
+      let finalPlaces = dbPlaces;
+      if (finalPlaces.length === 0 && !search && (!region || region === "all") && (!type || type === "all")) {
+        console.log("[API] Aucun restaurant trouvé dans la DB, lancement de la synchronisation en arrière-plan...");
+        // On ne met pas 'await' ici pour ne pas faire attendre l'utilisateur 30s+
+        overpassService.syncPlaceType("restaurant").then(res => {
+          if (res.added > 0) console.log(`[Background Sync] Added ${res.added} restaurants`);
+        }).catch(err => console.error("Background sync error (restaurant):", err));
         
-        const allOsmPlaces = [...osmRestaurants, ...osmFastFood, ...osmCafe, ...osmBar];
-        const osmTransformed = allOsmPlaces.map((p, i) => transformOsmToRestaurant(p, i));
-        restaurants = [...restaurants, ...osmTransformed];
-      } catch (osmError) {
-        console.error("Erreur chargement OSM restaurants:", osmError);
+        overpassService.syncPlaceType("fast_food").then(res => {
+          if (res.added > 0) console.log(`[Background Sync] Added ${res.added} fast_food`);
+        }).catch(err => console.error("Background sync error (fast_food):", err));
       }
+
+      // Combiner restaurant et fast_food pour l'affichage
+      if ((!type || type === "all")) {
+        try {
+          // IMPORTANT: Ne pas faire de getPlaces qui pourrait déclencher une sync bloquante ici
+          // On utilise une requête directe très rapide
+          const fastFoodResult = await db.select().from(places).where(eq(places.placeType, "fast_food")).limit(500);
+          const existingIds = new Set(finalPlaces.map((p: any) => p.id));
+          const uniqueFastFood = fastFoodResult.filter((p: any) => !existingIds.has(p.id));
+          finalPlaces = [...finalPlaces, ...uniqueFastFood];
+        } catch (e) {
+          console.error("Error fetching fast_food from DB:", e);
+        }
+      }
+
+      let restaurants = finalPlaces.map((p, i) => transformOsmToRestaurant(p, i));
 
       if (search) {
         const query = (search as string).toLowerCase();
@@ -1766,65 +1803,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
           r.nom.toLowerCase().includes(query) ||
           r.ville?.toLowerCase().includes(query) ||
           r.quartier?.toLowerCase().includes(query) ||
-          r.type?.toLowerCase().includes(query) ||
-          (r.specialites && r.specialites.some((s: string) => s.toLowerCase().includes(query)))
+          r.type?.toLowerCase().includes(query)
         );
       }
-
       if (region && region !== "all") {
         restaurants = restaurants.filter(r => r.region === region);
       }
-
       if (type && type !== "all") {
         restaurants = restaurants.filter(r => r.type === type);
       }
 
-      if (gammePrix && gammePrix !== "all") {
-        restaurants = restaurants.filter(r => r.gammePrix === gammePrix);
-      }
-
-      if (livraison === "true") {
-        restaurants = restaurants.filter(r => r.livraison);
-      }
-
-      if (wifi === "true") {
-        restaurants = restaurants.filter(r => r.wifi);
-      }
-
       res.set('Cache-Control', 'public, max-age=3600');
-      res.json(restaurants);
+      res.json({
+        restaurants,
+        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
+      });
     } catch (error) {
-      console.error("Erreur récupération restaurants:", error);
+      console.error("Error fetching restaurants:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des restaurants" });
     }
   });
 
   app.get("/api/restaurants/stats", async (req, res) => {
     try {
-      const { RESTAURANTS_DATA } = await import("./restaurantsData");
+      const result = await overpassService.getPlaces({ placeType: "restaurant" });
+      const restaurants = result.places || [];
       
-      // Compter les données OSM
-      let osmCount = 0;
-      try {
-        const osmRestaurants = await overpassService.getPlaces({ placeType: "restaurant" });
-        const osmCafes = await overpassService.getPlaces({ placeType: "cafe" });
-        const osmBars = await overpassService.getPlaces({ placeType: "bar" });
-        const osmFastFood = await overpassService.getPlaces({ placeType: "fast_food" });
-        osmCount = osmRestaurants.length + osmCafes.length + osmBars.length + osmFastFood.length;
-      } catch (e) {}
+      const parType: Record<string, number> = {};
+      const parRegion: Record<string, number> = {};
+      const villes = new Set<string>();
+      let avecLivraison = 0;
+      let avecWifi = 0;
       
-      const total = RESTAURANTS_DATA.length + osmCount;
-      const avecWifi = RESTAURANTS_DATA.filter(r => r.wifi).length;
-      const avecLivraison = RESTAURANTS_DATA.filter(r => r.livraison).length;
-      const cuisineLocale = RESTAURANTS_DATA.filter(r => r.type === "Burkinabè" || r.type === "Africain").length;
-      
+      restaurants.forEach((r, i) => {
+        const transformed = transformOsmToRestaurant(r, i);
+        parType[transformed.type] = (parType[transformed.type] || 0) + 1;
+        if (transformed.region) {
+          parRegion[transformed.region] = (parRegion[transformed.region] || 0) + 1;
+        }
+        if (transformed.ville) {
+          villes.add(transformed.ville);
+        }
+        if (transformed.livraison) avecLivraison++;
+        if (transformed.wifi) avecWifi++;
+      });
+
       res.json({
-        total,
-        localCount: RESTAURANTS_DATA.length,
-        osmCount,
-        avecWifi,
+        total: restaurants.length,
         avecLivraison,
-        cuisineLocale
+        avecWifi,
+        parType,
+        parRegion,
+        nombreVilles: villes.size,
+        lastUpdate: new Date(),
+        source: "PostgreSQL"
       });
     } catch (error) {
       console.error("Erreur stats restaurants:", error);
@@ -1832,192 +1864,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ----------------------------------------
-  // ROUTES MARCHÉS
-  // ----------------------------------------
-  app.get("/api/marches", async (req, res) => {
+  // Stations-service
+  app.get("/api/stations", async (req, res) => {
     try {
-      const { MARCHES_DATA } = await import("./marchesData");
-      const { region, type, search } = req.query;
-
-      // Récupérer les données codées en dur
-      let marches: any[] = [...MARCHES_DATA];
-
-      // Ajouter les données OSM (marketplaces)
-      try {
-        const osmMarches = await overpassService.getPlaces({ placeType: "marketplace" });
-        const osmTransformed = osmMarches.map(p => transformOsmToMarche(p));
-        marches = [...marches, ...osmTransformed];
-      } catch (osmError) {
-        console.error("Erreur chargement OSM marchés:", osmError);
-      }
+      const { region, search } = req.query;
+      const result = await overpassService.getPlaces({ placeType: "fuel" });
+      const dbPlaces = result.places || [];
+      const lastUpdated = result.lastUpdated;
+      let stations = dbPlaces.map(transformOsmToStation);
 
       if (search) {
         const query = (search as string).toLowerCase();
-        marches = marches.filter(m =>
-          m.nom.toLowerCase().includes(query) ||
-          m.ville?.toLowerCase().includes(query) ||
-          m.quartier?.toLowerCase().includes(query) ||
-          m.type?.toLowerCase().includes(query) ||
-          (m.produits && m.produits.some((p: string) => p.toLowerCase().includes(query)))
+        stations = stations.filter(s =>
+          s.nom?.toLowerCase().includes(query) ||
+          s.ville?.toLowerCase().includes(query) ||
+          s.marque?.toLowerCase().includes(query)
         );
       }
-
       if (region && region !== "all") {
-        marches = marches.filter(m => m.region === region);
-      }
-
-      if (type && type !== "all") {
-        marches = marches.filter(m => m.type === type);
+        stations = stations.filter(s => s.region === region);
       }
 
       res.set('Cache-Control', 'public, max-age=3600');
-      res.json(marches);
+      res.json({
+        stations,
+        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
+      });
     } catch (error) {
-      console.error("Erreur récupération marchés:", error);
-      res.status(500).json({ error: "Erreur lors de la récupération des marchés" });
+      console.error("Error fetching stations:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des stations" });
     }
   });
 
-  app.get("/api/marches/stats", async (req, res) => {
+  app.get("/api/stations/stats", async (req, res) => {
     try {
-      const { MARCHES_DATA } = await import("./marchesData");
+      const result = await overpassService.getPlaces({ placeType: "fuel" });
+      const stations = result.places || [];
       
-      // Compter les données OSM
-      let osmMarches: any[] = [];
-      try {
-        osmMarches = await overpassService.getPlaces({ placeType: "marketplace" });
-      } catch (e) {}
-      
-      const allMarches = [...MARCHES_DATA, ...osmMarches.map(m => ({ ...m, type: "Central" }))];
-      const total = allMarches.length;
-      
-      // Compter par type
-      const parType: Record<string, number> = {};
-      MARCHES_DATA.forEach(m => {
-        const type = m.type || "Central";
-        parType[type] = (parType[type] || 0) + 1;
-      });
-      
-      // Compter par region
+      const parMarque: Record<string, number> = {};
       const parRegion: Record<string, number> = {};
-      MARCHES_DATA.forEach(m => {
-        const region = m.region || "Kadiogo";
-        parRegion[region] = (parRegion[region] || 0) + 1;
+      const villes = new Set<string>();
+      
+      stations.forEach(s => {
+        const transformed = transformOsmToStation(s);
+        parMarque[transformed.marque] = (parMarque[transformed.marque] || 0) + 1;
+        if (transformed.region) {
+          parRegion[transformed.region] = (parRegion[transformed.region] || 0) + 1;
+        }
+        if (transformed.ville) {
+          villes.add(transformed.ville);
+        }
       });
-      
-      // Nombre de villes uniques
-      const villes = new Set(MARCHES_DATA.map(m => m.ville));
-      const nombreVilles = villes.size;
-      
-      // Total commercants
-      const totalCommercants = MARCHES_DATA.reduce((sum, m) => sum + (m.nombreCommerçants || 0), 0);
-      
+
       res.json({
-        total,
-        totalCommercants,
-        parType,
+        total: stations.length,
+        par24h: stations.filter(s => (s.tags as any)?.opening_hours?.includes("24")).length,
+        parMarque,
         parRegion,
-        nombreVilles,
-        localCount: MARCHES_DATA.length,
-        osmCount: osmMarches.length,
-        source: "OSM + Local"
+        nombreVilles: villes.size,
+        lastUpdate: new Date(),
+        source: "PostgreSQL"
       });
     } catch (error) {
-      console.error("Erreur stats marchés:", error);
+      console.error("Erreur stats stations:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
     }
   });
 
-  // ----------------------------------------
-  // ROUTES BOUTIQUES
-  // ----------------------------------------
-  app.get("/api/boutiques", async (req, res) => {
+  // Banques et GAB
+  app.get("/api/banques", async (req, res) => {
     try {
-      const { BOUTIQUES_DATA } = await import("./boutiquesData");
-      const { region, categorie, search, livraison, climatisation } = req.query;
-
-      // Récupérer les données codées en dur
-      let boutiques: any[] = [...BOUTIQUES_DATA];
-
-      // Ajouter les données OSM (type "shop" dans la base)
-      try {
-        const osmShops = await overpassService.getPlaces({ placeType: "shop" });
-        const osmTransformed = osmShops.map(p => transformOsmToBoutique(p));
-        boutiques = [...boutiques, ...osmTransformed];
-      } catch (osmError) {
-        console.error("Erreur chargement OSM boutiques:", osmError);
-      }
+      const { region, search } = req.query;
+      const resultBanks = await overpassService.getPlaces({ placeType: "bank" });
+      const resultAtms = await overpassService.getPlaces({ placeType: "atm" });
+      const banks = resultBanks.places || [];
+      const atms = resultAtms.places || [];
+      let allBanks = [...banks, ...atms].map(transformOsmToBanque);
 
       if (search) {
         const query = (search as string).toLowerCase();
-        boutiques = boutiques.filter(b =>
-          b.nom.toLowerCase().includes(query) ||
-          b.ville?.toLowerCase().includes(query) ||
-          b.quartier?.toLowerCase().includes(query) ||
-          b.categorie?.toLowerCase().includes(query) ||
-          (b.produits && b.produits.some((p: string) => p.toLowerCase().includes(query))) ||
-          (b.marques && b.marques.some((m: string) => m.toLowerCase().includes(query)))
-        );
+        allBanks = allBanks.filter(b => b.nom.toLowerCase().includes(query));
+      }
+      if (region && region !== "all") {
+        allBanks = allBanks.filter(b => b.region === region);
       }
 
+      res.json(allBanks);
+    } catch (error) {
+      console.error("Error fetching banks:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des banques" });
+    }
+  });
+
+  // Boutiques et Commerces
+  app.get("/api/boutiques", async (req, res) => {
+    try {
+      const { region, categorie, search } = req.query;
+      const result = await overpassService.getPlaces({ placeType: "shop" });
+      const shops = result.places || [];
+      const lastUpdated = result.lastUpdated;
+      let boutiques = shops.map(transformOsmToBoutique);
+
+      if (search) {
+        const query = (search as string).toLowerCase();
+        boutiques = boutiques.filter(b => b.nom.toLowerCase().includes(query));
+      }
       if (region && region !== "all") {
         boutiques = boutiques.filter(b => b.region === region);
       }
 
-      if (categorie && categorie !== "all") {
-        boutiques = boutiques.filter(b => b.categorie === categorie);
-      }
-
-      if (livraison === "true") {
-        boutiques = boutiques.filter(b => b.livraison);
-      }
-
-      if (climatisation === "true") {
-        boutiques = boutiques.filter(b => b.climatisation);
-      }
-
-      res.set('Cache-Control', 'public, max-age=3600');
-      res.json(boutiques);
+      res.json({
+        boutiques,
+        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
+      });
     } catch (error) {
-      console.error("Erreur récupération boutiques:", error);
+      console.error("Error fetching shops:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des boutiques" });
     }
   });
 
-  app.get("/api/boutiques/stats", async (req, res) => {
+  // Marchés
+  app.get("/api/marches", async (req, res) => {
     try {
-      const { BOUTIQUES_DATA, getBoutiquesStats } = await import("./boutiquesData");
+      const { region, search } = req.query;
+      let { places: dbPlaces, lastUpdated } = await overpassService.getPlaces({ placeType: "marketplace" });
       
-      // Obtenir les statistiques détaillées
-      const detailedStats = getBoutiquesStats();
+      // Log for debugging
+      console.log(`[API] Requête Marchés: ${dbPlaces.length} lieux trouvés dans la DB`);
       
-      // Compter les données OSM (type "shop" dans la base)
-      let osmCount = 0;
-      try {
-        const osmShops = await overpassService.getPlaces({ placeType: "shop" });
-        osmCount = osmShops.length;
-      } catch (e) {}
-      
-      const total = BOUTIQUES_DATA.length + osmCount;
-      
-      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      if (dbPlaces.length === 0) {
+        console.log("[API] Aucun marché trouvé dans la DB, tentative de synchronisation forcée...");
+        const forcedSync = await overpassService.syncPlaceType("marketplace");
+        console.log(`[API] Sync forcée terminée: ${forcedSync.added} ajoutés`);
+        
+        const retry = await overpassService.getPlaces({ placeType: "marketplace" });
+        dbPlaces = retry.places;
+        lastUpdated = retry.lastUpdated;
+      }
+
+      let marches = dbPlaces.map(transformOsmToMarche);
+
+      if (search) {
+        const query = (search as string).toLowerCase();
+        marches = marches.filter(m => m.nom.toLowerCase().includes(query));
+      }
+      if (region && region !== "all") {
+        marches = marches.filter(m => m.region === region);
+      }
+
       res.json({
-        total,
-        localCount: BOUTIQUES_DATA.length,
-        osmCount,
-        source: "OSM + Local",
-        // Statistiques détaillées
-        avecClimatisation: detailedStats.avecClimatisation,
-        avecLivraison: detailedStats.avecLivraison,
-        avecParking: detailedStats.avecParking,
-        parCategorie: detailedStats.parCategorie,
-        parRegion: detailedStats.parRegion,
-        nombreVilles: detailedStats.nombreVilles
+        marches,
+        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
       });
     } catch (error) {
-      console.error("Erreur stats boutiques:", error);
-      res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
+      console.error("Error fetching markets:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des marchés" });
     }
   });
 
@@ -2101,6 +2102,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+
+  // ----------------------------------------
+  // ROUTES MARCHÉS
+  // ----------------------------------------
+  app.get("/api/marches", async (req, res) => {
+    try {
+      const { region, ville, search } = req.query;
+      const result = await overpassService.getPlaces({
+        placeType: "marketplace",
+        region: region as string,
+        ville: ville as string,
+        search: search as string,
+      });
+      const dbPlaces = result.places || [];
+
+      const marches = dbPlaces.map(p => transformOsmToMarche(p));
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json(marches);
+    } catch (error) {
+      console.error("Erreur récupération marchés:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des marchés" });
+    }
+  });
+
+  // ----------------------------------------
+  // ROUTES BOUTIQUES
+  // ----------------------------------------
+  app.get("/api/boutiques", async (req, res) => {
+    try {
+      const { region, ville, categorie, search } = req.query;
+      const result = await overpassService.getPlaces({
+        placeType: "shop",
+        region: region as string,
+        ville: ville as string,
+        search: search as string,
+      });
+      const dbPlaces = result.places || [];
+
+      let boutiques = dbPlaces.map(p => transformOsmToBoutique(p));
+      
+      if (categorie && categorie !== "all") {
+        boutiques = boutiques.filter(b => b.categorie === categorie);
+      }
+
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json(boutiques);
+    } catch (error) {
+      console.error("Erreur récupération boutiques:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des boutiques" });
+    }
+  });
+
   // ----------------------------------------
   // ROUTES BANQUES ET CAISSES POPULAIRES
   // ----------------------------------------
@@ -2114,9 +2168,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Ajouter les données OSM (banques, bureaux de change, transferts d'argent)
       try {
-        const osmBanks = await overpassService.getPlaces({ placeType: "bank" });
-        const osmBureauChange = await overpassService.getPlaces({ placeType: "bureau_de_change" });
-        const osmMoneyTransfer = await overpassService.getPlaces({ placeType: "money_transfer" });
+        const resultBanks = await overpassService.getPlaces({ placeType: "bank" });
+        const resultBureauChange = await overpassService.getPlaces({ placeType: "bureau_de_change" });
+        const resultMoneyTransfer = await overpassService.getPlaces({ placeType: "money_transfer" });
+        
+        const osmBanks = resultBanks.places || [];
+        const osmBureauChange = resultBureauChange.places || [];
+        const osmMoneyTransfer = resultMoneyTransfer.places || [];
         
         const allOsmPlaces = [...osmBanks, ...osmBureauChange, ...osmMoneyTransfer];
         const osmTransformed = allOsmPlaces.map(p => transformOsmToBanque(p));
@@ -2172,9 +2230,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Récupérer les données OSM
       let osmBanques: any[] = [];
       try {
-        const osmBanks = await overpassService.getPlaces({ placeType: "bank" });
-        const osmBureauChange = await overpassService.getPlaces({ placeType: "bureau_de_change" });
-        const osmMoneyTransfer = await overpassService.getPlaces({ placeType: "money_transfer" });
+        const resultBanks = await overpassService.getPlaces({ placeType: "bank" });
+        const resultBureauChange = await overpassService.getPlaces({ placeType: "bureau_de_change" });
+        const resultMoneyTransfer = await overpassService.getPlaces({ placeType: "money_transfer" });
+
+        const osmBanks = resultBanks.places || [];
+        const osmBureauChange = resultBureauChange.places || [];
+        const osmMoneyTransfer = resultMoneyTransfer.places || [];
+
         osmBanques = [...osmBanks, ...osmBureauChange, ...osmMoneyTransfer].map(p => transformOsmToBanque(p));
       } catch (e) {}
       
@@ -2295,8 +2358,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Ajouter les données OSM (fuel, car_wash)
       try {
-        const osmFuel = await overpassService.getPlaces({ placeType: "fuel" });
-        const osmCarWash = await overpassService.getPlaces({ placeType: "car_wash" });
+        const resultFuel = await overpassService.getPlaces({ placeType: "fuel" });
+        const resultCarWash = await overpassService.getPlaces({ placeType: "car_wash" });
+        
+        const osmFuel = resultFuel.places || [];
+        const osmCarWash = resultCarWash.places || [];
         
         const allOsmPlaces = [...osmFuel, ...osmCarWash];
         const osmTransformed = allOsmPlaces.map(p => transformOsmToStation(p));
@@ -2349,9 +2415,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Compter les données OSM
       let osmCount = 0;
       try {
-        const osmFuel = await overpassService.getPlaces({ placeType: "fuel" });
-        const osmCarWash = await overpassService.getPlaces({ placeType: "car_wash" });
-        osmCount = osmFuel.length + osmCarWash.length;
+        const resultFuel = await overpassService.getPlaces({ placeType: "fuel" });
+        const resultCarWash = await overpassService.getPlaces({ placeType: "car_wash" });
+        const fuelPlaces = resultFuel.places || [];
+        const carWashPlaces = resultCarWash.places || [];
+        osmCount = fuelPlaces.length + carWashPlaces.length;
       } catch (e) {}
       
       res.json({
@@ -2388,7 +2456,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { placeType, region, ville, search, verificationStatus, limit, offset } = req.query;
       
-      const places = await overpassService.getPlaces({
+      const response = await overpassService.getPlaces({
         placeType: placeType as string,
         region: region as string,
         ville: ville as string,
@@ -2398,8 +2466,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
         offset: offset ? parseInt(offset as string) : undefined,
       });
 
+      // Transformation spécifique pour les hôpitaux et cliniques
+      if (placeType === "hospital" || placeType === "clinic") {
+        const transformedPlaces = response.places.map(transformOsmToHopital);
+        return res.json({
+          places: transformedPlaces,
+          total: response.places.length,
+          lastUpdated: response.lastUpdated,
+          source: "PostgreSQL"
+        });
+      }
+
+      // Transformation spécifique pour les universités
+      if (placeType === "university" || placeType === "college") {
+        const transformedPlaces = response.places.map(transformOsmToUniversity);
+        return res.json({
+          places: transformedPlaces,
+          total: response.places.length,
+          lastUpdated: response.lastUpdated,
+          source: "PostgreSQL"
+        });
+      }
+
+      // Transformation spécifique pour les restaurants
+      if (placeType === "restaurant" || placeType === "fast_food" || placeType === "cafe") {
+        const transformedPlaces = response.places.map(transformOsmToRestaurant);
+        return res.json({
+          places: transformedPlaces,
+          total: response.places.length,
+          lastUpdated: response.lastUpdated,
+          source: "PostgreSQL"
+        });
+      }
+
+      // Transformation spécifique pour les pharmacies
+      if (placeType === "pharmacy") {
+        return res.json({
+          places: response.places,
+          total: response.places.length,
+          lastUpdated: response.lastUpdated,
+          source: "PostgreSQL"
+        });
+      }
+
+      // Transformation spécifique pour les restaurants
+      if (placeType === "restaurant" || placeType === "fast_food" || placeType === "cafe") {
+        const transformedPlaces = response.places.map(transformOsmToRestaurant);
+        return res.json({
+          places: transformedPlaces,
+          total: response.places.length,
+          lastUpdated: response.lastUpdated,
+          source: "PostgreSQL"
+        });
+      }
+
       res.set('Cache-Control', 'public, max-age=300');
-      res.json(places);
+      res.json(response);
     } catch (error) {
       console.error("Erreur récupération places:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des lieux" });
@@ -3141,6 +3263,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+
+  // Initial sync on startup if needed
+  const overpassService = OverpassService.getInstance();
+  const importantTypes = ["pharmacy", "restaurant", "fuel", "shop", "marketplace"];
+  
+  // Start background sync for critical data
+  setTimeout(async () => {
+    console.log("🚀 Starting initial data sync check...");
+    for (const type of importantTypes) {
+      try {
+        await overpassService.getPlaces({ placeType: type });
+        console.log(`✅ Sync check completed for ${type}`);
+        // Add a small delay between initial syncs to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      } catch (err) {
+        console.error(`❌ Sync error for ${type}:`, err);
+      }
+    }
+    console.log("🏁 All initial data sync checks completed");
+  }, 2000);
 
   return httpServer;
 }
