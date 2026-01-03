@@ -150,21 +150,29 @@ export default function Marches() {
     }
   }, [showNearestOnly, userLocation, toast]);
 
-  const { data, isLoading, refetch } = useQuery<{ marches: Marche[], lastUpdated: string }>({
+  const { data: marchesData, isLoading, refetch } = useQuery<{ marches: Marche[], lastUpdated: string }>({
     queryKey: ["/api/marches"],
   });
 
-  const marches = data?.marches || [];
+  const marches = marchesData?.marches || [];
 
-  const { data: stats } = useQuery<{
-    total: number;
-    totalCommercants: number;
-    parType: Record<string, number>;
-    parRegion: Record<string, number>;
-    nombreVilles: number;
-  }>({
-    queryKey: ["/api/marches/stats"],
-  });
+  const stats = useMemo(() => {
+    const marchesArray = Array.isArray(marches) ? marches : [];
+    const parType = marchesArray.reduce((acc, m) => {
+      acc[m.type] = (acc[m.type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const villes = new Set(marchesArray.map(m => m.ville));
+    const totalCommercants = marchesArray.reduce((acc, m) => acc + (m.nombreCommercants || 0), 0);
+
+    return {
+      total: marchesArray.length,
+      parType,
+      nombreVilles: villes.size,
+      totalCommercants
+    };
+  }, [marches]);
 
   const filteredMarches = useMemo(() => {
     const marchesArray = Array.isArray(marches) ? marches : [];
