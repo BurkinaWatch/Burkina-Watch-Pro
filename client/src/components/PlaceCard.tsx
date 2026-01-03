@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Phone, Clock, Navigation, Globe, Mail, ExternalLink, Locate } from "lucide-react";
+import { MapPin, Phone, Clock, Navigation, Globe, Mail, ExternalLink, Locate, Activity, ShieldCheck } from "lucide-react";
 import type { Place } from "@shared/schema";
 import { SourceBadge } from "./SourceBadge";
 
@@ -35,6 +35,10 @@ export function PlaceCard({ place }: PlaceCardProps) {
   
   const tags = (place.tags || {}) as Record<string, string>;
   
+  // Extraire les spécialités et services pour l'affichage enrichi
+  const specialites = tags.specialites || tags.cuisine || tags.speciality;
+  const services = tags.services || (place.placeType === "hospital" ? "Urgences, Consultations, Hospitalisation" : null);
+
   const imageUrl = tags.image || tags.photo || tags["image:url"] || null;
   const website = tags.website || tags["contact:website"] || null;
   const email = tags.email || tags["contact:email"] || null;
@@ -118,6 +122,26 @@ export function PlaceCard({ place }: PlaceCardProps) {
           <div className="flex items-start gap-2 text-sm text-muted-foreground">
             <Clock className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <span className="break-words">{openingHours}</span>
+          </div>
+        )}
+
+        {specialites && (
+          <div className="flex items-start gap-2 text-sm text-muted-foreground">
+            <Activity className="w-4 h-4 flex-shrink-0 mt-0.5 text-primary/70" />
+            <div className="flex flex-wrap gap-1">
+              {String(specialites).split(/[,;]/).map((s, i) => (
+                <Badge key={i} variant="outline" className="text-[10px] py-0 h-4 bg-primary/5 border-primary/20">
+                  {s.trim()}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {services && (
+          <div className="flex items-start gap-2 text-sm text-muted-foreground">
+            <ShieldCheck className="w-4 h-4 flex-shrink-0 mt-0.5 text-primary/70" />
+            <span className="text-xs line-clamp-2 italic">{String(services)}</span>
           </div>
         )}
         

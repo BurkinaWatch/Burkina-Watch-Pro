@@ -3,6 +3,7 @@ import { places, placeVerifications, type Place, type InsertPlace, PlaceTypes, V
 import { eq, and, sql, ilike, or } from "drizzle-orm";
 import { storage } from "./storage";
 import { RESTAURANTS_DATA } from "./restaurantsData";
+import { UNIVERSITES_DATA } from "./universitesData";
 import { PHARMACIES_DATA } from "./pharmaciesData";
 import { BANQUES_DATA } from "./banquesData";
 import { MARCHES_DATA } from "./marchesData";
@@ -506,6 +507,36 @@ export class OverpassService {
     try {
       const response = await this.fetchFromOverpass(query);
       
+      if (!response.elements || response.elements.length === 0) {
+        console.log(`[Overpass] No OSM results for ${placeType}, using fallback data`);
+        const fallbacks = this.getFallbackPlaces(placeType);
+        if (fallbacks.length > 0) {
+          for (const fallback of fallbacks) {
+            try {
+              const { id, ...data } = fallback;
+              await db.insert(places).values(data).onConflictDoUpdate({
+                target: [places.osmId, places.osmType],
+                set: {
+                  name: data.name,
+                  latitude: data.latitude,
+                  longitude: data.longitude,
+                  address: data.address,
+                  telephone: data.telephone,
+                  horaires: data.horaires,
+                  tags: data.tags,
+                  lastSyncedAt: new Date(),
+                  updatedAt: new Date(),
+                }
+              });
+              added++;
+            } catch (err) {
+              errors++;
+            }
+          }
+          return { added, updated, errors };
+        }
+      }
+
       // Batch processing for better performance
       for (const element of response.elements) {
         try {
@@ -571,6 +602,10 @@ export class OverpassService {
 
   private getFallbackPlaces(placeType: string): any[] {
     switch (placeType) {
+      case "hospital":
+      case "clinic":
+      case "doctors":
+        return [];
       case "marketplace":
         return MARCHES_DATA.map(m => ({
           id: parseInt(m.id.replace(/\D/g, '') || "0"),
@@ -657,7 +692,6 @@ export class OverpassService {
         }));
       case "university":
         return UNIVERSITES_DATA.map(u => ({
-          id: parseInt(u.id.replace(/\D/g, '') || "0"),
           osmId: u.id,
           osmType: "node",
           placeType: "university",
