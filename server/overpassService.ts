@@ -430,6 +430,19 @@ export class OverpassService {
       `;
     }
 
+    // Simplifier la requête banques et caisses pour capturer plus de données à travers tout le pays
+    if (placeType === "bank" || placeType === "atm") {
+      return `
+        [out:json][timeout:180][maxsize:536870912];
+        (
+          node["amenity"~"bank|atm|bureau_de_change"](${south},${west},${north},${east});
+          way["amenity"~"bank|atm|bureau_de_change"](${south},${west},${north},${east});
+          relation["amenity"~"bank|atm|bureau_de_change"](${south},${west},${north},${east});
+        );
+        out center;
+      `;
+    }
+
     return `
       [out:json][timeout:180][maxsize:536870912];
       (
