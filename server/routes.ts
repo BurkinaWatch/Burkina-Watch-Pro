@@ -2154,23 +2154,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   app.get("/api/boutiques", async (req, res) => {
     try {
-      const { region, ville, categorie, search } = req.query;
-      const result = await overpassService.getPlaces({
-        placeType: "shop",
-        region: region as string,
-        ville: ville as string,
-        search: search as string,
-      });
-      const dbPlaces = result.places || [];
+      const { region, search, categorie } = req.query;
+      let result = await overpassService.getPlaces({ placeType: "shop" });
+      let dbPlaces = result.places || [];
+      let lastUpdated = result.lastUpdated;
 
-      let boutiques = dbPlaces.map(p => transformOsmToBoutique(p));
+      if (dbPlaces.length === 0) {
+        console.log("[API] Aucune boutique trouvée dans la DB, injection du fallback...");
+        const fallbackData = overpassService["getFallbackPlaces"]("shop");
+        for (const p of fallbackData) {
+          try {
+            await db.insert(places).values(p).onConflictDoNothing();
+          } catch (e) {}
+        }
+        const retry = await overpassService.getPlaces({ placeType: "shop" });
+        dbPlaces = retry.places;
+        lastUpdated = retry.lastUpdated;
+      }
+
+      let boutiques = dbPlaces.map(transformOsmToBoutique);
       
       if (categorie && categorie !== "all") {
         boutiques = boutiques.filter(b => b.categorie === categorie);
       }
+      if (region && region !== "all") {
+        boutiques = boutiques.filter(b => b.region === region);
+      }
+      if (search) {
+        const query = (search as string).toLowerCase();
+        boutiques = boutiques.filter(b => b.nom.toLowerCase().includes(query));
+      }
 
-      res.set('Cache-Control', 'public, max-age=3600');
-      res.json(boutiques);
+      res.json({
+        boutiques,
+        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
+      });
     } catch (error) {
       console.error("Erreur récupération boutiques:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des boutiques" });

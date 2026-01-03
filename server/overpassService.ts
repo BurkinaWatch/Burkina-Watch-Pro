@@ -626,6 +626,35 @@ export class OverpassService {
           updatedAt: new Date(),
           verificationStatus: "verified"
         }));
+      case "shop":
+        return BOUTIQUES_DATA.map(b => ({
+          id: parseInt(b.id.replace(/\D/g, '') || "0"),
+          osmId: b.id,
+          osmType: "node",
+          placeType: "shop",
+          name: b.nom,
+          latitude: String(b.latitude),
+          longitude: String(b.longitude),
+          address: b.adresse,
+          quartier: b.quartier,
+          ville: b.ville,
+          region: b.region,
+          telephone: b.telephone,
+          horaires: b.horaires,
+          tags: { 
+            category: b.categorie,
+            services: b.services.join(", "),
+            products: b.produits.join(", "),
+            delivery: b.livraison ? "yes" : "no",
+            air_conditioning: b.climatisation ? "yes" : "no"
+          },
+          source: "Fallback",
+          confidenceScore: "0.8",
+          lastSyncedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          verificationStatus: "verified"
+        }));
       case "pharmacy":
         return PHARMACIES_DATA.map(p => ({
           id: parseInt(p.id.replace(/\D/g, '')),
