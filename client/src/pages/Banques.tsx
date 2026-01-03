@@ -432,43 +432,72 @@ export default function Banques() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <PageStatCard
-            title="Banques"
-            value={stats?.banques || 0}
-            icon={Landmark}
-            description="Cliquez pour la liste"
-            variant="blue"
-            onClick={() => setShowBanquesDetails(!showBanquesDetails)}
-            clickable
-          />
-          <PageStatCard
-            title="Caisses Populaires"
-            value={stats?.caissesPopulaires || 0}
-            icon={Wallet}
-            description="Cliquez pour la liste"
-            variant="green"
-            onClick={() => setShowCaissesDetails(!showCaissesDetails)}
-            clickable
-          />
-          <PageStatCard
-            title="GAB disponibles"
-            value={stats?.totalGAB || 0}
-            icon={CreditCard}
-            description="Cliquez pour la liste"
-            variant="amber"
-            onClick={() => setShowGABDetails(!showGABDetails)}
-            clickable
-          />
-          <PageStatCard
-            title="EBIS (Systemique)"
-            value={stats?.importanceSystemique || 0}
-            icon={AlertTriangle}
-            description="Cliquez pour la liste"
-            variant="red"
-            onClick={() => setShowEBISDetails(!showEBISDetails)}
-            clickable
-          />
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20 cursor-pointer" onClick={() => setShowBanquesDetails(!showBanquesDetails)}>
+            <CardContent className="p-4 relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Banques</p>
+                  <span className="text-2xl font-bold tracking-tight">{stats?.banques || 0}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-blue-500/10 group-hover:scale-110 transition-transform">
+                  <Landmark className="w-5 h-5 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20 cursor-pointer" onClick={() => setShowCaissesDetails(!showCaissesDetails)}>
+            <CardContent className="p-4 relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Caisses</p>
+                  <span className="text-2xl font-bold tracking-tight">{stats?.caissesPopulaires || 0}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-green-500/10 group-hover:scale-110 transition-transform">
+                  <Wallet className="w-5 h-5 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20 cursor-pointer" onClick={() => setShowGABDetails(!showGABDetails)}>
+            <CardContent className="p-4 relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">GAB</p>
+                  <span className="text-2xl font-bold tracking-tight">{stats?.totalGAB || 0}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-amber-500/10 group-hover:scale-110 transition-transform">
+                  <CreditCard className="w-5 h-5 text-amber-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-red-500/10 to-red-500/5 border-red-500/20 cursor-pointer" onClick={() => setShowEBISDetails(!showEBISDetails)}>
+            <CardContent className="p-4 relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">EBIS</p>
+                  <span className="text-2xl font-bold tracking-tight">{stats?.importanceSystemique || 0}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-red-500/10 group-hover:scale-110 transition-transform">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
+            <CardContent className="p-4 relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Villes</p>
+                  <span className="text-2xl font-bold tracking-tight">{stats?.nombreVilles || 0}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-purple-500/10 group-hover:scale-110 transition-transform">
+                  <MapPin className="w-5 h-5 text-purple-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {showGABDetails && (

@@ -273,35 +273,72 @@ export default function Marches() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <PageStatCard
-            title="Total marches"
-            value={stats?.total || 0}
-            icon={Store}
-            description={`Dans ${stats?.nombreVilles || 0} villes`}
-            variant="amber"
-          />
-          <PageStatCard
-            title="Marches de quartier"
-            value={stats?.parType?.["Quartier"] || 0}
-            icon={Building}
-            description="Proximite"
-            variant="green"
-          />
-          <PageStatCard
-            title="Hebdomadaires"
-            value={stats?.parType?.["Hebdomadaire"] || 0}
-            icon={Calendar}
-            description="Jours fixes"
-            variant="blue"
-          />
-          <PageStatCard
-            title="Commercants"
-            value={stats?.totalCommercants || 0}
-            icon={Users}
-            description="Acteurs economiques"
-            variant="purple"
-          />
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20">
+            <CardContent className="p-4 relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Marchés</p>
+                  <span className="text-2xl font-bold tracking-tight">{stats?.total || 0}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-amber-500/10 group-hover:scale-110 transition-transform">
+                  <Store className="w-5 h-5 text-amber-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+            <CardContent className="p-4 relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Quartiers</p>
+                  <span className="text-2xl font-bold tracking-tight">{stats?.parType?.["Quartier"] || 0}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-green-500/10 group-hover:scale-110 transition-transform">
+                  <Building className="w-5 h-5 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
+            <CardContent className="p-4 relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Hebdos</p>
+                  <span className="text-2xl font-bold tracking-tight">{stats?.parType?.["Hebdomadaire"] || 0}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-blue-500/10 group-hover:scale-110 transition-transform">
+                  <Calendar className="w-5 h-5 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
+            <CardContent className="p-4 relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Acteurs</p>
+                  <span className="text-2xl font-bold tracking-tight">{stats?.totalCommercants || 0}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-purple-500/10 group-hover:scale-110 transition-transform">
+                  <Users className="w-5 h-5 text-purple-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20">
+            <CardContent className="p-4 relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Villes</p>
+                  <span className="text-2xl font-bold tracking-tight">{stats?.nombreVilles || 0}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-orange-500/10 group-hover:scale-110 transition-transform">
+                  <MapPin className="w-5 h-5 text-orange-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="space-y-4">
