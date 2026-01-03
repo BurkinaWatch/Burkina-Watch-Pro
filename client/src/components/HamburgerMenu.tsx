@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Link, useLocation } from "wouter";
-import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Cross, Newspaper, Calendar, Navigation, Sparkles, Bell, Shield, Camera, Utensils, ShoppingBag, Fuel, Store, Landmark, Bus, Film, Hospital } from "lucide-react";
+import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Cross, Newspaper, Calendar, Navigation, Sparkles, Bell, Shield, Camera, Utensils, ShoppingBag, Fuel, Store, Landmark, Bus, Film, Hospital, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +54,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     { href: "/boutiques", icon: ShoppingBag, label: "Boutiques", color: "text-pink-600 dark:text-pink-500" },
     { href: "/banques", icon: Landmark, label: "Banques", color: "text-blue-600 dark:text-blue-500" },
     { href: "/stations", icon: Fuel, label: "Stations-Service", color: "text-red-600 dark:text-red-500" },
+    { href: "/universites", icon: GraduationCap, label: "Universités", color: "text-indigo-600 dark:text-indigo-500" },
     { href: "/gares", icon: Bus, label: "Gares Routieres", color: "text-blue-600 dark:text-blue-500", badge: t("common.new"), badgeColor: "bg-blue-500" },
   ];
 

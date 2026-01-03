@@ -117,6 +117,7 @@ const PLACE_TYPE_QUERIES: Record<string, string> = {
   kindergarten: `["amenity"="kindergarten"]`,
   library: `["amenity"="library"]`,
   driving_school: `["amenity"="driving_school"]`,
+  research_institute: `["amenity"="research_institute"]`,
   
   // Culture et loisirs
   cinema: `["amenity"="cinema"]`,

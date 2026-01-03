@@ -231,6 +231,27 @@ function transformOsmToHopital(place: Place) {
   };
 }
 
+function transformOsmToUniversity(place: Place) {
+  const tags = place.tags as Record<string, string> || {};
+  const faculties = tags.description || tags.subject || "Filières générales et techniques";
+  return {
+    id: `osm-uni-${place.id}`,
+    nom: place.name,
+    adresse: place.address || "Adresse à vérifier",
+    quartier: place.quartier || "Quartier non spécifié",
+    ville: place.ville || "Ville non spécifiée",
+    region: place.region || "Région non spécifiée",
+    latitude: parseFloat(place.latitude),
+    longitude: parseFloat(place.longitude),
+    telephone: place.telephone || undefined,
+    email: place.email || undefined,
+    website: place.website || undefined,
+    services: faculties.split(';').map(f => f.trim()),
+    type: tags.amenity === "university" ? "Université" : "Institut / École Supérieure",
+    source: "OSM" as const
+  };
+}
+
 function mapOsmBrandToMarque(brand: string): string {
   const brandLower = brand.toLowerCase();
   if (brandLower.includes("total")) return "TotalEnergies";
@@ -2448,6 +2469,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Transformation spécifique pour les hôpitaux et cliniques
       if (placeType === "hospital" || placeType === "clinic") {
         const transformedPlaces = response.places.map(transformOsmToHopital);
+        return res.json({
+          places: transformedPlaces,
+          total: response.places.length,
+          lastUpdated: response.lastUpdated,
+          source: "PostgreSQL"
+        });
+      }
+
+      // Transformation spécifique pour les universités
+      if (placeType === "university" || placeType === "college") {
+        const transformedPlaces = response.places.map(transformOsmToUniversity);
         return res.json({
           places: transformedPlaces,
           total: response.places.length,
