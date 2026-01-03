@@ -480,8 +480,8 @@ export class OverpassService {
       tags["addr:city"],
     ].filter(Boolean).join(", ") || tags.address || null;
 
-    const ville = tags["addr:city"] || this.guessCity(lat, lon);
-    const region = this.guessRegion(ville);
+    const ville = tags["addr:city"] || this.guessCity(lat, lon) || "Ville non spécifiée";
+    const region = this.guessRegion(ville) || "Région non spécifiée";
 
     return {
       osmId: String(element.id),
@@ -490,8 +490,8 @@ export class OverpassService {
       name,
       latitude: String(lat),
       longitude: String(lon),
-      address,
-      quartier: tags["addr:suburb"] || tags["addr:neighbourhood"] || null,
+      address: address || (tags["addr:suburb"] ? `Quartier ${tags["addr:suburb"]}` : "Burkina Faso"),
+      quartier: tags["addr:suburb"] || tags["addr:neighbourhood"] || "Quartier non spécifié",
       ville,
       region,
       telephone: tags.phone || tags["contact:phone"] || null,
