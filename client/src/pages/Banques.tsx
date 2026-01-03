@@ -193,22 +193,28 @@ export default function Banques() {
     queryKey: ["/api/banques"],
   });
 
-  const { data: stats } = useQuery<{
-    total: number;
-    banques: number;
-    caissesPopulaires: number;
-    microfinance: number;
-    avecGAB: number;
-    totalGAB: number;
-    totalAgences: number;
-    importanceSystemique: number;
-    parType: Record<string, number>;
-    parCategorie: Record<string, number>;
-    parRegion: Record<string, number>;
-    nombreVilles: number;
-  }>({
-    queryKey: ["/api/banques/stats"],
-  });
+  const stats = useMemo(() => {
+    const banquesArray = Array.isArray(banques) ? banques : [];
+    const total = banquesArray.length;
+    const banquesCount = banquesArray.filter(b => b.type === "Banque").length;
+    const caissesCount = banquesArray.filter(b => b.type === "Caisse Populaire" || b.type === "Microfinance").length;
+    const totalGAB = banquesArray.filter(b => b.hasGAB).length;
+    const importanceSystemique = banquesArray.filter(b => b.importanceSystemique).length;
+    const villesSet = new Set<string>();
+
+    banquesArray.forEach(b => {
+      if (b.ville) villesSet.add(b.ville);
+    });
+
+    return {
+      total,
+      banques: banquesCount,
+      caissesPopulaires: caissesCount,
+      totalGAB,
+      importanceSystemique,
+      nombreVilles: villesSet.size
+    };
+  }, [banques]);
 
   const filteredBanques = useMemo(() => {
     let result = banques;
