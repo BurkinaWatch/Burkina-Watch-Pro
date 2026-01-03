@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, Fuel, Droplets, Locate } from "lucide-react";
+import { Search, MapPin, Phone, Clock, Navigation, RefreshCw, Fuel, Droplets, Locate, ChevronLeft, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 import { VoiceSearchButton } from "@/components/VoiceSearchButton";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -341,54 +342,87 @@ export default function StationsService() {
       <Header />
 
       <main className="container mx-auto px-4 py-6">
-        <Button
-          variant="ghost"
-          className="mb-4 gap-2"
-          onClick={() => setLocation("/")}
-          data-testid="button-back"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Retour
-        </Button>
-
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-              <Fuel className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Stations-Service</h1>
-              <p className="text-sm text-muted-foreground">
-                {stats.total} stations répertoriées au Burkina Faso
-              </p>
-            </div>
+        <div className="flex items-center gap-4 mb-6">
+          <Link href="/">
+            <Button variant="ghost" size="icon" data-testid="button-back">
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground">
+              <Fuel className="w-7 h-7 text-orange-600" />
+              Stations-Service
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {stats.total} stations répertoriées au Burkina Faso
+            </p>
           </div>
         </div>
 
-        {/* Stats rapides */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-800">
-            <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.byMarque.barka || 0}</p>
-              <p className="text-xs text-muted-foreground">Barka Energies</p>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20">
+            <CardContent className="p-4 relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Stations</p>
+                  <span className="text-2xl font-bold tracking-tight">{filteredStations.length}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-orange-500/10 group-hover:scale-110 transition-transform">
+                  <Fuel className="w-5 h-5 text-orange-600" />
+                </div>
+              </div>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 border-yellow-200 dark:border-yellow-800">
-            <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.byMarque.shell || 0}</p>
-              <p className="text-xs text-muted-foreground">Shell</p>
+          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
+            <CardContent className="p-4 relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">24h/24</p>
+                  <span className="text-2xl font-bold tracking-tight">{filteredStations.filter(s => s.horaires === "24h/24").length}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-blue-500/10 group-hover:scale-110 transition-transform">
+                  <Clock className="w-5 h-5 text-blue-600" />
+                </div>
+              </div>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200 dark:border-orange-800">
-            <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.byMarque.oryx || 0}</p>
-              <p className="text-xs text-muted-foreground">Oryx</p>
+          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+            <CardContent className="p-4 relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Villes</p>
+                  <span className="text-2xl font-bold tracking-tight">{new Set(filteredStations.map(s => s.ville)).size}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-green-500/10 group-hover:scale-110 transition-transform">
+                  <MapPin className="w-5 h-5 text-green-600" />
+                </div>
+              </div>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
-            <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{(stats.byMarque.sonabhy || 0) + (stats.byMarque.petrofa || 0) + (stats.byMarque.sipe || 0)}</p>
-              <p className="text-xs text-muted-foreground">Autres</p>
+          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 border-cyan-500/20">
+            <CardContent className="p-4 relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">GPL/Gaz</p>
+                  <span className="text-2xl font-bold tracking-tight">{filteredStations.filter(s => s.services.includes("GPL")).length}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-cyan-500/10 group-hover:scale-110 transition-transform">
+                  <Droplets className="w-5 h-5 text-cyan-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-red-500/10 to-red-500/5 border-red-500/20">
+            <CardContent className="p-4 relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Marques</p>
+                  <span className="text-2xl font-bold tracking-tight">{new Set(filteredStations.map(s => s.marque)).size}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-red-500/10 group-hover:scale-110 transition-transform">
+                  <Building2 className="w-5 h-5 text-red-600" />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
