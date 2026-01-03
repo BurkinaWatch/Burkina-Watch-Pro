@@ -47,6 +47,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
   // Vie Quotidienne - Restaurants et Commerces
   const vieQuotidienneItems = [
     { href: "/pharmacies", icon: Cross, label: "Pharmacies", color: "text-green-600 dark:text-green-500" },
+    { href: "/hopitaux", icon: Hospital, label: "Hôpitaux & Santé", color: "text-red-600 dark:text-red-500" },
     { href: "/restaurants", icon: Utensils, label: "Restaurants", color: "text-amber-600 dark:text-amber-500" },
     { href: "/cine", icon: Film, label: "Programme Ciné", color: "text-pink-600 dark:text-pink-500" },
     { href: "/marches", icon: Store, label: "Marches", color: "text-amber-700 dark:text-amber-400" },

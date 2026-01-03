@@ -213,6 +213,24 @@ function transformOsmToStation(place: Place) {
   };
 }
 
+function transformOsmToHopital(place: Place) {
+  const tags = place.tags as Record<string, string> || {};
+  return {
+    id: `osm-hosp-${place.id}`,
+    nom: place.name,
+    adresse: place.address || "Adresse à vérifier",
+    quartier: place.quartier || "Quartier non spécifié",
+    ville: place.ville || "Ville non spécifiée",
+    region: place.region || "Région non spécifiée",
+    latitude: parseFloat(place.latitude),
+    longitude: parseFloat(place.longitude),
+    telephone: place.telephone || undefined,
+    horaires: place.horaires || "24h/24",
+    services: tags.amenity === "hospital" ? ["Urgences", "Consultations", "Hospitalisation"] : ["Soins de base"],
+    source: "OSM" as const
+  };
+}
+
 function mapOsmBrandToMarque(brand: string): string {
   const brandLower = brand.toLowerCase();
   if (brandLower.includes("total")) return "TotalEnergies";
@@ -2417,7 +2435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { placeType, region, ville, search, verificationStatus, limit, offset } = req.query;
       
-      const places = await overpassService.getPlaces({
+      const response = await overpassService.getPlaces({
         placeType: placeType as string,
         region: region as string,
         ville: ville as string,
@@ -2427,8 +2445,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         offset: offset ? parseInt(offset as string) : undefined,
       });
 
+      // Transformation spécifique pour les hôpitaux et cliniques
+      if (placeType === "hospital" || placeType === "clinic") {
+        const transformedPlaces = response.places.map(transformOsmToHopital);
+        return res.json({
+          places: transformedPlaces,
+          total: response.total
+        });
+      }
+
       res.set('Cache-Control', 'public, max-age=300');
-      res.json(places);
+      res.json(response);
     } catch (error) {
       console.error("Erreur récupération places:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des lieux" });

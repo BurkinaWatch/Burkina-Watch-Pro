@@ -44,6 +44,7 @@ import Stations from "@/pages/Stations";
 import PharmaciesOSM from "@/pages/PharmaciesOSM";
 import LiveTrack from "@/pages/LiveTrack";
 import Gares from "@/pages/Gares";
+import Hopitaux from "@/pages/Hopitaux";
 import Cine from "@/pages/Cine";
 import Weather from "@/pages/Weather";
 import Fiabilite from "@/pages/Fiabilite";
@@ -79,6 +80,7 @@ function Router() {
       <Route path="/boutiques" component={Boutiques} />
       <Route path="/banques" component={Banques} />
       <Route path="/stations" component={Stations} />
+      <Route path="/hopitaux" component={Hopitaux} />
       <Route path="/gares" component={Gares} />
       <Route path="/cine" component={Cine} />
       <Route path="/meteo" component={Weather} />
