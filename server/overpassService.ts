@@ -470,7 +470,7 @@ export class OverpassService {
     const ville = tags["addr:city"] || this.guessCity(lat, lon);
     const region = this.guessRegion(ville);
 
-    return {
+    const result = {
       osmId: String(element.id),
       osmType: element.type,
       placeType,
@@ -486,7 +486,7 @@ export class OverpassService {
       website: tags.website || tags["contact:website"] || null,
       horaires: tags.opening_hours || null,
       tags: tags as Record<string, unknown>,
-      source: placeType === "restaurant" ? name : "OSM", // Utiliser le nom pour les restaurants, OSM pour le reste
+      source: placeType === "restaurant" ? name : "OSM", 
       confidenceScore: "0.6",
       lastSyncedAt: new Date(),
     };
@@ -511,13 +511,18 @@ export class OverpassService {
     return null;
   }
 
-  async syncPlaceType(placeType: string): Promise<{ added: number; updated: number; errors: number }> {
+  async syncPlaceType(placeType: string, force = false): Promise<{ added: number; updated: number; errors: number }> {
     const query = this.buildOverpassQuery(placeType);
     if (!query) return { added: 0, updated: 0, errors: 0 };
 
     let added = 0, updated = 0, errors = 0;
 
     try {
+      // Nettoyer les données existantes pour ce type si force est activé
+      if (force) {
+        await db.delete(places).where(eq(places.placeType, placeType));
+      }
+
       const response = await this.fetchFromOverpass(query);
       
       if (!response.elements || response.elements.length === 0) {
@@ -587,8 +592,8 @@ export class OverpassService {
     return { added, updated, errors };
   }
 
-  async syncAllPlaces(): Promise<void> {
-    if (this.syncInProgress) {
+  async syncAllPlaces(force = false): Promise<void> {
+    if (this.syncInProgress && !force) {
       console.log("Sync already in progress, skipping...");
       return;
     }
@@ -599,7 +604,7 @@ export class OverpassService {
     try {
       for (const placeType of Object.keys(PLACE_TYPE_QUERIES)) {
         console.log(`  Syncing ${placeType}...`);
-        const result = await this.syncPlaceType(placeType);
+        const result = await this.syncPlaceType(placeType, force);
         console.log(`  ✅ ${placeType}: ${result.added} added, ${result.updated} updated, ${result.errors} errors`);
         await this.sleep(2000);
       }
@@ -669,9 +674,10 @@ export class OverpassService {
             price_level: r.gammePrix,
             plats: r.plats?.join(", "),
             services: r.services?.join(", "),
-            specialites: r.specialites?.join(", ")
+            specialites: r.specialites?.join(", "),
+            source_enrichie: "true"
           },
-          source: r.nom,
+          source: r.nom, // Utiliser le nom comme source pour l'affichage
           confidenceScore: "1.0",
           lastSyncedAt: new Date(),
           createdAt: new Date(),
@@ -745,9 +751,12 @@ export class OverpassService {
           telephone: p.telephone,
           email: p.email,
           horaires: p.horaires,
-          tags: { is24h: p.is24h ? "yes" : "no" },
+          tags: { 
+            is24h: p.is24h ? "yes" : "no",
+            source_enrichie: "true"
+          },
           source: p.nom,
-          confidenceScore: "0.9",
+          confidenceScore: "1.0",
           lastSyncedAt: new Date(),
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -770,9 +779,13 @@ export class OverpassService {
           email: b.email,
           website: b.siteWeb,
           horaires: b.horaires,
-          tags: { sigle: b.sigle, type: b.type },
+          tags: { 
+            sigle: b.sigle, 
+            type: b.type,
+            source_enrichie: "true"
+          },
           source: b.nom,
-          confidenceScore: "0.9",
+          confidenceScore: "1.0",
           lastSyncedAt: new Date(),
           createdAt: new Date(),
           updatedAt: new Date(),

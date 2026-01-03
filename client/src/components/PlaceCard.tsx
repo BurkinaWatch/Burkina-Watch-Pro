@@ -42,6 +42,9 @@ export function PlaceCard({ place }: PlaceCardProps) {
   const specialites = tags.specialites || tags.cuisine || tags.speciality;
   const services = tags.services || (place.placeType === "hospital" ? "Urgences, Consultations, Hospitalisation" : null);
 
+  // Nom de l'établissement pour la source si c'est une donnée enrichie
+  const sourceName = place.source && place.source !== "OSM" && place.source !== "Fallback" && place.source !== "OpenStreetMap" ? place.source : "OSM";
+
   const imageUrl = tags.image || tags.photo || tags["image:url"] || null;
   const website = tags.website || tags["contact:website"] || null;
   const email = tags.email || tags["contact:email"] || null;
@@ -88,7 +91,7 @@ export function PlaceCard({ place }: PlaceCardProps) {
         )}
         <div className="mt-2">
           <SourceBadge 
-            source={place.source || "OSM"}
+            source={sourceName}
             confidenceScore={place.confidenceScore}
             verificationStatus={place.verificationStatus}
             confirmations={place.confirmations}

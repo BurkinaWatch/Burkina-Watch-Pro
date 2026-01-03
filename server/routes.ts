@@ -2525,6 +2525,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   // ROUTES LIEUX VÉRIFIÉS (OpenStreetMap)
   // ----------------------------------------
+  app.post("/api/places/sync", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== "admin") {
+        return res.status(403).json({ error: "Non autorisé" });
+      }
+
+      const force = req.query.force === 'true';
+      // Lancer la synchronisation en arrière-plan
+      overpassService.syncAllPlaces(force).catch(err => console.error("Sync error:", err));
+      
+      res.json({ message: "Synchronisation démarrée en arrière-plan" });
+    } catch (error) {
+      res.status(500).json({ error: "Erreur lors du démarrage de la synchronisation" });
+    }
+  });
+
   app.get("/api/places", async (req, res) => {
     try {
       const { placeType, region, ville, search, verificationStatus, limit, offset } = req.query;
