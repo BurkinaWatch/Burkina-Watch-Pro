@@ -409,6 +409,8 @@ export class OverpassService {
           way["shop"="mall"](${south},${west},${north},${east});
           node["leisure"="market"](${south},${west},${north},${east});
           way["leisure"="market"](${south},${west},${north},${east});
+          node["place"="market"](${south},${west},${north},${east});
+          way["place"="market"](${south},${west},${north},${east});
         );
         out center;
       `;

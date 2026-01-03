@@ -152,10 +152,25 @@ function mapOsmShopToCategory(shop: string): string {
 
 function transformOsmToMarche(place: Place) {
   const tags = place.tags as Record<string, string> || {};
+  
+  // Extraire les jours d'ouverture à partir d'opening_hours si disponible
+  let joursOuverture = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+  if (tags.opening_hours) {
+    if (tags.opening_hours.toLowerCase().includes("daily") || tags.opening_hours.includes("24/7")) {
+      joursOuverture = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+    }
+  }
+
+  // Extraire les produits courants à partir des tags shop, product, etc.
+  const produits = [];
+  if (tags.shop === "supermarket") produits.push("Alimentation générale");
+  if (tags.craft) produits.push("Artisanat");
+  if (tags.amenity === "marketplace") produits.push("Fruits et légumes", "Viande", "Produits locaux");
+  
   return {
     id: `osm-march-${place.id}`,
     nom: place.name,
-    type: "Marché général",
+    type: tags.marketplace === "periodic" ? "Hebdomadaire" : "Quartier",
     adresse: place.address || "Adresse à vérifier",
     quartier: place.quartier || "Quartier non spécifié",
     ville: place.ville || "Ville non spécifiée",
@@ -163,9 +178,11 @@ function transformOsmToMarche(place: Place) {
     latitude: parseFloat(place.latitude),
     longitude: parseFloat(place.longitude),
     telephone: place.telephone || undefined,
-    horaires: place.horaires || "Tous les jours",
-    joursOuverture: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"],
-    produits: [],
+    horaires: place.horaires || (tags.opening_hours || "07:00 - 18:00"),
+    joursOuverture: joursOuverture,
+    produits: produits.length > 0 ? produits : ["Produits divers"],
+    nombreCommercants: parseInt(tags.capacity || "0") || undefined,
+    superficie: tags.area ? `${tags.area} m²` : undefined,
     source: "OSM" as const
   };
 }
