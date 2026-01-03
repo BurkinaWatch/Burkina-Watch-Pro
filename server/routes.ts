@@ -188,7 +188,7 @@ function transformOsmToMarche(place: Place) {
 }
 
 function transformOsmToBanque(place: Place) {
-  const tags = place.tags as Record<string, string> || {};
+  const tags = place.tags as Record<string, any> || {};
   return {
     id: `osm-bank-${place.id}`,
     nom: place.name,
@@ -203,7 +203,9 @@ function transformOsmToBanque(place: Place) {
     telephone: place.telephone || undefined,
     horaires: place.horaires || "8h-16h",
     services: [],
-    nombreGAB: place.placeType === "atm" ? 1 : 0,
+    nombreGAB: tags.hasGAB ? 1 : 0,
+    hasGAB: tags.hasGAB || false,
+    importanceSystemique: tags.importanceSystemique || false,
     source: "OSM" as const
   };
 }

@@ -498,8 +498,12 @@ export class OverpassService {
       email: tags.email || tags["contact:email"] || null,
       website: tags.website || tags["contact:website"] || null,
       horaires: tags.opening_hours || null,
-      tags: tags as Record<string, unknown>,
-      source: placeType === "restaurant" ? name : "OSM", 
+      tags: {
+        ...tags,
+        hasGAB: tags.atm === "yes" || placeType === "atm" || tags.amenity === "atm",
+        importanceSystemique: tags.importance === "high" || tags.rank === "1" || tags.operator?.toLowerCase().includes("boa") || tags.operator?.toLowerCase().includes("ecobank") || tags.operator?.toLowerCase().includes("coris") || tags.operator?.toLowerCase().includes("uba")
+      } as Record<string, unknown>,
+      source: "OSM", 
       confidenceScore: "0.6",
       lastSyncedAt: new Date(),
     };
