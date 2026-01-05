@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Home, Map, Plus, AlertCircle, User } from "lucide-react";
+import { Home, Map, Plus, AlertCircle, User, Cross } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -11,7 +11,7 @@ export default function BottomNav() {
     { icon: Home, label: "Accueil", path: "/", testId: "nav-home", color: "from-emerald-400 to-emerald-600" },
     { icon: Map, label: "Carte", path: "/carte", testId: "nav-map", color: "from-blue-400 to-blue-600" },
     { icon: Plus, label: "Publier", path: "/publier", testId: "nav-publish", highlight: true, color: "from-red-500 via-orange-400 to-yellow-400" },
-    { icon: AlertCircle, label: "SOS", path: "/sos", testId: "nav-sos", color: "from-red-500 to-red-600" },
+    { icon: Cross, label: "Pharmacies", path: "/pharmacies", testId: "nav-pharmacy", color: "from-red-500 to-red-600" },
     { icon: User, label: "Profil", path: "/profil", testId: "nav-profile", color: "from-purple-400 to-purple-600" },
   ];
 

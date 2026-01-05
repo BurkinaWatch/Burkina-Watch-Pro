@@ -41,13 +41,11 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
   // Services d'urgence - Groupés logiquement
   const urgenceItems = [
     { href: "/urgences", icon: AlertCircle, label: t("nav.urgences"), color: "text-orange-600 dark:text-orange-500" },
-    { href: "/pharmacies-garde", icon: Cross, label: t("nav.pharmacies"), color: "text-red-500 dark:text-red-400" },
+    { href: "/pharmacies", icon: Cross, label: "Pharmacies du Faso", color: "text-red-500 dark:text-red-400" },
   ];
 
   // Vie Quotidienne - Restaurants et Commerces
   const vieQuotidienneItems = [
-    { href: "/pharmacies", icon: Cross, label: "Pharmacies", color: "text-green-600 dark:text-green-500" },
-    { href: "/pharmacies-ii", icon: Cross, label: "Pharmacies II (DB)", color: "text-emerald-600 dark:text-emerald-500", badge: "BD" },
     { href: "/hopitaux", icon: Hospital, label: "Hôpitaux & Santé", color: "text-red-600 dark:text-red-500" },
     { href: "/restaurants", icon: Utensils, label: "Restaurants", color: "text-amber-600 dark:text-amber-500" },
     { href: "/cine", icon: Film, label: "Programme Ciné", color: "text-pink-600 dark:text-pink-500" },
