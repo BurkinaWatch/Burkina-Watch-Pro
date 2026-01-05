@@ -465,7 +465,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Transform based on type if needed
-      let transformed = response.places;
+      let transformed: any[] = response.places;
       if (type === "hospital") {
         transformed = response.places.map(transformOsmToHopital);
       } else if (type === "pharmacy") {
