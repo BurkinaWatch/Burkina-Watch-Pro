@@ -46,6 +46,7 @@ function UnreadBadge() {
 }
 
 export default function Header({ onMenuClick, showNotifications = true, showLogout = true }: HeaderProps) {
+  const { theme, setTheme } = useTheme();
   const { isStealthMode, toggleStealthMode } = useStealthMode();
   const { isAuthenticated, user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -147,17 +148,17 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
           <Button
             variant="ghost"
             size="icon"
-            onClick={toggleStealthMode}
-            data-testid="button-stealth-toggle"
-            title={isStealthMode ? t("header.stealthMode.off") : t("header.stealthMode.on")}
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            data-testid="button-theme-toggle"
+            title={theme === "dark" ? "Passer au mode clair" : "Passer au mode sombre"}
           >
-            {isStealthMode ? (
-              <EyeOff className="w-5 h-5 text-gray-500" />
+            {theme === "dark" ? (
+              <Sun className="w-5 h-5" />
             ) : (
-              <Eye className="w-5 h-5" />
+              <Moon className="w-5 h-5" />
             )}
           </Button>
-          {/* The theme toggle button is removed to enforce dark mode */}
+
         </div>
       </div>
     </header>

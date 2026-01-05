@@ -35,3 +35,4 @@ Additional completed tasks:
 [x] 33. Reinstalled tsx dependency and verified application running with all services initialized (Jan 5, 2026)
 [x] 34. Reinstalled dependencies and verified application running with all services (Jan 5, 2026)
 [x] 35. Reinstalled dependencies and verified application running with all services (Jan 5, 2026)
+[x] 36. Implemented Light/Dark mode toggle in Header and updated ThemeProvider to support theme switching.
