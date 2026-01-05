@@ -1,4 +1,4 @@
-import { Hospital, ChevronLeft, MapPin, Phone, Clock, Search, Building2, Landmark, Cross, HeartPulse, Activity, Globe, Navigation } from "lucide-react";
+import { Hospital, ChevronLeft, MapPin, Phone, Clock, Search, Building2, Landmark, Cross, HeartPulse, Activity, Globe, Navigation, RefreshCw } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -8,17 +8,22 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { REGION_NAMES } from "@/lib/regions";
 
 export default function Hopitaux() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("all");
+  const queryClient = useQueryClient();
 
-  const { data: hopitaux = [], isLoading } = useQuery<any[]>({
+  const { data: hopitaux = [], isLoading, isFetching } = useQuery<any[]>({
     queryKey: ["/api/places/hospital"],
   });
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/places/hospital"] });
+  };
 
   const stats = useMemo(() => {
     return {
@@ -51,21 +56,34 @@ export default function Hopitaux() {
 
       <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto p-4 space-y-6">
-          <div className="flex items-center gap-4">
-            <Link href="/">
-              <Button variant="ghost" size="icon" data-testid="button-back">
-                <ChevronLeft className="w-5 h-5" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold flex items-center gap-2">
-                <Hospital className="w-7 h-7 text-primary" />
-                Santé & Hôpitaux
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                Infrastructures sanitaires au Burkina Faso
-              </p>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Link href="/">
+                <Button variant="ghost" size="icon" data-testid="button-back">
+                  <ChevronLeft className="w-5 h-5" />
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                  <Hospital className="w-7 h-7 text-primary" />
+                  Santé & Hôpitaux
+                </h1>
+                <p className="text-muted-foreground text-sm">
+                  Infrastructures sanitaires au Burkina Faso
+                </p>
+              </div>
             </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefresh} 
+              disabled={isFetching}
+              className="gap-2"
+              data-testid="button-refresh-hospitals"
+            >
+              <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">Actualiser</span>
+            </Button>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
