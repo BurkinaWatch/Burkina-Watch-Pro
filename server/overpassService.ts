@@ -39,10 +39,11 @@ interface OverpassResponse {
 const PLACE_TYPE_QUERIES: Record<string, string> = {
   // Santé
   pharmacy: `["amenity"="pharmacy"]`,
-  hospital: `["amenity"="hospital"]`,
-  clinic: `["amenity"="clinic"]`,
-  doctors: `["amenity"="doctors"]`,
-  dentist: `["amenity"="dentist"]`,
+  hospital: `["amenity"~"hospital|clinic|doctors|dentist|nursing_home|health_post|dispensary|health_centre"]`,
+  hospital_extra: `["healthcare"~"hospital|clinic|doctor|dentist|health_centre|dispensary|medical_centre|physiotherapist|nursing_home"]`,
+  hospital_burkina: `["name"~"CSPS|CHUR|CHR|CMA|Centre de Santé|Hôpital|Clinique|Dispensaire"]`,
+  hospital_operator: `["operator:type"~"public|religious|private"]`,
+  hospital_social: `["amenity"="social_facility"]["social_facility"~"nursing_home|assisted_living"]`,
   
   // Restauration
   restaurant: `["amenity"="restaurant"]`,
@@ -401,6 +402,24 @@ export class OverpassService {
 
     const { south, west, north, east } = BURKINA_BBOX;
     
+    // Santé: Extension massive pour capturer tous les types de centres au Burkina
+    if (placeType === "hospital") {
+      const { south, west, north, east } = BURKINA_BBOX;
+      return `
+        [out:json][timeout:180][maxsize:1073741824];
+        (
+          node["amenity"~"hospital|clinic|doctors|dentist|health_post|dispensary|health_centre"](${south},${west},${north},${east});
+          way["amenity"~"hospital|clinic|doctors|dentist|health_post|dispensary|health_centre"](${south},${west},${north},${east});
+          relation["amenity"~"hospital|clinic|doctors|dentist|health_post|dispensary|health_centre"](${south},${west},${north},${east});
+          node["healthcare"~"hospital|clinic|doctor|dentist|health_centre|dispensary|medical_centre"](${south},${west},${north},${east});
+          way["healthcare"~"hospital|clinic|doctor|dentist|health_centre|dispensary|medical_centre"](${south},${west},${north},${east});
+          node["name"~"CSPS|CHUR|CHR|CMA|Centre de Santé|Hôpital|Clinique|Dispensaire"](${south},${west},${north},${east});
+          way["name"~"CSPS|CHUR|CHR|CMA|Centre de Santé|Hôpital|Clinique|Dispensaire"](${south},${west},${north},${east});
+        );
+        out center;
+      `;
+    }
+
     // Simplifier la requête restaurant pour capturer plus de données à travers tout le pays
     if (placeType === "restaurant" || placeType === "fast_food" || placeType === "cafe") {
       return `
@@ -492,16 +511,19 @@ export class OverpassService {
     ].filter(Boolean).join(", ") || tags.address || null;
 
     const ville = tags["addr:city"] || this.guessCity(lat, lon) || "Ville non spécifiée";
-    const region = this.guessRegion(ville) || "Région non spécifiée";
+    const region = tags["addr:region"] || tags["is_in:region"] || this.guessRegion(ville) || "Région non spécifiée";
 
-    // Enrichissement des tags pour les pharmacies
+    // Enrichissement des tags pour les infrastructures de santé et autres
     const enrichedTags = {
       ...tags,
-      is_on_duty: tags["emergency"] === "yes" || tags["on_duty"] === "yes" || tags["opening_hours"] === "24/7",
-      has_emergency_service: tags["emergency"] === "yes",
-      dispensing: tags["dispensing"] === "yes",
+      is_on_duty: tags["emergency"] === "yes" || tags["on_duty"] === "yes" || tags["opening_hours"] === "24/7" || tags["healthcare:speciality:emergency"] === "yes",
+      has_emergency_service: tags["emergency"] === "yes" || tags["healthcare:speciality:emergency"] === "yes" || tags["amenity"] === "hospital",
+      dispensing: tags["dispensing"] === "yes" || tags["healthcare:dispensing"] === "yes",
+      healthcare_type: tags["healthcare"] || tags["amenity"],
+      beds: tags["capacity:persons"] || tags["beds"],
+      speciality: tags["healthcare:speciality"] || tags["medical_specialty"],
       wheelchair: tags["wheelchair"],
-      operator: tags["operator"],
+      operator: tags["operator"] || tags["operator:type"],
       brand: tags["brand"],
       importanceSystemique: tags.importance === "high" || tags.rank === "1" || name?.toLowerCase().includes("boa") || name?.toLowerCase().includes("ecobank") || name?.toLowerCase().includes("coris") || name?.toLowerCase().includes("uba"),
       hasGAB: tags.atm === "yes" || finalPlaceType === "atm" || tags.amenity === "atm",
