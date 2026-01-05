@@ -29,50 +29,6 @@ import Leaderboard from "@/pages/Leaderboard";
 import TrackingLive from "@/pages/TrackingLive";
 import Notifications from "@/pages/Notifications";
 import Contribuer from "@/pages/Contribuer";
-import Pharmacies from "@/pages/Pharmacies";
-import Urgences from "@/pages/Urgences";
-import Bulletin from "@/pages/Bulletin";
-import Events from "@/pages/Events";
-import StreetView from "@/pages/StreetView";
-import Ouaga3D from "@/pages/Ouaga3D";
-import Restaurants from "@/pages/Restaurants";
-import BoutiquesMarchés from "@/pages/BoutiquesMarchés";
-import Marches from "@/pages/Marches";
-import Boutiques from "@/pages/Boutiques";
-import Banques from "@/pages/Banques";
-import Stations from "@/pages/Stations";
-import PharmaciesOSM from "@/pages/PharmaciesOSM";
-import PharmaciesII from "@/pages/PharmaciesII";
-import LiveTrack from "@/pages/LiveTrack";
-import Gares from "@/pages/Gares";
-import Hopitaux from "@/pages/Hopitaux";
-import Universites from "@/pages/Universites";
-import Cine from "@/pages/Cine";
-import Weather from "@/pages/Weather";
-import Fiabilite from "@/pages/Fiabilite";
-import NotFound from "@/pages/not-found";
-import { useOnlineStatus } from "./hooks/useOnlineStatus";
-
-function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/feed" component={Feed} />
-      <Route path="/signalement/:id" component={SignalementDetail} />
-      <Route path="/carte" component={Carte} />
-      <Route path="/publier" component={Publier} />
-      <Route path="/sos" component={SOS} />
-      <Route path="/sos/publier" component={SOSPublier} />
-      <Route path="/profil" component={Profil} />
-      <Route path="/profil/:userId" component={ProfilPublic} />
-      <Route path="/leaderboard" component={Leaderboard} />
-      <Route path="/classement" component={Leaderboard} />
-      <Route path="/tracking-live" component={TrackingLive} />
-      <Route path="/contribuer" component={Contribuer} />
-      <Route path="/pharmacies" component={PharmaciesOSM} />
-      <Route path="/pharmacies-ii" component={PharmaciesII} />
-      <Route path="/pharmacies-garde" component={Pharmacies} />
-      <Route path="/urgences" component={Urgences} />
       <Route path="/bulletin" component={Bulletin} />
       <Route path="/events" component={Events} />
       <Route path="/streetview" component={StreetView} />
