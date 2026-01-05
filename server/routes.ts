@@ -29,6 +29,7 @@ import { fetchBulletins, clearCache } from "./rssService";
 import { fetchEvents, clearEventsCache } from "./eventsService";
 import { overpassService } from "./overpassService";
 import { dataMigrationService } from "./dataMigrationService";
+import { BOUTIQUES_DATA } from "./boutiquesData";
 import type { Place } from "@shared/schema";
 
 // ============================================
@@ -1996,7 +1997,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await overpassService.getPlaces({ placeType: "shop" });
       const shops = result.places || [];
       const lastUpdated = result.lastUpdated;
-      let boutiques = shops.map(transformOsmToBoutique);
+      
+      // Combiner les données statiques (BOUTIQUES_DATA) et les données dynamiques (OSM)
+      let boutiques = [
+        ...BOUTIQUES_DATA,
+        ...(shops || []).map(transformOsmToBoutique)
+      ];
 
       if (search) {
         const query = (search as string).toLowerCase();
@@ -2004,6 +2010,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       if (region && region !== "all") {
         boutiques = boutiques.filter(b => b.region === region);
+      }
+      if (categorie && categorie !== "all") {
+        boutiques = boutiques.filter(b => b.categorie === categorie);
       }
 
       res.json({
