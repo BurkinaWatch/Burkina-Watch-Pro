@@ -32,7 +32,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
 
   // Services & Actualités - Nouvelles fonctionnalités en avant
   const servicesItems = [
-    { href: "/bulletin", icon: Newspaper, label: t("nav.bulletin"), color: "text-yellow-700 dark:text-yellow-500", badge: t("common.new"), badgeColor: "bg-yellow-500" },
+    { href: "/bulletin", icon: Newspaper, label: "Hot News", color: "text-yellow-700 dark:text-yellow-500", badge: t("common.new"), badgeColor: "bg-yellow-500" },
     { href: "/events", icon: Calendar, label: t("nav.events"), color: "text-purple-600 dark:text-purple-500", badge: t("common.new"), badgeColor: "bg-purple-500" },
     { href: "/tracking-live", icon: Navigation, label: t("nav.tracking"), color: "text-cyan-600 dark:text-cyan-500" },
     { href: "/streetview", icon: Camera, label: t("nav.streetview"), color: "text-green-700 dark:text-green-500", badge: t("common.new"), badgeColor: "bg-green-500" },
