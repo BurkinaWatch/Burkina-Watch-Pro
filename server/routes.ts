@@ -454,6 +454,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/places/:type", async (req, res) => {
+    try {
+      const { type } = req.params;
+      const { region } = req.query;
+      
+      const response = await overpassService.getPlaces({ 
+        placeType: type,
+        region: region as string | undefined
+      });
+      
+      // Transform based on type if needed
+      let transformed = response.places;
+      if (type === "hospital") {
+        transformed = response.places.map(transformOsmToHopital);
+      } else if (type === "pharmacy") {
+        transformed = response.places.map(transformOsmToPharmacy);
+      } else if (type === "restaurant") {
+        transformed = response.places.map((p, i) => transformOsmToRestaurant(p, i));
+      } else if (type === "shop" || type === "supermarket") {
+        transformed = response.places.map(transformOsmToBoutique);
+      } else if (type === "marketplace") {
+        transformed = response.places.map(transformOsmToMarche);
+      } else if (type === "bank" || type === "atm" || type === "caisses_populaires") {
+        transformed = response.places.map(transformOsmToBanque);
+      } else if (type === "fuel") {
+        transformed = response.places.map(transformOsmToStation);
+      } else if (type === "university") {
+        transformed = response.places.map(transformOsmToUniversity);
+      }
+
+      res.json(transformed);
+    } catch (error) {
+      console.error(`Error fetching places for ${req.params.type}:`, error);
+      res.status(500).json({ error: "Erreur lors de la récupération des lieux" });
+    }
+  });
+
   // ----------------------------------------
   // ROUTES SIGNALEMENTS
   // ----------------------------------------
