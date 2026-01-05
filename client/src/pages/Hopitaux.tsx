@@ -23,9 +23,9 @@ export default function Hopitaux() {
   const stats = useMemo(() => {
     return {
       total: hopitaux.length,
-      public: hopitaux.filter(h => h.tags?.operator_type === "government" || h.tags?.amenity === "hospital").length,
-      prive: hopitaux.filter(h => h.tags?.operator_type === "private").length,
-      pharmacies: hopitaux.filter(h => h.tags?.amenity === "pharmacy").length,
+      public: hopitaux.filter(h => h.operator_type === "government" || h.type === "hospital").length,
+      prive: hopitaux.filter(h => h.operator_type === "private").length,
+      pharmacies: hopitaux.filter(h => h.type === "pharmacy").length,
       villes: new Set(hopitaux.map(h => h.city)).size
     };
   }, [hopitaux]);
@@ -182,30 +182,30 @@ export default function Hopitaux() {
                           {h.city}, {h.region}
                         </CardDescription>
                       </div>
-                      <Badge variant={h.tags?.operator_type === "government" ? "default" : "secondary"} className="text-[10px] shrink-0">
-                        {h.tags?.operator_type === "government" ? "Public" : "Privé"}
+                      <Badge variant={h.operator_type === "government" ? "default" : "secondary"} className="text-[10px] shrink-0">
+                        {h.operator_type === "government" ? "Public" : "Privé"}
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex items-center gap-2 text-sm">
                       <Clock className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-xs">{h.tags?.opening_hours || "Heures non spécifiées"}</span>
+                      <span className="text-xs">{h.opening_hours || "Heures non spécifiées"}</span>
                     </div>
-                    {h.tags?.phone && (
+                    {h.phone && (
                       <div className="flex items-center gap-2 text-sm">
                         <Phone className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-xs">{h.tags.phone}</span>
+                        <span className="text-xs">{h.phone}</span>
                       </div>
                     )}
                     <div className="flex gap-2 pt-2 border-t">
                       <Button variant="outline" size="sm" className="flex-1 text-xs h-8" asChild>
-                        <a href={`tel:${h.tags?.phone || "112"}`}>
+                        <a href={`tel:${h.phone || "112"}`}>
                           <Phone className="w-3 h-3 mr-1" />
                           Appeler
                         </a>
                       </Button>
-                      <Button variant="default" size="sm" className="flex-1 text-xs h-8" onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lon}`)}>
+                      <Button variant="default" size="sm" className="flex-1 text-xs h-8" onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${h.latitude},${h.longitude}`)}>
                         <Navigation className="w-3 h-3 mr-1" />
                         Itinéraire
                       </Button>

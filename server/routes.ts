@@ -238,16 +238,17 @@ function transformOsmToHopital(place: Place) {
   const tags = place.tags as Record<string, string> || {};
   return {
     id: `osm-hosp-${place.id}`,
-    nom: place.name,
-    adresse: place.address || "Burkina Faso",
-    quartier: place.quartier || "Quartier non spécifié",
-    ville: place.ville || "Ville non spécifiée",
-    region: place.region || "Région non spécifiée",
+    name: place.name,
     latitude: parseFloat(place.latitude),
     longitude: parseFloat(place.longitude),
-    telephone: place.telephone || undefined,
-    horaires: place.horaires || "24h/24",
-    services: tags.amenity === "hospital" ? ["Urgences", "Consultations", "Hospitalisation"] : ["Soins de base"],
+    address: place.address || "Burkina Faso",
+    city: place.ville || "Ville non spécifiée",
+    region: place.region || "Région non spécifiée",
+    phone: place.telephone || undefined,
+    opening_hours: place.horaires || "24h/24",
+    type: tags.healthcare || tags.amenity || "hospital",
+    operator_type: tags.operator || tags["operator:type"] || (place.name?.toLowerCase().includes("csps") || place.name?.toLowerCase().includes("chur") || place.name?.toLowerCase().includes("chr") || place.name?.toLowerCase().includes("cma") ? "government" : "private"),
+    tags: tags,
     source: "OSM" as const
   };
 }
