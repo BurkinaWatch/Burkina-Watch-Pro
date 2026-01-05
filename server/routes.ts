@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 // ============================================
 // IMPORTS
 // ============================================
@@ -290,28 +291,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
 
   // ----------------------------------------
-  // ROUTES D'AUTHENTIFICATION
+  // ROUTES D'AUTHENTIFICATION HYBRIDE
   // ----------------------------------------
-  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
+  app.get("/api/auth/user", (req: any, res) => {
+    if (req.isAuthenticated()) {
+      return res.json(req.user);
+    }
+    res.status(401).json({ message: "Unauthorized" });
+  });
+
+  app.post("/api/auth/magic-link", async (req: any, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email requis" });
+
+    const token = crypto.randomUUID();
+    const userId = req.user?.id;
+    
+    if (!userId) return res.status(401).json({ error: "Utilisateur non identifié" });
+
     try {
-      const userId = req.user?.claims?.sub || "demo-user";
-      const user = await storage.getUser(userId);
+      await storage.createMagicLink(userId, email, token);
       
-      if (!user && userId === "railway-user") {
-        return res.json({
-          id: "railway-user",
-          email: "railway@example.com",
-          firstName: "Railway",
-          lastName: "User",
-          role: "admin",
-          points: 0
-        });
-      }
+      const domain = req.get("host");
+      const magicLink = `${req.protocol}://${domain}/api/auth/verify?token=${token}`;
       
-      res.json(user);
+      console.log(`[MagicLink] Pour ${email}: ${magicLink}`);
+      
+      // En production, on utiliserait Resend ici
+      // await sendMagicLinkEmail(email, magicLink);
+
+      res.json({ message: "Lien magique envoyé (vérifiez les logs en dév)" });
     } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+      console.error("Magic link error:", error);
+      res.status(500).json({ error: "Erreur lors de la génération du lien" });
+    }
+  });
+
+  app.get("/api/auth/verify", async (req: any, res) => {
+    const { token } = req.query;
+    if (!token) return res.redirect("/?error=token_missing");
+
+    try {
+      const link = await storage.getMagicLinkByToken(token as string);
+      if (!link) return res.redirect("/?error=invalid_token");
+
+      // Vérifier si un compte avec cet email existe déjà
+      const existingUser = await storage.getUserByEmail(link.email);
+      
+      if (existingUser) {
+        // Fusionner les données si nécessaire, mais ici on va simplement logger l'utilisateur existant
+        // Pour cet exercice, on va simplement associer l'email à l'utilisateur actuel s'il est anonyme
+        await storage.associateEmailWithUser(link.userId, link.email);
+      } else {
+        await storage.associateEmailWithUser(link.userId, link.email);
+      }
+
+      await storage.consumeMagicLink(token as string);
+      
+      res.redirect("/?auth=success");
+    } catch (error) {
+      console.error("Verification error:", error);
+      res.redirect("/?error=server_error");
     }
   });
 

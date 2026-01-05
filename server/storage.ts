@@ -28,6 +28,7 @@ import {
   type InsertVirtualTour,
   type VirtualTour,
   type VirtualTourWithPhotos,
+  magicLinks,
   users,
   signalements,
   commentaires,
@@ -180,12 +181,7 @@ export class DbStorage implements IStorage {
     return result[0];
   }
 
-  async getUserById(userId: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-    return result[0];
-  }
-
-  async upsertUser(userData: UpsertUser): Promise<User> {
+  async upsertUser(userData: any): Promise<User> {
     const [user] = await db
       .insert(users)
       .values(userData)
@@ -196,6 +192,42 @@ export class DbStorage implements IStorage {
           updatedAt: new Date(),
         },
       })
+      .returning();
+    return user;
+  }
+
+  async createMagicLink(userId: string, email: string, token: string): Promise<void> {
+    await db.insert(magicLinks).values({
+      userId,
+      email,
+      token,
+      expiresAt: new Date(Date.now() + 3600000), // 1 hour
+    });
+  }
+
+  async getMagicLinkByToken(token: string): Promise<any | undefined> {
+    const [link] = await db
+      .select()
+      .from(magicLinks)
+      .where(and(eq(magicLinks.token, token), sql`${magicLinks.expiresAt} > now()`))
+      .limit(1);
+    return link;
+  }
+
+  async consumeMagicLink(token: string): Promise<void> {
+    await db.delete(magicLinks).where(eq(magicLinks.token, token));
+  }
+
+  async associateEmailWithUser(userId: string, email: string): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({
+        email,
+        isAnonymous: false,
+        role: "trusted",
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
       .returning();
     return user;
   }

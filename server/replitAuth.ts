@@ -1,32 +1,12 @@
-import * as client from "openid-client";
-import { Strategy, type VerifyFunction } from "openid-client/passport";
-
+import crypto from "node:crypto";
 import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
-import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
 // Désactivé en production Railway pour éviter le crash OIDC
 const isProduction = process.env.NODE_ENV === "production" && !process.env.REPL_ID;
-
-const getOidcConfig = memoize(
-  async () => {
-    if (isProduction) {
-      return null;
-    }
-    const issuerUrl = process.env.ISSUER_URL || "https://replit.com/oidc";
-    const replId = process.env.REPL_ID;
-    if (!replId) return null;
-
-    return await client.discovery(
-      new URL(issuerUrl),
-      replId
-    );
-  },
-  { maxAge: 3600 * 1000 }
-);
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
@@ -41,34 +21,12 @@ export function getSession() {
     secret: process.env.SESSION_SECRET || "default_secret_for_dev_only",
     store: sessionStore,
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
     cookie: {
       httpOnly: true,
       secure: isProduction,
       maxAge: sessionTtl,
     },
-  });
-}
-
-function updateUserSession(
-  user: any,
-  tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
-) {
-  user.claims = tokens.claims();
-  user.access_token = tokens.access_token;
-  user.refresh_token = tokens.refresh_token;
-  user.expires_at = user.claims?.exp;
-}
-
-async function upsertUser(
-  claims: any,
-) {
-  await storage.upsertUser({
-    id: claims["sub"],
-    email: claims["email"],
-    firstName: claims["first_name"],
-    lastName: claims["last_name"],
-    profileImageUrl: claims["profile_image_url"],
   });
 }
 
@@ -78,127 +36,44 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  if (isProduction) {
-    console.log("⚠️ Replit Auth désactivé en production Railway");
-    
-    // Mock user pour éviter les crashs si nécessaire ou laisser tel quel
-    passport.serializeUser((user: any, cb) => cb(null, user));
-    passport.deserializeUser((user: any, cb) => cb(null, user));
-    return;
-  }
-
-  const config = await getOidcConfig();
-  if (!config) return;
-
-  const verify: VerifyFunction = async (
-    tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
-    verified: passport.AuthenticateCallback
-  ) => {
-    const user = {};
-    updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
-    verified(null, user);
-  };
-
-  // Keep track of registered strategies
-  const registeredStrategies = new Set<string>();
-
-  // Get the proper hostname from request headers (handles Replit proxy)
-  const getHostname = (req: any): string => {
-    // In Replit, x-forwarded-host contains the actual domain
-    const forwardedHost = req.get("x-forwarded-host");
-    if (forwardedHost) {
-      // Take the first host if there are multiple
-      return forwardedHost.split(",")[0].trim();
+  passport.serializeUser((user: any, cb) => cb(null, user.id));
+  passport.deserializeUser(async (id: string, cb) => {
+    try {
+      const user = await storage.getUser(id);
+      cb(null, user);
+    } catch (err) {
+      cb(err);
     }
-    return req.hostname;
-  };
-
-  // Helper function to ensure strategy exists for a domain
-  const ensureStrategy = (domain: string) => {
-    const strategyName = `replitauth:${domain}`;
-    if (!registeredStrategies.has(strategyName)) {
-      const strategy = new Strategy(
-        {
-          name: strategyName,
-          config,
-          scope: "openid email profile offline_access",
-          callbackURL: `https://${domain}/api/callback`,
-        },
-        verify,
-      );
-      passport.use(strategy);
-      registeredStrategies.add(strategyName);
-    }
-  };
-
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
-
-  app.get("/api/login", (req, res, next) => {
-    const hostname = getHostname(req);
-    ensureStrategy(hostname);
-    passport.authenticate(`replitauth:${hostname}`, {
-      prompt: "login consent",
-      scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
   });
 
-  app.get("/api/callback", (req, res, next) => {
-    const hostname = getHostname(req);
-    ensureStrategy(hostname);
-    passport.authenticate(`replitauth:${hostname}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
-    })(req, res, next);
-  });
+  // Middleware pour créer un utilisateur anonyme si non authentifié
+  app.use(async (req: any, res, next) => {
+    if (!req.user && !req.path.startsWith("/api/auth/verify")) {
+      const anonymousId = req.session?.anonymousId || `anon-${crypto.randomUUID()}`;
+      if (req.session) req.session.anonymousId = anonymousId;
 
-  app.get("/api/logout", (req, res) => {
-    req.logout(() => {
-      res.redirect(
-        client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
-        }).href
-      );
-    });
+      let user = await storage.getUser(anonymousId);
+      if (!user) {
+        user = await storage.upsertUser({
+          id: anonymousId,
+          isAnonymous: true,
+          role: "guest",
+        });
+      }
+      
+      req.login(user, (err: any) => {
+        if (err) return next(err);
+        next();
+      });
+    } else {
+      next();
+    }
   });
 }
 
-export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  // En production sans Replit, on autorise l'accès ou on utilise un utilisateur de démo
-  if (isProduction) {
-    if (!req.user) {
-      // Optionnel: Créer un utilisateur fictif pour Railway si l'auth est requise partout
-      (req as any).user = { claims: { sub: "railway-user" } };
-    }
+export const isAuthenticated: RequestHandler = (req, res, next) => {
+  if (req.isAuthenticated()) {
     return next();
   }
-
-  const user = req.user as any;
-
-  if (!req.isAuthenticated() || !user || !user.expires_at) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  const now = Math.floor(Date.now() / 1000);
-  if (now <= user.expires_at) {
-    return next();
-  }
-
-  const refreshToken = user.refresh_token;
-  if (!refreshToken) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
-
-  try {
-    const config = await getOidcConfig();
-    const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
-    updateUserSession(user, tokenResponse);
-    return next();
-  } catch (error) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
+  res.status(401).json({ message: "Unauthorized" });
 };

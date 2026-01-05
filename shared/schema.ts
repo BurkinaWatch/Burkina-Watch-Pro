@@ -15,9 +15,10 @@ export const sessions = pgTable(
 
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
-  email: text("email").unique().notNull(),
+  email: text("email").unique(),
+  isAnonymous: boolean("is_anonymous").default(true).notNull(),
   password: text("password"),
-  authProvider: text("auth_provider").default("email"),
+  authProvider: text("auth_provider").default("anonymous"),
   googleId: text("google_id"),
   facebookId: text("facebook_id"),
   firstName: text("first_name"),
@@ -27,12 +28,21 @@ export const users = pgTable("users", {
   bio: text("bio"),
   ville: text("ville"),
   metier: text("metier"),
-  role: text("role").default("citoyen"),
+  role: text("role").default("guest"),
   emailTrackingEnabled: boolean("email_tracking_enabled").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   userPoints: integer("user_points").default(0).notNull(),
   userLevel: text("user_level").default("sentinelle").notNull(),
+});
+
+export const magicLinks = pgTable("magic_links", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  email: text("email").notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const signalements = pgTable("signalements", {
