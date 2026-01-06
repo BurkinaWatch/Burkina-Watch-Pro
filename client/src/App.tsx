@@ -56,6 +56,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/feed" component={Feed} />
+      <Route path="/fil-actualite" component={Feed} />
       <Route path="/signalement/:id" component={SignalementDetail} />
       <Route path="/carte" component={Carte} />
       <Route path="/publier" component={Publier} />
