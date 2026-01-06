@@ -32,6 +32,7 @@ import { REGION_NAMES } from "@/lib/regions";
 export default function PharmaciesDuFaso() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("all");
+  const [onlyOnDuty, setOnlyOnDuty] = useState(false);
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
 
@@ -63,8 +64,14 @@ export default function PharmaciesDuFaso() {
     if (selectedRegion !== "all") {
       result = result.filter(p => (p.region || p.ville) === selectedRegion);
     }
+    if (onlyOnDuty) {
+      result = result.filter(p => {
+        const tags = p.tags || {};
+        return tags.is_on_duty || tags.opening_hours === "24/7" || p.typeGarde === "24h";
+      });
+    }
     return result;
-  }, [pharmacies, searchTerm, selectedRegion]);
+  }, [pharmacies, searchTerm, selectedRegion, onlyOnDuty]);
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/places/pharmacy"] });
@@ -173,6 +180,14 @@ export default function PharmaciesDuFaso() {
                   ))}
                 </SelectContent>
               </Select>
+              <Button 
+                variant={onlyOnDuty ? "default" : "outline"}
+                className={`h-11 gap-2 ${onlyOnDuty ? "bg-green-600 hover:bg-green-700 border-green-600" : ""}`}
+                onClick={() => setOnlyOnDuty(!onlyOnDuty)}
+              >
+                <ShieldCheck className={`h-4 w-4 ${onlyOnDuty ? "text-white" : "text-green-500"}`} />
+                {onlyOnDuty ? "Gardes Uniquement" : "Toutes"}
+              </Button>
               <Button 
                 variant="outline" 
                 className="h-11 gap-2"
