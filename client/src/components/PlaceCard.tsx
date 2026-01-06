@@ -35,8 +35,11 @@ export function PlaceCard({ place }: PlaceCardProps) {
   
   const tags = (place.tags || {}) as Record<string, string>;
   
+  // Extraire les noms si place.name est vide (souvent le cas dans les tags OSM)
+  const displayName = place.name || tags.name || tags["name:fr"] || tags["name:en"] || tags.operator || "Établissement sans nom";
+  
   // Liste des plats vendus (si disponible dans les tags)
-  const plats = tags.plats || tags.menu || tags.dishes;
+  const plats = tags.plats || tags.menu || tags.dishes || tags.cuisine;
   
   // Extraire les spécialités et services pour l'affichage enrichi
   const specialites = tags.specialites || tags.cuisine || tags.speciality;
@@ -48,8 +51,8 @@ export function PlaceCard({ place }: PlaceCardProps) {
   const imageUrl = tags.image || tags.photo || tags["image:url"] || null;
   const website = tags.website || tags["contact:website"] || null;
   const email = tags.email || tags["contact:email"] || null;
-  const phone = place.telephone || tags.phone || tags["contact:phone"] || null;
-  const openingHours = place.horaires || tags.opening_hours || null;
+  const phone = place.telephone || tags.phone || tags["contact:phone"] || tags["phone:mobile"] || null;
+  const openingHours = place.horaires || tags.opening_hours || tags["service_times"] || null;
   const brand = tags.brand || tags.operator || null;
 
   const openInMaps = () => {
@@ -80,7 +83,7 @@ export function PlaceCard({ place }: PlaceCardProps) {
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2 flex-wrap">
           <CardTitle className="text-base font-semibold leading-tight" data-testid={`text-place-name-${place.id}`}>
-            {place.name}
+            {displayName}
           </CardTitle>
           <Badge className={`text-xs ${typeColor}`} variant="secondary">
             {typeLabel}
