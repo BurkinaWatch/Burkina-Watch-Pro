@@ -690,6 +690,26 @@ function CameraCapture({
             {isRecording && countdown <= 0 && (
               <RotationGuide photoCount={capturedPhotos.length} minRequired={MIN_PHOTOS_REQUIRED} />
             )}
+
+            {/* Manual capture button overlay */}
+            {isStreaming && !isRecording && (
+              <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4">
+                <Button
+                  size="icon"
+                  onClick={capturePhoto}
+                  disabled={remainingSlots <= 0}
+                  className="w-20 h-20 rounded-full bg-white hover:bg-white/90 border-4 border-primary shadow-xl flex items-center justify-center group"
+                  data-testid="button-capture-manual-overlay"
+                >
+                  <div className="w-14 h-14 rounded-full border-2 border-primary/20 group-active:scale-95 transition-transform flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-primary" />
+                  </div>
+                </Button>
+                <p className="text-white text-xs font-bold drop-shadow-md uppercase tracking-wider bg-black/40 px-3 py-1 rounded-full">
+                  Appuyer pour capturer
+                </p>
+              </div>
+            )}
           </>
         )}
       </div>
