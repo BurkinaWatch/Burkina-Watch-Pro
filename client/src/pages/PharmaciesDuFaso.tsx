@@ -36,7 +36,7 @@ export default function PharmaciesDuFaso() {
   const queryClient = useQueryClient();
 
   const { data: pharmacies = [], isLoading, isFetching } = useQuery<any[]>({
-    queryKey: ["/api/places/pharmacy"],
+    queryKey: ["/api/places/pharmacy?limit=5000"],
   });
 
   const regions = useMemo(() => {
