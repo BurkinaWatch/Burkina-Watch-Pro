@@ -67,7 +67,7 @@ export default function Contribuer() {
                       <span className="text-white font-bold text-sm">O</span>
                     </div>
                     <div>
-                      <h3 className="font-semibold">Orange</h3>
+                      <h3 className="font-semibold">Orange Money</h3>
                       <p className="text-sm text-muted-foreground">Service Orange</p>
                     </div>
                   </div>
