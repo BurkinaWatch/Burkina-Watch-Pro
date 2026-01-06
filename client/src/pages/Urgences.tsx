@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Search, MapPin, Phone, AlertTriangle, Shield, Activity, Heart, Users, ArrowLeft, RefreshCw, Download, Smartphone, Loader2 } from "lucide-react";
+import { SiWhatsapp } from "react-icons/si";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
@@ -378,6 +379,59 @@ export default function Urgences() {
             Actualiser
           </Button>
         </div>
+
+        {/* CNA Card */}
+        <Card className="mb-6 border-primary/30 bg-primary/5">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <Phone className="w-8 h-8 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Centre National d'Appel (CNA)</h3>
+                  <p className="text-muted-foreground">Signaler tout fait suspect ou acte de terrorisme</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">24H/24</Badge>
+                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">7J/7</Badge>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <Button 
+                  size="lg" 
+                  className="flex-1 md:flex-none gap-2 bg-primary hover:bg-primary/90"
+                  onClick={() => window.location.href = "tel:199"}
+                >
+                  <Phone className="w-5 h-5" />
+                  <span className="text-lg font-bold">Appeler le 199</span>
+                </Button>
+                
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className="flex-1 md:flex-none gap-2 border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20"
+                    onClick={() => window.open("https://wa.me/22671203333", "_blank")}
+                  >
+                    <SiWhatsapp className="w-5 h-5" />
+                    <span>WhatsApp 71 20 33 33</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className="flex-1 md:flex-none gap-2 border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20"
+                    onClick={() => window.open("https://wa.me/22668244444", "_blank")}
+                  >
+                    <SiWhatsapp className="w-5 h-5" />
+                    <span>WhatsApp 68 24 44 44</span>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* En-tête */}
         <Card className="mb-6 bg-gradient-to-r from-red-500/10 to-yellow-500/10 border-red-500/20">
