@@ -1,4 +1,5 @@
 
+import { AnimatedCard } from "@/components/AnimatedCard";
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
@@ -528,7 +529,7 @@ export default function Urgences() {
         {!isLoading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredServices.map((service) => (
-            <Card key={service.id} className="hover-elevate transition-all">
+            <AnimatedCard key={service.id} className="transition-all" variant={service.type === "Pompiers" || service.type === "Ambulance" ? "destructive" : "default"}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">
                   <CardTitle className="text-base font-semibold leading-tight flex-1">
