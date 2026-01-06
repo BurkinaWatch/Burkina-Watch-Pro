@@ -99,7 +99,7 @@ export default function PharmaciesDuFaso() {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold tracking-tight">Pharmacies du Faso</h1>
-                  <p className="text-sm text-muted-foreground">Données enrichies via OpenStreetMap & Burkina Secure</p>
+                  <p className="text-sm text-muted-foreground">Données enrichies via OpenStreetMap & Burkina Secure (Orange)</p>
                 </div>
               </div>
             </div>
