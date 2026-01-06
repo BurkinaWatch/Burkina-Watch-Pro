@@ -58,16 +58,16 @@ export default function Contribuer() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Orange Money */}
+            {/* Orange */}
             <div className="p-4 rounded-lg border bg-card hover-elevate">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">OM</span>
+                      <span className="text-white font-bold text-sm">O</span>
                     </div>
                     <div>
-                      <h3 className="font-semibold">Orange Money</h3>
+                      <h3 className="font-semibold">Orange</h3>
                       <p className="text-sm text-muted-foreground">Service Orange</p>
                     </div>
                   </div>
@@ -78,7 +78,7 @@ export default function Contribuer() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleCopy("+226 65 51 13 23", "Orange Money")}
+                  onClick={() => handleCopy("+226 65 51 13 23", "Orange")}
                   data-testid="button-copy-orange"
                 >
                   {copiedNumber === "+226 65 51 13 23" ? (
