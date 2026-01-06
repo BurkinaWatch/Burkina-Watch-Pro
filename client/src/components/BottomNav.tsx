@@ -11,7 +11,7 @@ export default function BottomNav() {
     { icon: Home, label: "Accueil", path: "/", testId: "nav-home", color: "from-emerald-400 to-emerald-600" },
     { icon: Map, label: "Carte", path: "/carte", testId: "nav-map", color: "from-blue-400 to-blue-600" },
     { icon: Plus, label: "Publier", path: "/publier", testId: "nav-publish", highlight: true, color: "from-red-500 via-orange-400 to-yellow-400" },
-    { icon: AlertCircle, label: "SOS", path: "/urgences", testId: "nav-sos", color: "from-red-500 to-red-600" },
+    { icon: AlertCircle, label: "SOS", path: "/fil-actualite", testId: "nav-sos", color: "from-red-500 to-red-600" },
     { icon: User, label: "Profil", path: "/profil", testId: "nav-profile", color: "from-purple-400 to-purple-600" },
   ];
 
