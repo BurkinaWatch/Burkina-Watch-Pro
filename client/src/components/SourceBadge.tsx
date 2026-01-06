@@ -38,13 +38,13 @@ export function SourceBadge({
 
   const getSourceInfo = () => {
     switch (source) {
-      case "OSM":
+      case "DATABASE":
         return {
           icon: MapPin,
-          label: "OpenStreetMap",
-          shortLabel: "OSM",
+          label: "Base de données",
+          shortLabel: "BDD",
           variant: "secondary" as const,
-          description: "Donnees importees d'OpenStreetMap"
+          description: "Données importées de la base centrale"
         };
       case "COMMUNAUTE":
         return {

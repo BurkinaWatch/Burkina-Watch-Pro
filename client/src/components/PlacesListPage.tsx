@@ -205,7 +205,7 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-4 mb-6">
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
@@ -224,17 +224,6 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
                 <div>
                   <p className="text-2xl font-bold">{Object.keys(regionCounts).length}</p>
                   <p className="text-xs text-muted-foreground">Régions</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="col-span-2 md:col-span-1">
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-2">
-                <Map className="h-5 w-5 text-green-500" />
-                <div>
-                  <p className="text-2xl font-bold">OSM</p>
-                  <p className="text-xs text-muted-foreground">OpenStreetMap</p>
                 </div>
               </div>
             </CardContent>
@@ -332,7 +321,7 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
               <p className="text-muted-foreground mb-4">
                 {searchTerm || selectedRegion !== "all"
                   ? "Essayez de modifier vos critères de recherche"
-                  : "Les données seront disponibles après synchronisation avec OpenStreetMap"}
+                  : "Les données seront disponibles après synchronisation avec la base de données"}
               </p>
               <Button variant="outline" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4 mr-2" />

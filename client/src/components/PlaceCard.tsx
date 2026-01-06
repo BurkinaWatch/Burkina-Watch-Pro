@@ -43,7 +43,7 @@ export function PlaceCard({ place }: PlaceCardProps) {
   const services = tags.services || (place.placeType === "hospital" ? "Urgences, Consultations, Hospitalisation" : null);
 
   // Nom de l'établissement pour la source si c'est une donnée enrichie
-  const sourceName = place.source && place.source !== "OSM" && place.source !== "Fallback" && place.source !== "OpenStreetMap" ? place.source : "OSM";
+  const sourceName = place.source && place.source !== "OSM" && place.source !== "Fallback" && place.source !== "OpenStreetMap" ? place.source : "DATABASE";
 
   const imageUrl = tags.image || tags.photo || tags["image:url"] || null;
   const website = tags.website || tags["contact:website"] || null;
