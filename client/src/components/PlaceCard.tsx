@@ -36,7 +36,7 @@ export function PlaceCard({ place }: PlaceCardProps) {
   const tags = (place.tags || {}) as Record<string, string>;
   
   // Extraire les noms si place.name est vide (souvent le cas dans les tags OSM)
-  const displayName = place.name || tags.name || tags["name:fr"] || tags["name:en"] || tags.operator || "Établissement sans nom";
+  const displayName = place.name || tags.name || tags["name:fr"] || tags["name:en"] || tags.operator || tags.brand || tags.owner || tags.ref || "Établissement sans nom";
   
   // Liste des plats vendus (si disponible dans les tags)
   const plats = tags.plats || tags.menu || tags.dishes || tags.cuisine;
