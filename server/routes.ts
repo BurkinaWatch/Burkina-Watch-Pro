@@ -91,6 +91,8 @@ function mapOsmCuisineToType(cuisine: string): string {
 
 function transformOsmToPharmacy(place: Place) {
   const tags = place.tags as Record<string, string> || {};
+  const isOnDuty = tags.is_on_duty || tags.opening_hours === "24/7" || tags.emergency === "yes" || tags["healthcare:speciality:emergency"] === "yes";
+  
   return {
     id: `osm-pharm-${place.id}`,
     nom: place.name,
@@ -101,9 +103,14 @@ function transformOsmToPharmacy(place: Place) {
     latitude: parseFloat(place.latitude),
     longitude: parseFloat(place.longitude),
     telephone: place.telephone || undefined,
-    horaires: place.horaires || "Horaires à vérifier",
-    typeGarde: tags.opening_hours?.includes("24") ? "24h" : "jour" as "jour" | "nuit" | "24h",
-    services: [],
+    horaires: place.horaires || tags.opening_hours || "Horaires à vérifier",
+    typeGarde: isOnDuty ? "24h" : (tags.opening_hours?.includes("24") ? "24h" : "jour") as "jour" | "nuit" | "24h",
+    services: [
+      tags.dispensing === "yes" ? "Délivrance d'ordonnances" : null,
+      tags.wheelchair === "yes" ? "Accès handicapé" : null,
+      tags.operator ? `Opérateur: ${tags.operator}` : null
+    ].filter(Boolean),
+    tags: tags,
     source: "OSM" as const
   };
 }

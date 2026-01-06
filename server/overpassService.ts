@@ -467,6 +467,24 @@ export class OverpassService {
       `;
     }
 
+    // Pharmacie: Optimisation pour capturer un maximum de pharmacies à travers tout le Burkina Faso
+    if (placeType === "pharmacy") {
+      const { south, west, north, east } = BURKINA_BBOX;
+      return `
+        [out:json][timeout:300][maxsize:2000000000];
+        (
+          node["amenity"="pharmacy"](${south},${west},${north},${east});
+          way["amenity"="pharmacy"](${south},${west},${north},${east});
+          relation["amenity"="pharmacy"](${south},${west},${north},${east});
+          node["healthcare"="pharmacy"](${south},${west},${north},${east});
+          way["healthcare"="pharmacy"](${south},${west},${north},${east});
+          node["dispensing"="yes"](${south},${west},${north},${east});
+          way["dispensing"="yes"](${south},${west},${north},${east});
+        );
+        out center;
+      `;
+    }
+
     return `
       [out:json][timeout:180][maxsize:536870912];
       (
