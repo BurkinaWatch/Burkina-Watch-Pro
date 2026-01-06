@@ -360,26 +360,6 @@ export default function Urgences() {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Boutons Retour et Actualiser */}
-        <div className="mb-4 flex items-center gap-2">
-          <Button
-            variant="ghost"
-            onClick={() => setLocation("/")}
-            className="gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Retour
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleRefresh}
-            className="gap-2 ml-auto"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Actualiser
-          </Button>
-        </div>
-
         {/* Brigade Laabal Card */}
         <Card className="mb-6 border-blue-500/30 bg-blue-500/5">
           <CardContent className="p-6">
@@ -411,6 +391,26 @@ export default function Urgences() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Boutons Retour et Actualiser */}
+        <div className="mb-4 flex items-center gap-2">
+          <Button
+            variant="ghost"
+            onClick={() => setLocation("/")}
+            className="gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Retour
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            className="gap-2 ml-auto"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Actualiser
+          </Button>
+        </div>
 
         {/* CNA Card */}
         <Card className="mb-6 border-primary/30 bg-primary/5">
