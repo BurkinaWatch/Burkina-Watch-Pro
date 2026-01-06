@@ -39,9 +39,10 @@ import type { Place } from "@shared/schema";
 
 function transformOsmToRestaurant(place: Place, index: number) {
   const tags = place.tags as Record<string, string> || {};
+  const name = place.name || tags.name || tags["name:fr"] || tags["name:en"] || tags.operator || tags.brand || tags.owner || tags.ref || "Restaurant";
   return {
     id: `osm-rest-${place.id}`,
-    nom: place.name,
+    nom: name,
     type: mapOsmCuisineToType(tags.cuisine || tags.amenity || "restaurant") as any,
     adresse: place.address || "Burkina Faso",
     quartier: place.quartier || "Quartier non spécifié",
@@ -92,10 +93,11 @@ function mapOsmCuisineToType(cuisine: string): string {
 function transformOsmToPharmacy(place: Place) {
   const tags = place.tags as Record<string, string> || {};
   const isOnDuty = tags.is_on_duty || tags.opening_hours === "24/7" || tags.emergency === "yes" || tags["healthcare:speciality:emergency"] === "yes";
+  const name = place.name || tags.name || tags["name:fr"] || tags["name:en"] || tags.operator || "Pharmacie";
   
   return {
     id: `osm-pharm-${place.id}`,
-    nom: place.name,
+    nom: name,
     adresse: place.address || "Burkina Faso",
     quartier: place.quartier || "Quartier non spécifié",
     ville: place.ville || "Ville non spécifiée",
@@ -118,9 +120,10 @@ function transformOsmToPharmacy(place: Place) {
 function transformOsmToBoutique(place: Place) {
   const tags = place.tags as Record<string, string> || {};
   const shopType = tags.shop || place.placeType;
+  const name = place.name || tags.name || tags["name:fr"] || tags["name:en"] || tags.operator || "Boutique";
   return {
     id: `osm-bout-${place.id}`,
-    nom: place.name,
+    nom: name,
     categorie: mapOsmShopToCategory(shopType),
     adresse: place.address || "Burkina Faso",
     quartier: place.quartier || "Quartier non spécifié",
@@ -161,6 +164,7 @@ function mapOsmShopToCategory(shop: string): string {
 
 function transformOsmToMarche(place: Place) {
   const tags = place.tags as Record<string, string> || {};
+  const name = place.name || tags.name || tags["name:fr"] || tags["name:en"] || "Marché";
   
   // Extraire les jours d'ouverture à partir d'opening_hours si disponible
   let joursOuverture = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
@@ -198,9 +202,10 @@ function transformOsmToMarche(place: Place) {
 
 function transformOsmToBanque(place: Place) {
   const tags = place.tags as Record<string, any> || {};
+  const name = place.name || tags.name || tags["name:fr"] || tags["name:en"] || tags.operator || (place.placeType === "atm" ? "GAB" : "Banque");
   return {
     id: `osm-bank-${place.id}`,
-    nom: place.name,
+    nom: name,
     type: place.placeType === "atm" ? "GAB" : "Banque",
     categorie: "Commerciale",
     adresse: place.address || "Burkina Faso",
@@ -222,9 +227,10 @@ function transformOsmToBanque(place: Place) {
 function transformOsmToStation(place: Place) {
   const tags = place.tags as Record<string, string> || {};
   const brand = tags.brand || tags.operator || tags.name || "Station";
+  const name = place.name || tags.name || tags["name:fr"] || tags["name:en"] || brand;
   return {
     id: `osm-fuel-${place.id}`,
-    nom: place.name,
+    nom: name,
     marque: mapOsmBrandToMarque(brand),
     adresse: place.address || "Burkina Faso",
     quartier: place.quartier || "Quartier non spécifié",
