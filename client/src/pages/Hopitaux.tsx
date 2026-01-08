@@ -1,4 +1,4 @@
-import { Hospital, ChevronLeft, MapPin, Phone, Clock, Search, Building2, Landmark, Cross, HeartPulse, Activity, Globe, Navigation, RefreshCw } from "lucide-react";
+import { Hospital, ChevronLeft, MapPin, Phone, Clock, Search, Building2, Landmark, Cross, HeartPulse, Activity, Globe, Navigation, RefreshCw, Crosshair } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -15,11 +15,53 @@ export default function Hopitaux() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("all");
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [sortByDistance, setSortByDistance] = useState(false);
   const queryClient = useQueryClient();
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
+  };
+
+  const handleGeoLocation = () => {
+    if (sortByDistance) {
+      setSortByDistance(false);
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      alert("La géolocalisation n'est pas supportée par votre navigateur.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        });
+        setSortByDistance(true);
+      },
+      (error) => {
+        console.error("Erreur de géolocalisation:", error);
+        alert("Impossible d'obtenir votre position.");
+      }
+    );
+  };
 
   const { data: hopitaux = [], isLoading, isFetching } = useQuery<any[]>({
     queryKey: ["/api/places/hospital"],
   });
+
+  const { Crosshair } = useMemo(() => ({ Crosshair: require("lucide-react").Crosshair }), []);
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/places/hospital"] });
@@ -36,7 +78,7 @@ export default function Hopitaux() {
   }, [hopitaux]);
 
   const filteredHopitaux = useMemo(() => {
-    let result = hopitaux;
+    let result = [...hopitaux];
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter(h => h.name?.toLowerCase().includes(q) || h.city?.toLowerCase().includes(q));
@@ -44,8 +86,23 @@ export default function Hopitaux() {
     if (selectedRegion !== "all") {
       result = result.filter(h => h.region === selectedRegion);
     }
+
+    if (sortByDistance && userLocation) {
+      result = result
+        .map(h => ({
+          ...h,
+          distance: calculateDistance(
+            userLocation.lat,
+            userLocation.lng,
+            parseFloat(h.latitude),
+            parseFloat(h.longitude)
+          )
+        }))
+        .sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    }
+
     return result;
-  }, [hopitaux, searchQuery, selectedRegion]);
+  }, [hopitaux, searchQuery, selectedRegion, sortByDistance, userLocation]);
 
   return (
     <>
@@ -181,7 +238,7 @@ export default function Hopitaux() {
                   />
                 </div>
                 <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-                  <SelectTrigger className="w-full sm:w-48">
+                  <SelectTrigger className="w-full sm:w-48 h-10">
                     <SelectValue placeholder="Région" />
                   </SelectTrigger>
                   <SelectContent>
@@ -191,6 +248,14 @@ export default function Hopitaux() {
                     ))}
                   </SelectContent>
                 </Select>
+                <Button 
+                  variant={sortByDistance ? "default" : "outline"}
+                  className={`h-10 gap-2 ${sortByDistance ? "bg-blue-600 hover:bg-blue-700 border-blue-600" : ""}`}
+                  onClick={handleGeoLocation}
+                >
+                  <Crosshair className={`h-4 w-4 ${sortByDistance ? "text-white" : "text-blue-500"}`} />
+                  {sortByDistance ? "Plus Proches" : "A Proximité"}
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -203,48 +268,59 @@ export default function Hopitaux() {
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {filteredHopitaux.map((h) => (
-                <Card key={h.id} className="hover-elevate transition-all overflow-hidden group">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start gap-2">
-                      <div>
-                        <CardTitle className="text-base line-clamp-1">{h.name}</CardTitle>
-                        <CardDescription className="text-xs flex items-center gap-1 mt-1">
-                          <MapPin className="w-3 h-3" />
-                          {h.city}, {h.region}
-                        </CardDescription>
-                      </div>
+              {filteredHopitaux.map((h) => {
+                const distance = (h as any).distance;
+                return (
+                  <Card key={h.id} className="hover-elevate transition-all overflow-hidden group relative">
+                    <div className="absolute top-2 right-2 flex flex-col gap-2 items-end z-20">
                       <Badge variant={h.operator_type === "government" ? "default" : "secondary"} className="text-[10px] shrink-0">
                         {h.operator_type === "government" ? "Public" : "Privé"}
                       </Badge>
+                      {distance !== undefined && (
+                        <Badge variant="outline" className="bg-background/80 backdrop-blur-sm border-blue-200 text-blue-700 flex items-center gap-1 text-[10px]">
+                          <Navigation className="h-3 w-3" />
+                          {distance < 1 ? `${(distance * 1000).toFixed(0)}m` : `${distance.toFixed(1)}km`}
+                        </Badge>
+                      )}
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-xs">{h.opening_hours || "Heures non spécifiées"}</span>
-                    </div>
-                    {h.phone && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-xs">{h.phone}</span>
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start gap-2 pr-16">
+                        <div>
+                          <CardTitle className="text-base line-clamp-1">{h.name}</CardTitle>
+                          <CardDescription className="text-xs flex items-center gap-1 mt-1">
+                            <MapPin className="w-3 h-3" />
+                            {h.city}, {h.region}
+                          </CardDescription>
+                        </div>
                       </div>
-                    )}
-                    <div className="flex gap-2 pt-2 border-t">
-                      <Button variant="outline" size="sm" className="flex-1 text-xs h-8" asChild>
-                        <a href={`tel:${h.phone || "112"}`}>
-                          <Phone className="w-3 h-3 mr-1" />
-                          Appeler
-                        </a>
-                      </Button>
-                      <Button variant="default" size="sm" className="flex-1 text-xs h-8" onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${h.latitude},${h.longitude}`)}>
-                        <Navigation className="w-3 h-3 mr-1" />
-                        Itinéraire
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-xs">{h.opening_hours || "Heures non spécifiées"}</span>
+                      </div>
+                      {h.phone && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-xs">{h.phone}</span>
+                        </div>
+                      )}
+                      <div className="flex gap-2 pt-2 border-t">
+                        <Button variant="outline" size="sm" className="flex-1 text-xs h-8" asChild>
+                          <a href={`tel:${h.phone || "112"}`}>
+                            <Phone className="w-3 h-3 mr-1" />
+                            Appeler
+                          </a>
+                        </Button>
+                        <Button variant="default" size="sm" className="flex-1 text-xs h-8" onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${h.latitude},${h.longitude}`)}>
+                          <Navigation className="w-3 h-3 mr-1" />
+                          Itinéraire
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
