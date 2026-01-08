@@ -87,70 +87,84 @@ export default function Hopitaux() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-red-500/10 to-red-500/5 border-red-500/20">
+            <Card className="relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 group bg-gradient-to-br from-red-500/20 via-red-500/10 to-transparent border-red-500/30 backdrop-blur-sm shadow-lg shadow-red-500/5">
               <CardContent className="p-4 relative z-10">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Établissements</p>
-                    <span className="text-2xl font-bold tracking-tight">{stats.total}</span>
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-red-400 uppercase tracking-[0.2em] opacity-80">Établissements</p>
+                    <h3 className="text-3xl font-black tracking-tighter text-foreground">{stats.total}</h3>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-red-500/10 group-hover:scale-110 transition-transform">
-                    <Hospital className="w-5 h-5 text-red-600" />
+                  <div className="p-2.5 rounded-xl bg-red-500/20 group-hover:bg-red-500/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-inner">
+                    <Hospital className="w-5 h-5 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
                   </div>
                 </div>
               </CardContent>
+              <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-red-500/10 rounded-full blur-3xl group-hover:bg-red-500/20 transition-all duration-700 animate-pulse-slow" />
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             </Card>
-            <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
+
+            <Card className="relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 group bg-gradient-to-br from-blue-500/20 via-blue-500/10 to-transparent border-blue-500/30 backdrop-blur-sm shadow-lg shadow-blue-500/5">
               <CardContent className="p-4 relative z-10">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Publics (CHU/CMA)</p>
-                    <span className="text-2xl font-bold tracking-tight">{stats.public}</span>
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.2em] opacity-80">Publics</p>
+                    <h3 className="text-3xl font-black tracking-tighter text-foreground">{stats.public}</h3>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-blue-500/10 group-hover:scale-110 transition-transform">
-                    <Building2 className="w-5 h-5 text-blue-600" />
+                  <div className="p-2.5 rounded-xl bg-blue-500/20 group-hover:bg-blue-500/30 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 shadow-inner">
+                    <Building2 className="w-5 h-5 text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
                   </div>
                 </div>
               </CardContent>
+              <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all duration-700 animate-pulse-slow" />
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             </Card>
-            <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
+
+            <Card className="relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 group bg-gradient-to-br from-purple-500/20 via-purple-500/10 to-transparent border-purple-500/30 backdrop-blur-sm shadow-lg shadow-purple-500/5">
               <CardContent className="p-4 relative z-10">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Privés / Cliniques</p>
-                    <span className="text-2xl font-bold tracking-tight">{stats.prive}</span>
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-purple-400 uppercase tracking-[0.2em] opacity-80">Privés</p>
+                    <h3 className="text-3xl font-black tracking-tighter text-foreground">{stats.prive}</h3>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-purple-500/10 group-hover:scale-110 transition-transform">
-                    <HeartPulse className="w-5 h-5 text-purple-600" />
+                  <div className="p-2.5 rounded-xl bg-purple-500/20 group-hover:bg-purple-500/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-inner">
+                    <HeartPulse className="w-5 h-5 text-purple-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
                   </div>
                 </div>
               </CardContent>
+              <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-all duration-700 animate-pulse-slow" />
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             </Card>
-            <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+
+            <Card className="relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 group bg-gradient-to-br from-green-500/20 via-green-500/10 to-transparent border-green-500/30 backdrop-blur-sm shadow-lg shadow-green-500/5">
               <CardContent className="p-4 relative z-10">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Villes</p>
-                    <span className="text-2xl font-bold tracking-tight">{stats.villes}</span>
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-green-400 uppercase tracking-[0.2em] opacity-80">Villes</p>
+                    <h3 className="text-3xl font-black tracking-tighter text-foreground">{stats.villes}</h3>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-green-500/10 group-hover:scale-110 transition-transform">
-                    <MapPin className="w-5 h-5 text-green-600" />
+                  <div className="p-2.5 rounded-xl bg-green-500/20 group-hover:bg-green-500/30 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 shadow-inner">
+                    <MapPin className="w-5 h-5 text-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
                   </div>
                 </div>
               </CardContent>
+              <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-green-500/10 rounded-full blur-3xl group-hover:bg-green-500/20 transition-all duration-700 animate-pulse-slow" />
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             </Card>
-            <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20">
+
+            <Card className="relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 group bg-gradient-to-br from-orange-500/20 via-orange-500/10 to-transparent border-orange-500/30 backdrop-blur-sm shadow-lg shadow-orange-500/5">
               <CardContent className="p-4 relative z-10">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Urgences</p>
-                    <span className="text-2xl font-bold tracking-tight">24h/7</span>
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-orange-400 uppercase tracking-[0.2em] opacity-80">Urgences</p>
+                    <h3 className="text-3xl font-black tracking-tighter italic text-foreground">24h/7</h3>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-orange-500/10 group-hover:scale-110 transition-transform">
-                    <Activity className="w-5 h-5 text-orange-600" />
+                  <div className="p-2.5 rounded-xl bg-orange-500/20 group-hover:bg-orange-500/30 group-hover:scale-125 transition-all duration-500 shadow-inner animate-pulse">
+                    <Activity className="w-5 h-5 text-orange-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
                   </div>
                 </div>
               </CardContent>
+              <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-orange-500/10 rounded-full blur-3xl group-hover:bg-orange-500/20 transition-all duration-700 animate-pulse-slow" />
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             </Card>
           </div>
 
