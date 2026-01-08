@@ -162,55 +162,67 @@ export default function PharmaciesDuFaso() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-red-500/10 border-red-500/20 hover:bg-red-500/15 transition-all group overflow-visible">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest opacity-80">Pharmacies</p>
-                  <h3 className="text-3xl font-black">{pharmacies.length}</h3>
-                </div>
-                <div className="p-2.5 bg-red-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                  <Pill className="h-5 w-5 text-red-500" />
+            <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-red-500/10 to-red-500/5 border-red-500/20">
+              <CardContent className="p-4 relative z-10">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Pharmacies</p>
+                    <h3 className="text-3xl font-black tracking-tight">{pharmacies.length}</h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-red-500/10 group-hover:scale-110 transition-transform duration-500">
+                    <Pill className="h-6 w-6 text-red-500" />
+                  </div>
                 </div>
               </CardContent>
+              <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-red-500/5 rounded-full blur-2xl group-hover:bg-red-500/10 transition-colors" />
             </Card>
 
-            <Card className="bg-green-500/10 border-green-500/20 hover:bg-green-500/15 transition-all group overflow-visible">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-green-400 uppercase tracking-widest opacity-80">De Garde</p>
-                  <h3 className="text-3xl font-black">{onDutyCount}</h3>
-                </div>
-                <div className="p-2.5 bg-green-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                  <ShieldCheck className="h-5 w-5 text-green-500" />
+            <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+              <CardContent className="p-4 relative z-10">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">De Garde</p>
+                    <h3 className="text-3xl font-black tracking-tight">{onDutyCount}</h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-green-500/10 group-hover:scale-110 transition-transform duration-500">
+                    <ShieldCheck className="h-6 w-6 text-green-500" />
+                  </div>
                 </div>
               </CardContent>
+              <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-green-500/5 rounded-full blur-2xl group-hover:bg-green-500/10 transition-colors" />
             </Card>
 
-            <Card className="bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/15 transition-all group overflow-visible">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest opacity-80">Villes</p>
-                  <h3 className="text-3xl font-black">{new Set(pharmacies.map(p => p.city || p.ville)).size}</h3>
-                </div>
-                <div className="p-2.5 bg-blue-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                  <MapPin className="h-5 w-5 text-blue-500" />
+            <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
+              <CardContent className="p-4 relative z-10">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Villes</p>
+                    <h3 className="text-3xl font-black tracking-tight">{new Set(pharmacies.map(p => p.city || p.ville)).size}</h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-blue-500/10 group-hover:scale-110 transition-transform duration-500">
+                    <MapPin className="h-6 w-6 text-blue-500" />
+                  </div>
                 </div>
               </CardContent>
+              <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-colors" />
             </Card>
 
             <Card 
-              className="bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/15 transition-all group overflow-visible cursor-pointer"
+              className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20 cursor-pointer"
               onClick={() => setLocation("/sos")}
             >
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest opacity-80">Urgence</p>
-                  <h3 className="text-3xl font-black tracking-tighter italic">SOS</h3>
-                </div>
-                <div className="p-2.5 bg-amber-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                  <Activity className="h-5 w-5 text-amber-500" />
+              <CardContent className="p-4 relative z-10">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Urgence</p>
+                    <h3 className="text-3xl font-black tracking-tighter italic">SOS</h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-amber-500/10 group-hover:scale-110 transition-transform duration-500">
+                    <Activity className="h-6 w-6 text-amber-500" />
+                  </div>
                 </div>
               </CardContent>
+              <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-colors" />
             </Card>
           </div>
 
