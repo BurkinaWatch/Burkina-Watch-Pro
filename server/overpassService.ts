@@ -485,6 +485,22 @@ export class OverpassService {
       `;
     }
 
+    // Éducation: Extension massive pour capturer universités, instituts, centres de formation, etc.
+    if (placeType === "university" || placeType === "college") {
+      const { south, west, north, east } = BURKINA_BBOX;
+      return `
+        [out:json][timeout:300][maxsize:1073741824];
+        (
+          node["amenity"~"university|college|research_institute"](${south},${west},${north},${east});
+          way["amenity"~"university|college|research_institute"](${south},${west},${north},${east});
+          relation["amenity"~"university|college|research_institute"](${south},${west},${north},${east});
+          node["name"~"Université|Institut|Ecole Supérieure|Polytechnique|Centre de Formation|ENAM|ENS|IDS|ENEP|EHU|ISGE|ESTA|Aube Nouvelle|Saint-Dominique|Ouaga|Bobo"](${south},${west},${north},${east});
+          way["name"~"Université|Institut|Ecole Supérieure|Polytechnique|Centre de Formation|ENAM|ENS|IDS|ENEP|EHU|ISGE|ESTA|Aube Nouvelle|Saint-Dominique|Ouaga|Bobo"](${south},${west},${north},${east});
+        );
+        out center;
+      `;
+    }
+
     return `
       [out:json][timeout:180][maxsize:536870912];
       (
