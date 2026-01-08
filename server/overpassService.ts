@@ -319,7 +319,8 @@ export class OverpassService {
   private lastSync: Date | null = null;
   private syncInProgress = false;
   private cache: Map<string, { data: OverpassResponse; timestamp: number }> = new Map();
-  private cacheTTL = 12 * 60 * 60 * 1000; // 12 hours
+  private cacheTTL = 24 * 60 * 60 * 1000; // 24 hours
+  private syncInterval = 48 * 60 * 60 * 1000; // 48 hours
 
   private constructor() {}
 
