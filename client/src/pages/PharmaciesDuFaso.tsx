@@ -33,8 +33,49 @@ export default function PharmaciesDuFaso() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [onlyOnDuty, setOnlyOnDuty] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [sortByDistance, setSortByDistance] = useState(false);
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c; // Distance in km
+    return d;
+  };
+
+  const handleGeoLocation = () => {
+    if (sortByDistance) {
+      setSortByDistance(false);
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      alert("La géolocalisation n'est pas supportée par votre navigateur.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        });
+        setSortByDistance(true);
+      },
+      (error) => {
+        console.error("Erreur de géolocalisation:", error);
+        alert("Impossible d'obtenir votre position. Veuillez vérifier vos paramètres de localisation.");
+      }
+    );
+  };
 
   const { data: pharmacies = [], isLoading, isFetching } = useQuery<any[]>({
     queryKey: ["/api/places/pharmacy?limit=5000"],
@@ -52,7 +93,7 @@ export default function PharmaciesDuFaso() {
   }, [pharmacies]);
 
   const filteredPharmacies = useMemo(() => {
-    let result = pharmacies;
+    let result = [...pharmacies];
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       result = result.filter(p => 
@@ -70,8 +111,23 @@ export default function PharmaciesDuFaso() {
         return tags.is_on_duty || tags.opening_hours === "24/7" || p.typeGarde === "24h";
       });
     }
+
+    if (sortByDistance && userLocation) {
+      result = result
+        .map(p => ({
+          ...p,
+          distance: calculateDistance(
+            userLocation.lat,
+            userLocation.lng,
+            parseFloat(p.latitude || p.lat),
+            parseFloat(p.longitude || p.lon)
+          )
+        }))
+        .sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    }
+
     return result;
-  }, [pharmacies, searchTerm, selectedRegion, onlyOnDuty]);
+  }, [pharmacies, searchTerm, selectedRegion, onlyOnDuty, sortByDistance, userLocation]);
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/places/pharmacy"] });
@@ -181,6 +237,14 @@ export default function PharmaciesDuFaso() {
                 </SelectContent>
               </Select>
               <Button 
+                variant={sortByDistance ? "default" : "outline"}
+                className={`h-11 gap-2 ${sortByDistance ? "bg-blue-600 hover:bg-blue-700 border-blue-600" : ""}`}
+                onClick={handleGeoLocation}
+              >
+                <Crosshair className={`h-4 w-4 ${sortByDistance ? "text-white" : "text-blue-500"}`} />
+                {sortByDistance ? "Plus Proches" : "A Proximité"}
+              </Button>
+              <Button 
                 variant={onlyOnDuty ? "default" : "outline"}
                 className={`h-11 gap-2 ${onlyOnDuty ? "bg-green-600 hover:bg-green-700 border-green-600" : ""}`}
                 onClick={() => setOnlyOnDuty(!onlyOnDuty)}
@@ -213,17 +277,24 @@ export default function PharmaciesDuFaso() {
               {filteredPharmacies.map((pharmacy) => {
                 const tags = pharmacy.tags || {};
                 const isOnDuty = tags.is_on_duty || tags.opening_hours === "24/7" || pharmacy.typeGarde === "24h";
+                const distance = (pharmacy as any).distance;
                 
                 return (
                   <Card key={pharmacy.id} className="hover-elevate transition-all border-muted/40 overflow-hidden bg-muted/5 group relative">
-                    {isOnDuty && (
-                      <div className="absolute top-0 right-0 p-2">
+                    <div className="absolute top-0 right-0 p-2 flex flex-col gap-2 items-end">
+                      {isOnDuty && (
                         <Badge className="bg-green-500 hover:bg-green-600 text-white border-none flex items-center gap-1 shadow-sm">
                           <ShieldCheck className="h-3 w-3" />
                           De Garde
                         </Badge>
-                      </div>
-                    )}
+                      )}
+                      {distance !== undefined && (
+                        <Badge variant="outline" className="bg-background/80 backdrop-blur-sm border-blue-200 text-blue-700 flex items-center gap-1">
+                          <Navigation className="h-3 w-3" />
+                          {distance < 1 ? `${(distance * 1000).toFixed(0)}m` : `${distance.toFixed(1)}km`}
+                        </Badge>
+                      )}
+                    </div>
                     <CardHeader className="p-4 pb-2">
                       <div className="space-y-1">
                         <CardTitle className="text-lg font-bold line-clamp-2">
