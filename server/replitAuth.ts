@@ -43,6 +43,11 @@ export async function setupAuth(app: Express) {
       if (!user || !user.id) {
         return cb(null, null);
       }
+      // Ne pas restaurer les sessions des utilisateurs anonymes
+      // Ils doivent se connecter via OTP pour avoir une vraie session
+      if (user.isAnonymous) {
+        return cb(null, null);
+      }
       // Wrap user with claims.sub for compatibility with routes expecting OIDC-style user
       const wrappedUser = {
         ...user,
