@@ -32,7 +32,7 @@ function getEmailConfig(): EmailConfig | null {
   const port = parseInt(process.env.SMTP_PORT || '587', 10);
   const secure = process.env.SMTP_SECURE === 'true' || port === 465;
   const fromEmail = process.env.SMTP_FROM_EMAIL || user;
-  const fromName = process.env.SMTP_FROM_NAME || 'Burkina Secure';
+  const fromName = process.env.SMTP_FROM_NAME || 'Burkina Watch';
 
   return {
     host,
@@ -95,10 +95,10 @@ async function sendViaResend(
   try {
     console.log(`📧 Sending email via Resend to ${toEmail}`);
     const fromEmail = getResendFromEmail();
-    console.log(`📧 From: Burkina Secure <${fromEmail}>`);
+    console.log(`📧 From: Burkina Watch <${fromEmail}>`);
     
     const result = await resend.emails.send({
-      from: `Burkina Secure <${fromEmail}>`,
+      from: `Burkina Watch <${fromEmail}>`,
       to: toEmail,
       subject,
       html,
@@ -152,10 +152,10 @@ export async function sendOtpEmail(
 ): Promise<{ success: boolean; message: string }> {
   logEmailConfig();
   
-  const subject = 'Votre code de connexion Burkina Secure';
+  const subject = 'Votre code de connexion Burkina Watch';
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <h2 style="color: #16a34a;">Burkina Secure</h2>
+      <h2 style="color: #16a34a;">Burkina Watch</h2>
       <p>Bonjour,</p>
       <p>Votre code de connexion est :</p>
       <div style="background-color: #f0f4f8; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
@@ -164,7 +164,7 @@ export async function sendOtpEmail(
       <p>Ce code expire dans <strong>10 minutes</strong>.</p>
       <p>Si vous n'avez pas demandé ce code, ignorez ce message.</p>
       <hr style="margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;">
-      <p style="font-size: 12px; color: #718096;">Burkina Secure - Votre sécurité, notre priorité</p>
+      <p style="font-size: 12px; color: #718096;">Burkina Watch - Votre sécurité, notre priorité</p>
     </div>
   `;
 
