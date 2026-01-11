@@ -33,7 +33,7 @@ import { REGION_NAMES } from "@/lib/regions";
 export default function PharmaciesDuFaso() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("all");
-  const [onlyOnDuty, setOnlyOnDuty] = useState(false);
+  const [gardeFilter, setGardeFilter] = useState<"all" | "garde" | "24h" | "jour" | "nuit">("all");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [sortByDistance, setSortByDistance] = useState(false);
   const [, setLocation] = useLocation();
@@ -86,12 +86,35 @@ export default function PharmaciesDuFaso() {
     return REGION_NAMES;
   }, []);
 
-  const onDutyCount = useMemo(() => {
-    return pharmacies.filter(p => {
+  const gardeCounts = useMemo(() => {
+    let count24h = 0;
+    let countJour = 0;
+    let countNuit = 0;
+    
+    pharmacies.forEach(p => {
       const tags = p.tags || {};
-      return tags.is_on_duty || tags.opening_hours === "24/7" || p.typeGarde === "24h";
-    }).length;
+      const typeGarde = p.typeGarde || "";
+      const openingHours = tags.opening_hours || "";
+      
+      if (openingHours === "24/7" || typeGarde === "24h" || typeGarde === "24h/24") {
+        count24h++;
+      } else if (typeGarde === "Jour" || typeGarde === "jour") {
+        countJour++;
+      } else if (typeGarde === "Nuit" || typeGarde === "nuit" || tags.is_on_duty) {
+        countNuit++;
+      }
+    });
+    
+    return { 
+      total: pharmacies.length,
+      garde: count24h + countNuit,
+      h24: count24h, 
+      jour: countJour, 
+      nuit: countNuit 
+    };
   }, [pharmacies]);
+
+  const onDutyCount = gardeCounts.garde;
 
   const filteredPharmacies = useMemo(() => {
     let result = [...pharmacies];
@@ -106,10 +129,22 @@ export default function PharmaciesDuFaso() {
     if (selectedRegion !== "all") {
       result = result.filter(p => (p.region || p.ville) === selectedRegion);
     }
-    if (onlyOnDuty) {
+    if (gardeFilter !== "all") {
       result = result.filter(p => {
         const tags = p.tags || {};
-        return tags.is_on_duty || tags.opening_hours === "24/7" || p.typeGarde === "24h";
+        const typeGarde = (p.typeGarde || "").toLowerCase();
+        const openingHours = tags.opening_hours || "";
+        
+        if (gardeFilter === "garde") {
+          return tags.is_on_duty || openingHours === "24/7" || typeGarde === "24h" || typeGarde === "24h/24" || typeGarde === "nuit";
+        } else if (gardeFilter === "24h") {
+          return openingHours === "24/7" || typeGarde === "24h" || typeGarde === "24h/24";
+        } else if (gardeFilter === "jour") {
+          return typeGarde === "jour";
+        } else if (gardeFilter === "nuit") {
+          return typeGarde === "nuit" || tags.is_on_duty;
+        }
+        return true;
       });
     }
 
@@ -128,7 +163,7 @@ export default function PharmaciesDuFaso() {
     }
 
     return result;
-  }, [pharmacies, searchTerm, selectedRegion, onlyOnDuty, sortByDistance, userLocation]);
+  }, [pharmacies, searchTerm, selectedRegion, gardeFilter, sortByDistance, userLocation]);
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/places/pharmacy"] });
@@ -266,14 +301,6 @@ export default function PharmaciesDuFaso() {
                 {sortByDistance ? "Plus Proches" : "A Proximité"}
               </Button>
               <Button 
-                variant={onlyOnDuty ? "default" : "outline"}
-                className={`h-11 gap-2 ${onlyOnDuty ? "bg-green-600 hover:bg-green-700 border-green-600" : ""}`}
-                onClick={() => setOnlyOnDuty(!onlyOnDuty)}
-              >
-                <ShieldCheck className={`h-4 w-4 ${onlyOnDuty ? "text-white" : "text-green-500"}`} />
-                {onlyOnDuty ? "Gardes Uniquement" : "Toutes"}
-              </Button>
-              <Button 
                 variant="outline" 
                 className="h-11 gap-2"
                 onClick={handleRefresh}
@@ -283,6 +310,60 @@ export default function PharmaciesDuFaso() {
                 Actualiser
               </Button>
             </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-sm font-medium text-muted-foreground mr-2">Filtrer par type :</span>
+            <Button 
+              variant={gardeFilter === "all" ? "default" : "outline"}
+              size="sm"
+              className={`gap-2 ${gardeFilter === "all" ? "bg-primary" : ""}`}
+              onClick={() => setGardeFilter("all")}
+              data-testid="filter-all"
+            >
+              <Pill className="h-4 w-4" />
+              Toutes ({gardeCounts.total})
+            </Button>
+            <Button 
+              variant={gardeFilter === "garde" ? "default" : "outline"}
+              size="sm"
+              className={`gap-2 ${gardeFilter === "garde" ? "bg-green-600 hover:bg-green-700" : "border-green-500/50 text-green-600 hover:bg-green-50 dark:hover:bg-green-950"}`}
+              onClick={() => setGardeFilter("garde")}
+              data-testid="filter-garde"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              De Garde ({gardeCounts.garde})
+            </Button>
+            <Button 
+              variant={gardeFilter === "24h" ? "default" : "outline"}
+              size="sm"
+              className={`gap-2 ${gardeFilter === "24h" ? "bg-orange-600 hover:bg-orange-700" : "border-orange-500/50 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950"}`}
+              onClick={() => setGardeFilter("24h")}
+              data-testid="filter-24h"
+            >
+              <Clock className="h-4 w-4" />
+              24h/24 ({gardeCounts.h24})
+            </Button>
+            <Button 
+              variant={gardeFilter === "jour" ? "default" : "outline"}
+              size="sm"
+              className={`gap-2 ${gardeFilter === "jour" ? "bg-yellow-600 hover:bg-yellow-700" : "border-yellow-500/50 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-950"}`}
+              onClick={() => setGardeFilter("jour")}
+              data-testid="filter-jour"
+            >
+              <Clock className="h-4 w-4" />
+              Jour ({gardeCounts.jour})
+            </Button>
+            <Button 
+              variant={gardeFilter === "nuit" ? "default" : "outline"}
+              size="sm"
+              className={`gap-2 ${gardeFilter === "nuit" ? "bg-indigo-600 hover:bg-indigo-700" : "border-indigo-500/50 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950"}`}
+              onClick={() => setGardeFilter("nuit")}
+              data-testid="filter-nuit"
+            >
+              <Clock className="h-4 w-4" />
+              Nuit ({gardeCounts.nuit})
+            </Button>
           </div>
         </div>
 
