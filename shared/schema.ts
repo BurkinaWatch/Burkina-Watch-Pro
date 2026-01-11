@@ -45,6 +45,29 @@ export const magicLinks = pgTable("magic_links", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const otpCodes = pgTable("otp_codes", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  identifier: text("identifier").notNull(),
+  type: text("type").notNull(),
+  code: text("code").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  verified: boolean("verified").default(false).notNull(),
+  attempts: integer("attempts").default(0).notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  identifierTypeIdx: index("otp_codes_identifier_type_idx").on(table.identifier, table.type),
+}));
+
+export const insertOtpCodeSchema = createInsertSchema(otpCodes).omit({
+  id: true,
+  verified: true,
+  attempts: true,
+  createdAt: true,
+});
+
+export type InsertOtpCode = z.infer<typeof insertOtpCodeSchema>;
+export type OtpCode = typeof otpCodes.$inferSelect;
+
 export const signalements = pgTable("signalements", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   titre: text("titre").notNull(),

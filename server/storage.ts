@@ -28,6 +28,8 @@ import {
   type InsertVirtualTour,
   type VirtualTour,
   type VirtualTourWithPhotos,
+  type InsertOtpCode,
+  type OtpCode,
   magicLinks,
   users,
   signalements,
@@ -43,6 +45,7 @@ import {
   streetviewPoints,
   virtualTours,
   places,
+  otpCodes,
   insertSignalementSchema,
   insertCommentaireSchema,
   updateSignalementSchema,
@@ -57,7 +60,14 @@ import { eq, desc, and, sql, isNull } from "drizzle-orm";
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByPhone(phone: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  
+  createOtpCode(data: InsertOtpCode): Promise<OtpCode>;
+  getValidOtpCode(identifier: string, type: string): Promise<OtpCode | undefined>;
+  deleteOtpCode(id: string): Promise<void>;
+  deleteExpiredOtpCodes(identifier: string, type: string): Promise<void>;
+  incrementOtpAttempts(id: string): Promise<void>;
   updateUserProfile(id: string, profile: UpdateUserProfile): Promise<User | undefined>;
 
   // Méthodes pour les signalements
@@ -183,6 +193,53 @@ export class DbStorage implements IStorage {
   async getUserByEmail(email: string): Promise<User | undefined> {
     const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
     return result[0];
+  }
+
+  async getUserByPhone(phone: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.telephone, phone)).limit(1);
+    return result[0];
+  }
+
+  async createOtpCode(data: InsertOtpCode): Promise<OtpCode> {
+    const [otp] = await db.insert(otpCodes).values(data).returning();
+    return otp;
+  }
+
+  async getValidOtpCode(identifier: string, type: string): Promise<OtpCode | undefined> {
+    const [otp] = await db
+      .select()
+      .from(otpCodes)
+      .where(
+        and(
+          eq(otpCodes.identifier, identifier),
+          eq(otpCodes.type, type),
+          eq(otpCodes.verified, false),
+          sql`${otpCodes.expiresAt} > now()`
+        )
+      )
+      .orderBy(desc(otpCodes.createdAt))
+      .limit(1);
+    return otp;
+  }
+
+  async deleteOtpCode(id: string): Promise<void> {
+    await db.delete(otpCodes).where(eq(otpCodes.id, id));
+  }
+
+  async deleteExpiredOtpCodes(identifier: string, type: string): Promise<void> {
+    await db.delete(otpCodes).where(
+      and(
+        eq(otpCodes.identifier, identifier),
+        eq(otpCodes.type, type)
+      )
+    );
+  }
+
+  async incrementOtpAttempts(id: string): Promise<void> {
+    await db
+      .update(otpCodes)
+      .set({ attempts: sql`${otpCodes.attempts} + 1` })
+      .where(eq(otpCodes.id, id));
   }
 
   async upsertUser(userData: any): Promise<User> {

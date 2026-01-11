@@ -48,6 +48,7 @@ import Universites from "@/pages/Universites";
 import Cine from "@/pages/Cine";
 import Weather from "@/pages/Weather";
 import Fiabilite from "@/pages/Fiabilite";
+import Connexion from "@/pages/Connexion";
 import NotFound from "@/pages/not-found";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
 
@@ -92,6 +93,8 @@ function Router() {
       <Route path="/conditions" component={Conditions} />
       <Route path="/notifications" component={Notifications} />
       <Route path="/track/:shareToken" component={LiveTrack} />
+      <Route path="/connexion" component={Connexion} />
+      <Route path="/login" component={Connexion} />
       <Route component={NotFound} />
     </Switch>
   );

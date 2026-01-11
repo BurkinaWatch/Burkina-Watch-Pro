@@ -305,8 +305,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
 
   // ----------------------------------------
-  // ROUTES D'AUTHENTIFICATION HYBRIDE
+  // ROUTES D'AUTHENTIFICATION HYBRIDE (OTP Email + SMS)
   // ----------------------------------------
+  
+  const { sendEmailOtp, sendSmsOtp, verifyOtp, checkTwilioAvailability } = await import("./hybridAuthService");
+
+  app.post("/api/auth/send-otp", async (req: any, res) => {
+    const { identifier, type } = req.body;
+    
+    if (!identifier) {
+      return res.status(400).json({ success: false, message: "Email ou téléphone requis" });
+    }
+    
+    if (!type || !["email", "sms"].includes(type)) {
+      return res.status(400).json({ success: false, message: "Type doit être 'email' ou 'sms'" });
+    }
+
+    try {
+      let result;
+      if (type === "email") {
+        result = await sendEmailOtp(identifier);
+      } else {
+        result = await sendSmsOtp(identifier);
+      }
+      
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(400).json(result);
+      }
+    } catch (error: any) {
+      console.error("Send OTP error:", error);
+      res.status(500).json({ success: false, message: error.message || "Erreur serveur" });
+    }
+  });
+
+  app.post("/api/auth/verify-otp", async (req: any, res) => {
+    const { identifier, code, type } = req.body;
+    
+    if (!identifier || !code || !type) {
+      return res.status(400).json({ success: false, message: "Identifiant, code et type requis" });
+    }
+
+    try {
+      const result = await verifyOtp(identifier, code, type);
+      
+      if (result.success && result.userId) {
+        const user = await storage.getUser(result.userId);
+        if (user) {
+          const wrappedUser = {
+            ...user,
+            claims: { sub: user.id }
+          };
+          req.login(wrappedUser, (err: any) => {
+            if (err) {
+              console.error("Login error:", err);
+              return res.status(500).json({ success: false, message: "Erreur de connexion" });
+            }
+            res.json({ success: true, user: wrappedUser, message: "Connexion réussie" });
+          });
+        } else {
+          res.status(404).json({ success: false, message: "Utilisateur non trouvé" });
+        }
+      } else {
+        res.status(400).json(result);
+      }
+    } catch (error: any) {
+      console.error("Verify OTP error:", error);
+      res.status(500).json({ success: false, message: error.message || "Erreur serveur" });
+    }
+  });
+
+  app.get("/api/auth/check-sms-availability", async (req, res) => {
+    try {
+      const available = await checkTwilioAvailability();
+      res.json({ available });
+    } catch (error) {
+      res.json({ available: false });
+    }
+  });
+
+  app.post("/api/auth/logout", (req: any, res) => {
+    req.logout((err: any) => {
+      if (err) {
+        return res.status(500).json({ success: false, message: "Erreur de déconnexion" });
+      }
+      req.session.destroy((err: any) => {
+        if (err) {
+          return res.status(500).json({ success: false, message: "Erreur de destruction de session" });
+        }
+        res.clearCookie("connect.sid");
+        res.json({ success: true, message: "Déconnexion réussie" });
+      });
+    });
+  });
+
   app.get("/api/auth/user", (req: any, res) => {
     if (req.isAuthenticated()) {
       return res.json(req.user);
