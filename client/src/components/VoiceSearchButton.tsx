@@ -37,7 +37,8 @@ interface SpeechRecognitionInstance {
 }
 
 interface VoiceSearchButtonProps {
-  onResult: (transcript: string) => void;
+  onResult?: (transcript: string) => void;
+  onQueryChange?: (transcript: string) => void;
   onListeningChange?: (isListening: boolean) => void;
   className?: string;
   size?: "default" | "sm" | "lg" | "icon";
@@ -54,6 +55,7 @@ declare global {
 
 export function VoiceSearchButton({
   onResult,
+  onQueryChange,
   onListeningChange,
   className,
   size = "icon",
@@ -63,11 +65,13 @@ export function VoiceSearchButton({
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
-  const onResultRef = useRef(onResult);
+  // Support both onResult and onQueryChange (alias)
+  const resultHandler = onResult || onQueryChange;
+  const onResultRef = useRef(resultHandler);
   const onListeningChangeRef = useRef(onListeningChange);
   const { toast } = useToast();
 
-  onResultRef.current = onResult;
+  onResultRef.current = resultHandler;
   onListeningChangeRef.current = onListeningChange;
 
   useEffect(() => {
@@ -89,7 +93,7 @@ export function VoiceSearchButton({
       const transcript = event.results[last][0].transcript;
       
       if (event.results[last].isFinal) {
-        onResultRef.current(transcript.trim());
+        onResultRef.current?.(transcript.trim());
         setIsListening(false);
         onListeningChangeRef.current?.(false);
       }

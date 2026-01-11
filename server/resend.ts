@@ -1,20 +1,36 @@
 import { Resend } from 'resend';
 
-let connectionSettings: any;
+interface ResendCredentials {
+  apiKey: string;
+  fromEmail: string;
+}
 
-async function getCredentials() {
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME
+async function getCredentials(): Promise<ResendCredentials> {
+  // Check for direct environment variable first (Railway / production)
+  if (process.env.RESEND_API_KEY) {
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@burkinawatch.com';
+    if (!fromEmail) {
+      throw new Error('RESEND_FROM_EMAIL must be set when using RESEND_API_KEY');
+    }
+    return {
+      apiKey: process.env.RESEND_API_KEY,
+      fromEmail
+    };
+  }
+
+  // Fallback to Replit connectors
+  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY 
     ? 'repl ' + process.env.REPL_IDENTITY 
     : process.env.WEB_REPL_RENEWAL 
     ? 'depl ' + process.env.WEB_REPL_RENEWAL 
     : null;
 
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+  if (!xReplitToken || !hostname) {
+    throw new Error('RESEND_API_KEY not set and Replit connectors not available');
   }
 
-  connectionSettings = await fetch(
+  const response = await fetch(
     'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=resend',
     {
       headers: {
@@ -22,19 +38,30 @@ async function getCredentials() {
         'X_REPLIT_TOKEN': xReplitToken
       }
     }
-  ).then(res => res.json()).then(data => data.items?.[0]);
+  );
+  
+  const data = await response.json();
+  const connectorSettings = data.items?.[0];
 
-  if (!connectionSettings || (!connectionSettings.settings.api_key)) {
-    throw new Error('Resend not connected');
+  if (!connectorSettings || !connectorSettings.settings?.api_key) {
+    throw new Error('Resend not connected - missing API key');
   }
-  return {apiKey: connectionSettings.settings.api_key, fromEmail: connectionSettings.settings.from_email};
+  
+  if (!connectorSettings.settings?.from_email) {
+    throw new Error('Resend not connected - missing from_email');
+  }
+  
+  return {
+    apiKey: connectorSettings.settings.api_key,
+    fromEmail: connectorSettings.settings.from_email
+  };
 }
 
 export async function getUncachableResendClient() {
   const credentials = await getCredentials();
   return {
     client: new Resend(credentials.apiKey),
-    fromEmail: connectionSettings.settings.from_email
+    fromEmail: credentials.fromEmail
   };
 }
 

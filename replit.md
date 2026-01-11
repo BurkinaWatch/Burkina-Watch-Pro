@@ -17,6 +17,13 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 - **AI Integration**: Groq (llama-3.3-70b-versatile) for intelligent features.
 - **Data Sources**: OpenStreetMap (OSM) via Overpass API.
 
+## Recent Changes (Jan 11, 2026 - Production Audit)
+- **Authentication Fix**: Fixed critical 500 errors on protected routes (user.claims.sub undefined) by wrapping user objects with claims structure in replitAuth.ts
+- **VoiceSearchButton Fix**: Fixed "onResultRef.current is not a function" error by adding onQueryChange prop alias
+- **Railway Compatibility**: Added nixpacks.toml for Railway deployment, updated resend.ts to use RESEND_API_KEY env var fallback
+- **Domain Handling**: Updated routes.ts to use RAILWAY_PUBLIC_DOMAIN/APP_DOMAIN environment variables
+- **Database Improvements**: Added connection pool configuration with error handling in db.ts
+
 ## Recent Changes (Dec 31, 2025)
 - Fixed `tsx` dependency issues.
 - Updated Groq model to `llama-3.3-70b-versatile`.

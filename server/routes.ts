@@ -1209,7 +1209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 contact.email!,
                 contact.name,
                 userName,
-                `https://${process.env.REPLIT_DEV_DOMAIN || 'burkina-watch.replit.app'}/tracking-live`,
+                `https://${process.env.RAILWAY_PUBLIC_DOMAIN || process.env.REPLIT_DEV_DOMAIN || process.env.APP_DOMAIN || 'burkinawatch.com'}/tracking-live`,
                 initialLocation
               ).catch(err => {
                 console.error(`❌ Erreur envoi email à ${contact.email}:`, err);
@@ -1565,7 +1565,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sentTo = contacts.map(c => c.phone);
 
       // Creer le lien de suivi en direct
-      const host = req.get('host') || 'burkinawatch.replit.app';
+      const host = req.get('host') || process.env.RAILWAY_PUBLIC_DOMAIN || process.env.APP_DOMAIN || 'burkinawatch.com';
       const protocol = req.get('x-forwarded-proto') || 'https';
       const liveTrackingUrl = `${protocol}://${host}/track/${trackingSession.shareToken}`;
 

@@ -36,11 +36,19 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  passport.serializeUser((user: any, cb) => cb(null, user.id));
+  passport.serializeUser((user: any, cb) => cb(null, user.id || user.claims?.sub));
   passport.deserializeUser(async (id: string, cb) => {
     try {
       const user = await storage.getUser(id);
-      cb(null, user);
+      if (!user || !user.id) {
+        return cb(null, null);
+      }
+      // Wrap user with claims.sub for compatibility with routes expecting OIDC-style user
+      const wrappedUser = {
+        ...user,
+        claims: { sub: user.id }
+      };
+      cb(null, wrappedUser);
     } catch (err) {
       cb(err);
     }
@@ -61,7 +69,12 @@ export async function setupAuth(app: Express) {
         });
       }
       
-      req.login(user, (err: any) => {
+      // Wrap user with claims.sub for compatibility with routes expecting OIDC-style user
+      const wrappedUser = {
+        ...user,
+        claims: { sub: user.id }
+      };
+      req.login(wrappedUser, (err: any) => {
         if (err) return next(err);
         next();
       });
