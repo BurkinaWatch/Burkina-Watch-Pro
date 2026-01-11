@@ -361,38 +361,6 @@ export default function Urgences() {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Brigade Laabal Card */}
-        <Card className="mb-6 border-blue-500/30 bg-blue-500/5">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold">Brigade Laabal</h3>
-                  <p className="text-muted-foreground">Restauration de l'ordre public et lutte contre l'incivisme</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">Numéro Vert</Badge>
-                    <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">24H/24</Badge>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                <Button 
-                  size="lg" 
-                  className="flex-1 md:flex-none gap-2 bg-blue-600 hover:bg-blue-700"
-                  onClick={() => window.location.href = "tel:50400504"}
-                >
-                  <Phone className="w-5 h-5" />
-                  <span className="text-lg font-bold">Appeler le 50 40 05 04</span>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Boutons Retour et Actualiser */}
         <div className="mb-4 flex items-center gap-2">
           <Button
@@ -425,6 +393,38 @@ export default function Urgences() {
                 <p className="text-muted-foreground">
                   Contacts officiels pour les situations critiques au Burkina Faso
                 </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Brigade Laabal Card */}
+        <Card className="mb-6 border-blue-500/30 bg-blue-500/5">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Brigade Laabal</h3>
+                  <p className="text-muted-foreground">Restauration de l'ordre public et lutte contre l'incivisme</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">Numéro Vert</Badge>
+                    <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">24H/24</Badge>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <Button 
+                  size="lg" 
+                  className="flex-1 md:flex-none gap-2 bg-blue-600 hover:bg-blue-700"
+                  onClick={() => window.location.href = "tel:50400504"}
+                >
+                  <Phone className="w-5 h-5" />
+                  <span className="text-lg font-bold">Appeler le 50 40 05 04</span>
+                </Button>
               </div>
             </div>
           </CardContent>
