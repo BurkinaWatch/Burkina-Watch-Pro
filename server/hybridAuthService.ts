@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import twilio from "twilio";
 import { storage } from "./storage";
 import { getUncachableResendClient } from "./resend";
 
@@ -10,6 +11,7 @@ interface TwilioCredentials {
 }
 
 async function getTwilioCredentials(): Promise<TwilioCredentials> {
+  // Railway/manual configuration with Account SID + Auth Token
   if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER) {
     return {
       accountSid: process.env.TWILIO_ACCOUNT_SID,
@@ -19,6 +21,7 @@ async function getTwilioCredentials(): Promise<TwilioCredentials> {
     };
   }
 
+  // Replit connector with API Key authentication
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
     ? 'repl ' + process.env.REPL_IDENTITY
@@ -53,6 +56,12 @@ async function getTwilioCredentials(): Promise<TwilioCredentials> {
     apiKeySecret: connectorSettings.settings.api_key_secret,
     phoneNumber: connectorSettings.settings.phone_number,
   };
+}
+
+function getTwilioClient(credentials: TwilioCredentials) {
+  return twilio(credentials.apiKey, credentials.apiKeySecret, {
+    accountSid: credentials.accountSid
+  });
 }
 
 function generateOtp(): string {
@@ -138,27 +147,13 @@ export async function sendSmsOtp(phone: string): Promise<{ success: boolean; mes
     });
 
     const credentials = await getTwilioCredentials();
+    const client = getTwilioClient(credentials);
     
-    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${credentials.accountSid}/Messages.json`;
-    const auth = Buffer.from(`${credentials.apiKey}:${credentials.apiKeySecret}`).toString('base64');
-    
-    const response = await fetch(twilioUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Basic ${auth}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        To: normalizedPhone,
-        From: credentials.phoneNumber,
-        Body: `Burkina Secure: Votre code de connexion est ${code}. Il expire dans 10 minutes.`,
-      }),
+    await client.messages.create({
+      to: normalizedPhone,
+      from: credentials.phoneNumber,
+      body: `Burkina Secure: Votre code de connexion est ${code}. Il expire dans 10 minutes.`,
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Erreur Twilio');
-    }
 
     return { success: true, message: 'Code envoyé par SMS' };
   } catch (error: any) {
