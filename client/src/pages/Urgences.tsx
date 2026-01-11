@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Search, MapPin, Phone, AlertTriangle, Shield, Activity, Heart, Users, ArrowLeft, RefreshCw, Download, Smartphone, Loader2 } from "lucide-react";
+import { VoiceSearchButton } from "@/components/VoiceSearchButton";
 import { SiWhatsapp } from "react-icons/si";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -486,14 +487,17 @@ export default function Urgences() {
         <Card className="mb-6">
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Rechercher par nom, ville ou numéro..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+              <div className="flex-1 flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    placeholder="Rechercher par nom, ville ou numéro..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <VoiceSearchButton onQueryChange={setSearchTerm} />
               </div>
               <Select value={selectedType} onValueChange={setSelectedType}>
                 <SelectTrigger className="w-full sm:w-[200px]">

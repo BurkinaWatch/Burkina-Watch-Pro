@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, Store, Users, Calendar, ShoppingBasket, Locate, Building } from "lucide-react";
+import { VoiceSearchButton } from "@/components/VoiceSearchButton";
 import PageStatCard from "@/components/PageStatCard";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -351,15 +352,18 @@ export default function Marches() {
 
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 relative z-50">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher un marche..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-                data-testid="input-search"
-              />
+            <div className="relative flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher un marche..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                  data-testid="input-search"
+                />
+              </div>
+              <VoiceSearchButton onQueryChange={setSearchQuery} />
             </div>
 
             <div className="relative z-50">

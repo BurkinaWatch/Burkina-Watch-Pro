@@ -1,4 +1,5 @@
 import { Hospital, ChevronLeft, MapPin, Phone, Clock, Search, Building2, Landmark, Cross, HeartPulse, Activity, Globe, Navigation, RefreshCw } from "lucide-react";
+import { VoiceSearchButton } from "@/components/VoiceSearchButton";
 import { Helmet } from "react-helmet-async";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -171,14 +172,17 @@ export default function Hopitaux() {
           <Card className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-primary/30">
             <CardContent className="p-4">
               <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Rechercher un hôpital, une clinique, une ville..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
-                  />
+                <div className="relative flex-1 flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Rechercher un hôpital, une clinique, une ville..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+                  <VoiceSearchButton onQueryChange={setSearchQuery} />
                 </div>
                 <Select value={selectedRegion} onValueChange={setSelectedRegion}>
                   <SelectTrigger className="w-full sm:w-48">

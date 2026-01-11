@@ -31,6 +31,7 @@ import {
   Train,
   CircleDot
 } from "lucide-react";
+import { VoiceSearchButton } from "@/components/VoiceSearchButton";
 import { Link } from "wouter";
 import { Helmet } from "react-helmet-async";
 

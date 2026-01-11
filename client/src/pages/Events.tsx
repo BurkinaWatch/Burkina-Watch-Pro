@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import { VoiceSearchButton } from "@/components/VoiceSearchButton";
 import { Loader2, MapPin, Calendar, Clock, ExternalLink, Search, Filter, ArrowLeft, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -198,14 +199,17 @@ export default function Events() {
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4">
               {/* Recherche */}
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Rechercher un événement, ville, lieu..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+              <div className="flex-1 flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Rechercher un événement, ville, lieu..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <VoiceSearchButton onQueryChange={setSearchQuery} />
               </div>
 
               {/* Filtre par type */}
