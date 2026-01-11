@@ -93,21 +93,23 @@ export default function PharmaciesDuFaso() {
     
     pharmacies.forEach(p => {
       const tags = p.tags || {};
-      const typeGarde = p.typeGarde || "";
-      const openingHours = tags.opening_hours || "";
+      const typeGarde = (p.typeGarde || "").toLowerCase();
       
-      if (openingHours === "24/7" || typeGarde === "24h" || typeGarde === "24h/24") {
+      if (typeGarde === "24h" || typeGarde === "24h/24") {
         count24h++;
-      } else if (typeGarde === "Jour" || typeGarde === "jour") {
-        countJour++;
-      } else if (typeGarde === "Nuit" || typeGarde === "nuit" || tags.is_on_duty) {
+      } else if (typeGarde === "nuit") {
         countNuit++;
+      } else if (typeGarde === "jour") {
+        countJour++;
+      } else if (tags.is_on_duty) {
+        // OSM fallback for on-duty status
+        count24h++;
       }
     });
     
     return { 
       total: pharmacies.length,
-      garde: count24h + countNuit,
+      garde: count24h + countNuit, // De garde = 24h + Nuit
       h24: count24h, 
       jour: countJour, 
       nuit: countNuit 

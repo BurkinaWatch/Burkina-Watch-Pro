@@ -31,7 +31,51 @@ import { fetchEvents, clearEventsCache } from "./eventsService";
 import { overpassService } from "./overpassService";
 import { dataMigrationService } from "./dataMigrationService";
 import { BOUTIQUES_DATA } from "./boutiquesData";
+import { PHARMACIES_DATA } from "./pharmaciesData";
 import type { Place } from "@shared/schema";
+
+// Helper function to get merged pharmacy data (local + OSM)
+function getMergedPharmacies(): any[] {
+  // Use PHARMACIES_DATA as the primary source (has accurate guard status)
+  const localPharmacies = PHARMACIES_DATA.map(p => {
+    let typeGarde: "jour" | "nuit" | "24h" = "jour";
+    if (p.is24h) {
+      typeGarde = "24h";
+    } else if (p.gardeNuit) {
+      typeGarde = "nuit";
+    }
+    
+    return {
+      id: `local-pharm-${p.id}`,
+      nom: p.nom,
+      name: p.nom,
+      adresse: p.adresse,
+      quartier: p.quartier,
+      ville: p.ville,
+      city: p.ville,
+      region: p.region,
+      latitude: p.latitude,
+      lat: p.latitude,
+      longitude: p.longitude,
+      lon: p.longitude,
+      telephone: p.telephone,
+      phone: p.telephone,
+      horaires: p.horaires,
+      typeGarde,
+      is24h: p.is24h,
+      gardeNuit: p.gardeNuit,
+      services: p.services,
+      specialites: p.specialites,
+      tags: { 
+        is_on_duty: p.is24h || p.gardeNuit,
+        opening_hours: p.horaires 
+      },
+      source: "LOCAL"
+    };
+  });
+  
+  return localPharmacies;
+}
 
 // ============================================
 // HELPERS POUR TRANSFORMER LES DONNÉES OSM
@@ -92,27 +136,52 @@ function mapOsmCuisineToType(cuisine: string): string {
 
 function transformOsmToPharmacy(place: Place) {
   const tags = place.tags as Record<string, string> || {};
-  const isOnDuty = tags.is_on_duty || tags.opening_hours === "24/7" || tags.emergency === "yes" || tags["healthcare:speciality:emergency"] === "yes";
   const name = place.name || tags.name || tags["name:fr"] || tags["name:en"] || tags.operator || "Pharmacie";
+  
+  // Try to match with local pharmacy data for guard status
+  const normalizedName = name.toLowerCase().replace(/pharmacie\s*/i, "").trim();
+  const localData = pharmaciesDataMap.get(normalizedName) || pharmaciesDataMap.get(name.toLowerCase());
+  
+  // Determine type of guard from local data or OSM tags
+  let typeGarde: "jour" | "nuit" | "24h" = "jour";
+  let isOnDuty = false;
+  
+  if (localData) {
+    // Use local data for guard status (most accurate)
+    if (localData.is24h) {
+      typeGarde = "24h";
+      isOnDuty = true;
+    } else if (localData.gardeNuit) {
+      typeGarde = "nuit";
+      isOnDuty = true;
+    }
+  } else {
+    // Fallback to OSM tags
+    const osmIsOnDuty = tags.is_on_duty || tags.opening_hours === "24/7" || tags.emergency === "yes" || tags["healthcare:speciality:emergency"] === "yes";
+    if (osmIsOnDuty || tags.opening_hours?.includes("24")) {
+      typeGarde = "24h";
+      isOnDuty = true;
+    }
+  }
   
   return {
     id: `osm-pharm-${place.id}`,
     nom: name,
-    adresse: place.address || "Burkina Faso",
-    quartier: place.quartier || "Quartier non spécifié",
-    ville: place.ville || "Ville non spécifiée",
-    region: place.region || "Région non spécifiée",
+    adresse: place.address || localData?.adresse || "Burkina Faso",
+    quartier: place.quartier || localData?.quartier || "Quartier non spécifié",
+    ville: place.ville || localData?.ville || "Ville non spécifiée",
+    region: place.region || localData?.region || "Région non spécifiée",
     latitude: parseFloat(place.latitude),
     longitude: parseFloat(place.longitude),
-    telephone: place.telephone || undefined,
-    horaires: place.horaires || tags.opening_hours || "Horaires à vérifier",
-    typeGarde: isOnDuty ? "24h" : (tags.opening_hours?.includes("24") ? "24h" : "jour") as "jour" | "nuit" | "24h",
-    services: [
+    telephone: place.telephone || localData?.telephone || undefined,
+    horaires: place.horaires || localData?.horaires || tags.opening_hours || "Horaires à vérifier",
+    typeGarde,
+    services: localData?.services || [
       tags.dispensing === "yes" ? "Délivrance d'ordonnances" : null,
       tags.wheelchair === "yes" ? "Accès handicapé" : null,
       tags.operator ? `Opérateur: ${tags.operator}` : null
     ].filter(Boolean),
-    tags: tags,
+    tags: { ...tags, is_on_duty: isOnDuty },
     source: "OSM" as const
   };
 }
@@ -582,7 +651,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (type === "hospital") {
         transformed = response.places.map(transformOsmToHopital);
       } else if (type === "pharmacy") {
-        transformed = response.places.map(transformOsmToPharmacy);
+        // Use local PHARMACIES_DATA as primary source (has accurate guard status)
+        transformed = getMergedPharmacies();
       } else if (type === "restaurant") {
         transformed = response.places.map((p, i) => transformOsmToRestaurant(p, i));
       } else if (type === "shop" || type === "supermarket") {
@@ -1929,14 +1999,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/pharmacies", async (req, res) => {
     try {
       const { region, typeGarde, search } = req.query;
-      const result = await overpassService.getPlaces({ placeType: "pharmacy" });
-      const dbPlaces = result.places || [];
-      const lastUpdated = result.lastUpdated;
-      let pharmacies = dbPlaces.map(transformOsmToPharmacy);
+      // Use local PHARMACIES_DATA as primary source (has accurate guard status)
+      let pharmacies = getMergedPharmacies();
 
       if (search) {
         const query = (search as string).toLowerCase();
-        pharmacies = pharmacies.filter(p =>
+        pharmacies = pharmacies.filter((p: any) =>
           p.nom?.toLowerCase().includes(query) ||
           p.ville?.toLowerCase().includes(query) ||
           p.quartier?.toLowerCase().includes(query) ||
@@ -1944,16 +2012,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
       if (region && region !== "all") {
-        pharmacies = pharmacies.filter(p => p.region === region);
+        pharmacies = pharmacies.filter((p: any) => p.region === region);
       }
       if (typeGarde && typeGarde !== "all") {
-        pharmacies = pharmacies.filter(p => p.typeGarde === typeGarde);
+        pharmacies = pharmacies.filter((p: any) => p.typeGarde === typeGarde);
       }
 
       res.set('Cache-Control', 'public, max-age=3600');
       res.json({
         pharmacies,
-        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
+        lastUpdated: new Date().toISOString()
       });
     } catch (error) {
       console.error("Error fetching pharmacies:", error);
