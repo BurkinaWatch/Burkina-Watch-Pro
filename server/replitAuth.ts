@@ -21,10 +21,11 @@ export function getSession() {
     secret: process.env.SESSION_SECRET || "default_secret_for_dev_only",
     store: sessionStore,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: isProduction,
+      secure: process.env.NODE_ENV === "production" || !!process.env.REPL_ID,
+      sameSite: process.env.REPL_ID ? "none" : "lax",
       maxAge: sessionTtl,
     },
   });
