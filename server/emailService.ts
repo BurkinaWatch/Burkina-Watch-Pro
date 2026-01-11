@@ -168,16 +168,24 @@ export async function sendOtpEmail(
     </div>
   `;
 
-  if (process.env.RESEND_API_KEY) {
-    console.log('📧 Trying Resend first...');
+  const resendKey = process.env.RESEND_API_KEY;
+  console.log(`📧 RESEND_API_KEY present: ${!!resendKey}`);
+  
+  if (resendKey) {
+    console.log('📧 Using Resend API (priority)...');
     const result = await sendViaResend(toEmail, subject, html);
-    if (result.success) return result;
-    console.log('⚠️ Resend failed, trying SMTP fallback...');
+    console.log(`📧 Resend result: success=${result.success}, message=${result.message}`);
+    if (result.success) {
+      return result;
+    }
+    console.log('⚠️ Resend failed, will try SMTP as fallback...');
+  } else {
+    console.log('📧 No RESEND_API_KEY, skipping Resend');
   }
 
   const config = getEmailConfig();
   if (config) {
-    console.log('📧 Trying SMTP...');
+    console.log('📧 Trying SMTP fallback...');
     const result = await sendViaSMTP(toEmail, subject, html, config.fromEmail, config.fromName);
     if (result.success) return result;
   }
