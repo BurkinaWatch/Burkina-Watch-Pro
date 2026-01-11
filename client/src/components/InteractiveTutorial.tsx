@@ -15,7 +15,8 @@ import {
   MessageCircle,
   Shield,
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  Menu
 } from "lucide-react";
 
 interface TutorialStep {
@@ -87,6 +88,14 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     description: "Vos signalements peuvent etre anonymes. Nous protegens votre identite et vos donnees personnelles.",
     icon: <Shield className="w-8 h-8 text-primary" />,
     position: "center"
+  },
+  {
+    id: "navigation",
+    title: "Menu de navigation",
+    description: "Explorez le menu lateral pour acceder a toutes les fonctionnalites: Actualites, Evenements, Suivi en direct, Numeros d'urgence, Pharmacies, Hopitaux, Restaurants, Cinemas, Marches, Boutiques, Banques et Stations-service.",
+    icon: <Menu className="w-8 h-8 text-primary" />,
+    targetSelector: "[data-testid='button-sidebar-toggle']",
+    position: "right"
   }
 ];
 
