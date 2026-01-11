@@ -1,46 +1,70 @@
 import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { offlineStorage } from '@/lib/offlineStorage';
 import { useNetworkStatus } from './useNetworkStatus';
 
 export function useOfflineCache() {
   const { isOnline } = useNetworkStatus();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const loadCachedData = async () => {
+      try {
+        const [cachedPharmacies, cachedUrgences, cachedSignalements] = await Promise.all([
+          offlineStorage.getCachedPharmacies(),
+          offlineStorage.getCachedUrgences(),
+          offlineStorage.getCachedSignalements(),
+        ]);
+
+        if (cachedPharmacies.length > 0) {
+          queryClient.setQueryData(['/api/pharmacies'], cachedPharmacies);
+        }
+        if (cachedUrgences.length > 0) {
+          queryClient.setQueryData(['/api/urgences'], cachedUrgences);
+        }
+        if (cachedSignalements.length > 0) {
+          queryClient.setQueryData(['/api/signalements'], cachedSignalements);
+        }
+      } catch (error) {
+        console.error('[OfflineCache] Failed to load cached data:', error);
+      }
+    };
+
+    loadCachedData();
+  }, [queryClient]);
 
   const { data: pharmacies } = useQuery({
     queryKey: ['/api/pharmacies'],
-    enabled: isOnline,
     staleTime: 1000 * 60 * 60,
   });
 
   const { data: urgences } = useQuery({
     queryKey: ['/api/urgences'],
-    enabled: isOnline,
     staleTime: 1000 * 60 * 60,
   });
 
   const { data: signalements } = useQuery<any[]>({
     queryKey: ['/api/signalements'],
-    enabled: isOnline,
     staleTime: 1000 * 60 * 5,
   });
 
   useEffect(() => {
-    if (pharmacies && Array.isArray(pharmacies)) {
+    if (isOnline && pharmacies && Array.isArray(pharmacies)) {
       offlineStorage.cachePharmacies(pharmacies).catch(console.error);
     }
-  }, [pharmacies]);
+  }, [pharmacies, isOnline]);
 
   useEffect(() => {
-    if (urgences && Array.isArray(urgences)) {
+    if (isOnline && urgences && Array.isArray(urgences)) {
       offlineStorage.cacheUrgences(urgences).catch(console.error);
     }
-  }, [urgences]);
+  }, [urgences, isOnline]);
 
   useEffect(() => {
-    if (signalements && Array.isArray(signalements)) {
+    if (isOnline && signalements && Array.isArray(signalements)) {
       offlineStorage.cacheSignalements(signalements.slice(0, 50)).catch(console.error);
     }
-  }, [signalements]);
+  }, [signalements, isOnline]);
 }
 
 export async function getOfflineData(type: 'pharmacies' | 'urgences' | 'signalements') {
