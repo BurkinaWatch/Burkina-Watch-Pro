@@ -51,6 +51,7 @@ import Fiabilite from "@/pages/Fiabilite";
 import Connexion from "@/pages/Connexion";
 import NotFound from "@/pages/not-found";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
+import { useOfflineCache } from "./hooks/useOfflineCache";
 
 function Router() {
   return (
@@ -131,6 +132,7 @@ function OfflineIndicator() {
 function AppContent() {
   const { isAuthenticated } = useAuth();
   useOnlineStatus(isAuthenticated);
+  useOfflineCache();
 
   return (
     <>

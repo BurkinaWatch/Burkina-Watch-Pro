@@ -1,0 +1,33 @@
+{
+  "name": "Burkina Watch",
+  "short_name": "BurkinaWatch",
+  "description": "Plateforme citoyenne de sécurité et services au Burkina Faso",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#dc2626",
+  "orientation": "portrait-primary",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["safety", "news", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Urgences",
+      "short_name": "Urgences",
+      "url": "/urgences",
+      "icons": [{"src": "/favicon.ico", "sizes": "64x64"}]
+    },
+    {
+      "name": "Pharmacies",
+      "short_name": "Pharmacies",
+      "url": "/pharmacies",
+      "icons": [{"src": "/favicon.ico", "sizes": "64x64"}]
+    }
+  ]
+}
