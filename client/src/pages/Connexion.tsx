@@ -62,12 +62,12 @@ export default function Connexion() {
     },
     onSuccess: (data) => {
       if (data.success) {
-        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+        queryClient.setQueryData(["/api/auth/user"], data.user);
         toast({
           title: "Connexion réussie",
           description: "Bienvenue sur Burkina Secure",
         });
-        navigate("/");
+        setTimeout(() => navigate("/"), 100);
       } else {
         toast({
           title: "Code incorrect",
