@@ -27,15 +27,15 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     { href: "/", icon: Home, label: t("nav.home"), color: "text-primary" },
     { href: "/carte", icon: MapPin, label: t("nav.map"), color: "text-green-600 dark:text-green-500" },
     { href: "/feed", icon: FileText, label: t("nav.feed"), color: "text-blue-600 dark:text-blue-500" },
-    { href: "/sos", icon: AlertCircle, label: t("nav.sos"), color: "text-red-600 dark:text-red-500", badge: t("common.new") },
+    { href: "/sos", icon: AlertCircle, label: t("nav.sos"), color: "text-red-600 dark:text-red-500" },
   ];
 
   // Services & Actualités - Nouvelles fonctionnalités en avant
   const servicesItems = [
-    { href: "/bulletin", icon: Newspaper, label: "Hot News", color: "text-yellow-700 dark:text-yellow-500", badge: t("common.new"), badgeColor: "bg-yellow-500" },
-    { href: "/events", icon: Calendar, label: t("nav.events"), color: "text-purple-600 dark:text-purple-500", badge: t("common.new"), badgeColor: "bg-purple-500" },
+    { href: "/bulletin", icon: Newspaper, label: "Hot News", color: "text-yellow-700 dark:text-yellow-500" },
+    { href: "/events", icon: Calendar, label: t("nav.events"), color: "text-purple-600 dark:text-purple-500" },
     { href: "/tracking-live", icon: Navigation, label: t("nav.tracking"), color: "text-cyan-600 dark:text-cyan-500" },
-    { href: "/streetview", icon: Camera, label: t("nav.streetview"), color: "text-green-700 dark:text-green-500", badge: t("common.new"), badgeColor: "bg-green-500" },
+    { href: "/streetview", icon: Camera, label: t("nav.streetview"), color: "text-green-700 dark:text-green-500" },
   ];
 
   // Services d'urgence - Groupés logiquement
@@ -54,7 +54,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     { href: "/banques", icon: Landmark, label: "Banques", color: "text-blue-600 dark:text-blue-500" },
     { href: "/stations", icon: Fuel, label: "Stations-Service", color: "text-red-600 dark:text-red-500" },
     { href: "/universites", icon: GraduationCap, label: "Universités", color: "text-indigo-600 dark:text-indigo-500" },
-    { href: "/gares", icon: Bus, label: "Gares Routieres", color: "text-blue-600 dark:text-blue-500", badge: t("common.new"), badgeColor: "bg-blue-500" },
+    { href: "/gares", icon: Bus, label: "Gares Routieres", color: "text-blue-600 dark:text-blue-500" },
   ];
 
   // Informations & Engagement
