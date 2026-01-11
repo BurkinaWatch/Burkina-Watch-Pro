@@ -21,7 +21,7 @@ import { fromZodError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { OverpassService } from "./overpassService";
 import { reverseGeocode } from "./geocoding";
-import { sendLocationEmail, sendEmergencyTrackingStartEmail } from "./resend";
+import { sendLocationEmail, sendEmergencyTrackingStartEmail } from "./emailService";
 import { verifySignalement } from "./aiVerification";
 import { moderateContent, logModerationAction } from "./contentModeration";
 import { signalementMutationLimiter } from "./securityHardening";
