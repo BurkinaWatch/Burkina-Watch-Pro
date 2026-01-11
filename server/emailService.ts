@@ -1,6 +1,13 @@
 import nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 
+console.log('📧 Email service initialization...');
+console.log('  - RESEND_API_KEY:', process.env.RESEND_API_KEY ? '✅ configured' : '❌ not set');
+console.log('  - GMAIL_USER:', process.env.GMAIL_USER ? '✅ configured' : '❌ not set');
+console.log('  - GMAIL_APP_PASSWORD:', process.env.GMAIL_APP_PASSWORD ? '✅ configured' : '❌ not set');
+console.log('  - SMTP_USER:', process.env.SMTP_USER ? '✅ configured' : '❌ not set');
+console.log('  - SMTP_PASS:', process.env.SMTP_PASS ? '✅ configured' : '❌ not set');
+
 interface EmailConfig {
   host: string;
   port: number;
