@@ -33,7 +33,7 @@ export async function sendEmailOtp(email: string): Promise<{ success: boolean; m
     if (!isEmailServiceAvailable()) {
       return {
         success: false,
-        message: "Service email non configuré. Veuillez configurer GMAIL_USER et GMAIL_APP_PASSWORD.",
+        message: "Service email non configuré. Veuillez configurer les identifiants SMTP (GMAIL_USER/GMAIL_APP_PASSWORD ou SMTP_USER/SMTP_PASS).",
       };
     }
 

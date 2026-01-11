@@ -18,12 +18,15 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 - **Data Sources**: OpenStreetMap (OSM) via Overpass API.
 
 ## Hybrid OTP Authentication (Jan 11, 2026)
-- **Email + SMS OTP**: Passwordless authentication with 6-digit codes
-- **Email OTP**: Via Resend (RESEND_API_KEY, RESEND_FROM_EMAIL)
-- **SMS OTP**: Via Twilio (Replit integration or TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)
-- **Security**: 10-minute expiry, 5 attempt limit, identifier normalization (Burkina +226 format)
+- **Email OTP**: Passwordless authentication with 6-digit codes via SMTP (Nodemailer)
+- **Email Config Options** (priority order):
+  1. SMTP_USER + SMTP_PASS (+ optional SMTP_HOST, SMTP_PORT, SMTP_FROM_EMAIL, SMTP_FROM_NAME)
+  2. GMAIL_USER + GMAIL_APP_PASSWORD (defaults to smtp.gmail.com:587)
+- **Gmail Setup**: Create app password at myaccount.google.com/apppasswords (free, 500 emails/day)
+- **SMS OTP**: Disabled (no free SMS service available)
+- **Security**: 10-minute expiry, 5 attempt limit, identifier normalization
 - **Guest Mode**: Visitors can browse the app without account; login required for posting/commenting/liking
-- **Files**: hybridAuthService.ts, Connexion.tsx, otp_codes table in schema.ts, replitAuth.ts
+- **Files**: hybridAuthService.ts, emailService.ts, Connexion.tsx, otp_codes table in schema.ts, replitAuth.ts
 - **Routes**: /api/auth/send-otp, /api/auth/verify-otp, /api/auth/check-sms-availability, /api/auth/logout
 - **Login Page**: /connexion (accessible via Login button in header)
 
