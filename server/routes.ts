@@ -362,7 +362,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.error("Login error:", err);
               return res.status(500).json({ success: false, message: "Erreur de connexion" });
             }
-            res.json({ success: true, user: wrappedUser, message: "Connexion réussie" });
+            req.session.save((saveErr: any) => {
+              if (saveErr) {
+                console.error("Session save error:", saveErr);
+                return res.status(500).json({ success: false, message: "Erreur de sauvegarde de session" });
+              }
+              console.log("✅ User logged in and session saved:", user.id);
+              res.json({ success: true, user: wrappedUser, message: "Connexion réussie" });
+            });
           });
         } else {
           res.status(404).json({ success: false, message: "Utilisateur non trouvé" });
