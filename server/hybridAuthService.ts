@@ -105,7 +105,9 @@ export async function sendEmailOtp(email: string): Promise<{ success: boolean; m
 
     const { client, fromEmail } = await getUncachableResendClient();
     
-    await client.emails.send({
+    console.log(`📧 Sending OTP email from ${fromEmail} to ${email}`);
+    
+    const result = await client.emails.send({
       from: fromEmail,
       to: email,
       subject: 'Votre code de connexion Burkina Secure',
@@ -125,10 +127,17 @@ export async function sendEmailOtp(email: string): Promise<{ success: boolean; m
       `,
     });
 
+    if (result.error) {
+      console.error('❌ Resend API error:', result.error);
+      throw new Error(result.error.message || 'Erreur Resend');
+    }
+    
+    console.log('✅ Email OTP sent successfully:', result.data?.id);
     return { success: true, message: 'Code envoyé par email' };
   } catch (error: any) {
-    console.error('Error sending email OTP:', error);
-    return { success: false, message: error.message || 'Erreur lors de l\'envoi du code' };
+    console.error('❌ Error sending email OTP:', error);
+    const errorMessage = error?.message || 'Erreur lors de l\'envoi du code';
+    return { success: false, message: errorMessage };
   }
 }
 
