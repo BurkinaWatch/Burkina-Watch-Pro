@@ -4,7 +4,8 @@ import { getUncachableResendClient } from "./resend";
 
 interface TwilioCredentials {
   accountSid: string;
-  authToken: string;
+  apiKey: string;
+  apiKeySecret: string;
   phoneNumber: string;
 }
 
@@ -12,7 +13,8 @@ async function getTwilioCredentials(): Promise<TwilioCredentials> {
   if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER) {
     return {
       accountSid: process.env.TWILIO_ACCOUNT_SID,
-      authToken: process.env.TWILIO_AUTH_TOKEN,
+      apiKey: process.env.TWILIO_ACCOUNT_SID,
+      apiKeySecret: process.env.TWILIO_AUTH_TOKEN,
       phoneNumber: process.env.TWILIO_PHONE_NUMBER,
     };
   }
@@ -41,13 +43,14 @@ async function getTwilioCredentials(): Promise<TwilioCredentials> {
   const data = await response.json();
   const connectorSettings = data.items?.[0];
 
-  if (!connectorSettings?.settings?.account_sid) {
+  if (!connectorSettings?.settings?.account_sid || !connectorSettings?.settings?.api_key) {
     throw new Error('Twilio not connected');
   }
 
   return {
     accountSid: connectorSettings.settings.account_sid,
-    authToken: connectorSettings.settings.auth_token,
+    apiKey: connectorSettings.settings.api_key,
+    apiKeySecret: connectorSettings.settings.api_key_secret,
     phoneNumber: connectorSettings.settings.phone_number,
   };
 }
@@ -137,7 +140,7 @@ export async function sendSmsOtp(phone: string): Promise<{ success: boolean; mes
     const credentials = await getTwilioCredentials();
     
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${credentials.accountSid}/Messages.json`;
-    const auth = Buffer.from(`${credentials.accountSid}:${credentials.authToken}`).toString('base64');
+    const auth = Buffer.from(`${credentials.apiKey}:${credentials.apiKeySecret}`).toString('base64');
     
     const response = await fetch(twilioUrl, {
       method: 'POST',
