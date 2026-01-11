@@ -70,7 +70,7 @@ function getResendClient(): Resend | null {
 }
 
 function getResendFromEmail(): string {
-  return process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+  return process.env.RESEND_FROM_EMAIL || 'noreply@burkinawatch.com';
 }
 
 export function isEmailServiceAvailable(): boolean {
