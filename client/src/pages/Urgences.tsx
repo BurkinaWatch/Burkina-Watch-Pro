@@ -413,6 +413,23 @@ export default function Urgences() {
           </Button>
         </div>
 
+        {/* En-tête */}
+        <Card className="mb-6 bg-gradient-to-r from-red-500/10 to-yellow-500/10 border-red-500/20">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold mb-2">Urgences Burkina</h2>
+                <p className="text-muted-foreground">
+                  Contacts officiels pour les situations critiques au Burkina Faso
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* CNA Card */}
         <Card className="mb-6 border-primary/30 bg-primary/5">
           <CardContent className="p-6">
@@ -461,23 +478,6 @@ export default function Urgences() {
                     <span>WhatsApp 68 24 44 44</span>
                   </Button>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* En-tête */}
-        <Card className="mb-6 bg-gradient-to-r from-red-500/10 to-yellow-500/10 border-red-500/20">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold mb-2">Urgences Burkina</h2>
-                <p className="text-muted-foreground">
-                  Contacts officiels pour les situations critiques au Burkina Faso
-                </p>
               </div>
             </div>
           </CardContent>
