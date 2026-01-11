@@ -54,34 +54,9 @@ export async function setupAuth(app: Express) {
     }
   });
 
-  // Middleware pour créer un utilisateur anonyme si non authentifié
-  app.use(async (req: any, res, next) => {
-    if (!req.user && !req.path.startsWith("/api/auth/verify")) {
-      const anonymousId = req.session?.anonymousId || `anon-${crypto.randomUUID()}`;
-      if (req.session) req.session.anonymousId = anonymousId;
-
-      let user = await storage.getUser(anonymousId);
-      if (!user) {
-        user = await storage.upsertUser({
-          id: anonymousId,
-          isAnonymous: true,
-          role: "guest",
-        });
-      }
-      
-      // Wrap user with claims.sub for compatibility with routes expecting OIDC-style user
-      const wrappedUser = {
-        ...user,
-        claims: { sub: user.id }
-      };
-      req.login(wrappedUser, (err: any) => {
-        if (err) return next(err);
-        next();
-      });
-    } else {
-      next();
-    }
-  });
+  // Ne plus créer d'utilisateurs anonymes automatiquement
+  // Les visiteurs restent des invités non authentifiés
+  // Ils doivent se connecter via /connexion pour accéder aux fonctionnalités protégées
 }
 
 export const isAuthenticated: RequestHandler = (req, res, next) => {
