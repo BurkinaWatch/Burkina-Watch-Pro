@@ -1,13 +1,6 @@
 import nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 
-console.log('📧 Email service initialization...');
-console.log('  - RESEND_API_KEY:', process.env.RESEND_API_KEY ? '✅ configured' : '❌ not set');
-console.log('  - GMAIL_USER:', process.env.GMAIL_USER ? '✅ configured' : '❌ not set');
-console.log('  - GMAIL_APP_PASSWORD:', process.env.GMAIL_APP_PASSWORD ? '✅ configured' : '❌ not set');
-console.log('  - SMTP_USER:', process.env.SMTP_USER ? '✅ configured' : '❌ not set');
-console.log('  - SMTP_PASS:', process.env.SMTP_PASS ? '✅ configured' : '❌ not set');
-
 interface EmailConfig {
   host: string;
   port: number;
@@ -18,6 +11,13 @@ interface EmailConfig {
   };
   fromEmail: string;
   fromName: string;
+}
+
+function logEmailConfig() {
+  console.log('📧 Email service check:');
+  console.log('  - RESEND_API_KEY:', process.env.RESEND_API_KEY ? `✅ (${process.env.RESEND_API_KEY.substring(0, 8)}...)` : '❌ not set');
+  console.log('  - GMAIL_USER:', process.env.GMAIL_USER ? '✅ configured' : '❌ not set');
+  console.log('  - GMAIL_APP_PASSWORD:', process.env.GMAIL_APP_PASSWORD ? '✅ configured' : '❌ not set');
 }
 
 function getEmailConfig(): EmailConfig | null {
@@ -44,15 +44,11 @@ function getEmailConfig(): EmailConfig | null {
   };
 }
 
-let transporter: nodemailer.Transporter | null = null;
-
-function getTransporter(): nodemailer.Transporter | null {
-  if (transporter) return transporter;
-  
+function createTransporter(): nodemailer.Transporter | null {
   const config = getEmailConfig();
   if (!config) return null;
 
-  transporter = nodemailer.createTransport({
+  return nodemailer.createTransport({
     host: config.host,
     port: config.port,
     secure: config.secure,
@@ -61,13 +57,15 @@ function getTransporter(): nodemailer.Transporter | null {
     greetingTimeout: 10000,
     socketTimeout: 15000,
   });
-
-  return transporter;
 }
 
 function getResendClient(): Resend | null {
   const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) {
+    console.log('❌ RESEND_API_KEY not found in environment');
+    return null;
+  }
+  console.log(`✅ Creating Resend client with key: ${apiKey.substring(0, 8)}...`);
   return new Resend(apiKey);
 }
 
@@ -76,7 +74,12 @@ function getResendFromEmail(): string {
 }
 
 export function isEmailServiceAvailable(): boolean {
-  return getEmailConfig() !== null || !!process.env.RESEND_API_KEY;
+  const hasSmtp = !!(process.env.SMTP_USER || process.env.GMAIL_USER) && 
+                  !!(process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD);
+  const hasResend = !!process.env.RESEND_API_KEY;
+  
+  console.log(`📧 Email availability check: SMTP=${hasSmtp}, Resend=${hasResend}`);
+  return hasSmtp || hasResend;
 }
 
 async function sendViaResend(
@@ -91,8 +94,11 @@ async function sendViaResend(
 
   try {
     console.log(`📧 Sending email via Resend to ${toEmail}`);
+    const fromEmail = getResendFromEmail();
+    console.log(`📧 From: Burkina Secure <${fromEmail}>`);
+    
     const result = await resend.emails.send({
-      from: `Burkina Secure <${getResendFromEmail()}>`,
+      from: `Burkina Secure <${fromEmail}>`,
       to: toEmail,
       subject,
       html,
@@ -118,7 +124,7 @@ async function sendViaSMTP(
   fromEmail: string,
   fromName: string
 ): Promise<{ success: boolean; message: string }> {
-  const transport = getTransporter();
+  const transport = createTransporter();
   if (!transport) {
     return { success: false, message: 'SMTP non configuré' };
   }
@@ -144,6 +150,8 @@ export async function sendOtpEmail(
   toEmail: string,
   code: string
 ): Promise<{ success: boolean; message: string }> {
+  logEmailConfig();
+  
   const subject = 'Votre code de connexion Burkina Secure';
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -161,6 +169,7 @@ export async function sendOtpEmail(
   `;
 
   if (process.env.RESEND_API_KEY) {
+    console.log('📧 Trying Resend first...');
     const result = await sendViaResend(toEmail, subject, html);
     if (result.success) return result;
     console.log('⚠️ Resend failed, trying SMTP fallback...');
@@ -168,6 +177,7 @@ export async function sendOtpEmail(
 
   const config = getEmailConfig();
   if (config) {
+    console.log('📧 Trying SMTP...');
     const result = await sendViaSMTP(toEmail, subject, html, config.fromEmail, config.fromName);
     if (result.success) return result;
   }
@@ -246,7 +256,7 @@ export async function sendLocationEmail(
     throw new Error("Service email non configuré");
   }
 
-  const transport = getTransporter();
+  const transport = createTransporter();
   if (!transport) {
     throw new Error("Transport SMTP non disponible");
   }
@@ -349,7 +359,7 @@ export async function sendEmergencyTrackingStartEmail(
     throw new Error("Service email non configuré");
   }
 
-  const transport = getTransporter();
+  const transport = createTransporter();
   if (!transport) {
     throw new Error("Transport SMTP non disponible");
   }
