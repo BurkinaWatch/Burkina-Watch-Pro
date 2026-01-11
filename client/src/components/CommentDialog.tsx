@@ -100,7 +100,7 @@ export default function CommentDialog({ signalementId, commentCount }: CommentDi
         description: "Vous devez être connecté pour commenter",
         variant: "destructive",
       });
-      window.location.href = "/api/login";
+      window.location.href = "/connexion";
       return;
     }
 

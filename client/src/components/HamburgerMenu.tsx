@@ -18,8 +18,13 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
   const { isAuthenticated, user } = useAuth();
   const { t } = useTranslation();
 
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      window.location.href = "/";
+    } catch (error) {
+      window.location.href = "/";
+    }
   };
 
   // Navigation principale - Actions principales

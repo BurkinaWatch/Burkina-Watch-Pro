@@ -20,7 +20,7 @@ export default function Landing() {
               </p>
             </div>
           </div>
-          <Button onClick={() => window.location.href = "/api/login"} data-testid="button-login">
+          <Button onClick={() => window.location.href = "/connexion"} data-testid="button-login">
             Se connecter
           </Button>
         </div>
@@ -54,7 +54,7 @@ export default function Landing() {
           </p>
           <Button 
             size="lg" 
-            onClick={() => window.location.href = "/api/login"}
+            onClick={() => window.location.href = "/connexion"}
             className="backdrop-blur-sm"
             data-testid="button-get-started"
           >
@@ -118,7 +118,7 @@ export default function Landing() {
           </p>
           <Button 
             size="lg"
-            onClick={() => window.location.href = "/api/login"}
+            onClick={() => window.location.href = "/connexion"}
             data-testid="button-join"
           >
             Créer mon compte gratuitement

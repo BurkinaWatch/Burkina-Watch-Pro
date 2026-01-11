@@ -150,7 +150,7 @@ export default function Publier() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/connexion";
         }, 500);
         return;
       }

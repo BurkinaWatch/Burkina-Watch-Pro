@@ -62,7 +62,7 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
   };
 
   const handleLogin = () => {
-    window.location.href = "/api/login";
+    setLocation("/connexion");
   };
 
   const getInitials = () => {

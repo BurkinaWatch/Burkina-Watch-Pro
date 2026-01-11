@@ -106,7 +106,7 @@ export default function SignalementCard({
         description: "Vous devez être connecté pour aimer un signalement",
         variant: "destructive",
       });
-      window.location.href = "/api/login";
+      window.location.href = "/connexion";
       return;
     }
     likeMutation.mutate();

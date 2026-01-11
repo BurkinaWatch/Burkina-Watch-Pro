@@ -261,7 +261,7 @@ export default function Profil() {
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/api/login";
+        window.location.href = "/connexion";
       }, 500);
     }
   }, [isAuthenticated, isLoading, toast]);
@@ -330,7 +330,7 @@ export default function Profil() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/connexion";
         }, 500);
         return;
       }
@@ -369,8 +369,13 @@ export default function Profil() {
     },
   });
 
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      window.location.href = "/";
+    } catch (error) {
+      window.location.href = "/";
+    }
   };
 
   const { data: activeSession, isLoading: sessionLoading } = useQuery<TrackingSession>({
