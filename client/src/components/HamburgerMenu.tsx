@@ -109,11 +109,6 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <item.icon className={`w-5 h-5 ${item.color} group-hover:scale-110 transition-transform`} />
                       <span className="font-medium">{item.label}</span>
-                      {item.badge && (
-                        <Badge variant="destructive" className="ml-auto text-[10px] px-1.5 py-0">
-                          {item.badge}
-                        </Badge>
-                      )}
                     </Button>
                   </Link>
                 ))}
@@ -142,11 +137,6 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <item.icon className={`w-5 h-5 ${item.color} group-hover:scale-110 transition-transform`} />
                       <span className="font-medium">{item.label}</span>
-                      {item.badge && (
-                        <Badge className={`ml-auto text-[10px] px-1.5 py-0 ${item.badgeColor} text-white border-0`}>
-                          {item.badge}
-                        </Badge>
-                      )}
                     </Button>
                   </Link>
                 ))}
