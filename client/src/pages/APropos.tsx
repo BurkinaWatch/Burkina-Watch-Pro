@@ -495,7 +495,7 @@ export default function APropos() {
             Burkina Watch v1.2 - Au service du peuple burkinabè
           </p>
           <p className="mt-2 text-xs">
-            Unité - Progrès - Justice
+            La patrie ou la mort, nous vaincrons
           </p>
         </div>
       </section>
