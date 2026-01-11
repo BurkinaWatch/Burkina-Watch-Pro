@@ -17,6 +17,14 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 - **AI Integration**: Groq (llama-3.3-70b-versatile) for intelligent features.
 - **Data Sources**: OpenStreetMap (OSM) via Overpass API.
 
+## Hybrid OTP Authentication (Jan 11, 2026)
+- **Email + SMS OTP**: Passwordless authentication with 6-digit codes
+- **Email OTP**: Via Resend (RESEND_API_KEY, RESEND_FROM_EMAIL)
+- **SMS OTP**: Via Twilio (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER)
+- **Security**: 10-minute expiry, 5 attempt limit, identifier normalization (Burkina +226 format)
+- **Files**: hybridAuthService.ts, Connexion.tsx, otp_codes table in schema.ts
+- **Routes**: /api/auth/send-otp, /api/auth/verify-otp, /api/auth/check-sms-availability, /api/auth/logout
+
 ## Recent Changes (Jan 11, 2026 - Production Audit)
 - **Authentication Fix**: Fixed critical 500 errors on protected routes (user.claims.sub undefined) by wrapping user objects with claims structure in replitAuth.ts
 - **VoiceSearchButton Fix**: Fixed "onResultRef.current is not a function" error by adding onQueryChange prop alias with optional chaining
