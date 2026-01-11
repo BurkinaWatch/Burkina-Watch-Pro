@@ -75,6 +75,6 @@ if (typeof window !== "undefined") {
     queryClient,
     persister: localStoragePersister,
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-    buster: "v1", // Cache buster
+    buster: "v2-guest-mode", // Cache buster - invalidate old anonymous user cache
   });
 }
