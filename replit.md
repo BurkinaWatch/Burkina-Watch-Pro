@@ -19,8 +19,9 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 
 ## Recent Changes (Jan 11, 2026 - Production Audit)
 - **Authentication Fix**: Fixed critical 500 errors on protected routes (user.claims.sub undefined) by wrapping user objects with claims structure in replitAuth.ts
-- **VoiceSearchButton Fix**: Fixed "onResultRef.current is not a function" error by adding onQueryChange prop alias
-- **Railway Compatibility**: Added nixpacks.toml for Railway deployment, updated resend.ts to use RESEND_API_KEY env var fallback
+- **VoiceSearchButton Fix**: Fixed "onResultRef.current is not a function" error by adding onQueryChange prop alias with optional chaining
+- **Resend Email Refactor**: Completely refactored resend.ts - removed module-level state, added TypeScript types, supports RESEND_API_KEY/RESEND_FROM_EMAIL env vars for Railway deployment
+- **Railway Compatibility**: Added nixpacks.toml for Railway deployment
 - **Domain Handling**: Updated routes.ts to use RAILWAY_PUBLIC_DOMAIN/APP_DOMAIN environment variables
 - **Database Improvements**: Added connection pool configuration with error handling in db.ts
 
