@@ -27,12 +27,21 @@ import { moderateContent, logModerationAction } from "./contentModeration";
 import { signalementMutationLimiter } from "./securityHardening";
 import { generateChatResponse, isAIAvailable } from "./aiService";
 import { fetchBulletins, clearCache } from "./rssService";
+import { getOfficialNews } from "./newsService";
 import { fetchEvents, clearEventsCache } from "./eventsService";
 import { overpassService } from "./overpassService";
 import { dataMigrationService } from "./dataMigrationService";
 import { BOUTIQUES_DATA } from "./boutiquesData";
 import { PHARMACIES_DATA } from "./pharmaciesData";
 import type { Place } from "@shared/schema";
+
+// Create a Map for quick pharmacy lookups by name
+const pharmaciesDataMap = new Map<string, typeof PHARMACIES_DATA[0]>();
+PHARMACIES_DATA.forEach(p => {
+  const normalizedName = p.nom.toLowerCase().replace(/pharmacie\s*/i, "").trim();
+  pharmaciesDataMap.set(normalizedName, p);
+  pharmaciesDataMap.set(p.nom.toLowerCase(), p);
+});
 
 // Helper function to get merged pharmacy data (local + OSM)
 function getMergedPharmacies(): any[] {
@@ -3611,6 +3620,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erreur alertes météo:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des alertes météo" });
+    }
+  });
+
+  // Official news from government sources
+  app.get("/api/news/official", async (req, res) => {
+    try {
+      const news = await getOfficialNews();
+      res.set("Cache-Control", "public, max-age=900");
+      res.json(news);
+    } catch (error) {
+      console.error("Error fetching official news:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des actualités" });
     }
   });
 

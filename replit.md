@@ -4,10 +4,12 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 ## Key Features
 - **Emergency Contacts**: SOS alerts and managed emergency contact list.
 - **Lockscreen Integration**: Generate emergency contact images for phone lockscreens.
-- **Pharmacy Service**: Real-time tracking of pharmacies (24h/24, Day, Night) across multiple cities.
-- **OpenStreetMap Integration**: Sync and display 11,000+ points of interest (hospitals, police, etc.).
+- **Pharmacy Service**: Real-time tracking of pharmacies (24h/24, Day, Night) across 33 cities (135 pharmacies, 105 de garde).
+- **OpenStreetMap Integration**: Sync and display 20,000+ points of interest (hospitals, police, etc.).
+- **Official News Ticker**: Scrolling banner with government communications from Présidence du Faso, SIG, and AIB.
 - **Signalements**: User-reported incidents and risk zones.
 - **Weather Service**: Regional weather monitoring.
+- **Offline Mode**: IndexedDB caching with automatic sync for low-bandwidth areas.
 - **3D Visualization**: Ouaga in 3D (experimental).
 
 ## Technical Architecture
@@ -29,6 +31,15 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 - **Files**: hybridAuthService.ts, emailService.ts, Connexion.tsx, otp_codes table in schema.ts, replitAuth.ts
 - **Routes**: /api/auth/send-otp, /api/auth/verify-otp, /api/auth/check-sms-availability, /api/auth/logout
 - **Login Page**: /connexion (accessible via Login button in header)
+
+## Recent Changes (Jan 12, 2026)
+- **Official News Ticker**: Added scrolling news banner with real-time government communications
+  - Sources: presidencedufaso.bf, sig.gov.bf, aib.media
+  - Files: NewsTicker.tsx, newsService.ts
+  - Route: /api/news/official
+  - Auto-refresh every 30 minutes with 15-minute cache
+- **Pharmacy Data Fix**: Switched from OSM to local PHARMACIES_DATA for accurate guard status (135 pharmacies, 105 de garde)
+- **Offline Sync**: Fixed French accents in OfflineIndicator component
 
 ## Recent Changes (Jan 11, 2026 - Production Audit)
 - **Authentication Fix**: Fixed critical 500 errors on protected routes (user.claims.sub undefined) by wrapping user objects with claims structure in replitAuth.ts

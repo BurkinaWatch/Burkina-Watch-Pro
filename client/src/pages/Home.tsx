@@ -12,6 +12,7 @@ import StatCard from "@/components/StatCard";
 import MessageDuJour from "@/components/MessageDuJour";
 import { RiskZonesPanel, RecommendationsPanel } from "@/components/RiskAnalysis";
 import { WeatherAlertsBanner } from "@/components/WeatherAlerts";
+import { NewsTicker } from "@/components/NewsTicker";
 import { AlertCircle, Shield, Users, TrendingUp, ArrowRight, Loader2, Heart, AlertTriangle, Search, X, MapPin, Filter, BookOpen, Download, Phone, MessageCircle, Mail } from "lucide-react";
 import { VoiceSearchButton } from "@/components/VoiceSearchButton";
 import { Link, useLocation } from "wouter";
@@ -816,6 +817,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Bande déroulante des communiqués officiels */}
+      <NewsTicker />
 
       {/* Section de recherche géographique */}
       <section className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
