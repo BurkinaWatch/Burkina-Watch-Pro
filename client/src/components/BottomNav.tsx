@@ -2,17 +2,18 @@ import { Button } from "@/components/ui/button";
 import { Home, Map, Plus, AlertCircle, User, Cross } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { OnboardingTip } from "@/components/OnboardingTip";
 
 export default function BottomNav() {
   const [location] = useLocation();
   const { isAuthenticated } = useAuth();
 
   const navItems = [
-    { icon: Home, label: "Accueil", path: "/", testId: "nav-home", color: "from-emerald-400 to-emerald-600" },
-    { icon: Map, label: "Carte", path: "/carte", testId: "nav-map", color: "from-blue-400 to-blue-600" },
-    { icon: Plus, label: "Publier", path: "/publier", testId: "nav-publish", highlight: true, color: "from-red-500 via-orange-400 to-yellow-400" },
-    { icon: AlertCircle, label: "SOS", path: "/fil-actualite", testId: "nav-sos", color: "from-red-500 to-red-600" },
-    { icon: User, label: "Profil", path: "/profil", testId: "nav-profile", color: "from-purple-400 to-purple-600" },
+    { icon: Home, label: "Accueil", path: "/", testId: "nav-home", color: "from-emerald-400 to-emerald-600", tipId: "nav-home", tip: "Tableau de bord principal" },
+    { icon: Map, label: "Carte", path: "/carte", testId: "nav-map", color: "from-blue-400 to-blue-600", tipId: "nav-map", tip: "Carte interactive des alertes" },
+    { icon: Plus, label: "Publier", path: "/publier", testId: "nav-publish", highlight: true, color: "from-red-500 via-orange-400 to-yellow-400", tipId: "nav-publish", tip: "Signalez un incident" },
+    { icon: AlertCircle, label: "SOS", path: "/fil-actualite", testId: "nav-sos", color: "from-red-500 to-red-600", tipId: "nav-sos", tip: "Fil des signalements" },
+    { icon: User, label: "Profil", path: "/profil", testId: "nav-profile", color: "from-purple-400 to-purple-600", tipId: "nav-profile", tip: "Vos paramètres et contacts" },
   ];
 
   return (
@@ -34,8 +35,15 @@ export default function BottomNav() {
           const isActive = location === item.path;
           
           return (
-            <Link key={item.path} href={item.path}>
-              <Button
+            <OnboardingTip 
+              key={item.path} 
+              id={item.tipId} 
+              content={item.tip} 
+              side="top"
+              delay={500 + index * 800}
+            >
+              <Link href={item.path}>
+                <Button
                 variant="ghost"
                 size="sm"
                 className={`
@@ -121,7 +129,8 @@ export default function BottomNav() {
                   `} />
                 )}
               </Button>
-            </Link>
+              </Link>
+            </OnboardingTip>
           );
         })}
       </div>

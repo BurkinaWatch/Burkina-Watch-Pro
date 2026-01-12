@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { User, LogOut, Loader2, Save, Camera, Trash2, MapPin, Calendar, Navigation, PlayCircle, StopCircle, Clock, Activity, Copy, ExternalLink, Briefcase, Mail, Shield, Plus, Trophy, Smartphone, Download, Bell } from "lucide-react";
 import { PushNotificationManager } from "@/components/PushNotificationManager";
 import { useAuth } from "@/hooks/useAuth";
+import { useOnboarding } from "@/hooks/use-onboarding";
+import { Switch } from "@/components/ui/switch";
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -46,6 +48,7 @@ export default function Profil() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const { showTips, setShowTips, resetTips } = useOnboarding();
   const [isEditing, setIsEditing] = useState(false);
   const [trackingActive, setTrackingActive] = useState(false);
   const [trackingInterval, setTrackingInterval] = useState<NodeJS.Timeout | null>(null);
@@ -1397,6 +1400,35 @@ export default function Profil() {
               <p className="text-xs text-muted-foreground mt-1">
                 L'email ne peut pas être modifié
               </p>
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm font-medium">Conseils d'utilisation</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Afficher les infobulles d'aide
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {!showTips && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={resetTips}
+                    className="text-xs"
+                  >
+                    Réinitialiser
+                  </Button>
+                )}
+                <Switch
+                  id="show-tips"
+                  checked={showTips}
+                  onCheckedChange={setShowTips}
+                  data-testid="switch-show-tips"
+                />
+              </div>
             </div>
 
             <Separator />

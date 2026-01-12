@@ -52,6 +52,7 @@ import Connexion from "@/pages/Connexion";
 import NotFound from "@/pages/not-found";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
 import { useOfflineCache } from "./hooks/useOfflineCache";
+import { OnboardingProvider } from "./hooks/use-onboarding";
 
 function Router() {
   return (
@@ -152,7 +153,9 @@ function App() {
         <ThemeProvider>
           <StealthModeProvider>
             <TooltipProvider>
-              <AppContent />
+              <OnboardingProvider>
+                <AppContent />
+              </OnboardingProvider>
             </TooltipProvider>
           </StealthModeProvider>
         </ThemeProvider>
