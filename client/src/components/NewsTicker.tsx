@@ -19,7 +19,7 @@ export function NewsTicker() {
 
   if (isLoading || news.length === 0) {
     return (
-      <div className="bg-gradient-to-r from-green-800 via-yellow-600 to-red-700 py-2 overflow-hidden">
+      <div className="bg-gradient-to-r from-red-700 via-yellow-600 to-green-800 py-2 overflow-hidden">
         <div className="flex items-center justify-center gap-2 text-white text-sm">
           <Newspaper className="w-4 h-4" />
           <span>Chargement des communiqués officiels...</span>
@@ -69,12 +69,12 @@ export function NewsTicker() {
   ]);
 
   return (
-    <div className="bg-gradient-to-r from-green-800 via-yellow-600 to-red-700 py-2.5 overflow-hidden relative">
-      <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-green-800 to-transparent z-10" />
-      <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-red-700 to-transparent z-10" />
+    <div className="bg-gradient-to-r from-red-700 via-yellow-600 to-green-800 py-2.5 overflow-hidden relative">
+      <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-red-700 to-transparent z-10" />
+      <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-green-800 to-transparent z-10" />
       
       <div className="flex items-center">
-        <div className="flex-shrink-0 px-4 flex items-center gap-2 text-white font-bold border-r border-white/30 mr-4 z-20 bg-green-800">
+        <div className="flex-shrink-0 px-4 flex items-center gap-2 text-white font-bold border-r border-white/30 mr-4 z-20 bg-red-700">
           <Newspaper className="w-4 h-4" />
           <span className="hidden sm:inline">INFOS</span>
         </div>
