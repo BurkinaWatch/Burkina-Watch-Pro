@@ -377,7 +377,7 @@ export default function ChatBot() {
             </Button>
           </div>
           <p className="text-[10px] md:text-xs text-muted-foreground text-center mt-1.5 md:mt-2">
-            🎤 Cliquez sur le micro pour parler | ⚠️ Urgence: 17 (Police) ou 18 (Pompiers)
+            ⚠️ Urgence: 17 (Police) ou 18 (Pompiers)
           </p>
         </div>
       </CardContent>
