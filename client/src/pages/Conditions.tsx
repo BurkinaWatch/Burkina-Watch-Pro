@@ -301,7 +301,7 @@ export default function Conditions() {
             </p>
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
-                Email : <span className="font-semibold text-foreground">help-burkinawatch@outlook.fr</span>
+                Email : <span className="font-semibold text-foreground">contact@burkinawatch.com</span>
               </p>
               <p className="text-sm text-muted-foreground mt-2">
                 Burkina Watch - Initiative Citoyenne

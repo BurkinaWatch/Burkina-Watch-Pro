@@ -165,7 +165,7 @@ export default function Contribuer() {
           <CardContent>
             <div className="flex items-center gap-2">
               <Mail className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm">help-burkinawatch@outlook.fr</span>
+              <span className="text-sm">contact@burkinawatch.com</span>
             </div>
           </CardContent>
         </Card>

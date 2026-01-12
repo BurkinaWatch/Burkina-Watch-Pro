@@ -253,7 +253,7 @@ function SecurityNotesDialog() {
     doc.rect(margin, yPosition, maxWidth, 20, 'F');
     yPosition += 5;
     addText('CONTACT & SUPPORT', 11, true);
-    addText('Email: help-burkinawatch@outlook.fr', 9);
+    addText('Email: contact@burkinawatch.com', 9);
     addText('Téléphone: +226 65511323', 9);
     addText('WhatsApp: +226 70019540', 9);
     yPosition += 3;
@@ -301,7 +301,7 @@ function SecurityNotesDialog() {
     doc.rect(margin, yPosition, maxWidth, 25, 'F');
     yPosition += 5;
     addText('CONTACT & SUPPORT', 11, true);
-    addText('Email: help-burkinawatch@outlook.fr', 9);
+    addText('Email: contact@burkinawatch.com', 9);
     addText('Téléphone: +226 65511323', 9);
     addText('WhatsApp: +226 70019540', 9);
     yPosition += 5;
@@ -1284,7 +1284,7 @@ export default function Home() {
                 <span className="text-xs font-medium hidden sm:inline">WhatsApp</span>
               </a>
               <a
-                href="mailto:help-burkinawatch@outlook.fr"
+                href="mailto:contact@burkinawatch.com"
                 className="flex items-center gap-2 px-3 py-2 rounded-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 transition-all hover:scale-105"
                 title="Email"
               >

@@ -193,5 +193,5 @@ npm run db:studio    # Interface Drizzle Studio
 
 **Version** : 1.0.0  
 **Licence** : Propriétaire  
-**Contact** : help-burkinawatch@outlook.fr  
+**Contact** : contact@burkinawatch.com  
 **Date** : 30 Décembre 2024
