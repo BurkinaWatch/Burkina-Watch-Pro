@@ -1,4 +1,6 @@
-import { ArrowLeft, Film, Clock, Ticket, Info, Calendar } from "lucide-react";
+import { ArrowLeft, Film, Clock, Ticket, Info, Calendar, CalendarDays } from "lucide-react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import { useLocation } from "wouter";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -93,11 +95,16 @@ export default function Cine() {
                           <div className="space-y-3 pt-2 border-t border-border/50">
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1">
-                                <Clock className="w-3 h-3" /> Séances
+                                <CalendarDays className="w-3 h-3" />
+                                {format(new Date(movieScreenings[0].date), "EEEE d MMMM", { locale: fr })}
                               </span>
                               <span className="text-xs font-bold text-pink-600 bg-pink-50 dark:bg-pink-900/20 px-2 py-0.5 rounded-full">
                                 {movieScreenings[0].price} FCFA
                               </span>
+                            </div>
+                            <div className="flex items-center gap-1 mb-1">
+                              <Clock className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">Séances :</span>
                             </div>
                             <div className="flex flex-wrap gap-2">
                               {movieScreenings.map((s) => (
