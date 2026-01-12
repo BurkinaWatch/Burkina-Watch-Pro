@@ -10,7 +10,7 @@ import { MOVIES, SCREENINGS } from "../../../server/cineData";
 export default function Cine() {
   const [, setLocation] = useLocation();
 
-  const cinemas = ["Ciné Burkina", "Ciné Nerwaya"];
+  const cinemas = ["Ciné Burkina", "Ciné Neerwaya", "CanalOlympia Yennenga"];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -32,13 +32,13 @@ export default function Cine() {
               Programme Ciné
             </h1>
             <p className="text-sm text-muted-foreground">
-              Horaires des séances au Burkina et Nerwaya
+              Horaires des séances à Ouagadougou
             </p>
           </div>
         </div>
 
         <Tabs defaultValue="Ciné Burkina" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             {cinemas.map((cinema) => (
               <TabsTrigger key={cinema} value={cinema} className="rounded-xl">
                 {cinema}
