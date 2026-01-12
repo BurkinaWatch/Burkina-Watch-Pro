@@ -332,6 +332,17 @@ export default function ChatBot() {
 
         <div className="border-t p-2 md:p-4 bg-background">
           <div className="flex gap-1.5 md:gap-2">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={isListening ? "🎤 Écoute en cours..." : historyLoading ? "Chargement..." : "Tapez ou parlez..."}
+              disabled={chatMutation.isPending || historyLoading}
+              className={`flex-1 text-xs md:text-sm h-9 md:h-10 transition-all duration-300 ${
+                isListening ? "border-red-500 ring-1 ring-red-500/50" : ""
+              }`}
+              data-testid="input-chat-message"
+            />
             <Button
               onClick={toggleListening}
               disabled={chatMutation.isPending || historyLoading}
@@ -351,17 +362,6 @@ export default function ChatBot() {
                 <Mic className="w-3.5 h-3.5 md:w-4 md:h-4" />
               )}
             </Button>
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={isListening ? "🎤 Écoute en cours..." : historyLoading ? "Chargement..." : "Tapez ou parlez..."}
-              disabled={chatMutation.isPending || historyLoading}
-              className={`flex-1 text-xs md:text-sm h-9 md:h-10 transition-all duration-300 ${
-                isListening ? "border-red-500 ring-1 ring-red-500/50" : ""
-              }`}
-              data-testid="input-chat-message"
-            />
             <Button
               onClick={handleSend}
               disabled={!input.trim() || chatMutation.isPending || historyLoading}
