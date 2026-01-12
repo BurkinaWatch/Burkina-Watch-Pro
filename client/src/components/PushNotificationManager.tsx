@@ -136,10 +136,16 @@ export function PushNotificationManager({ compact = false }: PushNotificationMan
         
         setIsSubscribed(true);
         toast({
-          title: 'Notifications activees',
+          title: 'Notifications activées',
           description: locationEnabled && lat
             ? `Vous recevrez des alertes dans un rayon de ${radiusKm} km.`
             : 'Vous recevrez des alertes pour les incidents importants.',
+        });
+      } else {
+        toast({
+          title: 'Configuration requise',
+          description: 'Les notifications push ne sont pas encore configurées sur le serveur. Contactez l\'administrateur.',
+          variant: 'destructive',
         });
       }
     } catch (error) {
