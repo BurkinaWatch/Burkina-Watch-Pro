@@ -941,7 +941,7 @@ export default function Profil() {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="signalements">Mes Publications</TabsTrigger>
             <TabsTrigger value="suivi">Suivi GPS</TabsTrigger>
-            <TabsTrigger value="urgence">Urgence</TabsTrigger>
+            <TabsTrigger value="urgence">Contacts d'Urgence</TabsTrigger>
           </TabsList>
 
           <TabsContent value="signalements" className="mt-0 border-b border-l border-r rounded-b-lg p-4">
