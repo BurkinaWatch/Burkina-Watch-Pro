@@ -40,6 +40,7 @@ export function PushNotificationManager({ compact = false }: PushNotificationMan
   const [isLoading, setIsLoading] = useState(false);
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [radiusKm, setRadiusKm] = useState(5);
+  const [prefRadiusKm, setPrefRadiusKm] = useState(50);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const { data: preferences } = useQuery<NotificationPreferences>({
@@ -63,6 +64,13 @@ export function PushNotificationManager({ compact = false }: PushNotificationMan
   const handlePreferenceChange = (key: keyof NotificationPreferences, value: boolean | number) => {
     updatePreferencesMutation.mutate({ [key]: value });
   };
+
+  // Sync prefRadiusKm with preferences when loaded
+  useEffect(() => {
+    if (preferences?.radiusKm) {
+      setPrefRadiusKm(preferences.radiusKm);
+    }
+  }, [preferences?.radiusKm]);
 
   useEffect(() => {
     const init = async () => {
@@ -269,9 +277,9 @@ export function PushNotificationManager({ compact = false }: PushNotificationMan
                 <Slider
                   value={[radiusKm]}
                   onValueChange={(v) => setRadiusKm(v[0])}
-                  min={1}
-                  max={50}
-                  step={1}
+                  min={5}
+                  max={200}
+                  step={5}
                   className="w-full"
                   data-testid="slider-radius"
                 />
@@ -375,19 +383,20 @@ export function PushNotificationManager({ compact = false }: PushNotificationMan
               <Label className="flex items-center justify-between">
                 <span>Rayon de notification</span>
                 <span className="text-sm font-normal text-muted-foreground">
-                  {preferences.radiusKm || 50} km
+                  {prefRadiusKm} km
                 </span>
               </Label>
               <Slider
-                value={[preferences.radiusKm || 50]}
+                value={[prefRadiusKm]}
                 min={5}
                 max={200}
                 step={5}
+                onValueChange={(value) => setPrefRadiusKm(value[0])}
                 onValueCommit={(value) => handlePreferenceChange('radiusKm', value[0])}
                 data-testid="slider-radius-pref"
               />
               <p className="text-xs text-muted-foreground">
-                Recevez les alertes dans un rayon de {preferences.radiusKm || 50} km.
+                Recevez les alertes dans un rayon de {prefRadiusKm} km.
               </p>
             </div>
           </div>
