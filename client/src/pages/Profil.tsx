@@ -1382,28 +1382,21 @@ export default function Profil() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label className="text-sm font-medium">Email</Label>
-              <p className="text-sm text-muted-foreground mt-1">{user.email || "Pas d'email"}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                L'email ne peut pas être modifié
-              </p>
-            </div>
-
-            <Separator />
-
-            <div>
-              <Label className="text-sm font-medium">Rôle</Label>
-              <p className="text-sm text-muted-foreground mt-1 capitalize">{user.role || "Citoyen"}</p>
-            </div>
-
-            <Separator />
-
-            <div>
               <Label className="text-sm font-medium flex items-center gap-2 mb-3">
                 <Bell className="w-4 h-4" />
                 Notifications Push
               </Label>
               <PushNotificationManager />
+            </div>
+
+            <Separator />
+
+            <div>
+              <Label className="text-sm font-medium">Email</Label>
+              <p className="text-sm text-muted-foreground mt-1">{user.email || "Pas d'email"}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                L'email ne peut pas être modifié
+              </p>
             </div>
 
             <Separator />
