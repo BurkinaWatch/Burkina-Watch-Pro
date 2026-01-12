@@ -738,3 +738,23 @@ export const DataSources = {
 } as const;
 
 export type DataSource = typeof DataSources[keyof typeof DataSources];
+
+// Push Notifications - Preferences (nouvelle table pour préférences utilisateur)
+export const notificationPreferences = pgTable("notification_preferences", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  securityAlerts: boolean("security_alerts").default(true).notNull(),
+  weatherAlerts: boolean("weather_alerts").default(true).notNull(),
+  pharmacyUpdates: boolean("pharmacy_updates").default(false).notNull(),
+  generalNews: boolean("general_news").default(false).notNull(),
+  radiusKm: integer("radius_km").default(50),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertNotificationPreferencesSchema = createInsertSchema(notificationPreferences).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
+export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
