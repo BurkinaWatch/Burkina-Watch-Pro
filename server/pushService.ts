@@ -1,6 +1,6 @@
 import webpush from 'web-push';
 import { db } from './db';
-import { pushSubscriptions, signalements } from '@shared/schema';
+import { pushSubscriptions, signalements, notificationPreferences } from '@shared/schema';
 import { eq, and, sql, isNotNull } from 'drizzle-orm';
 
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
@@ -245,4 +245,68 @@ export async function sendPushToAll(payload: PushPayload): Promise<number> {
   }
 
   return sent;
+}
+
+export function getVapidPublicKey(): string {
+  return VAPID_PUBLIC_KEY;
+}
+
+export function isConfigured(): boolean {
+  return Boolean(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY);
+}
+
+export async function getPreferences(userId: string) {
+  const [prefs] = await db
+    .select()
+    .from(notificationPreferences)
+    .where(eq(notificationPreferences.userId, userId))
+    .limit(1);
+
+  if (!prefs) {
+    const [newPrefs] = await db
+      .insert(notificationPreferences)
+      .values({
+        userId,
+        securityAlerts: true,
+        weatherAlerts: true,
+        pharmacyUpdates: false,
+        generalNews: false,
+        radiusKm: 50,
+      })
+      .returning();
+    return newPrefs;
+  }
+
+  return prefs;
+}
+
+export async function updatePreferences(
+  userId: string,
+  preferences: {
+    securityAlerts?: boolean;
+    weatherAlerts?: boolean;
+    pharmacyUpdates?: boolean;
+    generalNews?: boolean;
+    radiusKm?: number;
+  }
+) {
+  const existing = await getPreferences(userId);
+
+  const [updated] = await db
+    .update(notificationPreferences)
+    .set({
+      ...preferences,
+      updatedAt: new Date(),
+    })
+    .where(eq(notificationPreferences.userId, existing.userId))
+    .returning();
+
+  return updated;
+}
+
+export async function getUserSubscriptions(userId: string) {
+  return db
+    .select()
+    .from(pushSubscriptions)
+    .where(eq(pushSubscriptions.userId, userId));
 }
