@@ -81,7 +81,7 @@ export function OfflineIndicator() {
           ) : showSuccess ? (
             <>
               <CheckCircle className="w-4 h-4 text-green-500" />
-              <span className="text-sm text-green-600 dark:text-green-400 hidden sm:inline">Synchronise</span>
+              <span className="text-sm text-green-600 dark:text-green-400 hidden sm:inline">Synchronisé</span>
             </>
           ) : null}
         </Button>
@@ -95,14 +95,14 @@ export function OfflineIndicator() {
               <WifiOff className="w-5 h-5 text-destructive" />
             )}
             <span className="font-medium">
-              {isOnline ? 'Connecte' : 'Mode hors ligne'}
+              {isOnline ? 'Connecté' : 'Mode hors ligne'}
             </span>
           </div>
 
           {!isOnline && (
             <p className="text-sm text-muted-foreground">
-              Vos signalements seront sauvegardes localement et envoyes automatiquement 
-              des que la connexion sera retablie.
+              Vos signalements seront sauvegardés localement et envoyés automatiquement 
+              dès que la connexion sera rétablie.
             </p>
           )}
 
@@ -140,7 +140,7 @@ export function OfflineIndicator() {
           {isOnline && syncStatus.pendingCount === 0 && (
             <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
               <CheckCircle className="w-4 h-4" />
-              <span className="text-sm">Tout est synchronise</span>
+              <span className="text-sm">Tout est synchronisé</span>
             </div>
           )}
         </div>
@@ -167,7 +167,7 @@ export function OfflineBanner() {
               Mode hors ligne actif
             </p>
             <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-              Vous pouvez continuer a creer des signalements. Ils seront envoyes automatiquement.
+              Vous pouvez continuer à créer des signalements. Ils seront envoyés automatiquement.
             </p>
           </div>
           <Button 
