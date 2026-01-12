@@ -122,30 +122,30 @@ export default function Contribuer() {
               </div>
             </div>
 
-            {/* Coris Money */}
+            {/* Wave Money */}
             <div className="p-4 rounded-lg border bg-card hover-elevate">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">CM</span>
+                    <div className="w-10 h-10 rounded-full bg-sky-500 flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">W</span>
                     </div>
                     <div>
-                      <h3 className="font-semibold">Coris Money</h3>
-                      <p className="text-sm text-muted-foreground">Service Coris Bank</p>
+                      <h3 className="font-semibold">Wave Money</h3>
+                      <p className="text-sm text-muted-foreground">Service Wave</p>
                     </div>
                   </div>
                   <p className="text-lg font-mono font-semibold text-foreground">
-                    +226 ZZ ZZ ZZ ZZ
+                    +226 65 51 13 23
                   </p>
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleCopy("+226 ZZ ZZ ZZ ZZ", "Coris Money")}
-                  data-testid="button-copy-coris"
+                  onClick={() => handleCopy("+226 65 51 13 23", "Wave Money")}
+                  data-testid="button-copy-wave"
                 >
-                  {copiedNumber === "+226 ZZ ZZ ZZ ZZ" ? (
+                  {copiedNumber === "+226 65 51 13 23" ? (
                     <Check className="w-4 h-4 text-green-600" />
                   ) : (
                     <Copy className="w-4 h-4" />
