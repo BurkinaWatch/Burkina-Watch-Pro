@@ -1283,9 +1283,6 @@ export default function Profil() {
               </CardContent>
             </Card>
 
-            <div className="mt-4">
-              <PushNotificationManager />
-            </div>
           </TabsContent>
 
           <TabsContent value="urgence" className="mt-0 border-b border-l border-r rounded-b-lg p-4">
@@ -1397,6 +1394,16 @@ export default function Profil() {
             <div>
               <Label className="text-sm font-medium">Rôle</Label>
               <p className="text-sm text-muted-foreground mt-1 capitalize">{user.role || "Citoyen"}</p>
+            </div>
+
+            <Separator />
+
+            <div>
+              <Label className="text-sm font-medium flex items-center gap-2 mb-3">
+                <Bell className="w-4 h-4" />
+                Notifications Push
+              </Label>
+              <PushNotificationManager />
             </div>
 
             <Separator />
