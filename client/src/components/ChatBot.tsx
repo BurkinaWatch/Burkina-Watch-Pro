@@ -133,7 +133,7 @@ export default function ChatBot() {
 
   if (!isOpen) {
     return (
-      <div className="fixed bottom-[280px] md:bottom-[340px] right-4 z-50 animate-float">
+      <div className="fixed bottom-[248px] md:bottom-[280px] right-4 z-50 animate-float">
         <div className="relative">
           {/* Anneau pulsant aux couleurs du Burkina */}
           <div className="absolute inset-0 rounded-full bg-gradient-to-r from-red-500 via-yellow-400 to-green-600 animate-pulse opacity-40 blur-sm"></div>
