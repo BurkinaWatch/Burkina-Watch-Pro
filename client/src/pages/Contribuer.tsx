@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import orangeMoneyLogo from "@assets/orange_money_1768252790323.jpg";
+import moovMoneyLogo from "@assets/moov_money_1768252790322.jpg";
+import waveMoneyLogo from "@assets/wave_money_1768252790323.png";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Mail } from "lucide-react";
@@ -63,9 +66,7 @@ export default function Contribuer() {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">O</span>
-                    </div>
+                    <img src={orangeMoneyLogo} alt="Orange Money" className="w-10 h-10 rounded-full object-cover" />
                     <div>
                       <h3 className="font-semibold">Orange Money</h3>
                       <p className="text-sm text-muted-foreground">Service Orange</p>
@@ -95,9 +96,7 @@ export default function Contribuer() {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">MM</span>
-                    </div>
+                    <img src={moovMoneyLogo} alt="Moov Money" className="w-10 h-10 rounded-full object-cover" />
                     <div>
                       <h3 className="font-semibold">Moov Money</h3>
                       <p className="text-sm text-muted-foreground">Service Moov Africa</p>
@@ -127,9 +126,7 @@ export default function Contribuer() {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-full bg-sky-500 flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">W</span>
-                    </div>
+                    <img src={waveMoneyLogo} alt="Wave Money" className="w-10 h-10 rounded-full object-cover" />
                     <div>
                       <h3 className="font-semibold">Wave Money</h3>
                       <p className="text-sm text-muted-foreground">Service Wave</p>
