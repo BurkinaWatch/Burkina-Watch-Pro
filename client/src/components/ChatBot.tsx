@@ -3,12 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sparkles, X, Send, Loader2, Shield } from "lucide-react";
+import { Sparkles, X, Send, Loader2, Shield, Mic, MicOff } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { nanoid } from "nanoid";
+
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
 
 interface Message {
   role: "user" | "assistant";
@@ -20,9 +27,80 @@ export default function ChatBot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [sessionId] = useState(() => nanoid());
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const recognitionRef = useRef<any>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      setSpeechSupported(true);
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'fr-FR';
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0].transcript)
+          .join('');
+        setInput(transcript);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+        if (event.error === 'not-allowed') {
+          toast({
+            title: "Microphone non autorisé",
+            description: "Veuillez autoriser l'accès au microphone dans votre navigateur.",
+            variant: "destructive",
+          });
+        }
+      };
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
+  }, [toast]);
+
+  const toggleListening = () => {
+    if (!speechSupported) {
+      toast({
+        title: "Non supporté",
+        description: "La reconnaissance vocale n'est pas disponible sur votre navigateur.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      try {
+        recognitionRef.current?.start();
+        setIsListening(true);
+        toast({
+          title: "🎤 Écoute en cours...",
+          description: "Parlez maintenant. Votre message sera transcrit automatiquement.",
+        });
+      } catch (error) {
+        console.error('Failed to start speech recognition:', error);
+        setIsListening(false);
+      }
+    }
+  };
 
   // Charger l'historique de la conversation
   const { data: history, isLoading: historyLoading, isError: historyError } = useQuery<Message[]>({
@@ -254,13 +332,34 @@ export default function ChatBot() {
 
         <div className="border-t p-2 md:p-4 bg-background">
           <div className="flex gap-1.5 md:gap-2">
+            <Button
+              onClick={toggleListening}
+              disabled={chatMutation.isPending || historyLoading}
+              size="icon"
+              variant={isListening ? "destructive" : "outline"}
+              className={`h-9 w-9 md:h-10 md:w-10 transition-all duration-300 ${
+                isListening 
+                  ? "animate-pulse bg-red-500 hover:bg-red-600 border-red-600" 
+                  : "hover:bg-primary/10 hover:border-primary"
+              }`}
+              data-testid="button-voice-input"
+              title={isListening ? "Arrêter l'écoute" : "Parler au lieu d'écrire"}
+            >
+              {isListening ? (
+                <MicOff className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              ) : (
+                <Mic className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              )}
+            </Button>
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder={historyLoading ? "Chargement..." : "Tapez votre message..."}
+              placeholder={isListening ? "🎤 Écoute en cours..." : historyLoading ? "Chargement..." : "Tapez ou parlez..."}
               disabled={chatMutation.isPending || historyLoading}
-              className="flex-1 text-xs md:text-sm h-9 md:h-10"
+              className={`flex-1 text-xs md:text-sm h-9 md:h-10 transition-all duration-300 ${
+                isListening ? "border-red-500 ring-1 ring-red-500/50" : ""
+              }`}
               data-testid="input-chat-message"
             />
             <Button
@@ -278,7 +377,7 @@ export default function ChatBot() {
             </Button>
           </div>
           <p className="text-[10px] md:text-xs text-muted-foreground text-center mt-1.5 md:mt-2">
-            ⚠️ En cas d'urgence, appelez le 17 (Police) ou 18 (Pompiers)
+            🎤 Cliquez sur le micro pour parler | ⚠️ Urgence: 17 (Police) ou 18 (Pompiers)
           </p>
         </div>
       </CardContent>
