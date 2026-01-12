@@ -339,13 +339,13 @@ function SecurityNotesDialog() {
               Notes importantes — Conseils de sécurité pour utiliser BurkinaWatch
             </div>
             <Button
-              variant="outline"
               size="sm"
               onClick={exportToPDF}
-              className="gap-2"
+              className="gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-semibold border-0"
+              data-testid="button-download-pdf"
             >
-              <Download className="w-4 h-4" />
-              Télécharger
+              <Download className="w-4 h-4 animate-bounce" />
+              Télécharger PDF
             </Button>
           </DialogTitle>
           <DialogDescription className="sr-only">
