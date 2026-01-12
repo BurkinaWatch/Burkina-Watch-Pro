@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Bell, BellOff, MapPin, Loader2 } from 'lucide-react';
+import { Bell, BellOff, MapPin, Loader2, Shield, Cloud, Building2, Newspaper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import {
   registerServiceWorker,
   subscribeToPush,
@@ -15,12 +17,23 @@ import {
   isPushSubscribed,
 } from '@/lib/pushNotifications';
 
+interface NotificationPreferences {
+  id: string;
+  userId: string;
+  securityAlerts: boolean;
+  weatherAlerts: boolean;
+  pharmacyUpdates: boolean;
+  generalNews: boolean;
+  radiusKm: number;
+}
+
 interface PushNotificationManagerProps {
   compact?: boolean;
 }
 
 export function PushNotificationManager({ compact = false }: PushNotificationManagerProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>('default');
@@ -28,6 +41,28 @@ export function PushNotificationManager({ compact = false }: PushNotificationMan
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [radiusKm, setRadiusKm] = useState(5);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  const { data: preferences } = useQuery<NotificationPreferences>({
+    queryKey: ['/api/push/preferences'],
+    enabled: isSubscribed,
+  });
+
+  const updatePreferencesMutation = useMutation({
+    mutationFn: async (prefs: Partial<NotificationPreferences>) => {
+      return apiRequest('PUT', '/api/push/preferences', prefs);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/push/preferences'] });
+      toast({
+        title: 'Préférences mises à jour',
+        description: 'Vos préférences de notification ont été enregistrées.',
+      });
+    },
+  });
+
+  const handlePreferenceChange = (key: keyof NotificationPreferences, value: boolean | number) => {
+    updatePreferencesMutation.mutate({ [key]: value });
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -258,7 +293,97 @@ export function PushNotificationManager({ compact = false }: PushNotificationMan
 
         {isSubscribed && userLocation && (
           <div className="text-sm text-muted-foreground">
-            Position enregistree. Rayon: {radiusKm} km
+            Position enregistrée. Rayon: {radiusKm} km
+          </div>
+        )}
+
+        {isSubscribed && preferences && (
+          <div className="space-y-4 pt-4 border-t">
+            <h4 className="font-medium">Types d'alertes à recevoir</h4>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="security-alerts" className="flex items-center gap-2 cursor-pointer">
+                <Shield className="w-4 h-4 text-red-500" />
+                <div>
+                  <p className="font-medium">Alertes de sécurité</p>
+                  <p className="text-xs text-muted-foreground">Signalements et incidents</p>
+                </div>
+              </Label>
+              <Switch
+                id="security-alerts"
+                checked={preferences.securityAlerts}
+                onCheckedChange={(checked) => handlePreferenceChange('securityAlerts', checked)}
+                data-testid="switch-security-alerts"
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="weather-alerts" className="flex items-center gap-2 cursor-pointer">
+                <Cloud className="w-4 h-4 text-blue-500" />
+                <div>
+                  <p className="font-medium">Alertes météo</p>
+                  <p className="text-xs text-muted-foreground">Conditions météorologiques</p>
+                </div>
+              </Label>
+              <Switch
+                id="weather-alerts"
+                checked={preferences.weatherAlerts}
+                onCheckedChange={(checked) => handlePreferenceChange('weatherAlerts', checked)}
+                data-testid="switch-weather-alerts"
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="pharmacy-updates" className="flex items-center gap-2 cursor-pointer">
+                <Building2 className="w-4 h-4 text-green-500" />
+                <div>
+                  <p className="font-medium">Pharmacies de garde</p>
+                  <p className="text-xs text-muted-foreground">Mises à jour des gardes</p>
+                </div>
+              </Label>
+              <Switch
+                id="pharmacy-updates"
+                checked={preferences.pharmacyUpdates}
+                onCheckedChange={(checked) => handlePreferenceChange('pharmacyUpdates', checked)}
+                data-testid="switch-pharmacy-updates"
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="general-news" className="flex items-center gap-2 cursor-pointer">
+                <Newspaper className="w-4 h-4 text-yellow-500" />
+                <div>
+                  <p className="font-medium">Actualités officielles</p>
+                  <p className="text-xs text-muted-foreground">Communications gouvernementales</p>
+                </div>
+              </Label>
+              <Switch
+                id="general-news"
+                checked={preferences.generalNews}
+                onCheckedChange={(checked) => handlePreferenceChange('generalNews', checked)}
+                data-testid="switch-general-news"
+              />
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <Label className="flex items-center justify-between">
+                <span>Rayon de notification</span>
+                <span className="text-sm font-normal text-muted-foreground">
+                  {preferences.radiusKm || 50} km
+                </span>
+              </Label>
+              <Slider
+                value={[preferences.radiusKm || 50]}
+                min={5}
+                max={200}
+                step={5}
+                onValueCommit={(value) => handlePreferenceChange('radiusKm', value[0])}
+                data-testid="slider-radius-pref"
+              />
+              <p className="text-xs text-muted-foreground">
+                Recevez les alertes dans un rayon de {preferences.radiusKm || 50} km.
+              </p>
+            </div>
           </div>
         )}
       </CardContent>

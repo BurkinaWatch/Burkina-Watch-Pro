@@ -1314,6 +1314,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ vapidPublicKey });
   });
 
+  app.get("/api/push/preferences", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { getPreferences } = await import("./pushService");
+      const preferences = await getPreferences(userId);
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error getting notification preferences:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des préférences" });
+    }
+  });
+
+  app.put("/api/push/preferences", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { securityAlerts, weatherAlerts, pharmacyUpdates, generalNews, radiusKm } = req.body;
+      const { updatePreferences } = await import("./pushService");
+      const updated = await updatePreferences(userId, {
+        securityAlerts,
+        weatherAlerts,
+        pharmacyUpdates,
+        generalNews,
+        radiusKm,
+      });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      res.status(500).json({ error: "Erreur lors de la mise à jour des préférences" });
+    }
+  });
+
+  app.get("/api/push/subscriptions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { getUserSubscriptions } = await import("./pushService");
+      const subscriptions = await getUserSubscriptions(userId);
+      res.json(subscriptions);
+    } catch (error) {
+      console.error("Error getting subscriptions:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des abonnements" });
+    }
+  });
+
   // ----------------------------------------
   // ROUTES PROFIL PUBLIC
   // ----------------------------------------
