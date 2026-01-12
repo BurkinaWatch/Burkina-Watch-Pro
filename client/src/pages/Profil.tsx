@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { User, LogOut, Loader2, Save, Camera, Trash2, MapPin, Calendar, Navigation, PlayCircle, StopCircle, Clock, Activity, Copy, ExternalLink, Briefcase, Mail, Shield, Plus, Trophy, Smartphone, Download } from "lucide-react";
+import { User, LogOut, Loader2, Save, Camera, Trash2, MapPin, Calendar, Navigation, PlayCircle, StopCircle, Clock, Activity, Copy, ExternalLink, Briefcase, Mail, Shield, Plus, Trophy, Smartphone, Download, Bell } from "lucide-react";
+import { PushNotificationManager } from "@/components/PushNotificationManager";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -1281,6 +1282,10 @@ export default function Profil() {
                 </div>
               </CardContent>
             </Card>
+
+            <div className="mt-4">
+              <PushNotificationManager />
+            </div>
           </TabsContent>
 
           <TabsContent value="urgence" className="mt-0 border-b border-l border-r rounded-b-lg p-4">
