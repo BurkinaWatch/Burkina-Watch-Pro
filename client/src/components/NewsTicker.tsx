@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Newspaper, ExternalLink } from "lucide-react";
+import { format, isToday, isYesterday, parseISO } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface NewsItem {
   id: string;
@@ -10,11 +12,26 @@ interface NewsItem {
   date: string;
 }
 
+function formatNewsDate(dateStr: string): string {
+  try {
+    const date = parseISO(dateStr);
+    if (isToday(date)) {
+      return "Aujourd'hui";
+    } else if (isYesterday(date)) {
+      return "Hier";
+    } else {
+      return format(date, "d MMM", { locale: fr });
+    }
+  } catch {
+    return "";
+  }
+}
+
 export function NewsTicker() {
   const { data: news = [], isLoading } = useQuery<NewsItem[]>({
     queryKey: ["/api/news/official"],
-    staleTime: 1000 * 60 * 15,
-    refetchInterval: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5,
+    refetchInterval: 1000 * 60 * 10,
   });
 
   if (isLoading || news.length === 0) {
@@ -43,29 +60,29 @@ export function NewsTicker() {
     </a>
   ));
 
+  const renderNewsItem = (item: NewsItem, keyPrefix: string, index: number) => {
+    const dateLabel = formatNewsDate(item.date);
+    return (
+      <a
+        key={`${item.id}-${keyPrefix}-${index}`}
+        href={item.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 mx-8 hover:text-yellow-200 transition-colors"
+      >
+        {dateLabel && (
+          <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">{dateLabel}</span>
+        )}
+        <span className="font-medium">{item.source}:</span>
+        <span>{item.title}</span>
+        <ExternalLink className="w-3 h-3 opacity-70" />
+      </a>
+    );
+  };
+
   const duplicatedContent = news.flatMap((item, index) => [
-    <a
-      key={`${item.id}-first-${index}`}
-      href={item.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center gap-2 mx-8 hover:text-yellow-200 transition-colors"
-    >
-      <span className="font-medium">{item.source}:</span>
-      <span>{item.title}</span>
-      <ExternalLink className="w-3 h-3 opacity-70" />
-    </a>,
-    <a
-      key={`${item.id}-second-${index}`}
-      href={item.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center gap-2 mx-8 hover:text-yellow-200 transition-colors"
-    >
-      <span className="font-medium">{item.source}:</span>
-      <span>{item.title}</span>
-      <ExternalLink className="w-3 h-3 opacity-70" />
-    </a>
+    renderNewsItem(item, "first", index),
+    renderNewsItem(item, "second", index),
   ]);
 
   return (

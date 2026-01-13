@@ -28,15 +28,20 @@ const NEWS_SOURCES = [
     fallbackUrl: null,
   },
   {
-    name: "AIB",
-    url: "https://www.aib.media/feed/",
+    name: "Lefaso.net",
+    url: "https://lefaso.net/spip.php?page=backend",
+    fallbackUrl: null,
+  },
+  {
+    name: "Burkina24",
+    url: "https://burkina24.com/feed/",
     fallbackUrl: null,
   },
 ];
 
 let cachedNews: NewsItem[] = [];
 let lastFetch: Date | null = null;
-const CACHE_DURATION = 15 * 60 * 1000;
+const CACHE_DURATION = 5 * 60 * 1000;
 
 const FALLBACK_NEWS: NewsItem[] = [
   {
