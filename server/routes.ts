@@ -2107,45 +2107,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/restaurants", async (req, res) => {
     try {
       const { region, type, search } = req.query;
-      const result = await overpassService.getPlaces({ placeType: "restaurant" });
-      const dbPlaces = result.places || [];
-      const lastUpdated = result.lastUpdated;
+      const { RESTAURANTS_DATA } = await import("./restaurantsData");
       
-      console.log(`[API] Restaurants found in DB for type ${type || 'all'}: ${dbPlaces.length}`);
-      
-      // Fallback si la DB est vide : Lancer la sync en arrière-plan sans bloquer
-      let finalPlaces = dbPlaces;
-      if (finalPlaces.length === 0 && !search && (!region || region === "all") && (!type || type === "all")) {
-        console.log("[API] Aucun restaurant trouvé dans la DB, lancement de la synchronisation en arrière-plan...");
-        // On ne met pas 'await' ici pour ne pas faire attendre l'utilisateur 30s+
-        overpassService.syncPlaceType("restaurant").then(res => {
-          if (res.added > 0) console.log(`[Background Sync] Added ${res.added} restaurants`);
-        }).catch(err => console.error("Background sync error (restaurant):", err));
-        
-        overpassService.syncPlaceType("fast_food").then(res => {
-          if (res.added > 0) console.log(`[Background Sync] Added ${res.added} fast_food`);
-        }).catch(err => console.error("Background sync error (fast_food):", err));
-      }
+      const osmRestaurants = await overpassService.getPlaces({ placeType: "restaurant" });
+      const osmFastFood = await overpassService.getPlaces({ placeType: "fast_food" });
+      const osmCafe = await overpassService.getPlaces({ placeType: "cafe" });
+      const osmBar = await overpassService.getPlaces({ placeType: "bar" });
+      const osmPub = await overpassService.getPlaces({ placeType: "pub" });
+      const osmIceCream = await overpassService.getPlaces({ placeType: "ice_cream" });
+      const osmFoodCourt = await overpassService.getPlaces({ placeType: "food_court" });
 
-      // Combiner restaurant et fast_food pour l'affichage
-      if ((!type || type === "all")) {
+      const allOsm = [
+        ...osmRestaurants.places,
+        ...osmFastFood.places,
+        ...osmCafe.places,
+        ...osmBar.places,
+        ...osmPub.places,
+        ...osmIceCream.places,
+        ...osmFoodCourt.places
+      ];
+      
+      console.log(`[API] Restaurants found in DB: ${allOsm.length}`);
+      
+      // Fallback si la DB est vide
+      if (allOsm.length === 0 && !search && (!region || region === "all") && (!type || type === "all")) {
+        console.log("[API] Aucun restaurant trouvé dans la DB, lancement de la synchronisation...");
+        // Sync minimal sets to get started
         try {
-          // IMPORTANT: Ne pas faire de getPlaces qui pourrait déclencher une sync bloquante ici
-          // On utilise une requête directe très rapide
-          const fastFoodResult = await db.select().from(places).where(eq(places.placeType, "fast_food")).limit(500);
-          const existingIds = new Set(finalPlaces.map((p: any) => p.id));
-          const uniqueFastFood = fastFoodResult.filter((p: any) => !existingIds.has(p.id));
-          finalPlaces = [...finalPlaces, ...uniqueFastFood];
-        } catch (e) {
-          console.error("Error fetching fast_food from DB:", e);
+          // Utilisation de Promise.all pour accélérer la synchronisation initiale
+          await Promise.all([
+            overpassService.syncPlaceType("restaurant"),
+            overpassService.syncPlaceType("fast_food"),
+            overpassService.syncPlaceType("cafe"),
+            overpassService.syncPlaceType("bar")
+          ]);
+          
+          // Re-fetch after sync to ensure we have data
+          const [retryRestaurants, retryFastFood, retryCafe, retryBar] = await Promise.all([
+            overpassService.getPlaces({ placeType: "restaurant" }),
+            overpassService.getPlaces({ placeType: "fast_food" }),
+            overpassService.getPlaces({ placeType: "cafe" }),
+            overpassService.getPlaces({ placeType: "bar" })
+          ]);
+          
+          const retryAllOsm = [
+            ...(retryRestaurants.places || []),
+            ...(retryFastFood.places || []),
+            ...(retryCafe.places || []),
+            ...(retryBar.places || [])
+          ];
+          
+          if (retryAllOsm.length > 0) {
+            let transformedRestaurants = retryAllOsm.map((p, i) => transformOsmToRestaurant(p, i));
+            let combined = [...RESTAURANTS_DATA];
+            transformedRestaurants.forEach(osmRest => {
+              const isDuplicate = combined.some(localRest => 
+                localRest.nom.toLowerCase() === osmRest.nom.toLowerCase() ||
+                (Math.abs(localRest.latitude - osmRest.latitude) < 0.0001 && 
+                 Math.abs(localRest.longitude - osmRest.longitude) < 0.0001)
+              );
+              if (!isDuplicate) combined.push(osmRest as any);
+            });
+            
+            return res.json({
+              restaurants: combined,
+              lastUpdated: new Date().toISOString()
+            });
+          }
+        } catch (syncError) {
+          console.error("Error during initial restaurant sync:", syncError);
         }
       }
 
-      let restaurants = finalPlaces.map((p, i) => transformOsmToRestaurant(p, i));
+      let transformedRestaurants = allOsm.map((p, i) => transformOsmToRestaurant(p, i));
+      
+      // Merge with local data
+      let combined = [...RESTAURANTS_DATA];
+      transformedRestaurants.forEach(osmRest => {
+        const isDuplicate = combined.some(localRest => 
+          localRest.nom.toLowerCase() === osmRest.nom.toLowerCase() ||
+          (Math.abs(localRest.latitude - osmRest.latitude) < 0.0001 && 
+           Math.abs(localRest.longitude - osmRest.longitude) < 0.0001)
+        );
+        if (!isDuplicate) combined.push(osmRest as any);
+      });
 
       if (search) {
         const query = (search as string).toLowerCase();
-        restaurants = restaurants.filter(r =>
+        combined = combined.filter(r =>
           r.nom.toLowerCase().includes(query) ||
           r.ville?.toLowerCase().includes(query) ||
           r.quartier?.toLowerCase().includes(query) ||
@@ -2153,16 +2202,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
       if (region && region !== "all") {
-        restaurants = restaurants.filter(r => r.region === region);
+        combined = combined.filter(r => r.region === region);
       }
       if (type && type !== "all") {
-        restaurants = restaurants.filter(r => r.type === type);
+        combined = combined.filter(r => r.type === type);
       }
 
       res.set('Cache-Control', 'public, max-age=3600');
       res.json({
-        restaurants,
-        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
+        restaurants: combined,
+        lastUpdated: new Date().toISOString()
       });
     } catch (error) {
       console.error("Error fetching restaurants:", error);
