@@ -2,12 +2,6 @@ import { db } from "./db";
 import { places, placeVerifications, type Place, type InsertPlace, PlaceTypes, VerificationStatuses, DataSources } from "@shared/schema";
 import { eq, and, sql, ilike, or } from "drizzle-orm";
 import { storage } from "./storage";
-import { RESTAURANTS_DATA } from "./restaurantsData";
-import { UNIVERSITES_DATA } from "./universitesData";
-import { PHARMACIES_DATA } from "./pharmaciesData";
-import { BANQUES_DATA } from "./banquesData";
-import { MARCHES_DATA } from "./marchesData";
-import { BOUTIQUES_DATA } from "./boutiquesData";
 
 // Multiple Overpass API endpoints for redundancy
 const OVERPASS_ENDPOINTS = [
@@ -240,87 +234,28 @@ const REGIONS_MAPPING: Record<string, { cities: string[]; bounds: { south: numbe
   },
 };
 
-// Extended city coordinates for more accurate geo-matching (45 provinces + major towns)
 const CITY_COORDINATES: Record<string, { lat: number; lon: number; radius: number }> = {
-  // Région Centre
   "Ouagadougou": { lat: 12.37, lon: -1.52, radius: 0.15 },
   "Ziniaré": { lat: 12.58, lon: -1.30, radius: 0.05 },
   "Saaba": { lat: 12.36, lon: -1.40, radius: 0.03 },
-  
-  // Région Hauts-Bassins
   "Bobo-Dioulasso": { lat: 11.17, lon: -4.30, radius: 0.12 },
   "Houndé": { lat: 11.50, lon: -3.52, radius: 0.05 },
-  "Léna": { lat: 11.10, lon: -4.00, radius: 0.03 },
-  
-  // Région Cascades
   "Banfora": { lat: 10.63, lon: -4.77, radius: 0.06 },
-  "Sindou": { lat: 10.67, lon: -5.17, radius: 0.03 },
-  "Niangoloko": { lat: 10.27, lon: -4.92, radius: 0.03 },
-  
-  // Région Centre-Nord
   "Kaya": { lat: 13.08, lon: -1.08, radius: 0.05 },
-  "Kongoussi": { lat: 13.33, lon: -1.53, radius: 0.03 },
-  "Boulsa": { lat: 12.67, lon: -0.57, radius: 0.03 },
-  
-  // Région Centre-Ouest
   "Koudougou": { lat: 12.25, lon: -2.37, radius: 0.06 },
-  "Réo": { lat: 12.32, lon: -2.47, radius: 0.03 },
-  "Léo": { lat: 11.10, lon: -2.10, radius: 0.03 },
-  
-  // Région Centre-Est
   "Tenkodogo": { lat: 11.78, lon: -0.37, radius: 0.04 },
-  "Koupéla": { lat: 12.18, lon: -0.35, radius: 0.03 },
-  "Garango": { lat: 11.80, lon: -0.55, radius: 0.03 },
-  "Pouytenga": { lat: 12.25, lon: -0.52, radius: 0.03 },
-  
-  // Région Centre-Sud
-  "Manga": { lat: 11.67, lon: -1.07, radius: 0.03 },
-  "Pô": { lat: 11.17, lon: -1.15, radius: 0.03 },
-  "Kombissiri": { lat: 12.07, lon: -1.33, radius: 0.03 },
-  
-  // Région Est
   "Fada N'Gourma": { lat: 12.07, lon: 0.35, radius: 0.05 },
-  "Diapaga": { lat: 12.07, lon: 1.78, radius: 0.03 },
-  "Bogandé": { lat: 12.97, lon: -0.13, radius: 0.03 },
-  "Pama": { lat: 11.25, lon: 0.70, radius: 0.03 },
-  
-  // Région Nord
   "Ouahigouya": { lat: 13.58, lon: -2.43, radius: 0.06 },
-  "Yako": { lat: 12.95, lon: -2.27, radius: 0.03 },
-  "Gourcy": { lat: 13.20, lon: -2.35, radius: 0.03 },
-  "Titao": { lat: 13.77, lon: -2.07, radius: 0.03 },
-  
-  // Région Sahel
   "Dori": { lat: 14.03, lon: -0.03, radius: 0.04 },
-  "Djibo": { lat: 14.10, lon: -1.63, radius: 0.03 },
-  "Gorom-Gorom": { lat: 14.45, lon: -0.23, radius: 0.03 },
-  "Sebba": { lat: 13.43, lon: 0.53, radius: 0.03 },
-  
-  // Région Sud-Ouest
   "Gaoua": { lat: 10.33, lon: -3.18, radius: 0.04 },
-  "Diébougou": { lat: 10.97, lon: -3.25, radius: 0.03 },
-  "Dano": { lat: 11.15, lon: -3.07, radius: 0.03 },
-  "Batié": { lat: 9.88, lon: -2.92, radius: 0.03 },
-  
-  // Région Boucle du Mouhoun
   "Dédougou": { lat: 12.47, lon: -3.47, radius: 0.05 },
-  "Boromo": { lat: 11.75, lon: -2.93, radius: 0.03 },
-  "Nouna": { lat: 12.73, lon: -3.87, radius: 0.03 },
-  "Solenzo": { lat: 12.18, lon: -4.07, radius: 0.03 },
-  "Tougan": { lat: 13.07, lon: -3.07, radius: 0.03 },
-  
-  // Région Plateau-Central
-  "Zorgho": { lat: 12.25, lon: -0.62, radius: 0.03 },
-  "Boussé": { lat: 12.67, lon: -1.90, radius: 0.03 },
 };
 
 export class OverpassService {
   private static instance: OverpassService;
   private lastSync: Date | null = null;
-  private syncInProgress = false;
   private cache: Map<string, { data: OverpassResponse; timestamp: number }> = new Map();
-  private cacheTTL = 24 * 60 * 60 * 1000; // 24 hours
-  private syncInterval = 48 * 60 * 60 * 1000; // 48 hours
+  private cacheTTL = 24 * 60 * 60 * 1000;
 
   private constructor() {}
 
@@ -340,12 +275,11 @@ export class OverpassService {
     }
 
     for (let attempt = 0; attempt < retries; attempt++) {
-      // Rotate through endpoints on each retry
       const endpoint = OVERPASS_ENDPOINTS[(currentEndpointIndex + attempt) % OVERPASS_ENDPOINTS.length];
       
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
         
         const response = await fetch(endpoint, {
           method: "POST",
@@ -358,29 +292,19 @@ export class OverpassService {
 
         if (!response.ok) {
           if (response.status === 429) {
-            console.warn(`Overpass API rate limited on ${endpoint}, waiting...`);
             await this.sleep(10000);
             continue;
           }
-          if (response.status === 504 || response.status === 503) {
-            console.warn(`Overpass API ${response.status} on ${endpoint}, trying next...`);
-            currentEndpointIndex = (currentEndpointIndex + 1) % OVERPASS_ENDPOINTS.length;
-            await this.sleep(3000);
-            continue;
-          }
-          throw new Error(`Overpass API error: ${response.status}`);
+          currentEndpointIndex = (currentEndpointIndex + 1) % OVERPASS_ENDPOINTS.length;
+          await this.sleep(3000);
+          continue;
         }
 
         const data = await response.json() as OverpassResponse;
         this.cache.set(cacheKey, { data, timestamp: Date.now() });
         return data;
       } catch (error: any) {
-        if (error.name === 'AbortError') {
-          console.warn(`Overpass API timeout on ${endpoint}, trying next...`);
-          currentEndpointIndex = (currentEndpointIndex + 1) % OVERPASS_ENDPOINTS.length;
-          continue;
-        }
-        console.error(`Overpass fetch error on ${endpoint}:`, error);
+        currentEndpointIndex = (currentEndpointIndex + 1) % OVERPASS_ENDPOINTS.length;
         if (attempt < retries - 1) {
           await this.sleep(5000);
           continue;
@@ -388,8 +312,6 @@ export class OverpassService {
       }
     }
     
-    // Return empty result instead of throwing
-    console.warn("All Overpass endpoints failed, returning empty result");
     return { elements: [] };
   }
 
@@ -403,9 +325,7 @@ export class OverpassService {
 
     const { south, west, north, east } = BURKINA_BBOX;
     
-    // Santé: Extension massive pour capturer tous les types de centres au Burkina
     if (placeType === "hospital") {
-      const { south, west, north, east } = BURKINA_BBOX;
       return `
         [out:json][timeout:180][maxsize:1073741824];
         (
@@ -421,7 +341,6 @@ export class OverpassService {
       `;
     }
 
-    // Simplifier la requête restaurant pour capturer plus de données à travers tout le pays
     if (placeType === "restaurant" || placeType === "fast_food" || placeType === "cafe") {
       return `
         [out:json][timeout:180];
@@ -429,74 +348,6 @@ export class OverpassService {
           node["amenity"~"restaurant|fast_food|cafe|bar|pub|ice_cream|food_court"](${south},${west},${north},${east});
           way["amenity"~"restaurant|fast_food|cafe|bar|pub|ice_cream|food_court"](${south},${west},${north},${east});
           relation["amenity"~"restaurant|fast_food|cafe|bar|pub|ice_cream|food_court"](${south},${west},${north},${east});
-        );
-        out center;
-      `;
-    }
-
-    // Simplifier la requête marketplace pour éviter les timeouts et s'assurer de capturer les centres commerciaux et marchés
-    if (placeType === "marketplace" || placeType === "shop") {
-      const tags = placeType === "marketplace" 
-        ? `"amenity"="marketplace"|"leisure"="market"|"place"="market"|"shop"="mall"`
-        : `"shop"~"supermarket|convenience|grocery|butcher|bakery|clothes|shoes|electronics|mobile_phone|computer|hardware|furniture|cosmetics|beauty|hairdresser"`;
-      
-      return `
-        [out:json][timeout:180];
-        (
-          node[${tags}](${south},${west},${north},${east});
-          way[${tags}](${south},${west},${north},${east});
-          relation[${tags}](${south},${west},${north},${east});
-        );
-        out center;
-      `;
-    }
-
-    // Simplifier la requête banques et caisses pour capturer plus de données à travers tout le pays
-    if (placeType === "bank" || placeType === "atm" || placeType === "caisses_populaires") {
-      const tags = placeType === "caisses_populaires" 
-        ? `"amenity"~"bank|microfinance"]["name"~"Caisse Populaire|RCPB|Caisse"`
-        : `"amenity"~"bank|atm|bureau_de_change|microfinance"`;
-      
-      return `
-        [out:json][timeout:180][maxsize:536870912];
-        (
-          node[${tags}](${south},${west},${north},${east});
-          way[${tags}](${south},${west},${north},${east});
-          relation[${tags}](${south},${west},${north},${east});
-        );
-        out center;
-      `;
-    }
-
-    // Pharmacie: Optimisation pour capturer un maximum de pharmacies à travers tout le Burkina Faso
-    if (placeType === "pharmacy") {
-      const { south, west, north, east } = BURKINA_BBOX;
-      return `
-        [out:json][timeout:300][maxsize:2000000000];
-        (
-          node["amenity"="pharmacy"](${south},${west},${north},${east});
-          way["amenity"="pharmacy"](${south},${west},${north},${east});
-          relation["amenity"="pharmacy"](${south},${west},${north},${east});
-          node["healthcare"="pharmacy"](${south},${west},${north},${east});
-          way["healthcare"="pharmacy"](${south},${west},${north},${east});
-          node["dispensing"="yes"](${south},${west},${north},${east});
-          way["dispensing"="yes"](${south},${west},${north},${east});
-        );
-        out center;
-      `;
-    }
-
-    // Éducation: Extension massive pour capturer universités, instituts, centres de formation, etc.
-    if (placeType === "university" || placeType === "college") {
-      const { south, west, north, east } = BURKINA_BBOX;
-      return `
-        [out:json][timeout:300][maxsize:1073741824];
-        (
-          node["amenity"~"university|college|research_institute"](${south},${west},${north},${east});
-          way["amenity"~"university|college|research_institute"](${south},${west},${north},${east});
-          relation["amenity"~"university|college|research_institute"](${south},${west},${north},${east});
-          node["name"~"Université|Institut|Ecole Supérieure|Polytechnique|Centre de Formation|ENAM|ENS|IDS|ENEP|EHU|ISGE|ESTA|Aube Nouvelle|Saint-Dominique|Ouaga|Bobo"](${south},${west},${north},${east});
-          way["name"~"Université|Institut|Ecole Supérieure|Polytechnique|Centre de Formation|ENAM|ENS|IDS|ENEP|EHU|ISGE|ESTA|Aube Nouvelle|Saint-Dominique|Ouaga|Bobo"](${south},${west},${north},${east});
         );
         out center;
       `;
@@ -518,18 +369,10 @@ export class OverpassService {
     const lon = element.lon || element.center?.lon;
     
     if (!lat || !lon) return null;
-    if (lat < BURKINA_BBOX.south || lat > BURKINA_BBOX.north) return null;
-    if (lon < BURKINA_BBOX.west || lon > BURKINA_BBOX.east) return null;
 
     const tags = element.tags || {};
     let name = tags.name || tags["name:fr"] || tags.operator || tags.brand || tags.owner || tags.ref;
     
-    // Détection automatique du type basé sur le nom
-    let finalPlaceType = placeType;
-    if (name?.toLowerCase().includes("caisse populaire") || name?.toLowerCase().includes("rcpb")) {
-      finalPlaceType = "caisses_populaires";
-    }
-
     if (!name) {
       if (placeType === "marketplace") {
         const village = tags["addr:village"] || tags["addr:city"];
@@ -548,469 +391,100 @@ export class OverpassService {
     const ville = tags["addr:city"] || this.guessCity(lat, lon) || "Ville non spécifiée";
     const region = tags["addr:region"] || tags["is_in:region"] || this.guessRegion(ville) || "Région non spécifiée";
 
-    // Enrichissement des tags pour les infrastructures de santé et autres
     const enrichedTags = {
       ...tags,
-      is_on_duty: tags["emergency"] === "yes" || tags["on_duty"] === "yes" || tags["opening_hours"] === "24/7" || tags["healthcare:speciality:emergency"] === "yes",
-      has_emergency_service: tags["emergency"] === "yes" || tags["healthcare:speciality:emergency"] === "yes" || tags["amenity"] === "hospital",
-      dispensing: tags["dispensing"] === "yes" || tags["healthcare:dispensing"] === "yes",
-      healthcare_type: tags["healthcare"] || tags["amenity"],
-      beds: tags["capacity:persons"] || tags["beds"],
-      speciality: tags["healthcare:speciality"] || tags["medical_specialty"],
-      wheelchair: tags["wheelchair"],
-      operator: tags["operator"] || tags["operator:type"],
-      brand: tags["brand"],
       cuisine: tags["cuisine"] || tags["diet:type"],
       menu: tags["menu"] || tags["menu:url"] || tags["dishes"],
       contact: tags["contact:phone"] || tags["phone"] || tags["contact:mobile"],
       opening_hours: tags["opening_hours"],
       website: tags["contact:website"] || tags["website"],
     };
-      importanceSystemique: tags.importance === "high" || tags.rank === "1" || name?.toLowerCase().includes("boa") || name?.toLowerCase().includes("ecobank") || name?.toLowerCase().includes("coris") || name?.toLowerCase().includes("uba"),
-      hasGAB: tags.atm === "yes" || finalPlaceType === "atm" || tags.amenity === "atm",
-    };
 
     return {
-      osmId: String(element.id),
+      osmId: element.id.toString(),
       osmType: element.type,
-      placeType: finalPlaceType,
+      placeType,
       name,
-      latitude: String(lat),
-      longitude: String(lon),
-      address: address || (tags["addr:suburb"] ? `Quartier ${tags["addr:suburb"]}` : "Burkina Faso"),
-      quartier: tags["addr:suburb"] || tags["addr:neighbourhood"] || "Quartier non spécifié",
+      latitude: lat.toString(),
+      longitude: lon.toString(),
+      address,
       ville,
       region,
-      telephone: tags.phone || tags["contact:phone"] || tags["phone:mobile"] || null,
-      email: tags.email || tags["contact:email"] || null,
-      website: tags.website || tags["contact:website"] || null,
-      horaires: tags.opening_hours || null,
-      tags: enrichedTags as Record<string, unknown>,
-      source: "OSM", 
-      confidenceScore: "0.8",
-      lastSyncedAt: new Date(),
+      telephone: enrichedTags.contact || null,
+      website: enrichedTags.website || null,
+      horaires: enrichedTags.opening_hours || null,
+      tags: enrichedTags,
+      source: "OSM",
+      verificationStatus: VerificationStatuses.PENDING,
+      confidenceScore: "0.5",
     };
   }
 
   private guessCity(lat: number, lon: number): string | null {
-    if (lat >= 12.3 && lat <= 12.4 && lon >= -1.6 && lon <= -1.4) return "Ouagadougou";
-    if (lat >= 11.1 && lat <= 11.2 && lon >= -4.3 && lon <= -4.2) return "Bobo-Dioulasso";
-    if (lat >= 10.6 && lat <= 10.7 && lon >= -4.8 && lon <= -4.7) return "Banfora";
-    if (lat >= 13.0 && lat <= 13.1 && lon >= -2.4 && lon <= -2.3) return "Ouahigouya";
-    if (lat >= 13.2 && lat <= 13.3 && lon >= -1.6 && lon <= -1.5) return "Kaya";
-    return null;
-  }
-
-  private guessRegion(ville: string | null): string | null {
-    if (!ville) return null;
-    for (const [region, data] of Object.entries(REGIONS_MAPPING)) {
-      if (data.cities.some(city => ville.toLowerCase().includes(city.toLowerCase()))) {
-        return region;
-      }
+    for (const [cityName, coords] of Object.entries(CITY_COORDINATES)) {
+      const distance = Math.sqrt(Math.pow(lat - coords.lat, 2) + Math.pow(lon - coords.lon, 2));
+      if (distance <= coords.radius) return cityName;
     }
     return null;
   }
 
-  async syncPlaceType(placeType: string, force = false): Promise<{ added: number; updated: number; errors: number }> {
-    const query = this.buildOverpassQuery(placeType);
-    if (!query) return { added: 0, updated: 0, errors: 0 };
+  private guessRegion(ville: string): string | null {
+    for (const [regionName, regionData] of Object.entries(REGIONS_MAPPING)) {
+      if (regionData.cities.includes(ville)) return regionName;
+    }
+    return null;
+  }
 
+  async syncPlaceType(placeType: string): Promise<{ added: number; updated: number; errors: number }> {
+    const query = this.buildOverpassQuery(placeType);
+    const response = await this.fetchFromOverpass(query);
     let added = 0, updated = 0, errors = 0;
 
-    try {
-      // Nettoyer les données existantes pour ce type si force est activé
-      if (force) {
-        await db.delete(places).where(eq(places.placeType, placeType));
-      }
+    for (const element of response.elements) {
+      try {
+        const placeData = this.parseOSMElement(element, placeType);
+        if (!placeData) continue;
 
-      const response = await this.fetchFromOverpass(query);
-      
-      if (!response.elements || response.elements.length === 0) {
-        console.log(`[Overpass] No OSM results for ${placeType}, using fallback data`);
-        const fallbacks = this.getFallbackPlaces(placeType);
-        if (fallbacks.length > 0) {
-          for (const fallback of fallbacks) {
-            try {
-              const { id, ...data } = fallback;
-              await db.insert(places).values(data).onConflictDoUpdate({
-                target: [places.osmId, places.osmType],
-                set: {
-                  name: data.name,
-                  latitude: data.latitude,
-                  longitude: data.longitude,
-                  address: data.address,
-                  telephone: data.telephone,
-                  horaires: data.horaires,
-                  tags: data.tags,
-                  lastSyncedAt: new Date(),
-                  updatedAt: new Date(),
-                }
-              });
-              added++;
-            } catch (err) {
-              errors++;
-            }
-          }
-          return { added, updated, errors };
-        }
-      }
+        const existing = await db.select().from(places).where(and(eq(places.osmId, placeData.osmId), eq(places.osmType, placeData.osmType))).limit(1);
 
-      // Batch processing for better performance
-      for (const element of response.elements) {
-        try {
-          const placeData = this.parseOSMElement(element, placeType);
-          if (!placeData) continue;
-
-          // Enregistrer systématiquement en DB
-          await db.insert(places).values(placeData).onConflictDoUpdate({
-            target: [places.osmId, places.osmType],
-            set: {
-              name: placeData.name,
-              latitude: placeData.latitude,
-              longitude: placeData.longitude,
-              address: placeData.address,
-              telephone: placeData.telephone,
-              horaires: placeData.horaires,
-              tags: placeData.tags,
-              lastSyncedAt: new Date(),
-              updatedAt: new Date(),
-            }
-          });
+        if (existing.length > 0) {
+          await db.update(places).set({ ...placeData, lastSyncedAt: new Date(), updatedAt: new Date() }).where(eq(places.id, existing[0].id));
+          updated++;
+        } else {
+          await db.insert(places).values(placeData);
           added++;
-        } catch (err) {
-          errors++;
-          // Silent fail for individual elements
         }
+      } catch (err) {
+        errors++;
       }
-
-      await this.sleep(1000);
-    } catch (error) {
-      console.error(`Error syncing ${placeType}:`, error);
-      errors++;
     }
-
     return { added, updated, errors };
   }
 
-  async syncAllPlaces(force = false): Promise<void> {
-    if (this.syncInProgress && !force) {
-      console.log("Sync already in progress, skipping...");
-      return;
-    }
-
-    this.syncInProgress = true;
-    console.log("🌍 Starting OpenStreetMap sync for Burkina Faso...");
-
-    try {
-      for (const placeType of Object.keys(PLACE_TYPE_QUERIES)) {
-        console.log(`  Syncing ${placeType}...`);
-        const result = await this.syncPlaceType(placeType, force);
-        console.log(`  ✅ ${placeType}: ${result.added} added, ${result.updated} updated, ${result.errors} errors`);
-        await this.sleep(2000);
-      }
-
-      this.lastSync = new Date();
-      console.log("🌍 OpenStreetMap sync completed!");
-    } catch (error) {
-      console.error("Sync error:", error);
-    } finally {
-      this.syncInProgress = false;
+  async syncAllPlaces(): Promise<void> {
+    const types = Object.keys(PLACE_TYPE_QUERIES);
+    for (const type of types) {
+      await this.syncPlaceType(type);
+      await this.sleep(2000);
     }
   }
 
-  private getFallbackPlaces(placeType: string): any[] {
-    if (placeType === "shop") return BOUTIQUES_DATA.map(b => ({
-      ...b,
-      osmId: b.id,
-      osmType: "node",
-      placeType: "shop",
-      latitude: String(b.latitude),
-      longitude: String(b.longitude),
-      tags: { shop: b.categorie.toLowerCase() }
-    }));
-    
-    switch (placeType) {
-      case "hospital":
-      case "clinic":
-      case "doctors":
-        return [];
-      case "marketplace":
-        return MARCHES_DATA.map(m => ({
-          osmId: m.id,
-          osmType: "node",
-          placeType: "marketplace",
-          name: m.nom,
-          latitude: String(m.latitude),
-          longitude: String(m.longitude),
-          address: m.adresse,
-          quartier: m.quartier,
-          ville: m.ville,
-          region: m.region,
-          telephone: m.telephone,
-          horaires: m.horaires,
-          tags: { 
-            capacity: m.nombreCommerçants?.toString(), 
-            area: m.superficie,
-            opening_hours: m.horaires,
-            marketplace: m.type === "Hebdomadaire" ? "periodic" : "neighborhood"
-          },
-          source: m.nom,
-          confidenceScore: "0.9",
-          lastSyncedAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          verificationStatus: "verified"
-        }));
-      case "restaurant":
-      case "fast_food":
-      case "cafe":
-        return RESTAURANTS_DATA.map(r => ({
-          osmId: r.id,
-          osmType: "node",
-          placeType,
-          name: r.nom,
-          latitude: String(r.latitude),
-          longitude: String(r.longitude),
-          address: r.adresse,
-          quartier: r.quartier,
-          ville: r.ville,
-          region: r.region,
-          telephone: r.telephone,
-          email: r.email,
-          website: r.siteWeb,
-          horaires: r.horaires,
-          tags: { 
-            cuisine: r.type, 
-            price_level: r.gammePrix,
-            plats: r.plats?.join(", "),
-            services: r.services?.join(", "),
-            specialites: r.specialites?.join(", "),
-            source_enrichie: "true"
-          },
-          source: r.nom, // Utiliser le nom comme source pour l'affichage
-          confidenceScore: "1.0",
-          lastSyncedAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          verificationStatus: "verified"
-        }));
-      case "shop":
-        return BOUTIQUES_DATA.map(b => ({
-          osmId: b.id,
-          osmType: "node",
-          placeType: "shop",
-          name: b.nom,
-          latitude: String(b.latitude),
-          longitude: String(b.longitude),
-          address: b.adresse,
-          quartier: b.quartier,
-          ville: b.ville,
-          region: b.region,
-          telephone: b.telephone,
-          horaires: b.horaires,
-          tags: { 
-            category: b.categorie,
-            services: b.services.join(", "),
-            products: b.produits.join(", "),
-            delivery: b.livraison ? "yes" : "no",
-            air_conditioning: b.climatisation ? "yes" : "no"
-          },
-          source: b.nom,
-          confidenceScore: "0.9",
-          lastSyncedAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          verificationStatus: "verified"
-        }));
-      case "university":
-        return UNIVERSITES_DATA.map(u => ({
-          osmId: u.id,
-          osmType: "node",
-          placeType: "university",
-          name: u.nom,
-          latitude: String(u.latitude),
-          longitude: String(u.longitude),
-          address: u.adresse,
-          ville: u.ville,
-          region: u.region,
-          telephone: u.telephone,
-          website: u.siteWeb,
-          tags: { 
-            type: u.type,
-            courses: u.filières.join(", ")
-          },
-          source: u.nom,
-          confidenceScore: "0.9",
-          lastSyncedAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          verificationStatus: "verified"
-        }));
-      case "pharmacy":
-        return PHARMACIES_DATA.map(p => ({
-          osmId: p.id,
-          osmType: "node",
-          placeType: "pharmacy",
-          name: p.nom,
-          latitude: String(p.latitude),
-          longitude: String(p.longitude),
-          address: p.adresse,
-          quartier: p.quartier,
-          ville: p.ville,
-          region: p.region,
-          telephone: p.telephone,
-          email: p.email,
-          horaires: p.horaires,
-          tags: { 
-            is24h: p.is24h ? "yes" : "no",
-            source_enrichie: "true"
-          },
-          source: p.nom,
-          confidenceScore: "1.0",
-          lastSyncedAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          verificationStatus: "verified"
-        }));
-      case "bank":
-      case "atm":
-        return BANQUES_DATA.map(b => ({
-          osmId: b.id,
-          osmType: "node",
-          placeType: b.hasGAB ? "bank" : "atm",
-          name: b.nom,
-          latitude: String(b.latitude),
-          longitude: String(b.longitude),
-          address: b.adresse,
-          quartier: b.quartier,
-          ville: b.ville,
-          region: b.region,
-          telephone: b.telephone,
-          email: b.email,
-          website: b.siteWeb,
-          horaires: b.horaires,
-          tags: { 
-            sigle: b.sigle, 
-            type: b.type,
-            source_enrichie: "true"
-          },
-          source: b.nom,
-          confidenceScore: "1.0",
-          lastSyncedAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          verificationStatus: "verified"
-        }));
-      case "marketplace":
-        return MARCHES_DATA.map(m => ({
-          id: parseInt(m.id.replace(/\D/g, '')),
-          osmId: m.id,
-          osmType: "node",
-          placeType: "marketplace",
-          name: m.nom,
-          latitude: String(m.latitude),
-          longitude: String(m.longitude),
-          address: m.adresse,
-          quartier: m.quartier,
-          ville: m.ville,
-          region: m.region,
-          telephone: m.telephone,
-          horaires: m.horaires,
-          tags: { type: m.type, products: m.produits.join(", ") },
-          source: "Fallback",
-          confidenceScore: "0.5",
-          lastSyncedAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          verificationStatus: "verified"
-        }));
-      case "supermarket":
-      case "convenience":
-      case "clothes":
-      case "shoes":
-      case "electronics":
-      case "mobile_phone":
-      case "hardware":
-      case "cosmetics":
-      case "furniture":
-      case "books":
-      case "sports":
-      case "jewelry":
-        return BOUTIQUES_DATA.map(b => ({
-          id: parseInt(b.id.replace(/\D/g, '')),
-          osmId: b.id,
-          osmType: "node",
-          placeType: b.categorie.toLowerCase(),
-          name: b.nom,
-          latitude: String(b.latitude),
-          longitude: String(b.longitude),
-          address: b.adresse,
-          quartier: b.quartier,
-          ville: b.ville,
-          region: b.region,
-          telephone: b.telephone,
-          email: b.email,
-          website: b.siteWeb,
-          horaires: b.horaires,
-          tags: { category: b.categorie, brands: b.marques?.join(", ") },
-          source: "Fallback",
-          confidenceScore: "0.5",
-          lastSyncedAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          verificationStatus: "verified"
-        }));
-      default:
-        return [];
-    }
-  }
-
-  async getPlaces(options: {
-    placeType?: string;
-    region?: string;
-    ville?: string;
-    search?: string;
+  async getPlaces(options: { 
+    placeType?: string; 
+    region?: string; 
+    ville?: string; 
+    search?: string; 
     verificationStatus?: string;
     limit?: number;
     offset?: number;
   } = {}): Promise<{ places: Place[]; lastUpdated: Date | null }> {
-    // Check if we need to refresh (once per day or if empty)
-    // IMPORTANT: On ne bloque JAMAIS l'appel utilisateur par une synchronisation
-    if (options.placeType) {
-      const pType = options.placeType;
-      const now = new Date();
-      const lastSyncKey = `last_sync_${pType}`;
-      
-      // On récupère la date de dernière sync de manière asynchrone
-      storage.getMetadata(lastSyncKey).then(lastSyncStr => {
-        const lastSyncDate = lastSyncStr ? new Date(lastSyncStr) : null;
-        const oneDay = 24 * 60 * 60 * 1000;
-        
-        if (!lastSyncDate || (now.getTime() - lastSyncDate.getTime() > oneDay)) {
-          console.log(`[Overpass] Refreshing ${pType} in background (last sync: ${lastSyncDate})`);
-          this.syncPlaceType(pType).then(() => {
-            storage.setMetadata(lastSyncKey, now.toISOString());
-          }).catch(err => console.error(`Error refreshing ${pType}:`, err));
-        }
-      }).catch(err => console.error("Error getting metadata:", err));
-    }
-
-    // 1. Lire exclusivement depuis la base de données
-    let query = db.select().from(places);
+    let q = db.select().from(places);
     const conditions = [];
 
-    if (options.placeType) {
-      conditions.push(eq(places.placeType, options.placeType));
-    }
-    if (options.region) {
-      conditions.push(eq(places.region, options.region));
-    }
-    if (options.ville) {
-      conditions.push(eq(places.ville, options.ville));
-    }
-    if (options.verificationStatus) {
-      conditions.push(eq(places.verificationStatus, options.verificationStatus));
-    }
+    if (options.placeType) conditions.push(eq(places.placeType, options.placeType));
+    if (options.region) conditions.push(eq(places.region, options.region));
+    if (options.ville) conditions.push(eq(places.ville, options.ville));
+    if (options.verificationStatus) conditions.push(eq(places.verificationStatus, options.verificationStatus));
     if (options.search) {
       conditions.push(or(
         ilike(places.name, `%${options.search}%`),
@@ -1019,457 +493,13 @@ export class OverpassService {
       ));
     }
 
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions)) as typeof query;
-    }
+    if (conditions.length > 0) q = q.where(and(...conditions)) as typeof q;
+    const results = await q.limit(options.limit || 10000).offset(options.offset || 0);
 
-    let results = await query
-      .limit(options.limit || 10000)
-      .offset(options.offset || 0);
-
-    // 2. Si aucun résultat en DB, utiliser les données fallback
-    if (results.length === 0 && options.placeType) {
-      console.log(`[Overpass] No DB results for ${options.placeType}, using fallback data`);
-      const fallbackResults = this.getFallbackPlaces(options.placeType);
-      
-      // Filter fallbacks locally based on search/region/ville if provided
-      results = fallbackResults.filter(p => {
-        let match = true;
-        if (options.region && p.region !== options.region) match = false;
-        if (options.ville && p.ville !== options.ville) match = false;
-        if (options.search) {
-          const s = options.search.toLowerCase();
-          match = p.name.toLowerCase().includes(s) || 
-                  (p.ville && p.ville.toLowerCase().includes(s)) ||
-                  (p.address && p.address.toLowerCase().includes(s));
-        }
-        return match;
-      }) as Place[];
-    }
-
-    // Trouver la date de mise à jour la plus récente dans les résultats
-    let latestUpdate: Date | null = null;
-    if (results.length > 0) {
-      latestUpdate = results.reduce((latest, current) => {
-        const currentSync = current.lastSyncedAt;
-        if (!latest || (currentSync && currentSync > latest)) return currentSync;
-        return latest;
-      }, null as Date | null);
-    }
-
-    // Fallback: Si la DB est vide pour ce type, on tente une sync bloquante
-    // Sauf pour bus_station qui sera géré différemment si besoin
-    if (results.length === 0 && options.placeType) {
-      console.log(`[Overpass] DB empty for ${options.placeType}, forced sync...`);
-      try {
-        await this.syncPlaceType(options.placeType);
-        
-        // Update metadata after successful sync
-        const now = new Date();
-        const lastSyncKey = `last_sync_${options.placeType}`;
-        await storage.setMetadata(lastSyncKey, now.toISOString());
-        
-        // Re-query after sync
-        results = await db.select().from(places)
-          .where(eq(places.placeType, options.placeType))
-          .limit(options.limit || 10000)
-          .offset(options.offset || 0);
-          
-        if (results.length > 0) {
-          latestUpdate = results.reduce((latest, current) => {
-            const currentSync = current.lastSyncedAt;
-            if (!latest || (currentSync && currentSync > latest)) return currentSync;
-            return latest;
-          }, null as Date | null);
-        }
-      } catch (err) {
-        console.error(`[Overpass] Forced sync failed for ${options.placeType}:`, err);
-      }
-    }
-
-    return { places: results, lastUpdated: latestUpdate };
-  }
-
-  async getPlaceById(id: string): Promise<Place | null> {
-    const result = await db.select()
-      .from(places)
-      .where(eq(places.id, id))
-      .limit(1);
-    return result[0] || null;
-  }
-
-  async confirmPlace(placeId: string, userId: string | null, ipAddress: string): Promise<boolean> {
-    try {
-      if (userId) {
-        const existing = await db.select()
-          .from(placeVerifications)
-          .where(and(
-            eq(placeVerifications.placeId, placeId),
-            eq(placeVerifications.userId, userId),
-            eq(placeVerifications.action, "confirm")
-          ))
-          .limit(1);
-
-        if (existing.length > 0) {
-          return false;
-        }
-      } else {
-        const ipExisting = await db.select()
-          .from(placeVerifications)
-          .where(and(
-            eq(placeVerifications.placeId, placeId),
-            eq(placeVerifications.ipAddress, ipAddress),
-            eq(placeVerifications.action, "confirm")
-          ))
-          .limit(1);
-
-        if (ipExisting.length > 0) {
-          return false;
-        }
-      }
-
-      await db.insert(placeVerifications).values({
-        placeId,
-        userId,
-        action: "confirm",
-        ipAddress,
-      });
-
-      const place = await this.getPlaceById(placeId);
-      if (place) {
-        const newConfirmations = place.confirmations + 1;
-        let newStatus = place.verificationStatus;
-        
-        if (newConfirmations >= 3) {
-          newStatus = VerificationStatuses.VERIFIED;
-        }
-
-        await db.update(places)
-          .set({
-            confirmations: newConfirmations,
-            verificationStatus: newStatus,
-            updatedAt: new Date(),
-          })
-          .where(eq(places.id, placeId));
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Error confirming place:", error);
-      return false;
-    }
-  }
-
-  async reportPlace(placeId: string, userId: string | null, comment: string | null, ipAddress: string): Promise<boolean> {
-    try {
-      if (userId) {
-        const existing = await db.select()
-          .from(placeVerifications)
-          .where(and(
-            eq(placeVerifications.placeId, placeId),
-            eq(placeVerifications.userId, userId),
-            eq(placeVerifications.action, "report")
-          ))
-          .limit(1);
-
-        if (existing.length > 0) {
-          return false;
-        }
-      } else {
-        const ipExisting = await db.select()
-          .from(placeVerifications)
-          .where(and(
-            eq(placeVerifications.placeId, placeId),
-            eq(placeVerifications.ipAddress, ipAddress),
-            eq(placeVerifications.action, "report")
-          ))
-          .limit(1);
-
-        if (ipExisting.length > 0) {
-          return false;
-        }
-      }
-
-      await db.insert(placeVerifications).values({
-        placeId,
-        userId,
-        action: "report",
-        comment,
-        ipAddress,
-      });
-
-      const place = await this.getPlaceById(placeId);
-      if (place) {
-        const newReports = place.reports + 1;
-        let newStatus = place.verificationStatus;
-        
-        if (newReports >= 2) {
-          newStatus = VerificationStatuses.NEEDS_REVIEW;
-        }
-
-        await db.update(places)
-          .set({
-            reports: newReports,
-            verificationStatus: newStatus,
-            updatedAt: new Date(),
-          })
-          .where(eq(places.id, placeId));
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Error reporting place:", error);
-      return false;
-    }
-  }
-
-  async getStats(): Promise<{
-    total: number;
-    byType: Record<string, number>;
-    verified: number;
-    needsReview: number;
-    lastSync: Date | null;
-  }> {
-    const allPlaces = await db.select().from(places);
-    
-    const byType: Record<string, number> = {};
-    let verified = 0;
-    let needsReview = 0;
-
-    for (const place of allPlaces) {
-      byType[place.placeType] = (byType[place.placeType] || 0) + 1;
-      if (place.verificationStatus === VerificationStatuses.VERIFIED) verified++;
-      if (place.verificationStatus === VerificationStatuses.NEEDS_REVIEW) needsReview++;
-    }
-
-    return {
-      total: allPlaces.length,
-      byType,
-      verified,
-      needsReview,
-      lastSync: this.lastSync,
+    return { 
+      places: results, 
+      lastUpdated: results.length > 0 ? results[0].lastSyncedAt : null 
     };
-  }
-
-  async getUserVerifications(placeId: string, userId: string): Promise<{ confirmed: boolean; reported: boolean }> {
-    const verifications = await db.select()
-      .from(placeVerifications)
-      .where(and(
-        eq(placeVerifications.placeId, placeId),
-        eq(placeVerifications.userId, userId)
-      ));
-
-    return {
-      confirmed: verifications.some(v => v.action === "confirm"),
-      reported: verifications.some(v => v.action === "report"),
-    };
-  }
-
-  scheduleAutoSync(intervalHours: number = 24): void {
-    console.log(`🌍 OpenStreetMap auto-sync scheduled every ${intervalHours} hours`);
-    
-    this.syncAllPlaces().catch(console.error);
-    
-    setInterval(() => {
-      this.syncAllPlaces().catch(console.error);
-    }, intervalHours * 60 * 60 * 1000);
-  }
-
-  // Enhanced fuel station sync with multiple tags and region-based querying
-  async syncFuelStationsExtended(): Promise<{ total: number; added: number; updated: number; errors: number }> {
-    console.log("⛽ Starting extended fuel station sync...");
-    
-    let totalAdded = 0, totalUpdated = 0, totalErrors = 0;
-    const processedOsmIds = new Set<string>();
-
-    // Extended fuel queries - multiple tag variations
-    const fuelQueries = [
-      `["amenity"="fuel"]`,
-      `["shop"="gas"]`,
-      `["shop"="fuel"]`,
-      `["amenity"="fuel_station"]`,
-      `["landuse"="fuel_station"]`,
-      // Brand-specific queries to catch stations with brand but different main tags
-      `["brand"~"Total|Shell|Oryx|Barka|Sonabhy|SOB|Vivo|Petrofa|Nafex|Star Oil|Libya Oil|Petrolyn"]`,
-      `["operator"~"Total|Shell|Oryx|Sonabhy|Vivo|Barka"]`,
-    ];
-
-    // Sync by region to avoid Overpass limits and get better coverage
-    for (const [regionName, regionData] of Object.entries(REGIONS_MAPPING)) {
-      const { south, north, west, east } = regionData.bounds;
-      console.log(`  📍 Syncing region: ${regionName}...`);
-
-      for (const queryFilter of fuelQueries) {
-        try {
-          const query = `
-            [out:json][timeout:180][maxsize:536870912];
-            (
-              node${queryFilter}(${south},${west},${north},${east});
-              way${queryFilter}(${south},${west},${north},${east});
-              relation${queryFilter}(${south},${west},${north},${east});
-            );
-            out center;
-          `;
-
-          const response = await this.fetchFromOverpass(query);
-          
-          for (const element of response.elements) {
-            const osmKey = `${element.type}-${element.id}`;
-            if (processedOsmIds.has(osmKey)) continue;
-            processedOsmIds.add(osmKey);
-
-            try {
-              const placeData = this.parseOSMElement(element, "fuel");
-              if (!placeData) continue;
-
-              // Override region with the actual region we're querying
-              placeData.region = regionName;
-              placeData.ville = placeData.ville || this.guessCityExtended(
-                parseFloat(placeData.latitude),
-                parseFloat(placeData.longitude)
-              );
-
-              const existing = await db.select()
-                .from(places)
-                .where(and(
-                  eq(places.osmId, placeData.osmId),
-                  eq(places.osmType, placeData.osmType)
-                ))
-                .limit(1);
-
-              if (existing.length > 0) {
-                await db.update(places)
-                  .set({
-                    name: placeData.name,
-                    latitude: placeData.latitude,
-                    longitude: placeData.longitude,
-                    address: placeData.address,
-                    telephone: placeData.telephone,
-                    horaires: placeData.horaires,
-                    region: placeData.region,
-                    ville: placeData.ville,
-                    tags: placeData.tags,
-                    lastSyncedAt: new Date(),
-                    updatedAt: new Date(),
-                  })
-                  .where(eq(places.id, existing[0].id));
-                totalUpdated++;
-              } else {
-                await db.insert(places).values(placeData);
-                totalAdded++;
-              }
-            } catch (err) {
-              totalErrors++;
-            }
-          }
-
-          await this.sleep(500); // Respect rate limits between queries
-        } catch (error) {
-          console.error(`  ❌ Error with query ${queryFilter} in ${regionName}:`, error);
-          totalErrors++;
-        }
-      }
-      
-      await this.sleep(1000); // Pause between regions
-    }
-
-    // Also do a country-wide sync for any stations that might fall outside defined regions
-    console.log("  🌍 Country-wide fuel station sweep...");
-    for (const queryFilter of fuelQueries.slice(0, 3)) { // Main fuel queries only
-      try {
-        const { south, west, north, east } = BURKINA_BBOX;
-        const query = `
-          [out:json][timeout:300][maxsize:1073741824];
-          (
-            node${queryFilter}(${south},${west},${north},${east});
-            way${queryFilter}(${south},${west},${north},${east});
-            relation${queryFilter}(${south},${west},${north},${east});
-          );
-          out center;
-        `;
-
-        const response = await this.fetchFromOverpass(query);
-        
-        for (const element of response.elements) {
-          const osmKey = `${element.type}-${element.id}`;
-          if (processedOsmIds.has(osmKey)) continue;
-          processedOsmIds.add(osmKey);
-
-          try {
-            const placeData = this.parseOSMElement(element, "fuel");
-            if (!placeData) continue;
-
-            placeData.ville = placeData.ville || this.guessCityExtended(
-              parseFloat(placeData.latitude),
-              parseFloat(placeData.longitude)
-            );
-            placeData.region = placeData.region || this.guessRegionFromCoords(
-              parseFloat(placeData.latitude),
-              parseFloat(placeData.longitude)
-            );
-
-            const existing = await db.select()
-              .from(places)
-              .where(and(
-                eq(places.osmId, placeData.osmId),
-                eq(places.osmType, placeData.osmType)
-              ))
-              .limit(1);
-
-            if (existing.length === 0) {
-              await db.insert(places).values(placeData);
-              totalAdded++;
-            }
-          } catch (err) {
-            totalErrors++;
-          }
-        }
-
-        await this.sleep(2000);
-      } catch (error) {
-        console.error("Country-wide sweep error:", error);
-      }
-    }
-
-    const total = processedOsmIds.size;
-    console.log(`⛽ Extended fuel sync complete: ${total} unique stations processed, ${totalAdded} added, ${totalUpdated} updated, ${totalErrors} errors`);
-    
-    return { total, added: totalAdded, updated: totalUpdated, errors: totalErrors };
-  }
-
-  // Extended city guessing with coordinate-based matching
-  private guessCityExtended(lat: number, lon: number): string | null {
-    // First check the detailed city coordinates
-    for (const [cityName, coords] of Object.entries(CITY_COORDINATES)) {
-      const distance = Math.sqrt(
-        Math.pow(lat - coords.lat, 2) + Math.pow(lon - coords.lon, 2)
-      );
-      if (distance <= coords.radius) {
-        return cityName;
-      }
-    }
-    
-    // Fallback to the original method
-    return this.guessCity(lat, lon);
-  }
-
-  // Guess region from coordinates
-  private guessRegionFromCoords(lat: number, lon: number): string | null {
-    for (const [regionName, regionData] of Object.entries(REGIONS_MAPPING)) {
-      const { south, north, west, east } = regionData.bounds;
-      if (lat >= south && lat <= north && lon >= west && lon <= east) {
-        return regionName;
-      }
-    }
-    return null;
-  }
-
-  // Get fuel station count from OSM
-  async getFuelStationCount(): Promise<number> {
-    const result = await db.select({ count: sql<number>`count(*)` })
-      .from(places)
-      .where(eq(places.placeType, "fuel"));
-    return result[0]?.count || 0;
   }
 }
 

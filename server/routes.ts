@@ -103,19 +103,20 @@ function transformOsmToRestaurant(place: Place, index: number) {
     region: place.region || "Région non spécifiée",
     latitude: parseFloat(place.latitude),
     longitude: parseFloat(place.longitude),
-    telephone: place.telephone || undefined,
-    email: place.email || undefined,
-    siteWeb: place.website || undefined,
-    horaires: place.horaires || "Horaires à vérifier",
+    telephone: place.telephone || tags.contact || tags.phone || undefined,
+    email: place.email || tags.email || undefined,
+    siteWeb: place.website || tags.website || undefined,
+    horaires: place.horaires || tags.opening_hours || "Horaires à vérifier",
     gammePrix: "Moyen" as const,
-    services: [],
-    specialites: tags.cuisine ? tags.cuisine.split(";").map(c => c.trim()) : [],
+    services: tags.services ? tags.services.split(";").map((s: string) => s.trim()) : [],
+    specialites: tags.cuisine ? tags.cuisine.split(";").map((c: string) => c.trim()) : [],
     wifi: tags.internet_access === "wlan" || tags.internet_access === "yes",
     climatisation: false,
     parking: tags.parking === "yes",
     terrasse: tags.outdoor_seating === "yes",
     livraison: tags.delivery === "yes",
-    source: "OSM" as const
+    source: "OSM" as const,
+    plats: tags.menu || tags.dishes || undefined
   };
 }
 
