@@ -426,9 +426,9 @@ export class OverpassService {
       return `
         [out:json][timeout:180];
         (
-          node["amenity"~"restaurant|fast_food|cafe|bar"](${south},${west},${north},${east});
-          way["amenity"~"restaurant|fast_food|cafe|bar"](${south},${west},${north},${east});
-          relation["amenity"~"restaurant|fast_food|cafe|bar"](${south},${west},${north},${east});
+          node["amenity"~"restaurant|fast_food|cafe|bar|pub|ice_cream|food_court"](${south},${west},${north},${east});
+          way["amenity"~"restaurant|fast_food|cafe|bar|pub|ice_cream|food_court"](${south},${west},${north},${east});
+          relation["amenity"~"restaurant|fast_food|cafe|bar|pub|ice_cream|food_court"](${south},${west},${north},${east});
         );
         out center;
       `;
@@ -560,6 +560,12 @@ export class OverpassService {
       wheelchair: tags["wheelchair"],
       operator: tags["operator"] || tags["operator:type"],
       brand: tags["brand"],
+      cuisine: tags["cuisine"] || tags["diet:type"],
+      menu: tags["menu"] || tags["menu:url"] || tags["dishes"],
+      contact: tags["contact:phone"] || tags["phone"] || tags["contact:mobile"],
+      opening_hours: tags["opening_hours"],
+      website: tags["contact:website"] || tags["website"],
+    };
       importanceSystemique: tags.importance === "high" || tags.rank === "1" || name?.toLowerCase().includes("boa") || name?.toLowerCase().includes("ecobank") || name?.toLowerCase().includes("coris") || name?.toLowerCase().includes("uba"),
       hasGAB: tags.atm === "yes" || finalPlaceType === "atm" || tags.amenity === "atm",
     };

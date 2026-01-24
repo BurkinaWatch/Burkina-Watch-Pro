@@ -39,4 +39,5 @@ Additional completed tasks:
 [x] 37. Reinstalled tsx, pushed database schema, verified application running with all services (Jan 11, 2026)
 [x] 38. Reinstalled dependencies and verified application running with all services initialized (Jan 13, 2026)
 [x] 39. Fixed email service configuration issue where the user was receiving a "Service email non disponible" toast. Verified that Resend is now correctly configured and sending emails successfully.
+[x] 40. Enhanced restaurant data synchronization from OpenStreetMap to include menus, cuisines, and contact information. Updated the Overpass query to capture more establishment types (cafes, bars, pubs, etc.).
 [x] 39. Reinstalled tsx package and verified application running with all services initialized (Jan 24, 2026)
