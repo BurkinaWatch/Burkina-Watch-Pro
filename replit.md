@@ -32,6 +32,14 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 - **Routes**: /api/auth/send-otp, /api/auth/verify-otp, /api/auth/check-sms-availability, /api/auth/logout
 - **Login Page**: /connexion (accessible via Login button in header)
 
+## Recent Changes (Feb 3, 2026)
+- **17-Region Administrative Reform**: Updated to new Burkina Faso administrative division (July 2025 reform)
+  - 17 new regions: Bankui, Djoro, Goulmou, Guiriko, Kadiogo, Kuilse, Liptako, Nakambe, Nando, Nazinon, Oubri, Sirba, Soum, Sourou, Tannounyan, Tapoa, Yaadga
+  - 45 provinces with correct chef-lieux and communes
+  - Files: client/src/lib/regions.ts (source of truth), server/overpassService.ts, PlacesListPage.tsx
+  - OLD_TO_NEW_REGION_MAPPING for legacy data migration from 13-region to 17-region structure
+  - Fixed Building2 import in StationsService.tsx
+
 ## Recent Changes (Jan 12, 2026)
 - **Official News Ticker**: Added scrolling news banner with real-time government communications
   - Sources: presidencedufaso.bf, sig.gov.bf, aib.media
