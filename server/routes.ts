@@ -31,6 +31,7 @@ import { getOfficialNews } from "./newsService";
 import { fetchEvents, clearEventsCache } from "./eventsService";
 import { overpassService } from "./overpassService";
 import { dataMigrationService } from "./dataMigrationService";
+import { googlePlacesService } from "./googlePlacesService";
 import { BOUTIQUES_DATA } from "./boutiquesData";
 import { PHARMACIES_DATA } from "./pharmaciesData";
 import type { Place } from "@shared/schema";
@@ -2229,6 +2230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const villes = new Set<string>();
       let avecLivraison = 0;
       let avecWifi = 0;
+      let fromGoogle = 0;
       
       restaurants.forEach((r, i) => {
         const transformed = transformOsmToRestaurant(r, i);
@@ -2241,21 +2243,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         if (transformed.livraison) avecLivraison++;
         if (transformed.wifi) avecWifi++;
+        if (r.source === "Google") fromGoogle++;
       });
 
       res.json({
         total: restaurants.length,
         avecLivraison,
         avecWifi,
+        fromGoogle,
         parType,
         parRegion,
         nombreVilles: villes.size,
         lastUpdate: new Date(),
-        source: "PostgreSQL"
+        source: "PostgreSQL",
+        googlePlacesEnabled: googlePlacesService.isConfigured()
       });
     } catch (error) {
       console.error("Erreur stats restaurants:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
+    }
+  });
+
+  app.post("/api/restaurants/sync-google", async (req, res) => {
+    try {
+      if (!googlePlacesService.isConfigured()) {
+        return res.status(400).json({ 
+          error: "Google Places API non configurée",
+          message: "Veuillez configurer GOOGLE_API_KEY pour utiliser cette fonctionnalité"
+        });
+      }
+      
+      console.log("🔄 Lancement de la synchronisation Google Places...");
+      const result = await googlePlacesService.syncRestaurantsFromGoogle();
+      
+      res.json({
+        success: true,
+        message: `Synchronisation terminée: ${result.added} restaurants ajoutés, ${result.updated} mis à jour`,
+        ...result
+      });
+    } catch (error) {
+      console.error("Erreur sync Google Places:", error);
+      res.status(500).json({ error: "Erreur lors de la synchronisation Google Places" });
     }
   });
 

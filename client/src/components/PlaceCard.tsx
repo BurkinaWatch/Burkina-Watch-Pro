@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Phone, Clock, Navigation, Globe, Mail, ExternalLink, Locate, Activity, ShieldCheck, UtensilsCrossed } from "lucide-react";
+import { MapPin, Phone, Clock, Navigation, Globe, Mail, ExternalLink, Locate, Activity, ShieldCheck, UtensilsCrossed, Star, DollarSign, Truck, Users } from "lucide-react";
 import type { Place } from "@shared/schema";
 import { SourceBadge } from "./SourceBadge";
 
@@ -45,10 +45,16 @@ export function PlaceCard({ place }: PlaceCardProps) {
   const specialites = tags.specialites || tags.cuisine || tags.speciality;
   const services = tags.services || (place.placeType === "hospital" ? "Urgences, Consultations, Hospitalisation" : null);
 
+  // Données Google Places
+  const rating = tags.rating ? parseFloat(tags.rating) : null;
+  const ratingCount = tags.ratingCount ? parseInt(tags.ratingCount) : null;
+  const priceLevel = tags.priceLevel || null;
+  const description = tags.description || null;
+
   // Nom de l'établissement pour la source si c'est une donnée enrichie
   const sourceName = place.source && place.source !== "OSM" && place.source !== "Fallback" && place.source !== "OpenStreetMap" ? place.source : "DATABASE";
 
-  const imageUrl = tags.image || tags.photo || tags["image:url"] || null;
+  const imageUrl = tags.photoUrl || tags.image || tags.photo || tags["image:url"] || null;
   const website = tags.website || tags["contact:website"] || null;
   const email = tags.email || tags["contact:email"] || null;
   const phone = place.telephone || tags.phone || tags["contact:phone"] || tags["phone:mobile"] || null;
@@ -91,6 +97,28 @@ export function PlaceCard({ place }: PlaceCardProps) {
         </div>
         {brand && (
           <p className="text-xs text-muted-foreground">{brand}</p>
+        )}
+        {(rating || priceLevel) && (
+          <div className="flex items-center gap-3 mt-1">
+            {rating && (
+              <div className="flex items-center gap-1">
+                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                <span className="text-sm font-medium">{rating.toFixed(1)}</span>
+                {ratingCount && (
+                  <span className="text-xs text-muted-foreground">({ratingCount})</span>
+                )}
+              </div>
+            )}
+            {priceLevel && (
+              <Badge variant="outline" className="text-xs py-0 h-5">
+                <DollarSign className="w-3 h-3 mr-1" />
+                {priceLevel}
+              </Badge>
+            )}
+          </div>
+        )}
+        {description && (
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{description}</p>
         )}
         <div className="mt-2">
           <SourceBadge 
