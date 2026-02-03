@@ -180,57 +180,73 @@ const PLACE_TYPE_QUERIES: Record<string, string> = {
 };
 
 const REGIONS_MAPPING: Record<string, { cities: string[]; bounds: { south: number; north: number; west: number; east: number } }> = {
-  "Centre": { 
-    cities: ["Ouagadougou", "Ziniaré", "Saaba", "Pabré", "Tanghin-Dassouri", "Komsilga", "Koubri", "Loumbila", "Nagréongo", "Ourgou-Manega"],
-    bounds: { south: 12.0, north: 12.8, west: -1.9, east: -1.2 }
+  "Bankui": { 
+    cities: ["Dedougou", "Boromo", "Nouna", "Solenzo", "Toma", "Djibasso", "Safane", "Bondokuy", "Gassan", "Gossina"],
+    bounds: { south: 11.8, north: 13.5, west: -4.5, east: -2.8 }
   },
-  "Hauts-Bassins": { 
-    cities: ["Bobo-Dioulasso", "Houndé", "Léna", "Dandé", "Padéma", "Bama", "Karangasso-Vigué", "Péni", "Satiri", "Toussiana"],
+  "Djoro": { 
+    cities: ["Gaoua", "Diebougou", "Dano", "Batie", "Kampti", "Loropeni", "Nako", "Dissin", "Legmoin", "Boussera"],
+    bounds: { south: 9.5, north: 11.5, west: -4.0, east: -2.5 }
+  },
+  "Goulmou": { 
+    cities: ["Fada N'Gourma", "Pama", "Matiacoali", "Diapangou", "Tibga", "Yamba", "Kompienga", "Madjoari"],
+    bounds: { south: 11.0, north: 12.8, west: -0.5, east: 1.0 }
+  },
+  "Guiriko": { 
+    cities: ["Bobo-Dioulasso", "Hounde", "Lena", "Dande", "Padema", "Bama", "Karangasso-Vigue", "Peni", "Satiri", "Toussiana", "Orodara"],
     bounds: { south: 10.5, north: 12.0, west: -5.5, east: -3.5 }
   },
-  "Cascades": { 
-    cities: ["Banfora", "Sindou", "Niangoloko", "Bérégadougou", "Ouo", "Sidéradougou", "Tiéfora", "Mangodara", "Soubakaniédougou", "Douna"],
-    bounds: { south: 9.4, north: 11.0, west: -5.5, east: -4.0 }
+  "Kadiogo": { 
+    cities: ["Ouagadougou", "Saaba", "Pabre", "Tanghin-Dassouri", "Komsilga", "Koubri", "Komki-Ipala"],
+    bounds: { south: 12.2, north: 12.6, west: -1.8, east: -1.3 }
   },
-  "Centre-Nord": { 
-    cities: ["Kaya", "Kongoussi", "Bourzanga", "Boulsa", "Barsalogho", "Pissila", "Tougouri", "Yalgo", "Dablo", "Namissiguima"],
-    bounds: { south: 12.8, north: 14.0, west: -1.8, east: -0.5 }
+  "Kuilse": { 
+    cities: ["Kaya", "Kongoussi", "Bourzanga", "Barsalogho", "Pissila", "Dablo", "Boussouma", "Korsimoro", "Mane"],
+    bounds: { south: 12.8, north: 14.0, west: -1.5, east: -0.3 }
   },
-  "Centre-Ouest": { 
-    cities: ["Koudougou", "Réo", "Léo", "Sabou", "Ténado", "Nanoro", "Didyr", "Pouni", "Zawara", "Thyou"],
-    bounds: { south: 11.5, north: 12.8, west: -2.8, east: -1.8 }
+  "Liptako": { 
+    cities: ["Dori", "Gorom-Gorom", "Sebba", "Seytenga", "Markoye", "Oursi", "Deou", "Tin-Akof", "Falagountou"],
+    bounds: { south: 13.5, north: 15.1, west: -0.5, east: 1.0 }
   },
-  "Centre-Est": { 
-    cities: ["Tenkodogo", "Koupéla", "Garango", "Ouargaye", "Bittou", "Pouytenga", "Andemtenga", "Dourtenga", "Lalgaye", "Sangha"],
+  "Nakambe": { 
+    cities: ["Tenkodogo", "Koupela", "Garango", "Ouargaye", "Bittou", "Pouytenga", "Andemtenga", "Lalgaye", "Sangha"],
     bounds: { south: 11.0, north: 12.5, west: -0.8, east: 0.5 }
   },
-  "Centre-Sud": { 
-    cities: ["Manga", "Pô", "Kombissiri", "Nobéré", "Saponé", "Gogo", "Guiaro", "Tiébélé", "Biéha", "Gongombiro"],
-    bounds: { south: 11.0, north: 12.2, west: -1.6, east: -0.6 }
+  "Nando": { 
+    cities: ["Koudougou", "Reo", "Sabou", "Tenado", "Nanoro", "Didyr", "Pouni", "Zawara", "Thyou", "Kokologho"],
+    bounds: { south: 11.5, north: 12.8, west: -2.8, east: -1.8 }
   },
-  "Est": { 
-    cities: ["Fada N'Gourma", "Diapaga", "Gayéri", "Bogandé", "Manni", "Pama", "Kantchari", "Tambaga", "Matiacoali", "Comin-Yanga"],
-    bounds: { south: 11.0, north: 13.5, west: -0.5, east: 2.4 }
+  "Nazinon": { 
+    cities: ["Leo", "Manga", "Po", "Kombissiri", "Sapone", "Gogo", "Guiaro", "Tiebele", "Bieha", "Sapouy", "Cassou"],
+    bounds: { south: 10.8, north: 12.0, west: -2.5, east: -1.5 }
   },
-  "Nord": { 
-    cities: ["Ouahigouya", "Yako", "Gourcy", "Titao", "Séguénéga", "Thiou", "Koumbri", "Arbollé", "Bokin", "Kirsi"],
-    bounds: { south: 12.8, north: 14.5, west: -3.0, east: -1.8 }
-  },
-  "Sahel": { 
-    cities: ["Dori", "Djibo", "Gorom-Gorom", "Sebba", "Aribinda", "Seytenga", "Tongomayel", "Baraboulé", "Sampelga", "Markoye"],
-    bounds: { south: 13.5, north: 15.1, west: -1.5, east: 1.0 }
-  },
-  "Sud-Ouest": { 
-    cities: ["Gaoua", "Diébougou", "Dano", "Batié", "Kampti", "Loropéni", "Nako", "Dissin", "Legmoin", "Iolonioro"],
-    bounds: { south: 9.8, north: 11.5, west: -4.0, east: -2.5 }
-  },
-  "Boucle du Mouhoun": { 
-    cities: ["Dédougou", "Boromo", "Nouna", "Solenzo", "Toma", "Tougan", "Djibasso", "Safané", "Bondokuy", "Gassan"],
-    bounds: { south: 11.5, north: 13.5, west: -4.5, east: -2.5 }
-  },
-  "Plateau-Central": { 
-    cities: ["Ziniaré", "Zorgho", "Boussé", "Mogtédo", "Méguet", "Absouya", "Laye", "Niou", "Zitenga", "Sourgoubila"],
+  "Oubri": { 
+    cities: ["Ziniare", "Zorgho", "Bousse", "Mogtedo", "Meguet", "Absouya", "Laye", "Niou", "Zitenga", "Sourgoubila", "Loumbila"],
     bounds: { south: 12.2, north: 13.0, west: -1.5, east: -0.5 }
+  },
+  "Sirba": { 
+    cities: ["Bogande", "Gayeri", "Manni", "Piela", "Bilanga", "Boulsa", "Tougouri", "Yalgo", "Foutouri", "Dargo"],
+    bounds: { south: 12.5, north: 14.0, west: -0.3, east: 1.0 }
+  },
+  "Soum": { 
+    cities: ["Djibo", "Aribinda", "Tongomayel", "Baraboule", "Kelbo", "Nassoumbou", "Pobe-Mengao"],
+    bounds: { south: 13.5, north: 15.0, west: -1.5, east: -0.3 }
+  },
+  "Sourou": { 
+    cities: ["Tougan", "Yako", "Gourcy", "Di", "Gomboro", "Kassoum", "Kiembara", "Lanfiera", "Arbolle", "Bokin"],
+    bounds: { south: 12.8, north: 14.0, west: -3.5, east: -2.5 }
+  },
+  "Tannounyan": { 
+    cities: ["Banfora", "Sindou", "Niangoloko", "Beregadougou", "Ouo", "Sideradougou", "Tiefora", "Mangodara", "Soubakaniédougou", "Douna"],
+    bounds: { south: 9.4, north: 11.0, west: -5.5, east: -4.0 }
+  },
+  "Tapoa": { 
+    cities: ["Diapaga", "Kantchari", "Logobou", "Namounou", "Partiaga", "Tambaga", "Tansarga", "Bottou"],
+    bounds: { south: 11.5, north: 13.0, west: 0.8, east: 2.4 }
+  },
+  "Yaadga": { 
+    cities: ["Ouahigouya", "Titao", "Gourcy", "Seguenenga", "Thiou", "Koumbri", "Oula", "Rambo", "Tangaye", "Zogore"],
+    bounds: { south: 12.8, north: 14.5, west: -3.0, east: -1.8 }
   },
 };
 
@@ -415,7 +431,6 @@ export class OverpassService {
       horaires: enrichedTags.opening_hours || null,
       tags: enrichedTags,
       source: "OSM",
-      verificationStatus: VerificationStatuses.PENDING,
       confidenceScore: "0.5",
     };
   }

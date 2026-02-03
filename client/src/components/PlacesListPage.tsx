@@ -20,11 +20,9 @@ interface PlacesListPageProps {
   icon: React.ReactNode;
 }
 
-const REGIONS = [
-  "Centre", "Hauts-Bassins", "Cascades", "Centre-Nord", "Centre-Ouest",
-  "Centre-Est", "Centre-Sud", "Est", "Nord", "Sahel", "Sud-Ouest",
-  "Boucle du Mouhoun", "Plateau-Central"
-];
+import { REGION_NAMES } from "@/lib/regions";
+
+const REGIONS = REGION_NAMES;
 
 interface PlaceWithDistance extends Place {
   distance?: number;
