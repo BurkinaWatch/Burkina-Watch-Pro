@@ -24,6 +24,88 @@ const parser = new Parser({
   }
 });
 
+// Cache pour les images extraites des pages (évite de refetch)
+const imageCache = new Map<string, string | null>();
+
+// Fonction pour extraire l'image Open Graph depuis la page de l'article
+async function fetchOgImage(url: string): Promise<string | undefined> {
+  // Vérifier le cache
+  if (imageCache.has(url)) {
+    const cached = imageCache.get(url);
+    return cached || undefined;
+  }
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'BurkinaWatch/1.0 (News Aggregator)'
+      },
+      signal: AbortSignal.timeout(5000) // Timeout 5s
+    });
+
+    if (!response.ok) {
+      imageCache.set(url, null);
+      return undefined;
+    }
+
+    const html = await response.text();
+    
+    // Chercher og:image (priorité)
+    let match = html.match(/<meta\s+(?:property|name)=["']og:image["']\s+content=["']([^"']+)["']/i);
+    if (!match) {
+      match = html.match(/<meta\s+content=["']([^"']+)["']\s+(?:property|name)=["']og:image["']/i);
+    }
+    
+    // Chercher twitter:image comme fallback
+    if (!match) {
+      match = html.match(/<meta\s+(?:property|name)=["']twitter:image["']\s+content=["']([^"']+)["']/i);
+    }
+    if (!match) {
+      match = html.match(/<meta\s+content=["']([^"']+)["']\s+(?:property|name)=["']twitter:image["']/i);
+    }
+    
+    // Chercher la première grande image dans l'article
+    if (!match) {
+      const imgMatches = html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi);
+      if (imgMatches) {
+        for (const imgTag of imgMatches) {
+          const srcMatch = imgTag.match(/src=["']([^"']+)["']/i);
+          if (srcMatch && srcMatch[1]) {
+            const src = srcMatch[1];
+            // Ignorer les petites icônes et logos
+            if (!src.includes('logo') && 
+                !src.includes('icon') && 
+                !src.includes('avatar') &&
+                !src.includes('favicon') &&
+                !src.includes('sprite') &&
+                (src.endsWith('.jpg') || src.endsWith('.jpeg') || src.endsWith('.png') || src.endsWith('.webp'))) {
+              match = [null, src];
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    if (match && match[1]) {
+      let imageUrl = match[1];
+      // Convertir URL relative en absolue
+      if (imageUrl.startsWith('/')) {
+        const urlObj = new URL(url);
+        imageUrl = `${urlObj.protocol}//${urlObj.host}${imageUrl}`;
+      }
+      imageCache.set(url, imageUrl);
+      return imageUrl;
+    }
+
+    imageCache.set(url, null);
+    return undefined;
+  } catch (error) {
+    imageCache.set(url, null);
+    return undefined;
+  }
+}
+
 // Fonction pour extraire l'image d'un article RSS
 function extractImage(item: any): string | undefined {
   // 1. media:content (format standard)
@@ -209,6 +291,27 @@ export async function fetchBulletins(): Promise<BulletinItem[]> {
 
   // Trier par date (plus récent en premier)
   allItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  // Récupérer les images manquantes depuis les pages (limité aux 30 premiers articles sans image)
+  const itemsWithoutImages = allItems.filter(item => !item.image && item.lien).slice(0, 30);
+  if (itemsWithoutImages.length > 0) {
+    console.log(`🖼️ Récupération des images pour ${itemsWithoutImages.length} articles...`);
+    
+    // Traiter en lots de 5 pour ne pas surcharger
+    const batchSize = 5;
+    for (let i = 0; i < itemsWithoutImages.length; i += batchSize) {
+      const batch = itemsWithoutImages.slice(i, i + batchSize);
+      await Promise.all(batch.map(async (item) => {
+        const ogImage = await fetchOgImage(item.lien);
+        if (ogImage) {
+          item.image = ogImage;
+        }
+      }));
+    }
+    
+    const imagesFound = itemsWithoutImages.filter(item => item.image).length;
+    console.log(`✅ ${imagesFound} images récupérées depuis les pages`);
+  }
 
   // Mettre à jour le cache
   cachedBulletins = allItems;
