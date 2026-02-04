@@ -33,6 +33,13 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 - **Login Page**: /connexion (accessible via Login button in header)
 
 ## Recent Changes (Feb 4, 2026)
+- **Transport Departures Enhancement**: Expanded from 2 to 15 departure cities
+  - New departure cities: Koudougou, Ouahigouya, Banfora, Fada N'Gourma, Kaya, Tenkodogo, Dori, Dedougou, Gaoua, Orodara, Ziniaré, Pô, Léo
+  - 65 trajets with detailed schedules, prices, and company info
+  - Geolocation "Ma position" button to find nearest departure city
+  - Select dropdowns for departure/arrival cities instead of text inputs
+  - International destinations: Abidjan, Bamako, Lomé, Cotonou, Niamey, Accra
+  - Files: server/transportData.ts, client/src/pages/Gares.tsx
 - **Universities & Institutes Enhancement**: Expanded to 384 educational institutions
   - Types: university, college, research_institute from OSM
   - Auto-sync on first load when < 10 establishments found

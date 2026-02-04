@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Bus, 
   MapPin, 
@@ -29,7 +30,8 @@ import {
   ExternalLink,
   Navigation,
   Train,
-  CircleDot
+  CircleDot,
+  Locate
 } from "lucide-react";
 import { VoiceSearchButton } from "@/components/VoiceSearchButton";
 import { Link } from "wouter";
@@ -98,6 +100,50 @@ interface TransportStats {
 
 const GARES_PER_PAGE = 50;
 
+const VILLE_COORDS: Record<string, {lat: number, lon: number}> = {
+  "Ouagadougou": { lat: 12.3714, lon: -1.5197 },
+  "Bobo-Dioulasso": { lat: 11.1771, lon: -4.2979 },
+  "Koudougou": { lat: 12.2525, lon: -2.3628 },
+  "Ouahigouya": { lat: 13.5826, lon: -2.4213 },
+  "Banfora": { lat: 10.6328, lon: -4.7580 },
+  "Kaya": { lat: 13.0910, lon: -1.0842 },
+  "Fada N'Gourma": { lat: 12.0626, lon: 0.3574 },
+  "Tenkodogo": { lat: 11.7800, lon: -0.3697 },
+  "Dori": { lat: 14.0354, lon: -0.0347 },
+  "Dedougou": { lat: 12.4633, lon: -3.4606 },
+  "Gaoua": { lat: 10.3250, lon: -3.1667 },
+  "Orodara": { lat: 10.9760, lon: -4.9081 },
+  "Ziniaré": { lat: 12.5833, lon: -1.3000 },
+  "Pô": { lat: 11.1667, lon: -1.1500 },
+  "Léo": { lat: 11.1000, lon: -2.1000 },
+  "Diapaga": { lat: 12.0728, lon: 1.7881 },
+  "Djibo": { lat: 14.1000, lon: -1.6333 }
+};
+
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+function findNearestCity(lat: number, lon: number): string {
+  let nearest = "Ouagadougou";
+  let minDistance = Infinity;
+  for (const [ville, coords] of Object.entries(VILLE_COORDS)) {
+    const dist = calculateDistance(lat, lon, coords.lat, coords.lon);
+    if (dist < minDistance) {
+      minDistance = dist;
+      nearest = ville;
+    }
+  }
+  return nearest;
+}
+
 export default function Gares() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCompagnie, setSelectedCompagnie] = useState<string>("all");
@@ -108,6 +154,8 @@ export default function Gares() {
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedGare, setExpandedGare] = useState<string | null>(null);
   const [showCompagnies, setShowCompagnies] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const { toast } = useToast();
 
   const [includeOSM, setIncludeOSM] = useState(true);
   
@@ -173,6 +221,42 @@ export default function Gares() {
     const start = (currentPage - 1) * GARES_PER_PAGE;
     return filteredGares.slice(start, start + GARES_PER_PAGE);
   }, [filteredGares, currentPage]);
+
+  // Liste des villes de départ disponibles
+  const villesDepart = useMemo(() => {
+    const villes = Array.from(new Set(trajets.map(t => t.depart))).sort();
+    return villes;
+  }, [trajets]);
+
+  // Liste des villes d'arrivée disponibles  
+  const villesArrivee = useMemo(() => {
+    const villes = Array.from(new Set(trajets.map(t => t.arrivee))).sort();
+    return villes;
+  }, [trajets]);
+
+  const handleLocateMe = () => {
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const nearestCity = findNearestCity(position.coords.latitude, position.coords.longitude);
+        setDepartVille(nearestCity);
+        setIsLocating(false);
+        toast({ 
+          title: "Position trouvée", 
+          description: `Ville la plus proche: ${nearestCity}` 
+        });
+      },
+      (error) => {
+        setIsLocating(false);
+        toast({ 
+          title: "Erreur de localisation", 
+          description: "Impossible d'obtenir votre position", 
+          variant: "destructive" 
+        });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const filteredTrajets = useMemo(() => {
     return trajets.filter(trajet => {
@@ -1098,40 +1182,77 @@ export default function Gares() {
             </TabsContent>
 
             <TabsContent value="horaires" className="space-y-4">
-              <Card>
-                <CardContent className="p-4">
+              <Card className="bg-gradient-to-r from-purple-500/5 via-purple-500/10 to-purple-500/5 border-purple-500/20">
+                <CardContent className="p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-purple-600" />
+                      Rechercher un trajet
+                    </h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleLocateMe}
+                      disabled={isLocating}
+                      className="gap-2"
+                      data-testid="button-locate-me"
+                    >
+                      <Locate className={`w-4 h-4 ${isLocating ? 'animate-pulse' : ''}`} />
+                      {isLocating ? "Localisation..." : "Ma position"}
+                    </Button>
+                  </div>
+                  
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                      <Input
-                        placeholder="Ville de depart"
-                        value={departVille}
-                        onChange={(e) => setDepartVille(e.target.value)}
-                        className="pl-10"
-                        data-testid="input-depart"
-                      />
-                    </div>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                      <Input
-                        placeholder="Ville d'arrivee"
-                        value={arriveeVille}
-                        onChange={(e) => setArriveeVille(e.target.value)}
-                        className="pl-10"
-                        data-testid="input-arrivee"
-                      />
-                    </div>
+                    <Select value={departVille || "all"} onValueChange={(v) => setDepartVille(v === "all" ? "" : v)}>
+                      <SelectTrigger data-testid="select-depart">
+                        <MapPin className="w-4 h-4 mr-2 text-green-600" />
+                        <SelectValue placeholder="Ville de départ" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Toutes les villes ({villesDepart.length})</SelectItem>
+                        {villesDepart.map(ville => (
+                          <SelectItem key={ville} value={ville}>{ville}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    <Select value={arriveeVille || "all"} onValueChange={(v) => setArriveeVille(v === "all" ? "" : v)}>
+                      <SelectTrigger data-testid="select-arrivee">
+                        <MapPin className="w-4 h-4 mr-2 text-red-600" />
+                        <SelectValue placeholder="Ville d'arrivée" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Toutes les destinations ({villesArrivee.length})</SelectItem>
+                        {villesArrivee.map(ville => (
+                          <SelectItem key={ville} value={ville}>{ville}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
                     <Select value={selectedCompagnie} onValueChange={setSelectedCompagnie}>
                       <SelectTrigger data-testid="select-compagnie-horaires">
+                        <Bus className="w-4 h-4 mr-2 text-primary" />
                         <SelectValue placeholder="Compagnie" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Toutes</SelectItem>
+                        <SelectItem value="all">Toutes les compagnies</SelectItem>
                         {compagnies.map(c => (
                           <SelectItem key={c.id} value={c.id}>{c.nom}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {filteredTrajets.length} trajet{filteredTrajets.length > 1 ? 's' : ''} trouvé{filteredTrajets.length > 1 ? 's' : ''}
+                    </span>
+                    {departVille && (
+                      <Badge variant="secondary" className="gap-1">
+                        <MapPin className="w-3 h-3" />
+                        Départs depuis {departVille}
+                      </Badge>
+                    )}
                   </div>
                 </CardContent>
               </Card>

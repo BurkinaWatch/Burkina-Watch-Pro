@@ -2357,6 +2357,428 @@ export const trajets: Trajet[] = [
     prix: 6000,
     frequence: "1 fois/semaine",
     jours: ["Mardi"]
+  },
+  // ========== TRAJETS DEPUIS BOBO-DIOULASSO ==========
+  {
+    id: "rahimo-bobo-ouaga",
+    compagnieId: "rahimo",
+    depart: "Bobo-Dioulasso",
+    arrivee: "Ouagadougou",
+    horaires: ["06:00", "08:00", "10:00", "14:00", "18:00", "22:00"],
+    duree: "5h - 5h30",
+    prix: 7500,
+    prixVIP: 9000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "tcv-bobo-ouaga",
+    compagnieId: "tcv",
+    depart: "Bobo-Dioulasso",
+    arrivee: "Ouagadougou",
+    horaires: ["06:00", "08:00", "12:00", "16:00", "20:00"],
+    duree: "5h - 5h30",
+    prix: 6500,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "stmb-bobo-ouaga",
+    compagnieId: "stmb",
+    depart: "Bobo-Dioulasso",
+    arrivee: "Ouagadougou",
+    horaires: ["05:30", "08:00", "12:00", "16:00"],
+    duree: "5h30",
+    prix: 6000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "rakieta-bobo-ouaga",
+    compagnieId: "rakieta",
+    depart: "Bobo-Dioulasso",
+    arrivee: "Ouagadougou",
+    horaires: ["06:00", "10:00", "14:00"],
+    duree: "5h30",
+    prix: 6500,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "tcv-bobo-abidjan",
+    compagnieId: "tcv",
+    depart: "Bobo-Dioulasso",
+    arrivee: "Abidjan",
+    horaires: ["07:00", "18:00"],
+    duree: "12h",
+    prix: 18000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  // ========== TRAJETS DEPUIS KOUDOUGOU ==========
+  {
+    id: "stmb-koudougou-ouaga",
+    compagnieId: "stmb",
+    depart: "Koudougou",
+    arrivee: "Ouagadougou",
+    horaires: ["06:00", "08:00", "10:00", "12:00", "14:00", "16:00"],
+    duree: "2h",
+    prix: 2500,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "staf-koudougou-ouaga",
+    compagnieId: "staf",
+    depart: "Koudougou",
+    arrivee: "Ouagadougou",
+    horaires: ["06:30", "09:00", "12:00", "15:00", "18:00"],
+    duree: "2h",
+    prix: 2000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "stmb-koudougou-bobo",
+    compagnieId: "stmb",
+    depart: "Koudougou",
+    arrivee: "Bobo-Dioulasso",
+    horaires: ["07:00", "11:00", "15:00"],
+    duree: "3h30",
+    prix: 4000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "sitarail-koudougou-ouaga",
+    compagnieId: "sitarail",
+    depart: "Koudougou",
+    arrivee: "Ouagadougou",
+    horaires: ["11:30"],
+    duree: "2h30",
+    prix: 3000,
+    frequence: "2 fois/semaine",
+    jours: ["Mardi", "Jeudi"]
+  },
+  {
+    id: "sitarail-koudougou-bobo",
+    compagnieId: "sitarail",
+    depart: "Koudougou",
+    arrivee: "Bobo-Dioulasso",
+    horaires: ["11:30"],
+    duree: "4h30",
+    prix: 4000,
+    frequence: "2 fois/semaine",
+    jours: ["Mardi", "Jeudi"]
+  },
+  // ========== TRAJETS DEPUIS OUAHIGOUYA ==========
+  {
+    id: "stmb-ouahigouya-ouaga",
+    compagnieId: "stmb",
+    depart: "Ouahigouya",
+    arrivee: "Ouagadougou",
+    horaires: ["05:30", "08:00", "11:00", "14:00"],
+    duree: "3h",
+    prix: 4000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "tsr-ouahigouya-ouaga",
+    compagnieId: "tsr",
+    depart: "Ouahigouya",
+    arrivee: "Ouagadougou",
+    horaires: ["06:00", "10:00", "14:00"],
+    duree: "3h",
+    prix: 3500,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "stmb-ouahigouya-djibo",
+    compagnieId: "stmb",
+    depart: "Ouahigouya",
+    arrivee: "Djibo",
+    horaires: ["07:00", "13:00"],
+    duree: "2h30",
+    prix: 3000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  // ========== TRAJETS DEPUIS BANFORA ==========
+  {
+    id: "rakieta-banfora-ouaga",
+    compagnieId: "rakieta",
+    depart: "Banfora",
+    arrivee: "Ouagadougou",
+    horaires: ["05:30", "08:00", "12:00"],
+    duree: "7h",
+    prix: 8500,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "rakieta-banfora-bobo",
+    compagnieId: "rakieta",
+    depart: "Banfora",
+    arrivee: "Bobo-Dioulasso",
+    horaires: ["06:00", "08:00", "10:00", "12:00", "14:00", "16:00"],
+    duree: "1h30",
+    prix: 1500,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "tcv-banfora-abidjan",
+    compagnieId: "tcv",
+    depart: "Banfora",
+    arrivee: "Abidjan",
+    horaires: ["06:00", "14:00"],
+    duree: "10h",
+    prix: 15000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "sitarail-banfora-ouaga",
+    compagnieId: "sitarail",
+    depart: "Banfora",
+    arrivee: "Ouagadougou",
+    horaires: ["07:00"],
+    duree: "9h",
+    prix: 6000,
+    frequence: "1 fois/semaine",
+    jours: ["Mercredi"]
+  },
+  // ========== TRAJETS DEPUIS FADA N'GOURMA ==========
+  {
+    id: "stmb-fada-ouaga",
+    compagnieId: "stmb",
+    depart: "Fada N'Gourma",
+    arrivee: "Ouagadougou",
+    horaires: ["05:30", "08:00", "12:00", "15:00"],
+    duree: "3h30",
+    prix: 4500,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "stmb-fada-diapaga",
+    compagnieId: "stmb",
+    depart: "Fada N'Gourma",
+    arrivee: "Diapaga",
+    horaires: ["07:00", "12:00"],
+    duree: "2h",
+    prix: 2500,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "stmb-fada-niamey",
+    compagnieId: "stmb",
+    depart: "Fada N'Gourma",
+    arrivee: "Niamey",
+    horaires: ["06:00"],
+    duree: "6h",
+    prix: 10000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  // ========== TRAJETS DEPUIS KAYA ==========
+  {
+    id: "stmb-kaya-ouaga",
+    compagnieId: "stmb",
+    depart: "Kaya",
+    arrivee: "Ouagadougou",
+    horaires: ["05:30", "08:00", "11:00", "14:00", "16:00"],
+    duree: "2h",
+    prix: 2500,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "stmb-kaya-dori",
+    compagnieId: "stmb",
+    depart: "Kaya",
+    arrivee: "Dori",
+    horaires: ["06:00", "12:00"],
+    duree: "3h30",
+    prix: 4000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  // ========== TRAJETS DEPUIS TENKODOGO ==========
+  {
+    id: "stmb-tenkodogo-ouaga",
+    compagnieId: "stmb",
+    depart: "Tenkodogo",
+    arrivee: "Ouagadougou",
+    horaires: ["05:30", "08:00", "11:00", "14:00"],
+    duree: "2h30",
+    prix: 3000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "stmb-tenkodogo-fada",
+    compagnieId: "stmb",
+    depart: "Tenkodogo",
+    arrivee: "Fada N'Gourma",
+    horaires: ["07:00", "13:00"],
+    duree: "2h",
+    prix: 2500,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "tcv-tenkodogo-lome",
+    compagnieId: "tcv",
+    depart: "Tenkodogo",
+    arrivee: "Lome",
+    horaires: ["06:00"],
+    duree: "14h",
+    prix: 20000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  // ========== TRAJETS DEPUIS DORI ==========
+  {
+    id: "stmb-dori-ouaga",
+    compagnieId: "stmb",
+    depart: "Dori",
+    arrivee: "Ouagadougou",
+    horaires: ["05:00", "08:00"],
+    duree: "5h",
+    prix: 5500,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "stmb-dori-kaya",
+    compagnieId: "stmb",
+    depart: "Dori",
+    arrivee: "Kaya",
+    horaires: ["06:00", "12:00"],
+    duree: "3h30",
+    prix: 4000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  // ========== TRAJETS DEPUIS DEDOUGOU ==========
+  {
+    id: "stmb-dedougou-ouaga",
+    compagnieId: "stmb",
+    depart: "Dedougou",
+    arrivee: "Ouagadougou",
+    horaires: ["05:30", "08:00", "12:00"],
+    duree: "4h",
+    prix: 4500,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "stmb-dedougou-bobo",
+    compagnieId: "stmb",
+    depart: "Dedougou",
+    arrivee: "Bobo-Dioulasso",
+    horaires: ["06:00", "10:00", "14:00"],
+    duree: "2h30",
+    prix: 3000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  // ========== TRAJETS DEPUIS GAOUA ==========
+  {
+    id: "rakieta-gaoua-bobo",
+    compagnieId: "rakieta",
+    depart: "Gaoua",
+    arrivee: "Bobo-Dioulasso",
+    horaires: ["06:00", "12:00"],
+    duree: "4h",
+    prix: 4500,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "rakieta-gaoua-ouaga",
+    compagnieId: "rakieta",
+    depart: "Gaoua",
+    arrivee: "Ouagadougou",
+    horaires: ["05:00", "10:00"],
+    duree: "8h",
+    prix: 9000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  // ========== TRAJETS DEPUIS ORODARA ==========
+  {
+    id: "tcv-orodara-bobo",
+    compagnieId: "tcv",
+    depart: "Orodara",
+    arrivee: "Bobo-Dioulasso",
+    horaires: ["06:30", "09:00", "12:00", "15:00", "18:00"],
+    duree: "1h30",
+    prix: 1000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "tcv-orodara-ouaga",
+    compagnieId: "tcv",
+    depart: "Orodara",
+    arrivee: "Ouagadougou",
+    horaires: ["06:00", "14:00"],
+    duree: "6h30",
+    prix: 7000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  // ========== TRAJETS DEPUIS ZINIARÉ ==========
+  {
+    id: "sotraco-ziniare-ouaga",
+    compagnieId: "sotraco",
+    depart: "Ziniaré",
+    arrivee: "Ouagadougou",
+    horaires: ["06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "14:00", "16:00", "18:00"],
+    duree: "45min",
+    prix: 500,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  // ========== TRAJETS DEPUIS PO ==========
+  {
+    id: "stmb-po-ouaga",
+    compagnieId: "stmb",
+    depart: "Pô",
+    arrivee: "Ouagadougou",
+    horaires: ["06:00", "10:00", "14:00"],
+    duree: "2h30",
+    prix: 3000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  {
+    id: "tcv-po-accra",
+    compagnieId: "tcv",
+    depart: "Pô",
+    arrivee: "Accra",
+    horaires: ["06:00"],
+    duree: "8h",
+    prix: 15000,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  // ========== TRAJETS DEPUIS LEO ==========
+  {
+    id: "stmb-leo-ouaga",
+    compagnieId: "stmb",
+    depart: "Léo",
+    arrivee: "Ouagadougou",
+    horaires: ["06:00", "12:00"],
+    duree: "3h",
+    prix: 3500,
+    frequence: "Quotidien",
+    jours: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
   }
 ];
 
