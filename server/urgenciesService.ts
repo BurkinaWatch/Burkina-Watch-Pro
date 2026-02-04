@@ -52,12 +52,21 @@ export const EMERGENCY_SERVICES: EmergencyService[] = [
   },
   {
     id: "nat-3",
-    name: "Gendarmerie Nationale",
+    name: "Gendarmerie Nationale - Urgences",
     type: "Gendarmerie",
+    city: "National",
+    phone: "16",
+    available24h: true,
+    services: ["Urgences gendarmerie", "Sécurité routière", "Ordre public", "Interventions"]
+  },
+  {
+    id: "nat-3b",
+    name: "Protection Civile",
+    type: "Pompiers",
     city: "National",
     phone: "1010",
     available24h: true,
-    services: ["Sécurité routière", "Ordre public"]
+    services: ["Protection civile", "Catastrophes naturelles", "Secours"]
   },
   {
     id: "nat-4",
@@ -76,6 +85,24 @@ export const EMERGENCY_SERVICES: EmergencyService[] = [
     phone: "112",
     available24h: true,
     services: ["Urgences médicales", "Ambulances", "Évacuation sanitaire"]
+  },
+  {
+    id: "nat-5b",
+    name: "Centre Antipoison",
+    type: "Hôpitaux",
+    city: "National",
+    phone: "80001111",
+    available24h: true,
+    services: ["Intoxications", "Empoisonnements", "Conseils médicaux"]
+  },
+  {
+    id: "nat-5c",
+    name: "Urgences Psychiatriques",
+    type: "Hôpitaux",
+    city: "National",
+    phone: "80001112",
+    available24h: true,
+    services: ["Crises psychiatriques", "Urgences mentales", "Aide psychologique"]
   },
 
   // ============================================
@@ -192,6 +219,57 @@ export const EMERGENCY_SERVICES: EmergencyService[] = [
     latitude: 12.3686,
     longitude: -1.5275,
     available24h: true
+  },
+  // Numéros verts alternatifs pompiers Ouagadougou (si 18 inaccessible)
+  {
+    id: "oua-pom-3",
+    name: "Pompiers Ouagadougou - Ligne Alternative 1",
+    type: "Pompiers",
+    city: "Ouagadougou",
+    region: "Centre",
+    phone: "25409696",
+    available24h: true,
+    services: ["Numéro vert", "Alternative au 18"]
+  },
+  {
+    id: "oua-pom-4",
+    name: "Pompiers Ouagadougou - Ligne Alternative 2",
+    type: "Pompiers",
+    city: "Ouagadougou",
+    region: "Centre",
+    phone: "25402626",
+    available24h: true,
+    services: ["Numéro vert", "Alternative au 18"]
+  },
+  {
+    id: "oua-pom-5",
+    name: "Pompiers Ouagadougou - Ligne Alternative 3",
+    type: "Pompiers",
+    city: "Ouagadougou",
+    region: "Centre",
+    phone: "25405858",
+    available24h: true,
+    services: ["Numéro vert", "Alternative au 18"]
+  },
+  {
+    id: "oua-pom-6",
+    name: "Pompiers Ouagadougou - Ligne Alternative 4",
+    type: "Pompiers",
+    city: "Ouagadougou",
+    region: "Centre",
+    phone: "25408989",
+    available24h: true,
+    services: ["Numéro vert", "Alternative au 18"]
+  },
+  {
+    id: "oua-pom-7",
+    name: "Pompiers Ouagadougou - Ligne Alternative 5",
+    type: "Pompiers",
+    city: "Ouagadougou",
+    region: "Centre",
+    phone: "25409494",
+    available24h: true,
+    services: ["Numéro vert", "Alternative au 18"]
   },
 
   // Hôpitaux - Ouagadougou (VÉRIFIÉS)
@@ -762,15 +840,6 @@ export const EMERGENCY_SERVICES: EmergencyService[] = [
     phone: "80001287",
     available24h: true,
     services: ["Violences physiques", "Violences sexuelles", "MGF", "Mariages forcés", "Harcèlement"]
-  },
-  {
-    id: "nat-8",
-    name: "Gendarmerie Nationale - Urgences",
-    type: "Gendarmerie",
-    city: "National",
-    phone: "16",
-    available24h: true,
-    services: ["Urgences gendarmerie", "Interventions"]
   },
   {
     id: "nat-9",
