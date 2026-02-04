@@ -348,21 +348,66 @@ function transformOsmToHopital(place: Place) {
 
 function transformOsmToUniversity(place: Place) {
   const tags = place.tags as Record<string, string> || {};
-  const faculties = tags.description || tags.subject || "Filières générales et techniques";
+  const name = place.name || tags.name || tags["name:fr"] || tags.operator || "Établissement";
+  
+  // Déterminer le type d'établissement
+  let institutionType = "Université";
+  const nameLower = name.toLowerCase();
+  const amenity = tags.amenity || "";
+  
+  if (amenity === "college" || nameLower.includes("institut") || nameLower.includes("isge") || nameLower.includes("istic")) {
+    institutionType = "Institut";
+  } else if (nameLower.includes("école") || nameLower.includes("ecole")) {
+    if (nameLower.includes("supérieur") || nameLower.includes("superieur") || nameLower.includes("ingénieur")) {
+      institutionType = "Grande École";
+    } else {
+      institutionType = "École Supérieure";
+    }
+  } else if (nameLower.includes("centre") && nameLower.includes("formation")) {
+    institutionType = "Centre de Formation";
+  } else if (amenity === "research_institute" || nameLower.includes("recherche")) {
+    institutionType = "Institut de Recherche";
+  } else if (nameLower.includes("lycée") || nameLower.includes("lycee")) {
+    institutionType = "Lycée Technique";
+  }
+  
+  // Extraire les filières et cursus depuis les tags OSM
+  const filieres = tags.subject || tags.description || tags.courses || tags.faculty || "";
+  const filieresArray = filieres ? filieres.split(';').map(f => f.trim()).filter(f => f) : [];
+  
+  // Extraire les niveaux d'études
+  const niveaux = tags.isced_level || tags.level || "";
+  const niveauxArray = niveaux ? niveaux.split(';').map(n => n.trim()) : [];
+  
   return {
     id: `osm-uni-${place.id}`,
-    nom: place.name,
-    adresse: place.address || "Burkina Faso",
-    quartier: place.quartier || "Quartier non spécifié",
-    ville: place.ville || "Ville non spécifiée",
+    name: name,
+    nom: name,
+    address: place.address || tags["addr:full"] || tags["addr:street"] || "Burkina Faso",
+    adresse: place.address || tags["addr:full"] || tags["addr:street"] || "Burkina Faso",
+    quartier: place.quartier || tags["addr:suburb"] || "Quartier non spécifié",
+    ville: place.ville || tags["addr:city"] || "Ville non spécifiée",
     region: place.region || "Région non spécifiée",
+    lat: parseFloat(place.latitude),
+    lon: parseFloat(place.longitude),
     latitude: parseFloat(place.latitude),
     longitude: parseFloat(place.longitude),
-    telephone: place.telephone || undefined,
-    email: place.email || undefined,
-    website: place.website || undefined,
-    services: faculties.split(';').map(f => f.trim()),
-    type: tags.amenity === "university" ? "Université" : "Institut / École Supérieure",
+    telephone: place.telephone || tags.phone || tags["contact:phone"] || undefined,
+    email: place.email || tags.email || tags["contact:email"] || undefined,
+    website: place.website || tags.website || tags["contact:website"] || undefined,
+    filieres: filieresArray.length > 0 ? filieresArray : undefined,
+    niveaux: niveauxArray.length > 0 ? niveauxArray : undefined,
+    capacite: tags.capacity ? parseInt(tags.capacity) : undefined,
+    anneeCreation: tags.start_date || tags.opening_date || undefined,
+    operateur: tags.operator || undefined,
+    tags: {
+      type: institutionType,
+      amenity: amenity,
+      filieres: filieres || undefined,
+      niveaux: niveaux || undefined,
+      ...tags
+    },
+    type: institutionType,
     source: "OSM" as const
   };
 }
@@ -2591,25 +2636,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/universites", async (req, res) => {
     try {
       const { region, search } = req.query;
-      let result = await overpassService.getPlaces({ placeType: "university" });
-      let dbPlaces = result.places || [];
-      let lastUpdated = result.lastUpdated;
+      
+      // Récupérer tous les types d'établissements d'enseignement supérieur
+      const [universities, colleges, researchInstitutes] = await Promise.all([
+        overpassService.getPlaces({ placeType: "university" }),
+        overpassService.getPlaces({ placeType: "college" }),
+        overpassService.getPlaces({ placeType: "research_institute" })
+      ]);
+      
+      let allPlaces = [
+        ...(universities.places || []),
+        ...(colleges.places || []),
+        ...(researchInstitutes.places || [])
+      ];
+      
+      let lastUpdated = universities.lastUpdated || colleges.lastUpdated || researchInstitutes.lastUpdated;
 
-      if (dbPlaces.length === 0) {
-        console.log("[API] Aucune université trouvée dans la DB, injection du fallback...");
-        const fallbackData = overpassService["getFallbackPlaces"]("university");
-        for (const p of fallbackData) {
-          try {
-            await db.insert(places).values(p).onConflictDoNothing();
-          } catch (e) {}
+      // Si aucune donnée, lancer la synchronisation OSM
+      if (allPlaces.length < 10) {
+        console.log("[API] Peu d'universités trouvées, lancement de la synchronisation OSM...");
+        try {
+          await Promise.all([
+            overpassService.syncPlaceType("university"),
+            overpassService.syncPlaceType("college"),
+            overpassService.syncPlaceType("research_institute")
+          ]);
+          
+          // Re-fetch après sync
+          const [retryUni, retryCollege, retryResearch] = await Promise.all([
+            overpassService.getPlaces({ placeType: "university" }),
+            overpassService.getPlaces({ placeType: "college" }),
+            overpassService.getPlaces({ placeType: "research_institute" })
+          ]);
+          
+          allPlaces = [
+            ...(retryUni.places || []),
+            ...(retryCollege.places || []),
+            ...(retryResearch.places || [])
+          ];
+          lastUpdated = new Date();
+          console.log(`[API] Synchronisation terminée: ${allPlaces.length} établissements trouvés`);
+        } catch (syncError) {
+          console.error("Erreur sync universités OSM:", syncError);
         }
-        const retry = await overpassService.getPlaces({ placeType: "university" });
-        dbPlaces = retry.places;
-        lastUpdated = retry.lastUpdated;
       }
+      
+      // Transformer les données avec plus de détails
+      let universites = allPlaces.map(transformOsmToUniversity);
+      
+      // Filtrer par région si spécifié
+      if (region && region !== "all") {
+        universites = universites.filter(u => u.region === region);
+      }
+      
+      // Filtrer par recherche si spécifié
+      if (search) {
+        const query = (search as string).toLowerCase();
+        universites = universites.filter(u => 
+          u.name.toLowerCase().includes(query) ||
+          u.ville.toLowerCase().includes(query) ||
+          u.type.toLowerCase().includes(query)
+        );
+      }
+      
+      // Trier: universités d'abord, puis par nom
+      universites.sort((a, b) => {
+        if (a.type === "Université" && b.type !== "Université") return -1;
+        if (a.type !== "Université" && b.type === "Université") return 1;
+        return a.name.localeCompare(b.name, 'fr');
+      });
 
       res.json({
-        universites: dbPlaces,
+        universites,
+        total: universites.length,
         lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
       });
     } catch (error) {

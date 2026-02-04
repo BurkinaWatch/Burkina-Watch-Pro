@@ -33,6 +33,13 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 - **Login Page**: /connexion (accessible via Login button in header)
 
 ## Recent Changes (Feb 4, 2026)
+- **Universities & Institutes Enhancement**: Expanded to 384 educational institutions
+  - Types: university, college, research_institute from OSM
+  - Auto-sync on first load when < 10 establishments found
+  - Enhanced transformation: type detection (Université, Institut, Grande École, Centre de Formation)
+  - New fields: filieres, niveaux, capacite, anneeCreation, operateur
+  - Sorted: universities first, then alphabetically
+  - Endpoint: GET /api/universites
 - **Restaurants OSM Integration**: Full restaurant data from OpenStreetMap (free, no API key required)
   - Auto-sync on first load: restaurants, fast_food, cafe, bar types
   - 2900+ restaurants across Burkina Faso
