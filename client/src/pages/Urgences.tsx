@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Search, MapPin, Phone, AlertTriangle, Shield, Activity, Heart, Users, ArrowLeft, RefreshCw, Download, Smartphone, Loader2 } from "lucide-react";
+import { Search, MapPin, Phone, AlertTriangle, Shield, Activity, Heart, Users, ArrowLeft, RefreshCw, Download, Smartphone, Loader2, Navigation } from "lucide-react";
 import { VoiceSearchButton } from "@/components/VoiceSearchButton";
 import { SiWhatsapp } from "react-icons/si";
 import { useLocation } from "wouter";
@@ -44,6 +44,70 @@ export default function Urgences() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
   const lastRefreshRef = useRef<number>(0);
+  
+  // Proximity sorting state
+  const [sortByProximity, setSortByProximity] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+
+  // Calculate distance between two points using Haversine formula
+  const calculateDistance = useCallback((lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }, []);
+
+  // Handle proximity sorting
+  const handleSortByProximity = useCallback(() => {
+    if (sortByProximity) {
+      setSortByProximity(false);
+      setUserLocation(null);
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      toast({
+        title: "Géolocalisation non disponible",
+        description: "Votre navigateur ne supporte pas la géolocalisation",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setSortByProximity(true);
+        setIsLocating(false);
+        toast({
+          title: "Position trouvée",
+          description: "Services d'urgence triés par distance",
+        });
+      },
+      (error) => {
+        setIsLocating(false);
+        let message = "Impossible d'obtenir votre position";
+        if (error.code === error.PERMISSION_DENIED) {
+          message = "Veuillez autoriser l'accès à votre position";
+        }
+        toast({
+          title: "Erreur de localisation",
+          description: message,
+          variant: "destructive",
+        });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, [sortByProximity, toast]);
 
   // Chargement initial des données - exécuté une seule fois au montage
   useEffect(() => {
@@ -125,7 +189,7 @@ export default function Urgences() {
       return [];
     }
     
-    return urgencesData.filter(service => {
+    let services = urgencesData.filter(service => {
       if (!service) return false;
       
       const name = service.name || "";
@@ -148,7 +212,35 @@ export default function Urgences() {
       
       return matchesSearch && matchesType;
     });
-  }, [urgencesData, searchTerm, selectedType]);
+
+    // Sort by proximity if enabled
+    if (sortByProximity && userLocation) {
+      services = services.map(service => ({
+        ...service,
+        distance: service.latitude && service.longitude
+          ? calculateDistance(userLocation.lat, userLocation.lng, service.latitude, service.longitude)
+          : Infinity,
+      })).sort((a, b) => (a.distance || Infinity) - (b.distance || Infinity));
+    }
+
+    return services;
+  }, [urgencesData, searchTerm, selectedType, sortByProximity, userLocation, calculateDistance]);
+
+  // Get distance for a service
+  const getServiceDistance = useCallback((service: EmergencyService): number | null => {
+    if (!sortByProximity || !userLocation || !service.latitude || !service.longitude) {
+      return null;
+    }
+    return calculateDistance(userLocation.lat, userLocation.lng, service.latitude, service.longitude);
+  }, [sortByProximity, userLocation, calculateDistance]);
+
+  // Format distance for display
+  const formatDistance = (distance: number): string => {
+    if (distance < 1) {
+      return `${Math.round(distance * 1000)} m`;
+    }
+    return `${distance.toFixed(1)} km`;
+  };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -513,9 +605,28 @@ export default function Urgences() {
                   <SelectItem value="ONG">ONG</SelectItem>
                 </SelectContent>
               </Select>
+              <Button
+                variant={sortByProximity ? "default" : "outline"}
+                onClick={handleSortByProximity}
+                disabled={isLocating}
+                className={`gap-2 ${sortByProximity ? "bg-green-600 hover:bg-green-700" : ""}`}
+                data-testid="button-sort-proximity"
+              >
+                {isLocating ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Navigation className="w-4 h-4" />
+                )}
+                Les plus proches
+              </Button>
             </div>
-            <div className="mt-4 text-sm text-muted-foreground">
-              {filteredServices.length} service{filteredServices.length > 1 ? 's' : ''} trouvé{filteredServices.length > 1 ? 's' : ''}
+            <div className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
+              <span>{filteredServices.length} service{filteredServices.length > 1 ? 's' : ''} trouvé{filteredServices.length > 1 ? 's' : ''}</span>
+              {sortByProximity && (
+                <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                  Triés par proximité
+                </Badge>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -540,9 +651,20 @@ export default function Urgences() {
                   </CardTitle>
                   {getTypeIcon(service.type)}
                 </div>
-                <Badge className={`w-fit mt-2 ${getTypeColor(service.type)}`}>
-                  {service.type}
-                </Badge>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge className={`w-fit ${getTypeColor(service.type)}`}>
+                    {service.type}
+                  </Badge>
+                  {(() => {
+                    const distance = getServiceDistance(service);
+                    return distance !== null ? (
+                      <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                        <Navigation className="w-3 h-3 mr-1" />
+                        {formatDistance(distance)}
+                      </Badge>
+                    ) : null;
+                  })()}
+                </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-2 text-sm">
