@@ -3713,12 +3713,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   app.get("/api/transport", async (req, res) => {
     try {
-      const { getCompagnies, getGares, getTrajets, getStatistiquesTransport } = await import("./transportData");
+      const { getCompagnies, getGares, getTrajets, getStatistiquesTransport, GARES_DEPART } = await import("./transportData");
       const { getGaresWithOSM } = await import("./garesOSMService");
       
       const includeOSM = req.query.osm === "true";
       const hardcodedGares = getGares();
       const allGares = includeOSM ? await getGaresWithOSM(hardcodedGares) : hardcodedGares;
+      
+      // Enrichir les trajets avec les infos de gare de départ
+      const trajetsWithGares = getTrajets().map(trajet => ({
+        ...trajet,
+        gareDepart: GARES_DEPART[trajet.depart] || null
+      }));
       
       const baseStats = getStatistiquesTransport();
       const stats = {
@@ -3730,7 +3736,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         compagnies: getCompagnies(),
         gares: allGares,
-        trajets: getTrajets(),
+        trajets: trajetsWithGares,
         stats
       });
     } catch (error) {

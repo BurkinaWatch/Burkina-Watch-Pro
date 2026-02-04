@@ -77,6 +77,13 @@ interface Gare {
   imageUrl?: string;
 }
 
+interface GareDepart {
+  nom: string;
+  adresse: string;
+  coordonnees: { lat: number; lng: number };
+  telephone?: string;
+}
+
 interface Trajet {
   id: string;
   compagnieId: string;
@@ -88,6 +95,7 @@ interface Trajet {
   prixVIP?: number;
   frequence: string;
   jours: string[];
+  gareDepart?: GareDepart;
 }
 
 interface TransportStats {
@@ -1308,6 +1316,47 @@ export default function Gares() {
                           ))}
                         </div>
                       </div>
+                      
+                      {trajet.gareDepart && (
+                        <div className="mt-4 pt-4 border-t bg-gradient-to-r from-blue-500/5 to-blue-500/10 -mx-4 -mb-4 px-4 py-3 rounded-b-lg">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Building2 className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                <span className="font-semibold text-sm truncate">{trajet.gareDepart.nom}</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground pl-6 truncate">{trajet.gareDepart.adresse}</p>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {trajet.gareDepart.telephone && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="gap-1"
+                                  onClick={() => window.open(`tel:${trajet.gareDepart?.telephone}`, '_self')}
+                                  data-testid={`button-call-gare-${trajet.id}`}
+                                >
+                                  <Phone className="w-3 h-3" />
+                                  <span className="hidden sm:inline">Appeler</span>
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="gap-1"
+                                onClick={() => {
+                                  const { lat, lng } = trajet.gareDepart!.coordonnees;
+                                  window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+                                }}
+                                data-testid={`button-navigate-gare-${trajet.id}`}
+                              >
+                                <Navigation className="w-3 h-3" />
+                                <span className="hidden sm:inline">Y aller</span>
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}

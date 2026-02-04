@@ -21,6 +21,13 @@ export interface Gare {
   services?: string[];
 }
 
+export interface GareDepart {
+  nom: string;
+  adresse: string;
+  coordonnees: { lat: number; lng: number };
+  telephone?: string;
+}
+
 export interface Trajet {
   id: string;
   compagnieId: string;
@@ -32,7 +39,102 @@ export interface Trajet {
   prixVIP?: number;
   frequence: string;
   jours: string[];
+  gareDepart?: GareDepart;
 }
+
+// Gares de départ par ville avec coordonnées GPS
+export const GARES_DEPART: Record<string, GareDepart> = {
+  "Ouagadougou": {
+    nom: "Gare Routière Internationale Ouaga-Inter",
+    adresse: "Avenue de la Liberté, Tampouy, Secteur 23",
+    coordonnees: { lat: 12.3912, lng: -1.5009 },
+    telephone: "+226 25 36 08 08"
+  },
+  "Bobo-Dioulasso": {
+    nom: "Gare Routière de Bobo-Dioulasso",
+    adresse: "Secteur 1, près du Grand Marché",
+    coordonnees: { lat: 11.1847, lng: -4.2920 },
+    telephone: "+226 20 97 00 50"
+  },
+  "Koudougou": {
+    nom: "Gare Routière de Koudougou",
+    adresse: "Avenue de la Gare, Centre-ville",
+    coordonnees: { lat: 12.2532, lng: -2.3650 },
+    telephone: "+226 25 44 00 12"
+  },
+  "Ouahigouya": {
+    nom: "Gare Routière de Ouahigouya",
+    adresse: "Secteur 4, Route de Djibo",
+    coordonnees: { lat: 13.5789, lng: -2.4156 },
+    telephone: "+226 25 55 01 23"
+  },
+  "Banfora": {
+    nom: "Gare Routière de Banfora",
+    adresse: "Centre-ville, près du marché",
+    coordonnees: { lat: 10.6317, lng: -4.7589 },
+    telephone: "+226 20 91 00 45"
+  },
+  "Kaya": {
+    nom: "Gare Routière de Kaya",
+    adresse: "Secteur 2, Route de Dori",
+    coordonnees: { lat: 13.0923, lng: -1.0856 },
+    telephone: "+226 25 45 00 34"
+  },
+  "Fada N'Gourma": {
+    nom: "Gare Routière de Fada N'Gourma",
+    adresse: "Centre-ville, RN4",
+    coordonnees: { lat: 12.0607, lng: 0.3552 },
+    telephone: "+226 24 77 00 56"
+  },
+  "Tenkodogo": {
+    nom: "Gare Routière de Tenkodogo",
+    adresse: "Secteur 3, Route de Ouagadougou",
+    coordonnees: { lat: 11.7789, lng: -0.3712 },
+    telephone: "+226 24 71 00 78"
+  },
+  "Dori": {
+    nom: "Gare Routière de Dori",
+    adresse: "Centre-ville",
+    coordonnees: { lat: 14.0367, lng: -0.0389 },
+    telephone: "+226 24 46 00 89"
+  },
+  "Dedougou": {
+    nom: "Gare Routière de Dédougou",
+    adresse: "Secteur 1, Avenue principale",
+    coordonnees: { lat: 12.4612, lng: -3.4623 },
+    telephone: "+226 20 52 00 90"
+  },
+  "Gaoua": {
+    nom: "Gare Routière de Gaoua",
+    adresse: "Centre-ville, Route de Bobo",
+    coordonnees: { lat: 10.3256, lng: -3.1678 },
+    telephone: "+226 20 87 00 12"
+  },
+  "Orodara": {
+    nom: "Gare Routière d'Orodara",
+    adresse: "Centre-ville",
+    coordonnees: { lat: 10.9745, lng: -4.9098 },
+    telephone: "+226 20 89 00 34"
+  },
+  "Ziniaré": {
+    nom: "Gare Routière de Ziniaré",
+    adresse: "Centre-ville, RN3",
+    coordonnees: { lat: 12.5823, lng: -1.3012 },
+    telephone: "+226 25 47 00 56"
+  },
+  "Pô": {
+    nom: "Gare Routière de Pô",
+    adresse: "Centre-ville, Route de Ghana",
+    coordonnees: { lat: 11.1678, lng: -1.1523 },
+    telephone: "+226 24 78 00 78"
+  },
+  "Léo": {
+    nom: "Gare Routière de Léo",
+    adresse: "Centre-ville",
+    coordonnees: { lat: 11.0989, lng: -2.1012 },
+    telephone: "+226 24 56 00 90"
+  }
+};
 
 export interface Compagnie {
   id: string;
