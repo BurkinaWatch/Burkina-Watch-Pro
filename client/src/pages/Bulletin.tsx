@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { VoiceSearchButton } from "@/components/VoiceSearchButton";
-import { Loader2, ExternalLink, RefreshCw, Search, Filter, Calendar, FileText, ArrowLeft } from "lucide-react";
+import { Loader2, ExternalLink, RefreshCw, Search, Filter, Calendar, FileText, ArrowLeft, Building2, Megaphone, Newspaper, Globe, Radio, BookOpen, Tv, Mic } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
@@ -127,15 +127,51 @@ export default function Bulletin() {
 
   const getSourceBadgeColor = (source: string) => {
     const colors: Record<string, string> = {
-      aib: "bg-blue-500",
-      lefaso: "bg-green-500",
-      burkina24: "bg-yellow-500",
-      rtb: "bg-red-500",
-      bf1: "bg-purple-500",
-      sidwaya: "bg-orange-500",
-      gouvernement: "bg-indigo-500",
+      aib: "bg-blue-600",
+      lefaso: "bg-green-600",
+      burkina24: "bg-amber-500",
+      rtb: "bg-red-600",
+      bf1: "bg-purple-600",
+      sidwaya: "bg-orange-600",
+      gouvernement: "bg-indigo-600",
+      wakatsera: "bg-teal-600",
+      fasozine: "bg-pink-600",
+      infowakat: "bg-cyan-600",
+      netafrique: "bg-emerald-600",
+      "libre info": "bg-violet-600",
+      "bbc afrique": "bg-red-700",
+      "jeune afrique": "bg-yellow-600",
+      "voa afrique": "bg-blue-700",
+      "l'economiste du faso": "bg-slate-600",
     };
     return colors[source.toLowerCase()] || "bg-gray-500";
+  };
+
+  const getSourceIcon = (source: string) => {
+    const sourceLower = source.toLowerCase();
+    
+    // Sources officielles gouvernementales
+    if (sourceLower.includes("gouvernement") || sourceLower.includes("presidence") || sourceLower.includes("sig")) {
+      return <Building2 className="w-3.5 h-3.5" />;
+    }
+    // Agences de presse officielles
+    if (sourceLower === "aib" || sourceLower === "sidwaya") {
+      return <Megaphone className="w-3.5 h-3.5" />;
+    }
+    // Radios et TV
+    if (sourceLower === "rtb" || sourceLower === "bf1" || sourceLower.includes("voa") || sourceLower.includes("bbc")) {
+      return <Radio className="w-3.5 h-3.5" />;
+    }
+    // Journaux en ligne majeurs
+    if (sourceLower.includes("lefaso") || sourceLower.includes("burkina24") || sourceLower.includes("jeune afrique")) {
+      return <Newspaper className="w-3.5 h-3.5" />;
+    }
+    // Économie
+    if (sourceLower.includes("economiste")) {
+      return <BookOpen className="w-3.5 h-3.5" />;
+    }
+    // Autres médias en ligne
+    return <Globe className="w-3.5 h-3.5" />;
   };
 
   return (
@@ -276,7 +312,8 @@ export default function Bulletin() {
               >
                 <CardHeader>
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <Badge className={`${getSourceBadgeColor(bulletin.source)} text-white`}>
+                    <Badge className={`${getSourceBadgeColor(bulletin.source)} text-white flex items-center gap-1.5`}>
+                      {getSourceIcon(bulletin.source)}
                       {bulletin.source}
                     </Badge>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
