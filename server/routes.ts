@@ -90,11 +90,12 @@ function getMergedPharmacies(): any[] {
 // HELPERS POUR TRANSFORMER LES DONNÉES OSM
 // ============================================
 
-function transformOsmToRestaurant(place: Place, index: number) {
+function transformOsmToRestaurant(place: Place, index?: number) {
   const tags = place.tags as Record<string, string> || {};
   const name = place.name || tags.name || tags["name:fr"] || tags["name:en"] || tags.operator || tags.brand || tags.owner || tags.ref || "Restaurant";
   return {
     id: `osm-rest-${place.id}`,
+    name: name,
     nom: name,
     type: mapOsmCuisineToType(tags.cuisine || tags.amenity || "restaurant") as any,
     adresse: place.address || "Burkina Faso",
