@@ -31,7 +31,6 @@ import { getOfficialNews } from "./newsService";
 import { fetchEvents, clearEventsCache } from "./eventsService";
 import { overpassService } from "./overpassService";
 import { dataMigrationService } from "./dataMigrationService";
-import { googlePlacesService } from "./googlePlacesService";
 import { BOUTIQUES_DATA } from "./boutiquesData";
 import { PHARMACIES_DATA } from "./pharmaciesData";
 import type { Place } from "@shared/schema";
@@ -2255,35 +2254,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         parRegion,
         nombreVilles: villes.size,
         lastUpdate: new Date(),
-        source: "PostgreSQL",
-        googlePlacesEnabled: googlePlacesService.isConfigured()
+        source: "OpenStreetMap"
       });
     } catch (error) {
       console.error("Erreur stats restaurants:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
-    }
-  });
-
-  app.post("/api/restaurants/sync-google", async (req, res) => {
-    try {
-      if (!googlePlacesService.isConfigured()) {
-        return res.status(400).json({ 
-          error: "Google Places API non configurée",
-          message: "Veuillez configurer GOOGLE_API_KEY pour utiliser cette fonctionnalité"
-        });
-      }
-      
-      console.log("🔄 Lancement de la synchronisation Google Places...");
-      const result = await googlePlacesService.syncRestaurantsFromGoogle();
-      
-      res.json({
-        success: true,
-        message: `Synchronisation terminée: ${result.added} restaurants ajoutés, ${result.updated} mis à jour`,
-        ...result
-      });
-    } catch (error) {
-      console.error("Erreur sync Google Places:", error);
-      res.status(500).json({ error: "Erreur lors de la synchronisation Google Places" });
     }
   });
 
@@ -2994,6 +2969,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Transformation spécifique pour les restaurants
       if (placeType === "restaurant" || placeType === "fast_food" || placeType === "cafe") {
+        // Si aucun restaurant trouvé, synchroniser depuis OSM
+        if (response.places.length === 0) {
+          console.log(`[API] Aucun ${placeType} trouvé, lancement de la synchronisation OSM...`);
+          try {
+            await Promise.all([
+              overpassService.syncPlaceType("restaurant"),
+              overpassService.syncPlaceType("fast_food"),
+              overpassService.syncPlaceType("cafe"),
+              overpassService.syncPlaceType("bar")
+            ]);
+            
+            // Re-fetch après synchronisation
+            const [rest, fastFood, cafe, bar] = await Promise.all([
+              overpassService.getPlaces({ placeType: "restaurant" }),
+              overpassService.getPlaces({ placeType: "fast_food" }),
+              overpassService.getPlaces({ placeType: "cafe" }),
+              overpassService.getPlaces({ placeType: "bar" })
+            ]);
+            
+            const allRestaurants = [
+              ...rest.places,
+              ...fastFood.places,
+              ...cafe.places,
+              ...bar.places
+            ];
+            
+            const transformedPlaces = allRestaurants.map(transformOsmToRestaurant);
+            return res.json({
+              places: transformedPlaces,
+              total: transformedPlaces.length,
+              lastUpdated: new Date().toISOString(),
+              source: "OpenStreetMap"
+            });
+          } catch (syncError) {
+            console.error("Erreur sync restaurants OSM:", syncError);
+          }
+        }
+        
         const transformedPlaces = response.places.map(transformOsmToRestaurant);
         return res.json({
           places: transformedPlaces,

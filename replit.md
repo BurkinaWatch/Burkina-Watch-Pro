@@ -32,14 +32,12 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 - **Routes**: /api/auth/send-otp, /api/auth/verify-otp, /api/auth/check-sms-availability, /api/auth/logout
 - **Login Page**: /connexion (accessible via Login button in header)
 
-## Recent Changes (Feb 3, 2026)
-- **Google Places Integration for Restaurants**: Enhanced restaurant data with Google Maps Places API
-  - New service: server/googlePlacesService.ts
-  - Fetches restaurants from 10 major cities with detailed info (rating, hours, phone, photos, price level)
-  - Sync endpoint: POST /api/restaurants/sync-google
-  - PlaceCard updated to display Google ratings, price levels, and descriptions
-  - Backward compatible - works alongside existing OSM data
-  - Requires GOOGLE_API_KEY secret to be configured
+## Recent Changes (Feb 4, 2026)
+- **Restaurants OSM Integration**: Full restaurant data from OpenStreetMap (free, no API key required)
+  - Auto-sync on first load: restaurants, fast_food, cafe, bar types
+  - 2900+ restaurants across Burkina Faso
+  - PlaceCard displays ratings, price levels, descriptions when available
+  - Endpoint: GET /api/places?placeType=restaurant
 - **17-Region Administrative Reform**: Updated to new Burkina Faso administrative division (July 2025 reform)
   - 17 new regions: Bankui, Djoro, Goulmou, Guiriko, Kadiogo, Kuilse, Liptako, Nakambe, Nando, Nazinon, Oubri, Sirba, Soum, Sourou, Tannounyan, Tapoa, Yaadga
   - 45 provinces with correct chef-lieux and communes
