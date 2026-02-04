@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { VoiceSearchButton } from "@/components/VoiceSearchButton";
-import { Loader2, ExternalLink, RefreshCw, Search, Filter, Calendar, FileText, ArrowLeft, Building2, Megaphone, Newspaper, Globe, Radio, BookOpen, Tv, Mic } from "lucide-react";
+import { Loader2, ExternalLink, RefreshCw, Search, Filter, Calendar, FileText, ArrowLeft, Building2, Megaphone, Newspaper, Globe, Radio, BookOpen, Tv, Mic, ImageOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
@@ -20,6 +20,7 @@ interface BulletinItem {
   lien: string;
   date: string;
   categorie?: string;
+  image?: string;
 }
 
 const SOURCES = [
@@ -308,9 +309,37 @@ export default function Bulletin() {
             {filteredBulletins.map((bulletin) => (
               <Card
                 key={bulletin.id}
-                className="hover:shadow-lg transition-shadow cursor-pointer"
+                className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
               >
-                <CardHeader>
+                {/* Image d'illustration */}
+                {bulletin.image ? (
+                  <div className="relative h-40 bg-muted">
+                    <img
+                      src={bulletin.image}
+                      alt={bulletin.titre}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        target.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                    <div className="hidden absolute inset-0 flex items-center justify-center bg-muted">
+                      <ImageOff className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-32 bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
+                    {getSourceIcon(bulletin.source) ? (
+                      <div className={`p-4 rounded-full ${getSourceBadgeColor(bulletin.source)}`}>
+                        <Newspaper className="w-8 h-8 text-white" />
+                      </div>
+                    ) : (
+                      <FileText className="w-12 h-12 text-muted-foreground/50" />
+                    )}
+                  </div>
+                )}
+                <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <Badge className={`${getSourceBadgeColor(bulletin.source)} text-white flex items-center gap-1.5`}>
                       {getSourceIcon(bulletin.source)}
@@ -321,12 +350,12 @@ export default function Bulletin() {
                       {new Date(bulletin.date).toLocaleDateString("fr-FR")}
                     </div>
                   </div>
-                  <CardTitle className="text-lg leading-tight">
+                  <CardTitle className="text-lg leading-tight line-clamp-2">
                     {bulletin.titre}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                     {bulletin.description}
                   </p>
                   <Button

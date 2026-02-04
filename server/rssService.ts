@@ -9,16 +9,55 @@ interface BulletinItem {
   lien: string;
   date: string;
   categorie?: string;
+  image?: string;
 }
 
 const parser = new Parser({
   customFields: {
     item: [
       ['media:content', 'media'],
-      ['dc:creator', 'creator']
+      ['media:thumbnail', 'mediaThumbnail'],
+      ['enclosure', 'enclosure'],
+      ['dc:creator', 'creator'],
+      ['content:encoded', 'contentEncoded']
     ]
   }
 });
+
+// Fonction pour extraire l'image d'un article RSS
+function extractImage(item: any): string | undefined {
+  // 1. media:content (format standard)
+  if (item.media && item.media.$) {
+    return item.media.$.url;
+  }
+  
+  // 2. media:thumbnail
+  if (item.mediaThumbnail && item.mediaThumbnail.$) {
+    return item.mediaThumbnail.$.url;
+  }
+  
+  // 3. enclosure (souvent utilisé pour les images)
+  if (item.enclosure && item.enclosure.url && item.enclosure.type?.startsWith('image')) {
+    return item.enclosure.url;
+  }
+  
+  // 4. Extraire depuis content:encoded ou content ou description
+  const htmlContent = item.contentEncoded || item.content || item.description || '';
+  const imgMatch = htmlContent.match(/<img[^>]+src=["']([^"']+)["']/i);
+  if (imgMatch && imgMatch[1]) {
+    return imgMatch[1];
+  }
+  
+  // 5. Chercher dans le summary
+  if (item['content:encodedSnippet']) {
+    const snippetMatch = item['content:encodedSnippet'].match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (snippetMatch && snippetMatch[1]) {
+      return snippetMatch[1];
+    }
+  }
+  
+  return undefined;
+}
 
 // Configuration des flux RSS des médias burkinabè et africains fiables
 const RSS_FEEDS = [
@@ -142,14 +181,15 @@ export async function fetchBulletins(): Promise<BulletinItem[]> {
       const xml = await response.text();
       const parsed = await parser.parseString(xml);
 
-      return parsed.items.map((item, index) => ({
+      return parsed.items.map((item: any, index: number) => ({
         id: `${feed.source}-${index}-${Date.now()}`,
         source: feed.source,
         titre: item.title || 'Sans titre',
         description: item.contentSnippet || item.content || item.description || '',
         lien: item.link || '',
         date: item.pubDate || item.isoDate || new Date().toISOString(),
-        categorie: feed.categorie
+        categorie: feed.categorie,
+        image: extractImage(item)
       }));
     } catch (error) {
       console.error(`❌ Erreur pour ${feed.source}:`, error);
