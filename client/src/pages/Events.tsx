@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { VoiceSearchButton } from "@/components/VoiceSearchButton";
-import { Loader2, MapPin, Calendar, Clock, ExternalLink, Search, Filter, ArrowLeft, RefreshCw } from "lucide-react";
+import { Loader2, MapPin, Calendar, Clock, ExternalLink, Search, Filter, ArrowLeft, RefreshCw, Music, Film, Theater, Mic2, BookOpen, Trophy, AlertTriangle, Flag, Building2, PartyPopper, ImageOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
@@ -149,6 +149,39 @@ export default function Events() {
     return colors[type] || "bg-gray-500";
   };
 
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case "Concert":
+        return <Music className="w-3.5 h-3.5" />;
+      case "Café-concert":
+        return <Mic2 className="w-3.5 h-3.5" />;
+      case "Festival":
+        return <PartyPopper className="w-3.5 h-3.5" />;
+      case "Cinéma":
+        return <Film className="w-3.5 h-3.5" />;
+      case "Théâtre":
+        return <Theater className="w-3.5 h-3.5" />;
+      case "Dédicace":
+        return <BookOpen className="w-3.5 h-3.5" />;
+      case "Cérémonie":
+        return <Trophy className="w-3.5 h-3.5" />;
+      case "Conférence":
+        return <Mic2 className="w-3.5 h-3.5" />;
+      case "Sport":
+        return <Trophy className="w-3.5 h-3.5" />;
+      case "Sécurité":
+        return <AlertTriangle className="w-3.5 h-3.5" />;
+      case "Infrastructure":
+        return <Building2 className="w-3.5 h-3.5" />;
+      case "Fête nationale":
+        return <Flag className="w-3.5 h-3.5" />;
+      case "Culturel":
+        return <PartyPopper className="w-3.5 h-3.5" />;
+      default:
+        return <Calendar className="w-3.5 h-3.5" />;
+    }
+  };
+
   const openMapLocation = (event: Event) => {
     if (event.latitude && event.longitude) {
       window.open(`https://www.google.com/maps?q=${event.latitude},${event.longitude}`, "_blank");
@@ -282,11 +315,37 @@ export default function Events() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredEvents.map((event) => (
-              <Card key={event.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
+              <Card key={event.id} className="hover:shadow-lg transition-shadow overflow-hidden">
+                {/* Image d'affiche */}
+                {event.affiche ? (
+                  <div className="relative h-40 bg-muted">
+                    <img
+                      src={event.affiche}
+                      alt={event.nom}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        target.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                    <div className="hidden absolute inset-0 flex items-center justify-center bg-muted">
+                      <ImageOff className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-32 bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
+                    <div className={`p-4 rounded-full ${getTypeBadgeColor(event.type)}`}>
+                      {getTypeIcon(event.type)}
+                      <span className="sr-only">{event.type}</span>
+                    </div>
+                  </div>
+                )}
+                <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex flex-wrap gap-1">
-                      <Badge className={`${getTypeBadgeColor(event.type)} text-white`}>
+                      <Badge className={`${getTypeBadgeColor(event.type)} text-white flex items-center gap-1.5`}>
+                        {getTypeIcon(event.type)}
                         {event.type}
                       </Badge>
                       {(() => {
@@ -309,13 +368,13 @@ export default function Events() {
                       {new Date(event.date).toLocaleDateString("fr-FR")}
                     </div>
                   </div>
-                  <CardTitle className="text-lg leading-tight">{event.nom}</CardTitle>
+                  <CardTitle className="text-lg leading-tight line-clamp-2">{event.nom}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3 mb-4">
+                  <div className="space-y-2 mb-4">
                     <div className="flex items-start gap-2 text-sm">
                       <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                      <span>
+                      <span className="line-clamp-1">
                         {event.lieu}, {event.ville}
                       </span>
                     </div>
@@ -325,7 +384,7 @@ export default function Events() {
                         <span>{event.heure}</span>
                       </div>
                     )}
-                    <p className="text-sm text-muted-foreground line-clamp-3">
+                    <p className="text-sm text-muted-foreground line-clamp-2">
                       {event.description}
                     </p>
                   </div>

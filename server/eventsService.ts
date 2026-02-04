@@ -14,9 +14,111 @@ interface EventItem {
   latitude?: number;
   longitude?: number;
   lienOfficiel?: string;
+  affiche?: string;
 }
 
-const parser = new Parser();
+const parser = new Parser({
+  customFields: {
+    item: [
+      ['media:content', 'media'],
+      ['media:thumbnail', 'mediaThumbnail'],
+      ['enclosure', 'enclosure'],
+      ['content:encoded', 'contentEncoded']
+    ]
+  }
+});
+
+// Cache pour les images extraites des pages
+const eventImageCache = new Map<string, string | null>();
+
+// Fonction pour extraire l'image d'un article RSS
+function extractEventImage(item: any): string | undefined {
+  // 1. media:content
+  if (item.media && item.media.$) {
+    return item.media.$.url;
+  }
+  // 2. media:thumbnail
+  if (item.mediaThumbnail && item.mediaThumbnail.$) {
+    return item.mediaThumbnail.$.url;
+  }
+  // 3. enclosure
+  if (item.enclosure && item.enclosure.url && item.enclosure.type?.startsWith('image')) {
+    return item.enclosure.url;
+  }
+  // 4. Extraire depuis le contenu HTML
+  const htmlContent = item.contentEncoded || item.content || item.description || '';
+  const imgMatch = htmlContent.match(/<img[^>]+src=["']([^"']+)["']/i);
+  if (imgMatch && imgMatch[1]) {
+    return imgMatch[1];
+  }
+  return undefined;
+}
+
+// Fonction pour récupérer l'image OG depuis la page de l'article
+async function fetchEventOgImage(url: string): Promise<string | undefined> {
+  if (!url) return undefined;
+  if (eventImageCache.has(url)) {
+    const cached = eventImageCache.get(url);
+    return cached || undefined;
+  }
+
+  try {
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'BurkinaWatch/1.0' },
+      signal: AbortSignal.timeout(5000)
+    });
+
+    if (!response.ok) {
+      eventImageCache.set(url, null);
+      return undefined;
+    }
+
+    const html = await response.text();
+    
+    // Chercher og:image
+    let match = html.match(/<meta\s+(?:property|name)=["']og:image["']\s+content=["']([^"']+)["']/i);
+    if (!match) {
+      match = html.match(/<meta\s+content=["']([^"']+)["']\s+(?:property|name)=["']og:image["']/i);
+    }
+    // twitter:image
+    if (!match) {
+      match = html.match(/<meta\s+(?:property|name)=["']twitter:image["']\s+content=["']([^"']+)["']/i);
+    }
+    // Première grande image
+    if (!match) {
+      const imgMatches = html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi);
+      if (imgMatches) {
+        for (const imgTag of imgMatches) {
+          const srcMatch = imgTag.match(/src=["']([^"']+)["']/i);
+          if (srcMatch && srcMatch[1]) {
+            const src = srcMatch[1];
+            if (!src.includes('logo') && !src.includes('icon') && !src.includes('avatar') &&
+                (src.endsWith('.jpg') || src.endsWith('.jpeg') || src.endsWith('.png') || src.endsWith('.webp'))) {
+              match = [null, src];
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    if (match && match[1]) {
+      let imageUrl = match[1];
+      if (imageUrl.startsWith('/')) {
+        const urlObj = new URL(url);
+        imageUrl = `${urlObj.protocol}//${urlObj.host}${imageUrl}`;
+      }
+      eventImageCache.set(url, imageUrl);
+      return imageUrl;
+    }
+
+    eventImageCache.set(url, null);
+    return undefined;
+  } catch {
+    eventImageCache.set(url, null);
+    return undefined;
+  }
+}
 
 // Sources pour les événements - Flux RSS, médias locaux, blogs, forums
 const EVENT_SOURCES = [
@@ -678,7 +780,8 @@ Si ce n'est PAS un événement (actualité politique, économie, faits divers, e
           ville: analysis.ville,
           heure: analysis.heure || undefined,
           description: analysis.description,
-          lienOfficiel: article.link
+          lienOfficiel: article.link,
+          affiche: extractEventImage(article)
         });
       }
     } catch (error) {
@@ -700,6 +803,28 @@ Si ce n'est PAS un événement (actualité politique, économie, faits divers, e
 
   // Trier par date (événements les plus proches en premier)
   events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  // Récupérer les images manquantes depuis les pages (limité aux 20 premiers sans image)
+  const eventsWithoutImages = events.filter(e => !e.affiche && e.lienOfficiel).slice(0, 20);
+  if (eventsWithoutImages.length > 0) {
+    console.log(`🖼️ Récupération des affiches pour ${eventsWithoutImages.length} événements...`);
+    
+    const batchSize = 5;
+    for (let i = 0; i < eventsWithoutImages.length; i += batchSize) {
+      const batch = eventsWithoutImages.slice(i, i + batchSize);
+      await Promise.all(batch.map(async (event) => {
+        if (event.lienOfficiel) {
+          const ogImage = await fetchEventOgImage(event.lienOfficiel);
+          if (ogImage) {
+            event.affiche = ogImage;
+          }
+        }
+      }));
+    }
+    
+    const imagesFound = eventsWithoutImages.filter(e => e.affiche).length;
+    console.log(`✅ ${imagesFound} affiches récupérées depuis les pages`);
+  }
 
   cachedEvents = events;
   lastFetchTime = now;
