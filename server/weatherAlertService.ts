@@ -240,7 +240,7 @@ function generateRealisticWeatherData(): WeatherData {
   
   // Alertes de canicule (Mars-Mai, periode la plus chaude avant les pluies)
   const isHotSeason = month >= 2 && month <= 4;
-  if (isHotSeason && Math.random() > 0.3) {
+  if (isHotSeason) {
     const affectedCities = cities.filter(c => c.current.temp >= 38);
     if (affectedCities.length > 0) {
       alerts.push({
@@ -260,6 +260,7 @@ function generateRealisticWeatherData(): WeatherData {
 
   // Alertes Harmattan (Nov-Fév)
   if (isHarmattanSeason) {
+    // Alerte principale Harmattan
     alerts.push({
       id: generateAlertId(),
       event: "Harmattan",
@@ -272,10 +273,52 @@ function generateRealisticWeatherData(): WeatherData {
       regions: ["Sahel", "Nord", "Centre-Nord", "Est"],
       tags: ["vent", "poussière", "santé"],
     });
+    
+    // Alerte qualité de l'air dégradée
+    alerts.push({
+      id: generateAlertId(),
+      event: "Qualité de l'air dégradée",
+      sender: "Ministère de l'Environnement",
+      start: Math.floor(now.getTime() / 1000),
+      end: Math.floor((now.getTime() + 48 * 60 * 60 * 1000) / 1000),
+      description: "Concentration élevée de particules fines (PM2.5/PM10) due à l'Harmattan. Les personnes asthmatiques et les enfants doivent limiter les activités extérieures. Portez un masque si nécessaire.",
+      severity: "moderate",
+      urgency: "expected",
+      regions: ["Sahel", "Nord", "Centre-Nord", "Est", "Centre"],
+      tags: ["air", "santé", "respiration"],
+    });
+
+    // Alerte visibilité réduite
+    alerts.push({
+      id: generateAlertId(),
+      event: "Visibilité réduite",
+      sender: "Direction Générale des Transports Terrestres",
+      start: Math.floor(now.getTime() / 1000),
+      end: Math.floor((now.getTime() + 24 * 60 * 60 * 1000) / 1000),
+      description: "Brume de poussière réduisant la visibilité à moins de 2km sur les axes routiers. Prudence recommandée pour les conducteurs. Allumez vos feux et réduisez votre vitesse.",
+      severity: "minor",
+      urgency: "expected",
+      regions: ["Sahel", "Nord", "Centre-Nord"],
+      tags: ["transport", "sécurité routière"],
+    });
+
+    // Alerte sécheresse cutanée
+    alerts.push({
+      id: generateAlertId(),
+      event: "Sécheresse cutanée",
+      sender: "Direction de la Santé Publique",
+      start: Math.floor(now.getTime() / 1000),
+      end: Math.floor((now.getTime() + 96 * 60 * 60 * 1000) / 1000),
+      description: "L'air sec de l'Harmattan provoque des irritations de la peau et des lèvres gercées. Utilisez des crèmes hydratantes et buvez suffisamment d'eau.",
+      severity: "minor",
+      urgency: "future",
+      regions: ["Centre", "Centre-Ouest", "Plateau-Central", "Centre-Sud"],
+      tags: ["santé", "hydratation"],
+    });
   }
 
   // Alertes de pluies/orages (saison des pluies)
-  if (isRainySeason && Math.random() > 0.4) {
+  if (isRainySeason) {
     alerts.push({
       id: generateAlertId(),
       event: "Orages violents",
@@ -288,11 +331,39 @@ function generateRealisticWeatherData(): WeatherData {
       regions: ["Centre", "Centre-Ouest", "Hauts-Bassins", "Cascades"],
       tags: ["pluie", "orage", "inondation"],
     });
+
+    // Alerte inondations
+    alerts.push({
+      id: generateAlertId(),
+      event: "Risque d'inondation",
+      sender: "Service National de la Protection Civile",
+      start: Math.floor(now.getTime() / 1000),
+      end: Math.floor((now.getTime() + 48 * 60 * 60 * 1000) / 1000),
+      description: "Risque élevé d'inondation dans les zones basses et près des cours d'eau. Évitez de traverser les zones inondées à pied ou en véhicule. Préparez un kit d'urgence.",
+      severity: "severe",
+      urgency: "expected",
+      regions: ["Centre", "Hauts-Bassins", "Cascades", "Sud-Ouest"],
+      tags: ["inondation", "sécurité"],
+    });
+
+    // Alerte routes impraticables
+    alerts.push({
+      id: generateAlertId(),
+      event: "Routes impraticables",
+      sender: "Direction Générale des Routes",
+      start: Math.floor(now.getTime() / 1000),
+      end: Math.floor((now.getTime() + 72 * 60 * 60 * 1000) / 1000),
+      description: "Plusieurs axes routiers non bitumés sont impraticables suite aux fortes pluies. Renseignez-vous avant de voyager vers les zones rurales.",
+      severity: "moderate",
+      urgency: "expected",
+      regions: ["Sud-Ouest", "Cascades", "Boucle du Mouhoun"],
+      tags: ["transport", "routes"],
+    });
   }
 
-  // Alerte UV élevé (journée, saison sèche)
-  if (isDaytime && !isRainySeason) {
-    const highUVCities = cities.filter(c => c.current.uvi >= 10);
+  // Alerte UV élevé (journée, toute l'année au Burkina)
+  if (isDaytime) {
+    const highUVCities = cities.filter(c => c.current.uvi >= 8);
     if (highUVCities.length > 0) {
       alerts.push({
         id: generateAlertId(),
@@ -307,6 +378,38 @@ function generateRealisticWeatherData(): WeatherData {
         tags: ["UV", "soleil", "santé"],
       });
     }
+  }
+
+  // Alerte températures nocturnes basses (Harmattan)
+  if (isHarmattanSeason && !isDaytime) {
+    alerts.push({
+      id: generateAlertId(),
+      event: "Fraîcheur nocturne",
+      sender: "Direction de la Santé Publique",
+      start: Math.floor(now.getTime() / 1000),
+      end: Math.floor((now.getTime() + 12 * 60 * 60 * 1000) / 1000),
+      description: "Températures nocturnes basses (15-18°C). Couvrez-vous bien la nuit, notamment les enfants et personnes âgées. Risque accru d'infections respiratoires.",
+      severity: "minor",
+      urgency: "expected",
+      regions: ["Sahel", "Nord", "Centre-Nord", "Plateau-Central"],
+      tags: ["froid", "santé", "nuit"],
+    });
+  }
+
+  // Alerte vents de sable (fréquent au Sahel)
+  if (isHarmattanSeason || (month >= 3 && month <= 5)) {
+    alerts.push({
+      id: generateAlertId(),
+      event: "Vents de sable",
+      sender: "Agence Nationale de la Météorologie du Burkina Faso",
+      start: Math.floor(now.getTime() / 1000),
+      end: Math.floor((now.getTime() + 36 * 60 * 60 * 1000) / 1000),
+      description: "Vents de sable attendus dans la région du Sahel avec des rafales pouvant atteindre 50 km/h. Protégez vos yeux et voies respiratoires. Sécurisez les objets légers.",
+      severity: "moderate",
+      urgency: "expected",
+      regions: ["Sahel", "Nord"],
+      tags: ["vent", "sable", "météo"],
+    });
   }
 
   // Ajouter les alertes aux villes concernées
