@@ -1,4 +1,4 @@
-import { Hospital, ChevronLeft, MapPin, Phone, Clock, Search, Building2, Landmark, Cross, HeartPulse, Activity, Globe, Navigation, RefreshCw } from "lucide-react";
+import { Hospital, ChevronLeft, MapPin, Phone, Clock, Search, Building2, Landmark, Cross, HeartPulse, Activity, Globe, Navigation, RefreshCw, Locate, Loader2 } from "lucide-react";
 import { VoiceSearchButton } from "@/components/VoiceSearchButton";
 import { Helmet } from "react-helmet-async";
 import { Link } from "wouter";
@@ -8,15 +8,31 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { REGION_NAMES } from "@/lib/regions";
+import { useToast } from "@/hooks/use-toast";
+
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 export default function Hopitaux() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("all");
+  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [sortByProximity, setSortByProximity] = useState(false);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: hopitaux = [], isLoading, isFetching } = useQuery<any[]>({
     queryKey: ["/api/places/hospital"],
@@ -25,6 +41,42 @@ export default function Hopitaux() {
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/places/hospital"] });
   };
+
+  const handleFindNearest = useCallback(() => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Erreur",
+        description: "La géolocalisation n'est pas supportée par votre navigateur.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lon: position.coords.longitude,
+        });
+        setSortByProximity(true);
+        setIsLocating(false);
+        toast({
+          title: "Position trouvée",
+          description: "Les hôpitaux sont triés par proximité.",
+        });
+      },
+      (error) => {
+        setIsLocating(false);
+        toast({
+          title: "Erreur de localisation",
+          description: "Impossible d'obtenir votre position. Vérifiez les permissions.",
+          variant: "destructive",
+        });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }, [toast]);
 
   const stats = useMemo(() => {
     return {
@@ -45,8 +97,16 @@ export default function Hopitaux() {
     if (selectedRegion !== "all") {
       result = result.filter(h => h.region === selectedRegion);
     }
+    if (sortByProximity && userLocation) {
+      result = result
+        .map(h => ({
+          ...h,
+          distance: calculateDistance(userLocation.lat, userLocation.lon, h.latitude, h.longitude)
+        }))
+        .sort((a, b) => a.distance - b.distance);
+    }
     return result;
-  }, [hopitaux, searchQuery, selectedRegion]);
+  }, [hopitaux, searchQuery, selectedRegion, sortByProximity, userLocation]);
 
   return (
     <>
@@ -195,6 +255,21 @@ export default function Hopitaux() {
                     ))}
                   </SelectContent>
                 </Select>
+                <Button
+                  variant={sortByProximity ? "default" : "outline"}
+                  size="sm"
+                  onClick={handleFindNearest}
+                  disabled={isLocating}
+                  className="gap-2 whitespace-nowrap"
+                  data-testid="button-nearest-hospitals"
+                >
+                  {isLocating ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Locate className="w-4 h-4" />
+                  )}
+                  <span className="hidden sm:inline">Les plus proches</span>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -216,6 +291,11 @@ export default function Hopitaux() {
                         <CardDescription className="text-xs flex items-center gap-1 mt-1">
                           <MapPin className="w-3 h-3" />
                           {h.city}, {h.region}
+                          {h.distance !== undefined && (
+                            <Badge variant="outline" className="ml-2 text-[10px] px-1.5 py-0">
+                              {h.distance < 1 ? `${Math.round(h.distance * 1000)}m` : `${h.distance.toFixed(1)}km`}
+                            </Badge>
+                          )}
                         </CardDescription>
                       </div>
                       <Badge variant={h.operator_type === "government" ? "default" : "secondary"} className="text-[10px] shrink-0">
