@@ -369,6 +369,32 @@ export class OverpassService {
       `;
     }
 
+    if (placeType === "fuel") {
+      return `
+        [out:json][timeout:300][maxsize:1073741824];
+        (
+          node["amenity"="fuel"](${south},${west},${north},${east});
+          way["amenity"="fuel"](${south},${west},${north},${east});
+          relation["amenity"="fuel"](${south},${west},${north},${east});
+          node["shop"="gas"](${south},${west},${north},${east});
+          way["shop"="gas"](${south},${west},${north},${east});
+          node["amenity"="fuel_station"](${south},${west},${north},${east});
+          way["amenity"="fuel_station"](${south},${west},${north},${east});
+          node["fuel:diesel"="yes"](${south},${west},${north},${east});
+          way["fuel:diesel"="yes"](${south},${west},${north},${east});
+          node["fuel:octane_95"="yes"](${south},${west},${north},${east});
+          way["fuel:octane_95"="yes"](${south},${west},${north},${east});
+          node["brand"~"Total|TotalEnergies|Shell|Oryx|Sonabhy|Barka|Petrovit|Oilibya|Libya Oil|OLA|Ola|SIBE|VIVO|Vivo|Star Oil|Tamoil"](${south},${west},${north},${east});
+          way["brand"~"Total|TotalEnergies|Shell|Oryx|Sonabhy|Barka|Petrovit|Oilibya|Libya Oil|OLA|Ola|SIBE|VIVO|Vivo|Star Oil|Tamoil"](${south},${west},${north},${east});
+          node["operator"~"Total|TotalEnergies|Shell|Oryx|Sonabhy|Barka|Petrovit|Oilibya|Libya Oil|OLA|Ola|SIBE|VIVO|Vivo"](${south},${west},${north},${east});
+          way["operator"~"Total|TotalEnergies|Shell|Oryx|Sonabhy|Barka|Petrovit|Oilibya|Libya Oil|OLA|Ola|SIBE|VIVO|Vivo"](${south},${west},${north},${east});
+          node["name"~"Station.service|Carburant|Essence|Gasoil|Pompe|Petrol|station-service|station essence"](${south},${west},${north},${east});
+          way["name"~"Station.service|Carburant|Essence|Gasoil|Pompe|Petrol|station-service|station essence"](${south},${west},${north},${east});
+        );
+        out center;
+      `;
+    }
+
     return `
       [out:json][timeout:180][maxsize:536870912];
       (

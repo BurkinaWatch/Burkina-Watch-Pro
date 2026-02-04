@@ -3908,8 +3908,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log("🚀 Starting initial data sync check...");
     for (const type of importantTypes) {
       try {
-        await overpassService.getPlaces({ placeType: type });
-        console.log(`✅ Sync check completed for ${type}`);
+        // Check if we have data for this type
+        const existing = await overpassService.getPlaces({ placeType: type, limit: 5 });
+        if (existing.places.length < 5) {
+          console.log(`📥 Syncing ${type} from OSM (only ${existing.places.length} entries found)...`);
+          const result = await overpassService.syncPlaceType(type);
+          console.log(`✅ Sync completed for ${type}: ${result.added} added, ${result.updated} updated`);
+        } else {
+          console.log(`✅ Sync check completed for ${type} (${existing.places.length}+ entries found)`);
+        }
         // Add a small delay between initial syncs to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 5000));
       } catch (err) {
