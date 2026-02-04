@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import EmergencyPanel from "@/components/EmergencyPanel";
@@ -7,22 +7,72 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, MapPin, Phone, Globe, ChevronLeft, Search, Building2, BookOpen, Navigation, Library } from "lucide-react";
+import { GraduationCap, MapPin, Phone, Globe, ChevronLeft, Search, Building2, BookOpen, Navigation, Library, RefreshCw, Locate } from "lucide-react";
 import { VoiceSearchButton } from "@/components/VoiceSearchButton";
 import { Link, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
 import { REGION_NAMES } from "@/lib/regions";
+import { useToast } from "@/hooks/use-toast";
+
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
 
 export default function Universites() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("all");
+  const [sortByProximity, setSortByProximity] = useState(false);
+  const [userLocation, setUserLocation] = useState<{lat: number, lon: number} | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  const { data, isLoading } = useQuery<{ universites: any[], lastUpdated: string }>({
+  const { data, isLoading, isFetching, refetch } = useQuery<{ universites: any[], lastUpdated: string }>({
     queryKey: ["/api/universites"],
   });
 
   const universites = data?.universites || [];
+
+  const handleRefresh = async () => {
+    toast({ title: "Actualisation...", description: "Mise à jour des données en cours" });
+    await refetch();
+    toast({ title: "Terminé", description: "Données actualisées avec succès" });
+  };
+
+  const handleProximitySort = () => {
+    if (sortByProximity) {
+      setSortByProximity(false);
+      return;
+    }
+    
+    if (userLocation) {
+      setSortByProximity(true);
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({ lat: position.coords.latitude, lon: position.coords.longitude });
+        setSortByProximity(true);
+        setIsLocating(false);
+        toast({ title: "Position trouvée", description: "Tri par proximité activé" });
+      },
+      (error) => {
+        setIsLocating(false);
+        toast({ title: "Erreur", description: "Impossible d'obtenir votre position", variant: "destructive" });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const stats = useMemo(() => {
     return {
@@ -46,8 +96,16 @@ export default function Universites() {
     if (selectedRegion !== "all") {
       result = result.filter(u => u.region === selectedRegion);
     }
+    
+    if (sortByProximity && userLocation) {
+      result = result.map(u => ({
+        ...u,
+        distance: calculateDistance(userLocation.lat, userLocation.lon, u.lat, u.lon)
+      })).sort((a, b) => (a.distance || 999) - (b.distance || 999));
+    }
+    
     return result;
-  }, [universites, searchQuery, selectedRegion]);
+  }, [universites, searchQuery, selectedRegion, sortByProximity, userLocation]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -130,30 +188,63 @@ export default function Universites() {
 
         <Card className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-primary/30">
           <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1 flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Rechercher une université, un institut..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
-                  />
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1 flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Rechercher une université, un institut..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9"
+                      data-testid="input-search-university"
+                    />
+                  </div>
+                  <VoiceSearchButton onQueryChange={setSearchQuery} />
                 </div>
-                <VoiceSearchButton onQueryChange={setSearchQuery} />
+                <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                  <SelectTrigger className="w-full sm:w-48" data-testid="select-region">
+                    <SelectValue placeholder="Région" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes les régions</SelectItem>
+                    {REGION_NAMES.map(r => (
+                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Région" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes les régions</SelectItem>
-                  {REGION_NAMES.map(r => (
-                    <SelectItem key={r} value={r}>{r}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  variant={sortByProximity ? "default" : "outline"}
+                  size="sm"
+                  onClick={handleProximitySort}
+                  disabled={isLocating}
+                  className="gap-2"
+                  data-testid="button-proximity-sort"
+                >
+                  <Locate className={`w-4 h-4 ${isLocating ? 'animate-pulse' : ''}`} />
+                  {isLocating ? "Localisation..." : "Les plus proches"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefresh}
+                  disabled={isFetching}
+                  className="gap-2"
+                  data-testid="button-refresh-universities"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
+                  Actualiser
+                </Button>
+                {sortByProximity && userLocation && (
+                  <Badge variant="secondary" className="gap-1">
+                    <MapPin className="w-3 h-3" />
+                    Tri par distance activé
+                  </Badge>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -175,6 +266,11 @@ export default function Universites() {
                       <CardDescription className="text-xs flex items-center gap-1 mt-1">
                         <MapPin className="w-3 h-3" />
                         {u.ville}, {u.region}
+                        {u.distance !== undefined && (
+                          <span className="ml-2 text-primary font-medium">
+                            ({u.distance < 1 ? `${Math.round(u.distance * 1000)}m` : `${u.distance.toFixed(1)}km`})
+                          </span>
+                        )}
                       </CardDescription>
                     </div>
                     <Badge variant="secondary" className="text-[10px] shrink-0">
