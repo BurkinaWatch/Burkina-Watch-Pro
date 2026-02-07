@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -148,6 +148,31 @@ export function InteractiveTutorial() {
     setIsOpen(false);
   }, [dontShowAgain]);
 
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+    const absDeltaX = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
+    if (absDeltaX > 50 && absDeltaX > absDeltaY) {
+      if (deltaX < 0) {
+        handleNext();
+      } else {
+        handlePrevious();
+      }
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+  }, [handleNext, handlePrevious]);
+
   if (!isOpen) return null;
 
   const step = TUTORIAL_STEPS[currentStep];
@@ -162,7 +187,11 @@ export function InteractiveTutorial() {
       />
       
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-card border-2 border-primary/20 shadow-2xl animate-in fade-in zoom-in duration-300">
+        <Card
+          className="w-full max-w-md bg-card border-2 border-primary/20 shadow-2xl animate-in fade-in zoom-in duration-300 touch-pan-y"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           <CardContent className="p-0">
             <div className="h-1 bg-muted rounded-t-lg overflow-hidden">
               <div 
