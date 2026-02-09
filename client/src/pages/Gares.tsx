@@ -166,6 +166,9 @@ export default function Gares() {
   const { toast } = useToast();
 
   const [includeOSM, setIncludeOSM] = useState(true);
+  const [sortByNearest, setSortByNearest] = useState(false);
+  const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
+  const [isLocatingForSort, setIsLocatingForSort] = useState(false);
   
   const { data: transportData, isLoading } = useQuery<{
     compagnies: Compagnie[];
@@ -203,9 +206,40 @@ export default function Gares() {
   // Compteur des lignes SOTRACO (37 lignes: 18 Ouaga + 12 Bobo + 7 Koudougou)
   const lignesSotraco = 37;
 
+  const handleSortByNearest = () => {
+    if (sortByNearest) {
+      setSortByNearest(false);
+      return;
+    }
+    if (userLocation) {
+      setSortByNearest(true);
+      setCurrentPage(1);
+      return;
+    }
+    setIsLocatingForSort(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
+        setSortByNearest(true);
+        setCurrentPage(1);
+        setIsLocatingForSort(false);
+        toast({ title: "Position trouvee", description: "Les gares sont triees par proximite" });
+      },
+      () => {
+        setIsLocatingForSort(false);
+        toast({ title: "Erreur de localisation", description: "Impossible d'obtenir votre position", variant: "destructive" });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const getDistanceToGare = (gare: Gare): number | null => {
+    if (!userLocation) return null;
+    return calculateDistance(userLocation.lat, userLocation.lng, gare.coordonnees.lat, gare.coordonnees.lng);
+  };
+
   const filteredGares = useMemo(() => {
-    return gares.filter(gare => {
-      // Exclure les gares SOTRACO et SITARAIL de l'onglet principal (elles ont leurs onglets dédiés)
+    const filtered = gares.filter(gare => {
       if (gare.compagnie === "sotraco" || gare.compagnie === "sitarail") return false;
       
       const matchesSearch = searchQuery === "" || 
@@ -218,7 +252,17 @@ export default function Gares() {
         gare.region === selectedRegion;
       return matchesSearch && matchesCompagnie && matchesRegion;
     });
-  }, [gares, searchQuery, selectedCompagnie, selectedRegion]);
+
+    if (sortByNearest && userLocation) {
+      filtered.sort((a, b) => {
+        const distA = calculateDistance(userLocation.lat, userLocation.lng, a.coordonnees.lat, a.coordonnees.lng);
+        const distB = calculateDistance(userLocation.lat, userLocation.lng, b.coordonnees.lat, b.coordonnees.lng);
+        return distA - distB;
+      });
+    }
+
+    return filtered;
+  }, [gares, searchQuery, selectedCompagnie, selectedRegion, sortByNearest, userLocation]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -714,20 +758,35 @@ export default function Gares() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                    <span>
+                  <div className="flex items-center justify-between mt-2 gap-2">
+                    <span className="text-xs text-muted-foreground">
                       {filteredGares.length > GARES_PER_PAGE 
                         ? `Affichage ${(currentPage - 1) * GARES_PER_PAGE + 1}-${Math.min(currentPage * GARES_PER_PAGE, filteredGares.length)} sur ${filteredGares.length} gares`
                         : `${filteredGares.length} gare${filteredGares.length > 1 ? "s" : ""} trouvee${filteredGares.length > 1 ? "s" : ""}`
                       }
                     </span>
-                    <span>Source: Donnees verifiees + OpenStreetMap</span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant={sortByNearest ? "default" : "outline"}
+                        size="sm"
+                        onClick={handleSortByNearest}
+                        disabled={isLocatingForSort}
+                        className="gap-1.5 text-xs"
+                        data-testid="button-sort-nearest"
+                      >
+                        <Locate className={`w-3.5 h-3.5 ${isLocatingForSort ? 'animate-spin' : ''}`} />
+                        {isLocatingForSort ? "Localisation..." : sortByNearest ? "Les plus proches" : "Les plus proches"}
+                      </Button>
+                      <span className="text-xs text-muted-foreground hidden sm:inline">Source: Donnees verifiees + OSM</span>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {paginatedGares.map((gare) => (
+                {paginatedGares.map((gare) => {
+                  const distance = sortByNearest ? getDistanceToGare(gare) : null;
+                  return (
                   <Card 
                     key={gare.id} 
                     className={`hover-elevate cursor-pointer transition-all ${expandedGare === gare.id ? 'ring-2 ring-primary' : ''}`}
@@ -743,12 +802,20 @@ export default function Gares() {
                             {gare.ville}, {gare.region}
                           </p>
                         </div>
-                        <Badge 
-                          variant={gare.type === "principale" ? "default" : "secondary"}
-                          className="text-xs"
-                        >
-                          {gare.type}
-                        </Badge>
+                        <div className="flex items-center gap-1.5">
+                          {distance !== null && (
+                            <Badge variant="outline" className="text-xs gap-1 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-700">
+                              <Locate className="w-3 h-3" />
+                              {distance < 1 ? `${Math.round(distance * 1000)}m` : `${distance.toFixed(1)} km`}
+                            </Badge>
+                          )}
+                          <Badge 
+                            variant={gare.type === "principale" ? "default" : "secondary"}
+                            className="text-xs"
+                          >
+                            {gare.type}
+                          </Badge>
+                        </div>
                       </div>
                       
                       {gare.adresse && (
@@ -860,7 +927,8 @@ export default function Gares() {
                       )}
                     </CardContent>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
 
               {filteredGares.length === 0 && (
