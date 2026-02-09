@@ -13,6 +13,7 @@ import { VoiceSearchButton } from "@/components/VoiceSearchButton";
 import PageStatCard from "@/components/PageStatCard";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { LocationValidator } from "@/components/LocationValidator";
 import { useQuery } from "@tanstack/react-query";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
@@ -36,6 +37,9 @@ interface Marche {
   nombreCommercants?: number;
   superficie?: string;
   dateCreation?: string;
+  placeId?: string;
+  confirmations?: number;
+  reports?: number;
 }
 
 const typeColors: Record<string, string> = {
@@ -555,6 +559,7 @@ export default function Marches() {
                     )}
                   </div>
 
+                  <LocationValidator placeId={marche.placeId || marche.id} initialConfirmations={marche.confirmations || 0} initialReports={marche.reports || 0} compact />
                   <div className="flex gap-2 pt-2">
                     {marche.telephone && (
                       <Button

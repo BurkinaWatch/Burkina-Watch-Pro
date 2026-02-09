@@ -216,7 +216,10 @@ function transformOsmToBoutique(place: Place) {
     horaires: place.horaires || "Horaires à vérifier",
     produits: [],
     services: [],
-    source: "OSM" as const
+    source: "OSM" as const,
+    placeId: place.id,
+    confirmations: place.confirmations || 0,
+    reports: place.reports || 0,
   };
 }
 
@@ -277,7 +280,10 @@ function transformOsmToMarche(place: Place) {
     produits: produits.length > 0 ? produits : ["Produits divers"],
     nombreCommercants: parseInt(tags.capacity || "0") || undefined,
     superficie: tags.area ? `${tags.area} m²` : undefined,
-    source: "OSM" as const
+    source: "OSM" as const,
+    placeId: place.id,
+    confirmations: place.confirmations || 0,
+    reports: place.reports || 0,
   };
 }
 
@@ -301,7 +307,10 @@ function transformOsmToBanque(place: Place) {
     nombreGAB: tags.hasGAB ? 1 : 0,
     hasGAB: tags.hasGAB || false,
     importanceSystemique: tags.importanceSystemique || false,
-    source: "OSM" as const
+    source: "OSM" as const,
+    placeId: place.id,
+    confirmations: place.confirmations || 0,
+    reports: place.reports || 0,
   };
 }
 
@@ -324,7 +333,10 @@ function transformOsmToStation(place: Place) {
     is24h: tags.opening_hours?.includes("24") || false,
     services: [],
     carburants: ["Essence", "Gasoil"],
-    source: "OSM" as const
+    source: "OSM" as const,
+    placeId: place.id,
+    confirmations: place.confirmations || 0,
+    reports: place.reports || 0,
   };
 }
 
@@ -332,6 +344,7 @@ function transformOsmToHopital(place: Place) {
   const tags = place.tags as Record<string, string> || {};
   return {
     id: `osm-hosp-${place.id}`,
+    placeId: place.id,
     name: place.name,
     latitude: parseFloat(place.latitude),
     longitude: parseFloat(place.longitude),
@@ -343,7 +356,9 @@ function transformOsmToHopital(place: Place) {
     type: tags.healthcare || tags.amenity || "hospital",
     operator_type: tags.operator || tags["operator:type"] || (place.name?.toLowerCase().includes("csps") || place.name?.toLowerCase().includes("chur") || place.name?.toLowerCase().includes("chr") || place.name?.toLowerCase().includes("cma") ? "government" : "private"),
     tags: tags,
-    source: "OSM" as const
+    source: "OSM" as const,
+    confirmations: place.confirmations || 0,
+    reports: place.reports || 0,
   };
 }
 
@@ -409,7 +424,10 @@ function transformOsmToUniversity(place: Place) {
       ...tags
     },
     type: institutionType,
-    source: "OSM" as const
+    source: "OSM" as const,
+    placeId: place.id,
+    confirmations: place.confirmations || 0,
+    reports: place.reports || 0,
   };
 }
 

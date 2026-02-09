@@ -14,6 +14,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
 import { REGION_NAMES } from "@/lib/regions";
 import { useToast } from "@/hooks/use-toast";
+import { LocationValidator } from "@/components/LocationValidator";
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371;
@@ -300,6 +301,7 @@ export default function Universites() {
                     </div>
                   )}
 
+                  <LocationValidator placeId={u.placeId} initialConfirmations={u.confirmations} initialReports={u.reports} compact />
                   <div className="flex gap-2 pt-2 border-t">
                     <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${u.lat},${u.lon}`)}>
                       <Navigation className="w-3 h-3 mr-1" />

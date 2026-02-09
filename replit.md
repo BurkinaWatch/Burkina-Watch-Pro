@@ -19,6 +19,17 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 - **AI Integration**: Groq (llama-3.3-70b-versatile) for intelligent features.
 - **Data Sources**: OpenStreetMap (OSM) via Overpass API.
 
+## Recent Changes (Feb 9, 2026)
+- **Location Validator**: Community-driven location accuracy system on ALL place cards
+  - Users can "Valider" (confirm) or "Signaler" (report) location accuracy
+  - Reusable LocationValidator component: client/src/components/LocationValidator.tsx
+  - Integrated into: PlaceCard, Hopitaux, Universites, StationsService, PharmaciesDuFaso, Banques, Marches, BoutiquesMarchés
+  - Backend: /api/places/:id/confirm, /api/places/:id/report (persists to placeVerifications table)
+  - Counts displayed as badges, duplicate prevention per user/IP
+  - Transform functions updated to pass placeId, confirmations, reports from DB
+- **Leaderboard Filter**: Only shows users with points > 0 (no more 0-point entries)
+- **Navigation**: Added "Classement" (Trophy icon) to hamburger menu
+
 ## Improvements (Feb 9, 2026)
 - **Lazy Loading**: All 30+ pages use React.lazy() + Suspense for code splitting
 - **Bundle size**: Main bundle reduced from 1,726 kB to 422 kB (75% reduction)

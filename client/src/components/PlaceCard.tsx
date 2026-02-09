@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, Clock, Navigation, Globe, Mail, ExternalLink, Locate, Activity, ShieldCheck, UtensilsCrossed, Star, DollarSign, Truck, Users } from "lucide-react";
 import type { Place } from "@shared/schema";
 import { SourceBadge } from "./SourceBadge";
+import { LocationValidator } from "./LocationValidator";
 
 interface PlaceWithDistance extends Place {
   distance?: number;
@@ -233,7 +234,13 @@ export function PlaceCard({ place }: PlaceCardProps) {
           </div>
         )}
 
-        <div className="pt-3 border-t">
+        <div className="pt-3 border-t space-y-3">
+          <LocationValidator
+            placeId={place.id}
+            initialConfirmations={place.confirmations || 0}
+            initialReports={place.reports || 0}
+            compact
+          />
           <Button
             onClick={openInMaps}
             className="w-full gap-2"

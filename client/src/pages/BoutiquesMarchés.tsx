@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, Store, ShoppingBag } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { LocationValidator } from "@/components/LocationValidator";
 
 interface Boutique {
   id: string;
@@ -362,6 +363,7 @@ export default function BoutiquesMarchés() {
                     </div>
                   </div>
 
+                  <LocationValidator placeId={boutique.placeId || boutique.id} initialConfirmations={boutique.confirmations || 0} initialReports={boutique.reports || 0} compact />
                   <div className="flex gap-2">
                     <Button
                       onClick={() => openInMaps(boutique)}

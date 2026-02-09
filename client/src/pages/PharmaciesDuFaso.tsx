@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Helmet } from "react-helmet-async";
 import { REGION_NAMES } from "@/lib/regions";
+import { LocationValidator } from "@/components/LocationValidator";
 
 export default function PharmaciesDuFaso() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -432,6 +433,7 @@ export default function PharmaciesDuFaso() {
                         </div>
                       </div>
 
+                      <LocationValidator placeId={pharmacy.placeId || pharmacy.id} initialConfirmations={pharmacy.confirmations || 0} initialReports={pharmacy.reports || 0} compact />
                       <div className="flex gap-2 pt-2 border-t">
                         <Button 
                           variant="outline" 

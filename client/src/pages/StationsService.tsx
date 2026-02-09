@@ -13,6 +13,7 @@ import { Link } from "wouter";
 import { VoiceSearchButton } from "@/components/VoiceSearchButton";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { LocationValidator } from "@/components/LocationValidator";
 
 interface StationService {
   id: string;
@@ -27,6 +28,9 @@ interface StationService {
   horaires: string;
   latitude: number;
   longitude: number;
+  placeId?: string;
+  confirmations?: number;
+  reports?: number;
 }
 
 const STATIONS_DATA: StationService[] = [
@@ -569,6 +573,7 @@ export default function StationsService() {
                   ))}
                 </div>
 
+                <LocationValidator placeId={station.placeId || station.id} initialConfirmations={station.confirmations || 0} initialReports={station.reports || 0} compact />
                 <Button
                   size="sm"
                   className="w-full gap-2 bg-orange-600 hover:bg-orange-700 text-white"
