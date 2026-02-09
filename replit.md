@@ -19,6 +19,12 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 - **AI Integration**: Groq (llama-3.3-70b-versatile) for intelligent features.
 - **Data Sources**: OpenStreetMap (OSM) via Overpass API.
 
+## Performance Optimization (Feb 9, 2026)
+- **Lazy Loading**: All 30+ pages use React.lazy() + Suspense for code splitting
+- **Bundle size**: Main bundle reduced from 1,726 kB to 422 kB (75% reduction)
+- **Loading UX**: Spinner "Chargement..." shown while pages load on demand
+- **Files**: client/src/App.tsx (all page imports are dynamic)
+
 ## Hybrid OTP Authentication (Jan 11, 2026)
 - **Email OTP**: Passwordless authentication with 6-digit codes via SMTP (Nodemailer)
 - **Email Config Options** (priority order):
