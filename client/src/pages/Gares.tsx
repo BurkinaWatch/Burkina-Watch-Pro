@@ -167,6 +167,9 @@ export default function Gares() {
 
   const [includeOSM, setIncludeOSM] = useState(true);
   const [sortByNearest, setSortByNearest] = useState(false);
+  const [sortSitarailNearest, setSortSitarailNearest] = useState(false);
+  const [sortSotracoNearest, setSortSotracoNearest] = useState(false);
+  const [sortDepartsNearest, setSortDepartsNearest] = useState(false);
   const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
   const [isLocatingForSort, setIsLocatingForSort] = useState(false);
   
@@ -206,13 +209,13 @@ export default function Gares() {
   // Compteur des lignes SOTRACO (37 lignes: 18 Ouaga + 12 Bobo + 7 Koudougou)
   const lignesSotraco = 37;
 
-  const handleSortByNearest = () => {
-    if (sortByNearest) {
-      setSortByNearest(false);
+  const requestLocationAndSort = (setter: (v: boolean) => void, currentValue: boolean, label: string) => {
+    if (currentValue) {
+      setter(false);
       return;
     }
     if (userLocation) {
-      setSortByNearest(true);
+      setter(true);
       setCurrentPage(1);
       return;
     }
@@ -220,10 +223,10 @@ export default function Gares() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
-        setSortByNearest(true);
+        setter(true);
         setCurrentPage(1);
         setIsLocatingForSort(false);
-        toast({ title: "Position trouvee", description: "Les gares sont triees par proximite" });
+        toast({ title: "Position trouvee", description: `${label} triés par proximité` });
       },
       () => {
         setIsLocatingForSort(false);
@@ -232,6 +235,11 @@ export default function Gares() {
       { enableHighAccuracy: true, timeout: 10000 }
     );
   };
+
+  const handleSortByNearest = () => requestLocationAndSort(setSortByNearest, sortByNearest, "Les gares sont");
+  const handleSortSitarailNearest = () => requestLocationAndSort(setSortSitarailNearest, sortSitarailNearest, "Les gares SITARAIL sont");
+  const handleSortSotracoNearest = () => requestLocationAndSort(setSortSotracoNearest, sortSotracoNearest, "Les lignes SOTRACO sont");
+  const handleSortDepartsNearest = () => requestLocationAndSort(setSortDepartsNearest, sortDepartsNearest, "Les trajets sont");
 
   const getDistanceToGare = (gare: Gare): number | null => {
     if (!userLocation) return null;
@@ -311,7 +319,7 @@ export default function Gares() {
   };
 
   const filteredTrajets = useMemo(() => {
-    return trajets.filter(trajet => {
+    const filtered = trajets.filter(trajet => {
       const matchesDepart = departVille === "" || 
         trajet.depart.toLowerCase().includes(departVille.toLowerCase());
       const matchesArrivee = arriveeVille === "" || 
@@ -320,7 +328,61 @@ export default function Gares() {
         trajet.compagnieId === selectedCompagnie;
       return matchesDepart && matchesArrivee && matchesCompagnie;
     });
-  }, [trajets, departVille, arriveeVille, selectedCompagnie]);
+    if (sortDepartsNearest && userLocation) {
+      filtered.sort((a, b) => {
+        const aCoordsGare = a.gareDepart?.coordonnees;
+        const bCoordsGare = b.gareDepart?.coordonnees;
+        const aCoordsVille = VILLE_COORDS[a.depart];
+        const bCoordsVille = VILLE_COORDS[b.depart];
+        const distA = aCoordsGare ? calculateDistance(userLocation.lat, userLocation.lng, aCoordsGare.lat, aCoordsGare.lng) : aCoordsVille ? calculateDistance(userLocation.lat, userLocation.lng, aCoordsVille.lat, aCoordsVille.lon) : Infinity;
+        const distB = bCoordsGare ? calculateDistance(userLocation.lat, userLocation.lng, bCoordsGare.lat, bCoordsGare.lng) : bCoordsVille ? calculateDistance(userLocation.lat, userLocation.lng, bCoordsVille.lat, bCoordsVille.lon) : Infinity;
+        return distA - distB;
+      });
+    }
+    return filtered;
+  }, [trajets, departVille, arriveeVille, selectedCompagnie, sortDepartsNearest, userLocation]);
+
+  const sortedSitarailGares = useMemo(() => {
+    const sitarail = gares.filter(g => g.compagnie === "sitarail");
+    if (sortSitarailNearest && userLocation) {
+      return [...sitarail].sort((a, b) => {
+        const distA = calculateDistance(userLocation.lat, userLocation.lng, a.coordonnees.lat, a.coordonnees.lng);
+        const distB = calculateDistance(userLocation.lat, userLocation.lng, b.coordonnees.lat, b.coordonnees.lng);
+        return distA - distB;
+      });
+    }
+    const order = ["ouaga", "koudougou", "siby", "bobo", "banfora", "niangoloko"];
+    return sitarail.sort((a, b) => {
+      const aIdx = order.findIndex(o => a.id.includes(o));
+      const bIdx = order.findIndex(o => b.id.includes(o));
+      return aIdx - bIdx;
+    });
+  }, [gares, sortSitarailNearest, userLocation]);
+
+  const sortedSotracoGares = useMemo(() => {
+    const sotraco = gares.filter(g => g.compagnie === "sotraco");
+    if (sortSotracoNearest && userLocation) {
+      return [...sotraco].sort((a, b) => {
+        const distA = calculateDistance(userLocation.lat, userLocation.lng, a.coordonnees.lat, a.coordonnees.lng);
+        const distB = calculateDistance(userLocation.lat, userLocation.lng, b.coordonnees.lat, b.coordonnees.lng);
+        return distA - distB;
+      });
+    }
+    return sotraco;
+  }, [gares, sortSotracoNearest, userLocation]);
+
+  const getDistanceToTrajet = (trajet: Trajet): number | null => {
+    if (!userLocation) return null;
+    const gareCoordsObj = trajet.gareDepart?.coordonnees;
+    if (gareCoordsObj) {
+      return calculateDistance(userLocation.lat, userLocation.lng, gareCoordsObj.lat, gareCoordsObj.lng);
+    }
+    const villeCoords = VILLE_COORDS[trajet.depart];
+    if (villeCoords) {
+      return calculateDistance(userLocation.lat, userLocation.lng, villeCoords.lat, villeCoords.lon);
+    }
+    return null;
+  };
 
   const getCompagnieNom = (id: string) => {
     return compagnies.find(c => c.id === id)?.nom || id;
@@ -1035,24 +1097,33 @@ export default function Gares() {
 
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-orange-600" />
-                    Horaires des trains
-                  </CardTitle>
-                  <CardDescription>Departs les Mardi et Jeudi a 09h00</CardDescription>
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-orange-600" />
+                        Horaires des trains
+                      </CardTitle>
+                      <CardDescription>Departs les Mardi et Jeudi a 09h00</CardDescription>
+                    </div>
+                    <Button
+                      variant={sortSitarailNearest ? "default" : "outline"}
+                      size="sm"
+                      onClick={handleSortSitarailNearest}
+                      disabled={isLocatingForSort}
+                      className="gap-1.5 text-xs shrink-0"
+                      data-testid="button-sort-nearest-sitarail"
+                    >
+                      <Locate className={`w-3.5 h-3.5 ${isLocatingForSort ? 'animate-spin' : ''}`} />
+                      {isLocatingForSort ? "Localisation..." : "Les plus proches"}
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="relative">
                     <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-orange-200 dark:bg-orange-900"></div>
-                    {gares
-                      .filter(g => g.compagnie === "sitarail")
-                      .sort((a, b) => {
-                        const order = ["ouaga", "koudougou", "siby", "bobo", "banfora", "niangoloko"];
-                        const aIdx = order.findIndex(o => a.id.includes(o));
-                        const bIdx = order.findIndex(o => b.id.includes(o));
-                        return aIdx - bIdx;
-                      })
-                      .map((gare, index, arr) => (
+                    {sortedSitarailGares.map((gare) => {
+                      const distance = sortSitarailNearest ? getDistanceToGare(gare) : null;
+                      return (
                         <div key={gare.id} className="relative pl-10 pb-6 last:pb-0">
                           <div className="absolute left-2.5 top-1 w-3 h-3 rounded-full bg-orange-500 border-2 border-background"></div>
                           <Card className="hover-elevate">
@@ -1068,22 +1139,30 @@ export default function Gares() {
                                     </p>
                                   )}
                                 </div>
-                                <div className="flex gap-1">
-                                  {gare.telephone && (
-                                    <a href={`tel:${gare.telephone}`}>
-                                      <Button variant="ghost" size="icon" data-testid={`button-call-sitarail-${gare.id}`}>
-                                        <Phone className="w-4 h-4" />
-                                      </Button>
-                                    </a>
+                                <div className="flex items-center gap-1.5">
+                                  {distance !== null && (
+                                    <Badge variant="outline" className="text-xs gap-1 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-700">
+                                      <Locate className="w-3 h-3" />
+                                      {distance < 1 ? `${Math.round(distance * 1000)}m` : `${distance.toFixed(1)} km`}
+                                    </Badge>
                                   )}
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon"
-                                    onClick={() => openGoogleMaps(gare.coordonnees.lat, gare.coordonnees.lng, gare.nom)}
-                                    data-testid={`button-map-sitarail-${gare.id}`}
-                                  >
-                                    <Navigation className="w-4 h-4" />
-                                  </Button>
+                                  <div className="flex gap-1">
+                                    {gare.telephone && (
+                                      <a href={`tel:${gare.telephone}`}>
+                                        <Button variant="ghost" size="icon" data-testid={`button-call-sitarail-${gare.id}`}>
+                                          <Phone className="w-4 h-4" />
+                                        </Button>
+                                      </a>
+                                    )}
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      onClick={() => openGoogleMaps(gare.coordonnees.lat, gare.coordonnees.lng, gare.nom)}
+                                      data-testid={`button-map-sitarail-${gare.id}`}
+                                    >
+                                      <Navigation className="w-4 h-4" />
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
                               {gare.destinations && gare.destinations.length > 0 && (
@@ -1100,7 +1179,8 @@ export default function Gares() {
                             </CardContent>
                           </Card>
                         </div>
-                      ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
@@ -1155,16 +1235,31 @@ export default function Gares() {
 
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-emerald-600" />
-                    Lignes et destinations SOTRACO
-                  </CardTitle>
-                  <CardDescription>Transport urbain dans les principales villes</CardDescription>
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-emerald-600" />
+                        Lignes et destinations SOTRACO
+                      </CardTitle>
+                      <CardDescription>Transport urbain dans les principales villes</CardDescription>
+                    </div>
+                    <Button
+                      variant={sortSotracoNearest ? "default" : "outline"}
+                      size="sm"
+                      onClick={handleSortSotracoNearest}
+                      disabled={isLocatingForSort}
+                      className="gap-1.5 text-xs shrink-0"
+                      data-testid="button-sort-nearest-sotraco"
+                    >
+                      <Locate className={`w-3.5 h-3.5 ${isLocatingForSort ? 'animate-spin' : ''}`} />
+                      {isLocatingForSort ? "Localisation..." : "Les plus proches"}
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {gares
-                    .filter(g => g.compagnie === "sotraco")
-                    .map((gare) => (
+                  {sortedSotracoGares.map((gare) => {
+                    const distance = sortSotracoNearest ? getDistanceToGare(gare) : null;
+                    return (
                       <Card key={gare.id} className="hover-elevate" data-testid={`card-sotraco-${gare.id}`}>
                         <CardContent className="p-3">
                           <div className="flex items-start justify-between gap-2">
@@ -1185,6 +1280,12 @@ export default function Gares() {
                               )}
                             </div>
                             <div className="flex flex-col gap-2 shrink-0">
+                              {distance !== null && (
+                                <Badge variant="outline" className="text-xs gap-1 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-700">
+                                  <Locate className="w-3 h-3" />
+                                  {distance < 1 ? `${Math.round(distance * 1000)}m` : `${distance.toFixed(1)} km`}
+                                </Badge>
+                              )}
                               {gare.imageUrl && (
                                 <div className="w-16 h-16 rounded-md overflow-hidden bg-muted">
                                   <img 
@@ -1229,9 +1330,10 @@ export default function Gares() {
                           )}
                         </CardContent>
                       </Card>
-                    ))}
+                    );
+                  })}
                   
-                  {gares.filter(g => g.compagnie === "sotraco").length === 0 && (
+                  {sortedSotracoGares.length === 0 && (
                     <div className="text-center py-8">
                       <Bus className="w-12 h-12 mx-auto text-muted-foreground/50 mb-2" />
                       <p className="text-muted-foreground">Donnees SOTRACO en cours de chargement...</p>
@@ -1319,22 +1421,37 @@ export default function Gares() {
                     </Select>
                   </div>
                   
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center justify-between gap-2 text-sm">
                     <span className="text-muted-foreground">
                       {filteredTrajets.length} trajet{filteredTrajets.length > 1 ? 's' : ''} trouvé{filteredTrajets.length > 1 ? 's' : ''}
                     </span>
-                    {departVille && (
-                      <Badge variant="secondary" className="gap-1">
-                        <MapPin className="w-3 h-3" />
-                        Départs depuis {departVille}
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {departVille && (
+                        <Badge variant="secondary" className="gap-1">
+                          <MapPin className="w-3 h-3" />
+                          Départs depuis {departVille}
+                        </Badge>
+                      )}
+                      <Button
+                        variant={sortDepartsNearest ? "default" : "outline"}
+                        size="sm"
+                        onClick={handleSortDepartsNearest}
+                        disabled={isLocatingForSort}
+                        className="gap-1.5 text-xs"
+                        data-testid="button-sort-nearest-departs"
+                      >
+                        <Locate className={`w-3.5 h-3.5 ${isLocatingForSort ? 'animate-spin' : ''}`} />
+                        {isLocatingForSort ? "Localisation..." : "Les plus proches"}
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
               <div className="space-y-3">
-                {filteredTrajets.map((trajet) => (
+                {filteredTrajets.map((trajet) => {
+                  const trajetDistance = sortDepartsNearest ? getDistanceToTrajet(trajet) : null;
+                  return (
                   <Card key={trajet.id} className="overflow-hidden" data-testid={`card-trajet-${trajet.id}`}>
                     <CardContent className="p-4">
                       <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -1358,7 +1475,15 @@ export default function Gares() {
                         </div>
 
                         <div className="flex flex-col items-end gap-1">
-                          <Badge variant="outline">{getCompagnieNom(trajet.compagnieId)}</Badge>
+                          <div className="flex items-center gap-1.5">
+                            {trajetDistance !== null && (
+                              <Badge variant="outline" className="text-xs gap-1 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-700">
+                                <Locate className="w-3 h-3" />
+                                {trajetDistance < 1 ? `${Math.round(trajetDistance * 1000)}m` : `${trajetDistance.toFixed(1)} km`}
+                              </Badge>
+                            )}
+                            <Badge variant="outline">{getCompagnieNom(trajet.compagnieId)}</Badge>
+                          </div>
                           <div className="flex items-center gap-2">
                             <Banknote className="w-4 h-4 text-green-600" />
                             <span className="font-bold text-green-600">{trajet.prix.toLocaleString()} FCFA</span>
@@ -1427,7 +1552,8 @@ export default function Gares() {
                       )}
                     </CardContent>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
 
               {filteredTrajets.length === 0 && (
