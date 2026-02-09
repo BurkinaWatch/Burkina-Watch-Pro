@@ -164,10 +164,14 @@ export default function Contribuer() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2">
-              <Mail className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm">contact@burkinawatch.com</span>
-            </div>
+            <a
+              href="mailto:contact@burkinawatch.com"
+              className="inline-flex items-center gap-2 text-sm text-green-700 dark:text-green-400 hover-elevate rounded-md px-2 py-1.5 -mx-2 transition-colors"
+              data-testid="link-contact-email"
+            >
+              <Mail className="w-4 h-4" />
+              <span>contact@burkinawatch.com</span>
+            </a>
           </CardContent>
         </Card>
 
