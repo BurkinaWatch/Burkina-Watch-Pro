@@ -34,6 +34,7 @@ import {
   Locate
 } from "lucide-react";
 import { VoiceSearchButton } from "@/components/VoiceSearchButton";
+import { LocationValidator } from "@/components/LocationValidator";
 import { Link } from "wouter";
 import { Helmet } from "react-helmet-async";
 
@@ -933,6 +934,15 @@ export default function Gares() {
                         </div>
                       </div>
 
+                      <div className="pt-2 border-t" onClick={(e) => e.stopPropagation()}>
+                        <LocationValidator
+                          placeId={gare.id}
+                          initialConfirmations={0}
+                          initialReports={0}
+                          compact
+                        />
+                      </div>
+
                       {expandedGare === gare.id && gare.destinations && gare.destinations.length > 0 && (
                         <div className="mt-3 pt-3 border-t space-y-3" onClick={(e) => e.stopPropagation()}>
                           <h4 className="font-semibold text-sm flex items-center gap-2">
@@ -1176,6 +1186,14 @@ export default function Gares() {
                                   </div>
                                 </div>
                               )}
+                              <div className="mt-2 pt-2 border-t">
+                                <LocationValidator
+                                  placeId={gare.id}
+                                  initialConfirmations={0}
+                                  initialReports={0}
+                                  compact
+                                />
+                              </div>
                             </CardContent>
                           </Card>
                         </div>
@@ -1328,6 +1346,14 @@ export default function Gares() {
                               </div>
                             </div>
                           )}
+                          <div className="mt-2 pt-2 border-t">
+                            <LocationValidator
+                              placeId={gare.id}
+                              initialConfirmations={0}
+                              initialReports={0}
+                              compact
+                            />
+                          </div>
                         </CardContent>
                       </Card>
                     );
