@@ -166,7 +166,7 @@ export default function Contribuer() {
           <CardContent>
             <a
               href="mailto:contact@burkinawatch.com"
-              className="inline-flex items-center gap-2 text-sm text-green-700 dark:text-green-400 hover-elevate rounded-md px-2 py-1.5 -mx-2 transition-colors"
+              className="inline-flex items-center gap-2 text-sm text-white hover-elevate rounded-md px-2 py-1.5 -mx-2 transition-colors"
               data-testid="link-contact-email"
             >
               <Mail className="w-4 h-4" />
