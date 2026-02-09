@@ -27,14 +27,87 @@ const parser = new Parser({
   }
 });
 
+function upgradeImageUrl(url: string): string {
+  if (!url) return url;
+  let upgraded = url.replace(/cache-vignettes\/L\d+xH\d+\//i, 'cache-gd2/');
+  if (upgraded === url) {
+    upgraded = url.replace(/(-)\d+x\d+(\.\w+)$/, '$1scaled$2');
+  }
+  if (upgraded === url) {
+    upgraded = url.replace(/\?w=\d+(&h=\d+)?/, '');
+    upgraded = upgraded.replace(/&w=\d+(&h=\d+)?/, '');
+  }
+  if (upgraded === url) {
+    upgraded = url.replace(/-\d+x\d+(?=\.\w+$)/, '');
+  }
+  return upgraded;
+}
+
+const eventImageCache = new Map<string, string | null>();
+
+async function fetchOgImageForEvent(url: string): Promise<string | undefined> {
+  if (!url) return undefined;
+  if (eventImageCache.has(url)) {
+    const cached = eventImageCache.get(url);
+    return cached || undefined;
+  }
+  try {
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+      signal: AbortSignal.timeout(6000)
+    });
+    if (!response.ok) { eventImageCache.set(url, null); return undefined; }
+    const html = await response.text();
+    let match = html.match(/<meta\s+(?:property|name)=["']og:image["']\s+content=["']([^"']+)["']/i);
+    if (!match) match = html.match(/<meta\s+content=["']([^"']+)["']\s+(?:property|name)=["']og:image["']/i);
+    if (!match) match = html.match(/<meta\s+(?:property|name)=["']twitter:image["']\s+content=["']([^"']+)["']/i);
+    if (!match) match = html.match(/<meta\s+content=["']([^"']+)["']\s+(?:property|name)=["']twitter:image["']/i);
+    if (!match) {
+      const imgMatches = html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi);
+      if (imgMatches) {
+        for (const imgTag of imgMatches) {
+          const widthMatch = imgTag.match(/width=["']?(\d+)/i);
+          const w = widthMatch ? parseInt(widthMatch[1]) : 0;
+          if (w > 0 && w < 200) continue;
+          const srcMatch = imgTag.match(/src=["']([^"']+)["']/i);
+          if (srcMatch && srcMatch[1]) {
+            const src = srcMatch[1];
+            if (!src.includes('logo') && !src.includes('icon') && !src.includes('avatar') && !src.includes('favicon') && !src.includes('sprite')) {
+              match = [null, src];
+              break;
+            }
+          }
+        }
+      }
+    }
+    if (match && match[1]) {
+      let imageUrl = match[1];
+      if (imageUrl.startsWith('/')) {
+        const urlObj = new URL(url);
+        imageUrl = `${urlObj.protocol}//${urlObj.host}${imageUrl}`;
+      }
+      eventImageCache.set(url, imageUrl);
+      return imageUrl;
+    }
+    eventImageCache.set(url, null);
+    return undefined;
+  } catch {
+    eventImageCache.set(url, null);
+    return undefined;
+  }
+}
+
 function extractEventImage(item: any): string | undefined {
-  if (item.media && item.media.$) return item.media.$.url;
-  if (item.mediaThumbnail && item.mediaThumbnail.$) return item.mediaThumbnail.$.url;
-  if (item.enclosure && item.enclosure.url && item.enclosure.type?.startsWith('image')) return item.enclosure.url;
-  const htmlContent = item.contentEncoded || item.content || item.description || '';
-  const imgMatch = htmlContent.match(/<img[^>]+src=["']([^"']+)["']/i);
-  if (imgMatch && imgMatch[1]) return imgMatch[1];
-  return undefined;
+  let url: string | undefined;
+  if (item.media && item.media.$) url = item.media.$.url;
+  if (!url && item.mediaThumbnail && item.mediaThumbnail.$) url = item.mediaThumbnail.$.url;
+  if (!url && item.enclosure && item.enclosure.url && item.enclosure.type?.startsWith('image')) url = item.enclosure.url;
+  if (!url) {
+    const htmlContent = item.contentEncoded || item.content || item.description || '';
+    const imgMatch = htmlContent.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (imgMatch && imgMatch[1]) url = imgMatch[1];
+  }
+  return url ? upgradeImageUrl(url) : undefined;
 }
 
 const EVENT_SOURCES = [
@@ -493,6 +566,20 @@ async function fetchEventsBackground() {
     cachedEvents = rssEvents;
     lastFetchTime = Date.now();
     console.log(`${rssEvents.length} événements chargés (dont ${rssEvents.length - fallbackEvents.length} depuis RSS)`);
+
+    const lowQualityEvents = rssEvents.filter(e => e.lienOfficiel && (!e.affiche || e.affiche.includes('cache-vignettes') || e.affiche.includes('L150x'))).slice(0, 25);
+    if (lowQualityEvents.length > 0) {
+      const batchSize = 5;
+      for (let i = 0; i < lowQualityEvents.length; i += batchSize) {
+        const batch = lowQualityEvents.slice(i, i + batchSize);
+        await Promise.all(batch.map(async (event) => {
+          if (event.lienOfficiel) {
+            const ogImage = await fetchOgImageForEvent(event.lienOfficiel);
+            if (ogImage) event.affiche = ogImage;
+          }
+        }));
+      }
+    }
   } catch (error) {
     console.error('Erreur chargement événements en arrière-plan:', error);
     if (cachedEvents.length === 0) {

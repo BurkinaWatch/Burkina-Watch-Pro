@@ -106,39 +106,37 @@ async function fetchOgImage(url: string): Promise<string | undefined> {
   }
 }
 
-// Fonction pour extraire l'image d'un article RSS
+function upgradeImageUrl(url: string): string {
+  if (!url) return url;
+  let upgraded = url.replace(/cache-vignettes\/L\d+xH\d+\//i, 'cache-gd2/');
+  if (upgraded === url) {
+    upgraded = url.replace(/(-)\d+x\d+(\.\w+)$/, '$1scaled$2');
+  }
+  if (upgraded === url) {
+    upgraded = url.replace(/\?w=\d+(&h=\d+)?/, '');
+    upgraded = upgraded.replace(/&w=\d+(&h=\d+)?/, '');
+  }
+  if (upgraded === url) {
+    upgraded = url.replace(/-\d+x\d+(?=\.\w+$)/, '');
+  }
+  return upgraded;
+}
+
 function extractImage(item: any): string | undefined {
-  // 1. media:content (format standard)
-  if (item.media && item.media.$) {
-    return item.media.$.url;
+  let url: string | undefined;
+  if (item.media && item.media.$) url = item.media.$.url;
+  if (!url && item.mediaThumbnail && item.mediaThumbnail.$) url = item.mediaThumbnail.$.url;
+  if (!url && item.enclosure && item.enclosure.url && item.enclosure.type?.startsWith('image')) url = item.enclosure.url;
+  if (!url) {
+    const htmlContent = item.contentEncoded || item.content || item.description || '';
+    const imgMatch = htmlContent.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (imgMatch && imgMatch[1]) url = imgMatch[1];
   }
-  
-  // 2. media:thumbnail
-  if (item.mediaThumbnail && item.mediaThumbnail.$) {
-    return item.mediaThumbnail.$.url;
-  }
-  
-  // 3. enclosure (souvent utilisé pour les images)
-  if (item.enclosure && item.enclosure.url && item.enclosure.type?.startsWith('image')) {
-    return item.enclosure.url;
-  }
-  
-  // 4. Extraire depuis content:encoded ou content ou description
-  const htmlContent = item.contentEncoded || item.content || item.description || '';
-  const imgMatch = htmlContent.match(/<img[^>]+src=["']([^"']+)["']/i);
-  if (imgMatch && imgMatch[1]) {
-    return imgMatch[1];
-  }
-  
-  // 5. Chercher dans le summary
-  if (item['content:encodedSnippet']) {
+  if (!url && item['content:encodedSnippet']) {
     const snippetMatch = item['content:encodedSnippet'].match(/<img[^>]+src=["']([^"']+)["']/i);
-    if (snippetMatch && snippetMatch[1]) {
-      return snippetMatch[1];
-    }
+    if (snippetMatch && snippetMatch[1]) url = snippetMatch[1];
   }
-  
-  return undefined;
+  return url ? upgradeImageUrl(url) : undefined;
 }
 
 // Configuration des flux RSS des médias burkinabè et africains fiables
