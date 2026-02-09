@@ -232,23 +232,33 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
               </nav>
             </div>
 
-            {isAuthenticated && (
-              <>
-                <Separator className="my-3" />
+            <Separator className="my-3" />
 
-                {/* Compte utilisateur - Design amélioré */}
-                <div className="px-3 mb-4">
-                  <div className="flex items-center gap-2 mb-3 px-2">
-                    <User className="w-4 h-4 text-primary" />
-                    <p className="text-xs font-bold text-foreground uppercase tracking-wider">
-                      {t("nav.account")}
-                    </p>
-                  </div>
-                  <nav className="space-y-1.5">
+            <div className="px-3 mb-4">
+              <div className="flex items-center gap-2 mb-3 px-2">
+                <User className="w-4 h-4 text-primary" />
+                <p className="text-xs font-bold text-foreground uppercase tracking-wider">
+                  {isAuthenticated ? t("nav.account") : "Actions"}
+                </p>
+              </div>
+              <nav className="space-y-1.5">
+                <Link href="/contribuer">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-3 h-11 rounded-xl transition-all duration-200 group"
+                    onClick={() => onOpenChange(false)}
+                    data-testid="menu-contribuer"
+                  >
+                    <Heart className="w-5 h-5 text-pink-600 dark:text-pink-500 group-hover:scale-110 transition-transform" />
+                    <span className="font-medium">{t("nav.contribute")}</span>
+                  </Button>
+                </Link>
+                {isAuthenticated && (
+                  <>
                     <Link href="/profil">
                       <Button
                         variant="ghost"
-                        className="w-full justify-start gap-3 h-11 rounded-xl hover:bg-primary/10 hover:scale-[1.02] transition-all duration-200 group"
+                        className="w-full justify-start gap-3 h-11 rounded-xl transition-all duration-200 group"
                         onClick={() => onOpenChange(false)}
                         data-testid="menu-profil"
                       >
@@ -256,20 +266,9 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
                         <span className="font-medium">{t("nav.profile")}</span>
                       </Button>
                     </Link>
-                    <Link href="/contribuer">
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start gap-3 h-11 rounded-xl hover:bg-pink-50 dark:hover:bg-pink-950/20 hover:scale-[1.02] transition-all duration-200 group"
-                        onClick={() => onOpenChange(false)}
-                        data-testid="menu-contribuer"
-                      >
-                        <Heart className="w-5 h-5 text-pink-600 dark:text-pink-500 group-hover:scale-110 transition-transform" />
-                        <span className="font-medium">{t("nav.contribute")}</span>
-                      </Button>
-                    </Link>
                     <Button
                       variant="ghost"
-                      className="w-full justify-start gap-3 h-11 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-500 hover:scale-[1.02] transition-all duration-200 group"
+                      className="w-full justify-start gap-3 h-11 rounded-xl text-red-600 dark:text-red-500 transition-all duration-200 group"
                       onClick={() => {
                         onOpenChange(false);
                         handleLogout();
@@ -279,10 +278,10 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
                       <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
                       <span className="font-medium">{t("nav.logout")}</span>
                     </Button>
-                  </nav>
-                </div>
-              </>
-            )}
+                  </>
+                )}
+              </nav>
+            </div>
           </div>
 
           {/* Footer redesigné */}
