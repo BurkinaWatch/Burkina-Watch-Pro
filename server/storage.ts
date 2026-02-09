@@ -55,7 +55,7 @@ import {
   onlineSessions,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql, isNull } from "drizzle-orm";
+import { eq, desc, and, sql, isNull, gt } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -1120,6 +1120,7 @@ L'équipe Burkina Watch
         userLevel: users.userLevel,
       })
       .from(users)
+      .where(gt(users.userPoints, 0))
       .orderBy(desc(users.userPoints))
       .limit(limit);
   }

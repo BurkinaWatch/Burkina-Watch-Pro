@@ -68,6 +68,13 @@ export default function Leaderboard() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
+          {topUsers.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
+              <p className="text-lg font-medium">Aucun citoyen classé pour le moment</p>
+              <p className="text-sm mt-2">Soyez le premier à gagner des points en signalant des incidents !</p>
+            </div>
+          ) : (
           <div className="divide-y">
             {topUsers.map((user, index) => (
               <div
@@ -101,6 +108,7 @@ export default function Leaderboard() {
               </div>
             ))}
           </div>
+          )}
         </CardContent>
       </Card>
     </div>
