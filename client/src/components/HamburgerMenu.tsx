@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Link, useLocation } from "wouter";
-import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Cross, Newspaper, Calendar, Navigation, Sparkles, Bell, Shield, Camera, Utensils, ShoppingBag, Fuel, Store, Landmark, Bus, Film, Hospital, GraduationCap } from "lucide-react";
+import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Cross, Newspaper, Calendar, Navigation, Sparkles, Bell, Shield, Camera, Utensils, ShoppingBag, Fuel, Store, Landmark, Bus, Film, Hospital, GraduationCap, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     { href: "/carte", icon: MapPin, label: t("nav.map"), color: "text-green-600 dark:text-green-500" },
     { href: "/feed", icon: FileText, label: t("nav.feed"), color: "text-blue-600 dark:text-blue-500" },
     { href: "/sos", icon: AlertCircle, label: t("nav.sos"), color: "text-red-600 dark:text-red-500" },
+    { href: "/classement", icon: Trophy, label: "Classement", color: "text-yellow-600 dark:text-yellow-500" },
   ];
 
   // Services & Actualités - Nouvelles fonctionnalités en avant
