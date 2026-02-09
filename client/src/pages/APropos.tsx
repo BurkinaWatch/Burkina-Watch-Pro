@@ -418,8 +418,8 @@ export default function APropos() {
           </CardHeader>
           <CardContent className="space-y-4 text-muted-foreground">
             <p className="text-lg leading-relaxed">
-              <strong className="text-foreground">Burkina Watch</strong> s'engage à rester une 
-              plateforme gratuite, accessible à tous les Burkinabè. Nous garantissons :
+              <strong className="text-foreground">Burkina Watch</strong> s'engage à offrir une 
+              plateforme accessible et au service de tous les Burkinabè. Nous garantissons :
             </p>
             <ul className="space-y-3 ml-2">
               <li className="flex gap-3">
