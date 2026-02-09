@@ -943,6 +943,22 @@ export default function Gares() {
                         />
                       </div>
 
+                      {gare.destinations && gare.destinations.length > 0 && (
+                        <div className="flex items-center justify-center gap-1 pt-1 text-xs text-muted-foreground">
+                          {expandedGare === gare.id ? (
+                            <>
+                              <ChevronUp className="w-3.5 h-3.5" />
+                              <span>Masquer les details</span>
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="w-3.5 h-3.5 animate-bounce" />
+                              <span>Voir horaires et destinations</span>
+                            </>
+                          )}
+                        </div>
+                      )}
+
                       {expandedGare === gare.id && gare.destinations && gare.destinations.length > 0 && (
                         <div className="mt-3 pt-3 border-t space-y-3" onClick={(e) => e.stopPropagation()}>
                           <h4 className="font-semibold text-sm flex items-center gap-2">
