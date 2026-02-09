@@ -13,7 +13,7 @@ export interface Movie {
 export interface Screening {
   id: string;
   movieId: string;
-  cinema: "Ciné Burkina" | "Ciné Neerwaya" | "CanalOlympia Yennenga";
+  cinema: "Ciné Burkina" | "Ciné Neerwaya";
   time: string;
   date: string;
   price: number;
@@ -176,70 +176,4 @@ export const SCREENINGS: Screening[] = [
     date: "2026-01-12",
     price: 1000
   },
-
-  // CanalOlympia Yennenga - Films internationaux
-  {
-    id: "scr-11",
-    movieId: "movie-5",
-    cinema: "CanalOlympia Yennenga",
-    time: "14:00",
-    date: "2026-01-12",
-    price: 2000
-  },
-  {
-    id: "scr-12",
-    movieId: "movie-5",
-    cinema: "CanalOlympia Yennenga",
-    time: "17:00",
-    date: "2026-01-12",
-    price: 2000
-  },
-  {
-    id: "scr-13",
-    movieId: "movie-5",
-    cinema: "CanalOlympia Yennenga",
-    time: "20:00",
-    date: "2026-01-12",
-    price: 2000
-  },
-  {
-    id: "scr-14",
-    movieId: "movie-6",
-    cinema: "CanalOlympia Yennenga",
-    time: "14:00",
-    date: "2026-01-12",
-    price: 2000
-  },
-  {
-    id: "scr-15",
-    movieId: "movie-6",
-    cinema: "CanalOlympia Yennenga",
-    time: "17:00",
-    date: "2026-01-12",
-    price: 2000
-  },
-  {
-    id: "scr-16",
-    movieId: "movie-6",
-    cinema: "CanalOlympia Yennenga",
-    time: "20:00",
-    date: "2026-01-12",
-    price: 2000
-  },
-  {
-    id: "scr-17",
-    movieId: "movie-7",
-    cinema: "CanalOlympia Yennenga",
-    time: "14:00",
-    date: "2026-01-12",
-    price: 1000
-  },
-  {
-    id: "scr-18",
-    movieId: "movie-7",
-    cinema: "CanalOlympia Yennenga",
-    time: "17:00",
-    date: "2026-01-12",
-    price: 2000
-  }
 ];

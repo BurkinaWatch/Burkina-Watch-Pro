@@ -34,7 +34,7 @@ export interface CinemaProgram {
 
 let cachedProgram: CinemaProgram | null = null;
 
-const CINEMAS = ["Ciné Burkina", "Ciné Neerwaya", "CanalOlympia Yennenga"];
+const CINEMAS = ["Ciné Burkina", "Ciné Neerwaya"];
 
 function getWeekDates(): { start: Date; end: Date; dates: string[] } {
   const now = new Date();
@@ -180,12 +180,6 @@ function generateScreenings(movies: Movie[], dates: string[]): Screening[] {
       times: [["18:30", "20:30"], ["19:00"], ["17:00", "21:00"]],
       prices: [1500, 1000, 1000]
     },
-    {
-      cinema: "CanalOlympia Yennenga",
-      moviePicks: [half, Math.min(half + 1, movies.length - 1), Math.min(half + 2, movies.length - 1), Math.min(half + 3, movies.length - 1)],
-      times: [["14:00", "17:00", "20:00"], ["14:00", "17:00", "20:00"], ["14:00", "17:00"], ["16:00", "19:00"]],
-      prices: [2000, 2000, 2000, 1500]
-    }
   ];
 
   const showDays = dates.slice(2);

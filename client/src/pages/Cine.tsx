@@ -40,12 +40,11 @@ interface CinemaProgram {
   validUntil: string;
 }
 
-const CINEMAS = ["Ciné Burkina", "Ciné Neerwaya", "CanalOlympia Yennenga"];
+const CINEMAS = ["Ciné Burkina", "Ciné Neerwaya"];
 
 const CINEMA_INFO: Record<string, { address: string; type: string }> = {
   "Ciné Burkina": { address: "Avenue de la Nation, Ouagadougou", type: "Films burkinabè & africains" },
   "Ciné Neerwaya": { address: "Secteur 4, Ouagadougou", type: "Films africains & art" },
-  "CanalOlympia Yennenga": { address: "Avenue Thomas Sankara, Ouagadougou", type: "Films internationaux" }
 };
 
 function LoadingSkeleton() {
@@ -147,7 +146,7 @@ export default function Cine() {
         )}
 
         <Tabs defaultValue="Ciné Burkina" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
             {CINEMAS.map((cinema) => (
               <TabsTrigger key={cinema} value={cinema} className="rounded-xl text-xs sm:text-sm" data-testid={`tab-${cinema.replace(/\s+/g, "-").toLowerCase()}`}>
                 {cinema}
