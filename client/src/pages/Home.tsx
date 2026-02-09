@@ -825,6 +825,10 @@ export default function Home() {
       {/* Bande déroulante des communiqués officiels */}
       <NewsTicker />
 
+      <div className="max-w-7xl mx-auto px-4 pt-8 sm:pt-12">
+        <MessageDuJour />
+      </div>
+
       {/* Section de recherche géographique */}
       <section className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
         <Card className="p-4 sm:p-6 bg-card shadow-xl border-2">
@@ -1215,10 +1219,6 @@ export default function Home() {
             ))}
           </div>
         )}
-
-        <div className="mt-8 sm:mt-12">
-          <MessageDuJour />
-        </div>
 
         <div className="mt-8 sm:mt-12 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <RiskZonesPanel />
