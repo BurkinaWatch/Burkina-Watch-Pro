@@ -1,102 +1,70 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  X, 
-  ChevronRight, 
-  ChevronLeft, 
-  MapPin, 
+import {
+  X,
+  ChevronRight,
+  ChevronLeft,
   AlertTriangle,
   Heart,
-  Bell,
-  User,
   Map,
   MessageCircle,
   Shield,
-  Sparkles,
-  CheckCircle2,
-  Menu
+  Menu,
+  Lightbulb,
 } from "lucide-react";
 
-interface TutorialStep {
+interface TutorialTip {
   id: string;
   title: string;
-  description: string;
+  text: string;
   icon: React.ReactNode;
-  targetSelector?: string;
-  position?: "top" | "bottom" | "left" | "right" | "center";
+  color: string;
 }
 
-const TUTORIAL_STEPS: TutorialStep[] = [
-  {
-    id: "welcome",
-    title: "Bienvenue sur Burkina Watch",
-    description: "Decouvrez comment utiliser cette application pour signaler des incidents, demander de l'aide et rester informe sur votre communaute.",
-    icon: <Sparkles className="w-8 h-8 text-primary" />,
-    position: "center"
-  },
+const TIPS: TutorialTip[] = [
   {
     id: "signalement",
-    title: "Signaler un incident",
-    description: "Utilisez le bouton 'Nouveau signalement' pour reporter un probleme dans votre quartier: accidents, pannes, inondations, ou tout autre incident.",
-    icon: <AlertTriangle className="w-8 h-8 text-amber-500" />,
-    targetSelector: "[data-testid='button-new-report']",
-    position: "bottom"
+    title: "Signalez",
+    text: "Un incident pres de vous ? Publiez un signalement en quelques secondes, photo et localisation incluses.",
+    icon: <AlertTriangle className="w-5 h-5" />,
+    color: "text-amber-500",
   },
   {
     id: "carte",
-    title: "Explorer la carte",
-    description: "Visualisez tous les signalements sur une carte interactive. Cliquez sur un marqueur pour voir les details.",
-    icon: <Map className="w-8 h-8 text-blue-500" />,
-    targetSelector: "[data-testid='link-carte']",
-    position: "bottom"
+    title: "Explorez",
+    text: "La carte interactive affiche les incidents, pharmacies, hopitaux et services autour de vous en temps reel.",
+    icon: <Map className="w-5 h-5" />,
+    color: "text-blue-500",
   },
   {
     id: "sos",
-    title: "SOS - Demander de l'aide",
-    description: "En cas d'urgence, utilisez la fonction SOS pour demander ou offrir de l'aide a la communaute.",
-    icon: <Heart className="w-8 h-8 text-red-500" />,
-    targetSelector: "[data-testid='button-sos']",
-    position: "left"
+    title: "SOS",
+    text: "Besoin d'aide urgente ? Le bouton SOS alerte la communaute et affiche les numeros d'urgence.",
+    icon: <Heart className="w-5 h-5" />,
+    color: "text-red-500",
   },
   {
-    id: "notifications",
-    title: "Restez informe",
-    description: "Activez les notifications pour recevoir des alertes sur les incidents dans votre zone et les reponses a vos signalements.",
-    icon: <Bell className="w-8 h-8 text-primary" />,
-    position: "center"
-  },
-  {
-    id: "profil",
-    title: "Votre profil",
-    description: "Connectez-vous pour suivre vos signalements, accumuler des points et monter dans le classement des citoyens engages.",
-    icon: <User className="w-8 h-8 text-primary" />,
-    position: "center"
+    id: "menu",
+    title: "Decouvrez",
+    text: "Ouvrez le menu pour acceder aux pharmacies, hopitaux, restaurants, cinemas, marches, banques et plus.",
+    icon: <Menu className="w-5 h-5" />,
+    color: "text-primary",
   },
   {
     id: "assistant",
     title: "Assistant IA",
-    description: "Besoin d'aide? Cliquez sur le bouton Assistant pour poser vos questions. Notre IA vous guidera dans l'utilisation de l'application.",
-    icon: <MessageCircle className="w-8 h-8 text-green-500" />,
-    targetSelector: "[data-testid='button-chatbot']",
-    position: "left"
+    text: "Une question ? L'assistant intelligent en bas a droite peut vous guider dans l'application.",
+    icon: <MessageCircle className="w-5 h-5" />,
+    color: "text-green-500",
   },
   {
     id: "securite",
-    title: "Votre securite compte",
-    description: "Vos signalements peuvent etre anonymes. Nous protegens votre identite et vos donnees personnelles.",
-    icon: <Shield className="w-8 h-8 text-primary" />,
-    position: "center"
+    title: "Vie privee",
+    text: "Vos signalements peuvent etre anonymes et vous pouvez flouter les visages sur vos photos avant publication.",
+    icon: <Shield className="w-5 h-5" />,
+    color: "text-primary",
   },
-  {
-    id: "navigation",
-    title: "Menu de navigation",
-    description: "Explorez le menu lateral pour acceder a toutes les fonctionnalites: Actualites, Evenements, Suivi en direct, Numeros d'urgence, Pharmacies, Hopitaux, Restaurants, Cinemas, Marches, Boutiques, Banques et Stations-service.",
-    icon: <Menu className="w-8 h-8 text-primary" />,
-    targetSelector: "[data-testid='button-sidebar-toggle']",
-    position: "right"
-  }
 ];
 
 const STORAGE_KEY = "burkina_watch_tutorial_completed";
@@ -104,191 +72,184 @@ const STORAGE_KEY_DONT_SHOW = "burkina_watch_tutorial_dont_show";
 
 export function InteractiveTutorial() {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [dontShowAgain, setDontShowAgain] = useState(false);
+  const [currentTip, setCurrentTip] = useState(0);
+  const [exiting, setExiting] = useState(false);
+  const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     const completed = localStorage.getItem(STORAGE_KEY);
     const dontShow = localStorage.getItem(STORAGE_KEY_DONT_SHOW);
-    
+
     if (!completed && !dontShow) {
-      const timer = setTimeout(() => {
-        setIsOpen(true);
-      }, 1500);
+      const timer = setTimeout(() => setIsOpen(true), 2000);
       return () => clearTimeout(timer);
     }
   }, []);
 
-  const handleNext = useCallback(() => {
-    if (currentStep < TUTORIAL_STEPS.length - 1) {
-      setCurrentStep(prev => prev + 1);
-    } else {
-      handleComplete();
-    }
-  }, [currentStep]);
+  const [paused, setPaused] = useState(false);
 
-  const handlePrevious = useCallback(() => {
-    if (currentStep > 0) {
-      setCurrentStep(prev => prev - 1);
-    }
-  }, [currentStep]);
+  const resetAutoAdvance = useCallback(() => {
+    if (autoTimer.current) clearTimeout(autoTimer.current);
+    if (paused) return;
+    autoTimer.current = setTimeout(() => {
+      setCurrentTip((prev) => {
+        if (prev < TIPS.length - 1) return prev + 1;
+        return prev;
+      });
+    }, 8000);
+  }, [paused]);
 
-  const handleComplete = useCallback(() => {
+  useEffect(() => {
+    if (isOpen) resetAutoAdvance();
+    return () => {
+      if (autoTimer.current) clearTimeout(autoTimer.current);
+    };
+  }, [isOpen, currentTip, resetAutoAdvance]);
+
+  const handleInteraction = useCallback(() => {
+    setPaused(true);
+    if (autoTimer.current) clearTimeout(autoTimer.current);
+  }, []);
+
+  const dismiss = useCallback((permanent: boolean) => {
+    if (autoTimer.current) clearTimeout(autoTimer.current);
+    setExiting(true);
     localStorage.setItem(STORAGE_KEY, "true");
-    if (dontShowAgain) {
-      localStorage.setItem(STORAGE_KEY_DONT_SHOW, "true");
-    }
-    setIsOpen(false);
-  }, [dontShowAgain]);
+    if (permanent) localStorage.setItem(STORAGE_KEY_DONT_SHOW, "true");
+    setTimeout(() => setIsOpen(false), 300);
+  }, []);
 
-  const handleSkip = useCallback(() => {
-    if (dontShowAgain) {
-      localStorage.setItem(STORAGE_KEY_DONT_SHOW, "true");
+  const goNext = useCallback(() => {
+    handleInteraction();
+    if (currentTip < TIPS.length - 1) {
+      setCurrentTip((p) => p + 1);
+    } else {
+      dismiss(false);
     }
-    setIsOpen(false);
-  }, [dontShowAgain]);
+  }, [currentTip, dismiss, handleInteraction]);
 
-  const touchStartX = useRef<number | null>(null);
-  const touchStartY = useRef<number | null>(null);
+  const goPrev = useCallback(() => {
+    handleInteraction();
+    if (currentTip > 0) setCurrentTip((p) => p - 1);
+  }, [currentTip, handleInteraction]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
   }, []);
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (touchStartX.current === null || touchStartY.current === null) return;
-    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
-    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
-    const absDeltaX = Math.abs(deltaX);
-    const absDeltaY = Math.abs(deltaY);
-    if (absDeltaX > 50 && absDeltaX > absDeltaY) {
-      if (deltaX < 0) {
-        handleNext();
-      } else {
-        handlePrevious();
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      if (touchStartX.current === null) return;
+      const delta = e.changedTouches[0].clientX - touchStartX.current;
+      if (Math.abs(delta) > 50) {
+        if (delta < 0) goNext();
+        else goPrev();
       }
-    }
-    touchStartX.current = null;
-    touchStartY.current = null;
-  }, [handleNext, handlePrevious]);
+      touchStartX.current = null;
+    },
+    [goNext, goPrev],
+  );
 
   if (!isOpen) return null;
 
-  const step = TUTORIAL_STEPS[currentStep];
-  const isLastStep = currentStep === TUTORIAL_STEPS.length - 1;
-  const progress = ((currentStep + 1) / TUTORIAL_STEPS.length) * 100;
+  const tip = TIPS[currentTip];
+  const isLast = currentTip === TIPS.length - 1;
 
   return (
-    <div className="fixed inset-0 z-[100]" data-testid="tutorial-overlay">
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={handleSkip}
-      />
-      
-      <div className="absolute inset-0 flex items-center justify-center p-4">
-        <Card
-          className="w-full max-w-md bg-card border-2 border-primary/20 shadow-2xl animate-in fade-in zoom-in duration-300 touch-pan-y"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
-          <CardContent className="p-0">
-            <div className="h-1 bg-muted rounded-t-lg overflow-hidden">
-              <div 
-                className="h-full bg-primary transition-all duration-300"
-                style={{ width: `${progress}%` }}
+    <div
+      className={`fixed bottom-4 left-3 right-3 z-[90] max-w-md mx-auto transition-all duration-300 ${exiting ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0 animate-in slide-in-from-bottom-4 fade-in duration-400"}`}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      data-testid="tutorial-overlay"
+    >
+      <div className="bg-card border rounded-md shadow-lg overflow-hidden">
+        <div className="h-0.5 bg-muted">
+          <div
+            className="h-full bg-primary transition-all duration-500 ease-out"
+            style={{ width: `${((currentTip + 1) / TIPS.length) * 100}%` }}
+          />
+        </div>
+
+        <div className="p-3 flex items-start gap-3">
+          <div className={`shrink-0 mt-0.5 ${tip.color}`}>
+            {tip.icon}
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="font-semibold text-sm">{tip.title}</span>
+              <Badge variant="outline" className="text-[10px] leading-tight">
+                {currentTip + 1}/{TIPS.length}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {tip.text}
+            </p>
+          </div>
+
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => dismiss(false)}
+            className="shrink-0 -mt-1 -mr-1"
+            data-testid="button-tutorial-close"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+
+        <div className="px-3 pb-2.5 flex items-center justify-between gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => dismiss(true)}
+            className="text-[10px] text-muted-foreground/60"
+            data-testid="checkbox-dont-show-again"
+          >
+            Masquer
+          </Button>
+
+          <div className="flex items-center gap-1" role="tablist" aria-label="Astuces">
+            {TIPS.map((_, i) => (
+              <Badge
+                key={i}
+                variant="outline"
+                onClick={() => { handleInteraction(); setCurrentTip(i); }}
+                className={`cursor-pointer rounded-full border-0 p-0 transition-all ${
+                  i === currentTip
+                    ? "w-4 h-1.5 bg-primary"
+                    : i < currentTip
+                      ? "w-1.5 h-1.5 bg-primary/40"
+                      : "w-1.5 h-1.5 bg-muted-foreground/20"
+                }`}
+                data-testid={`tutorial-dot-${i}`}
               />
-            </div>
-            
-            <div className="p-6">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <Badge variant="outline" className="text-xs">
-                  Etape {currentStep + 1} / {TUTORIAL_STEPS.length}
-                </Badge>
-                <Button 
-                  size="icon" 
-                  variant="ghost" 
-                  onClick={handleSkip}
-                  className="shrink-0 -mt-1 -mr-2"
-                  data-testid="button-tutorial-close"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
+            ))}
+          </div>
 
-              <div className="flex flex-col items-center text-center mb-6">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  {step.icon}
-                </div>
-                <h3 className="text-xl font-bold mb-2">{step.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {step.description}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 mb-4">
-                {TUTORIAL_STEPS.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentStep(index)}
-                    className={`h-2 rounded-full transition-all ${
-                      index === currentStep 
-                        ? "w-6 bg-primary" 
-                        : index < currentStep 
-                          ? "w-2 bg-primary/50" 
-                          : "w-2 bg-muted"
-                    }`}
-                    data-testid={`tutorial-dot-${index}`}
-                  />
-                ))}
-              </div>
-
-              <div className="flex items-center justify-between gap-3">
-                <Button
-                  variant="outline"
-                  onClick={handlePrevious}
-                  disabled={currentStep === 0}
-                  className="gap-1"
-                  data-testid="button-tutorial-previous"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Precedent
-                </Button>
-                
-                <Button
-                  onClick={handleNext}
-                  className="gap-1"
-                  data-testid="button-tutorial-next"
-                >
-                  {isLastStep ? (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      Terminer
-                    </>
-                  ) : (
-                    <>
-                      Suivant
-                      <ChevronRight className="w-4 h-4" />
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              <div className="mt-4 pt-4 border-t">
-                <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={dontShowAgain}
-                    onChange={(e) => setDontShowAgain(e.target.checked)}
-                    className="rounded border-muted"
-                    data-testid="checkbox-dont-show-again"
-                  />
-                  Ne plus afficher ce tutoriel
-                </label>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <div className="flex items-center gap-1">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={goPrev}
+              disabled={currentTip === 0}
+              data-testid="button-tutorial-previous"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              onClick={goNext}
+              className="gap-1"
+              data-testid="button-tutorial-next"
+            >
+              {isLast ? "OK" : "Suite"}
+              {!isLast && <ChevronRight className="w-3.5 h-3.5" />}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -300,7 +261,7 @@ export function TutorialTrigger() {
   const handleRestart = () => {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(STORAGE_KEY_DONT_SHOW);
-    setForceUpdate(prev => prev + 1);
+    setForceUpdate((prev) => prev + 1);
     window.location.reload();
   };
 
@@ -312,8 +273,8 @@ export function TutorialTrigger() {
       className="gap-2"
       data-testid="button-restart-tutorial"
     >
-      <Sparkles className="w-4 h-4" />
-      Revoir le tutoriel
+      <Lightbulb className="w-4 h-4" />
+      Revoir les astuces
     </Button>
   );
 }
