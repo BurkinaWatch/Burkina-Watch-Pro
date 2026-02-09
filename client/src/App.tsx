@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -8,98 +8,113 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { StealthModeProvider } from "@/components/StealthModeProvider";
 import { HelmetProvider } from "react-helmet-async";
 import { useAuth } from "@/hooks/useAuth";
-import ChatBot from "@/components/ChatBot";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { InteractiveTutorial } from "@/components/InteractiveTutorial";
-import { WifiOff } from "lucide-react";
+import { WifiOff, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import "./i18n/config";
-import Landing from "@/pages/Landing";
-import Home from "@/pages/Home";
-import Feed from "@/pages/Feed";
-import Carte from "@/pages/Carte";
-import Publier from "@/pages/Publier";
-import SOS from "@/pages/SOS";
-import SOSPublier from "@/pages/SOSPublier";
-import SignalementDetail from "@/pages/SignalementDetail";
-import Profil from "@/pages/Profil";
-import ProfilPublic from "@/pages/ProfilPublic";
-import APropos from "@/pages/APropos";
-import Conditions from "@/pages/Conditions";
-import Leaderboard from "@/pages/Leaderboard";
-import TrackingLive from "@/pages/TrackingLive";
-import Notifications from "@/pages/Notifications";
-import Contribuer from "@/pages/Contribuer";
-import PharmaciesDuFaso from "@/pages/PharmaciesDuFaso";
-import Urgences from "@/pages/Urgences";
-import Bulletin from "@/pages/Bulletin";
-import Events from "@/pages/Events";
-import StreetView from "@/pages/StreetView";
-import Ouaga3D from "@/pages/Ouaga3D";
-import Restaurants from "@/pages/Restaurants";
-import BoutiquesMarchés from "@/pages/BoutiquesMarchés";
-import Marches from "@/pages/Marches";
-import Boutiques from "@/pages/Boutiques";
-import Banques from "@/pages/Banques";
-import Stations from "@/pages/Stations";
-import LiveTrack from "@/pages/LiveTrack";
-import Gares from "@/pages/Gares";
-import Hopitaux from "@/pages/Hopitaux";
-import Universites from "@/pages/Universites";
-import Cine from "@/pages/Cine";
-import Weather from "@/pages/Weather";
-import Fiabilite from "@/pages/Fiabilite";
-import Connexion from "@/pages/Connexion";
-import NotFound from "@/pages/not-found";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
 import { useOfflineCache } from "./hooks/useOfflineCache";
 import { OnboardingProvider } from "./hooks/use-onboarding";
 
+const Home = lazy(() => import("@/pages/Home"));
+const Feed = lazy(() => import("@/pages/Feed"));
+const Carte = lazy(() => import("@/pages/Carte"));
+const Publier = lazy(() => import("@/pages/Publier"));
+const SOS = lazy(() => import("@/pages/SOS"));
+const SOSPublier = lazy(() => import("@/pages/SOSPublier"));
+const SignalementDetail = lazy(() => import("@/pages/SignalementDetail"));
+const Profil = lazy(() => import("@/pages/Profil"));
+const ProfilPublic = lazy(() => import("@/pages/ProfilPublic"));
+const APropos = lazy(() => import("@/pages/APropos"));
+const Conditions = lazy(() => import("@/pages/Conditions"));
+const Leaderboard = lazy(() => import("@/pages/Leaderboard"));
+const TrackingLive = lazy(() => import("@/pages/TrackingLive"));
+const Notifications = lazy(() => import("@/pages/Notifications"));
+const Contribuer = lazy(() => import("@/pages/Contribuer"));
+const PharmaciesDuFaso = lazy(() => import("@/pages/PharmaciesDuFaso"));
+const Urgences = lazy(() => import("@/pages/Urgences"));
+const Bulletin = lazy(() => import("@/pages/Bulletin"));
+const Events = lazy(() => import("@/pages/Events"));
+const StreetView = lazy(() => import("@/pages/StreetView"));
+const Ouaga3D = lazy(() => import("@/pages/Ouaga3D"));
+const Restaurants = lazy(() => import("@/pages/Restaurants"));
+const BoutiquesMarchés = lazy(() => import("@/pages/BoutiquesMarchés"));
+const Marches = lazy(() => import("@/pages/Marches"));
+const Boutiques = lazy(() => import("@/pages/Boutiques"));
+const Banques = lazy(() => import("@/pages/Banques"));
+const Stations = lazy(() => import("@/pages/Stations"));
+const LiveTrack = lazy(() => import("@/pages/LiveTrack"));
+const Gares = lazy(() => import("@/pages/Gares"));
+const Hopitaux = lazy(() => import("@/pages/Hopitaux"));
+const Universites = lazy(() => import("@/pages/Universites"));
+const Cine = lazy(() => import("@/pages/Cine"));
+const Weather = lazy(() => import("@/pages/Weather"));
+const Fiabilite = lazy(() => import("@/pages/Fiabilite"));
+const Connexion = lazy(() => import("@/pages/Connexion"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+const ChatBot = lazy(() => import("@/components/ChatBot"));
+const StationsService = lazy(() => import("@/pages/StationsService"));
+const Landing = lazy(() => import("@/pages/Landing"));
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Chargement...</p>
+      </div>
+    </div>
+  );
+}
+
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/feed" component={Feed} />
-      <Route path="/fil-actualite" component={Feed} />
-      <Route path="/signalement/:id" component={SignalementDetail} />
-      <Route path="/carte" component={Carte} />
-      <Route path="/publier" component={Publier} />
-      <Route path="/sos" component={SOS} />
-      <Route path="/sos/publier" component={SOSPublier} />
-      <Route path="/profil" component={Profil} />
-      <Route path="/profil/:userId" component={ProfilPublic} />
-      <Route path="/leaderboard" component={Leaderboard} />
-      <Route path="/classement" component={Leaderboard} />
-      <Route path="/tracking-live" component={TrackingLive} />
-      <Route path="/contribuer" component={Contribuer} />
-      <Route path="/pharmacies" component={PharmaciesDuFaso} />
-      <Route path="/pharmacies-ii" component={PharmaciesDuFaso} />
-      <Route path="/pharmacies-garde" component={PharmaciesDuFaso} />
-      <Route path="/urgences" component={Urgences} />
-      <Route path="/bulletin" component={Bulletin} />
-      <Route path="/events" component={Events} />
-      <Route path="/streetview" component={StreetView} />
-      <Route path="/ouaga3d" component={Ouaga3D} />
-      <Route path="/restaurants" component={Restaurants} />
-      <Route path="/boutiques-marches" component={BoutiquesMarchés} />
-      <Route path="/marches" component={Marches} />
-      <Route path="/boutiques" component={Boutiques} />
-      <Route path="/banques" component={Banques} />
-      <Route path="/stations" component={Stations} />
-      <Route path="/hopitaux" component={Hopitaux} />
-      <Route path="/universites" component={Universites} />
-      <Route path="/gares" component={Gares} />
-      <Route path="/cine" component={Cine} />
-      <Route path="/meteo" component={Weather} />
-      <Route path="/a-propos" component={APropos} />
-      <Route path="/fiabilite" component={Fiabilite} />
-      <Route path="/conditions" component={Conditions} />
-      <Route path="/notifications" component={Notifications} />
-      <Route path="/track/:shareToken" component={LiveTrack} />
-      <Route path="/connexion" component={Connexion} />
-      <Route path="/login" component={Connexion} />
-      <Route component={NotFound} />
-    </Switch>
+    <Suspense fallback={<PageLoader />}>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/feed" component={Feed} />
+        <Route path="/fil-actualite" component={Feed} />
+        <Route path="/signalement/:id" component={SignalementDetail} />
+        <Route path="/carte" component={Carte} />
+        <Route path="/publier" component={Publier} />
+        <Route path="/sos" component={SOS} />
+        <Route path="/sos/publier" component={SOSPublier} />
+        <Route path="/profil" component={Profil} />
+        <Route path="/profil/:userId" component={ProfilPublic} />
+        <Route path="/leaderboard" component={Leaderboard} />
+        <Route path="/classement" component={Leaderboard} />
+        <Route path="/tracking-live" component={TrackingLive} />
+        <Route path="/contribuer" component={Contribuer} />
+        <Route path="/pharmacies" component={PharmaciesDuFaso} />
+        <Route path="/pharmacies-ii" component={PharmaciesDuFaso} />
+        <Route path="/pharmacies-garde" component={PharmaciesDuFaso} />
+        <Route path="/urgences" component={Urgences} />
+        <Route path="/bulletin" component={Bulletin} />
+        <Route path="/events" component={Events} />
+        <Route path="/streetview" component={StreetView} />
+        <Route path="/ouaga3d" component={Ouaga3D} />
+        <Route path="/restaurants" component={Restaurants} />
+        <Route path="/boutiques-marches" component={BoutiquesMarchés} />
+        <Route path="/marches" component={Marches} />
+        <Route path="/boutiques" component={Boutiques} />
+        <Route path="/banques" component={Banques} />
+        <Route path="/stations" component={Stations} />
+        <Route path="/hopitaux" component={Hopitaux} />
+        <Route path="/universites" component={Universites} />
+        <Route path="/gares" component={Gares} />
+        <Route path="/cine" component={Cine} />
+        <Route path="/meteo" component={Weather} />
+        <Route path="/a-propos" component={APropos} />
+        <Route path="/fiabilite" component={Fiabilite} />
+        <Route path="/conditions" component={Conditions} />
+        <Route path="/notifications" component={Notifications} />
+        <Route path="/track/:shareToken" component={LiveTrack} />
+        <Route path="/connexion" component={Connexion} />
+        <Route path="/login" component={Connexion} />
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 
@@ -141,7 +156,9 @@ function AppContent() {
       <Toaster />
       <OfflineIndicator />
       <Router />
-      <ChatBot />
+      <Suspense fallback={null}>
+        <ChatBot />
+      </Suspense>
       <PWAInstallPrompt />
       <InteractiveTutorial />
     </>
