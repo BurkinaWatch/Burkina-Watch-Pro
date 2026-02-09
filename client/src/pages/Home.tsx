@@ -825,6 +825,63 @@ export default function Home() {
       {/* Bande déroulante des communiqués officiels */}
       <NewsTicker />
 
+      {/* Stats Section */}
+      <section className="py-12 sm:py-16 md:py-20 px-4 bg-gradient-to-b from-background via-muted/30 to-background relative overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-destructive/5 rounded-full blur-3xl" />
+
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-3 bg-gradient-to-r from-primary via-destructive to-primary bg-clip-text text-transparent px-2">
+              Statistiques en temps réel
+            </h2>
+            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-4">
+              Découvrez l'engagement de notre communauté dans la surveillance citoyenne
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8" data-testid="container-stats">
+            <StatCard
+              title="Signalements actifs"
+              value={stats?.totalSignalements || 0}
+              icon={TrendingUp}
+              description="Dans la base de données"
+              trend="up"
+            />
+            <StatCard
+              title="Alertes SOS"
+              value={stats?.sosCount || 0}
+              icon={AlertTriangle}
+              description="Nécessitant attention urgente"
+              variant="destructive"
+              trend={(stats?.sosCount ?? 0) > 0 ? "up" : "neutral"}
+            />
+            <StatCard
+              title="Citoyens engagés"
+              value={stats?.totalUsers || 0}
+              icon={Users}
+              description="Utilisateurs inscrits"
+              variant="success"
+              trend="up"
+            />
+            <StatCard
+              title="En ligne maintenant"
+              value={stats?.onlineUsers || 0}
+              icon={Users}
+              description="Utilisateurs connectés"
+              variant="info"
+              trend={(stats?.onlineUsers ?? 0) > 0 ? "up" : "neutral"}
+            />
+          </div>
+
+          <div className="mt-6 sm:mt-8 text-center">
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Mis à jour en temps réel • Données vérifiées
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Section de recherche géographique */}
       <section className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
         <Card className="p-4 sm:p-6 bg-card shadow-xl border-2">
@@ -1119,67 +1176,6 @@ export default function Home() {
             </div>
           )}
         </Card>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 bg-gradient-to-b from-background via-muted/30 to-background relative overflow-hidden">
-        {/* Decorative background elements */}
-        <div className="absolute top-0 left-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-destructive/5 rounded-full blur-3xl" />
-
-        <div className="max-w-7xl mx-auto relative z-10">
-          {/* Section Header */}
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-3 bg-gradient-to-r from-primary via-destructive to-primary bg-clip-text text-transparent px-2">
-              Statistiques en temps réel
-            </h2>
-            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-4">
-              Découvrez l'engagement de notre communauté dans la surveillance citoyenne
-            </p>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8" data-testid="container-stats">
-            <StatCard
-              title="Signalements actifs"
-              value={stats?.totalSignalements || 0}
-              icon={TrendingUp}
-              description="Dans la base de données"
-              trend="up"
-            />
-            <StatCard
-              title="Alertes SOS"
-              value={stats?.sosCount || 0}
-              icon={AlertTriangle}
-              description="Nécessitant attention urgente"
-              variant="destructive"
-              trend={(stats?.sosCount ?? 0) > 0 ? "up" : "neutral"}
-            />
-            <StatCard
-              title="Citoyens engagés"
-              value={stats?.totalUsers || 0}
-              icon={Users}
-              description="Utilisateurs inscrits"
-              variant="success"
-              trend="up"
-            />
-            <StatCard
-              title="En ligne maintenant"
-              value={stats?.onlineUsers || 0}
-              icon={Users}
-              description="Utilisateurs connectés"
-              variant="info"
-              trend={(stats?.onlineUsers ?? 0) > 0 ? "up" : "neutral"}
-            />
-          </div>
-
-          {/* Additional Info */}
-          <div className="mt-6 sm:mt-8 text-center">
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              Mis à jour en temps réel • Données vérifiées
-            </p>
-          </div>
-        </div>
       </section>
 
       <section className="max-w-7xl mx-auto px-4 py-8 sm:py-12 pb-24 sm:pb-28">
