@@ -109,16 +109,11 @@ async function fetchOgImage(url: string): Promise<string | undefined> {
 function upgradeImageUrl(url: string): string {
   if (!url) return url;
   let upgraded = url.replace(/cache-vignettes\/L\d+xH\d+\//i, 'cache-gd2/');
-  if (upgraded === url) {
-    upgraded = url.replace(/(-)\d+x\d+(\.\w+)$/, '$1scaled$2');
-  }
-  if (upgraded === url) {
-    upgraded = url.replace(/\?w=\d+(&h=\d+)?/, '');
-    upgraded = upgraded.replace(/&w=\d+(&h=\d+)?/, '');
-  }
-  if (upgraded === url) {
-    upgraded = url.replace(/-\d+x\d+(?=\.\w+$)/, '');
-  }
+  if (upgraded !== url) return upgraded;
+  upgraded = url.replace(/-\d+x\d+(?=\.\w+$)/, '');
+  if (upgraded !== url) return upgraded;
+  upgraded = url.replace(/\?w=\d+(&h=\d+)?/, '');
+  upgraded = upgraded.replace(/&w=\d+(&h=\d+)?/, '');
   return upgraded;
 }
 
