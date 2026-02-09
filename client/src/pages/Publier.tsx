@@ -22,7 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Upload, MapPin, Camera, Loader2, X, WifiOff, Cloud } from "lucide-react";
+import { Upload, MapPin, Camera, Loader2, X, WifiOff, Cloud, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSignalementSchema, type InsertSignalement } from "@shared/schema";
@@ -35,6 +35,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useEffect, useState, useRef } from "react";
 import { z } from "zod";
 import ModerationDialog from "@/components/ModerationDialog";
+import ImageBlurEditor from "@/components/ImageBlurEditor";
 import { useTranslation } from "react-i18next";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { offlineStorage } from "@/lib/offlineStorage";
@@ -53,6 +54,8 @@ export default function Publier() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [moderationOpen, setModerationOpen] = useState(false);
   const [moderationData, setModerationData] = useState<any>(null);
+  const [blurEditorOpen, setBlurEditorOpen] = useState(false);
+  const [blurEditIndex, setBlurEditIndex] = useState<number | null>(null);
   const { t, i18n } = useTranslation();
   const { isOnline } = useNetworkStatus();
   const [savedOffline, setSavedOffline] = useState(false);
@@ -561,15 +564,30 @@ export default function Publier() {
                                 className="w-full h-32 object-cover"
                               />
                             )}
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="sm"
-                              className="absolute top-1 right-1"
-                              onClick={() => handleRemoveMedia(index)}
-                            >
-                              <X className="w-3 h-3" />
-                            </Button>
+                            <div className="absolute top-1 right-1 flex gap-1">
+                              {!preview.startsWith('data:video/') && (
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => {
+                                    setBlurEditIndex(index);
+                                    setBlurEditorOpen(true);
+                                  }}
+                                  data-testid={`button-blur-image-${index}`}
+                                >
+                                  <EyeOff className="w-3 h-3" />
+                                </Button>
+                              )}
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleRemoveMedia(index)}
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -664,6 +682,29 @@ export default function Publier() {
           </form>
         </Form>
       </div>
+
+      {blurEditIndex !== null && (
+        <ImageBlurEditor
+          imageSrc={mediaPreviews[blurEditIndex]}
+          open={blurEditorOpen}
+          onClose={() => {
+            setBlurEditorOpen(false);
+            setBlurEditIndex(null);
+          }}
+          onSave={(blurredBase64) => {
+            const updated = [...mediaPreviews];
+            updated[blurEditIndex] = blurredBase64;
+            setMediaPreviews(updated);
+            form.setValue("medias", updated);
+            setBlurEditorOpen(false);
+            setBlurEditIndex(null);
+            toast({
+              title: "Floutage applique",
+              description: "Les zones selectionnees ont ete floutees.",
+            });
+          }}
+        />
+      )}
 
       <BottomNav />
     </div>

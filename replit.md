@@ -20,6 +20,15 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 - **Data Sources**: OpenStreetMap (OSM) via Overpass API.
 
 ## Recent Changes (Feb 9, 2026)
+- **Image Blur Editor**: Canvas-based face/object blurring for signalement images
+  - Users can draw rectangles over faces or objects to pixelate them before publishing
+  - Two blur strengths: "Flou leger" (medium) and "Flou fort" (strong)
+  - Touch and mouse support for mobile-first usage
+  - Full resolution export (blur applied at original image resolution, not display size)
+  - Undo/clear actions, bounds clamping for edge safety
+  - Component: client/src/components/ImageBlurEditor.tsx
+  - Integrated into: client/src/pages/Publier.tsx (EyeOff button on each image thumbnail)
+
 - **Location Validator**: Community-driven location accuracy system on ALL place cards
   - Users can "Valider" (confirm) or "Signaler" (report) location accuracy
   - Reusable LocationValidator component: client/src/components/LocationValidator.tsx
