@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, AlertTriangle, Loader2 } from "lucide-react";
+import { ThumbsUp, Flag, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface LocationValidatorProps {
@@ -15,7 +14,6 @@ export function LocationValidator({
   placeId,
   initialConfirmations = 0,
   initialReports = 0,
-  compact = false,
 }: LocationValidatorProps) {
   const { toast } = useToast();
   const [confirmations, setConfirmations] = useState(initialConfirmations);
@@ -65,51 +63,51 @@ export function LocationValidator({
     }
   };
 
-  const renderButtons = (iconSize: string, textSize: string) => (
-    <>
-      <Button
-        variant={confirmed ? "default" : "outline"}
-        size="sm"
-        onClick={() => handleAction("confirm")}
-        disabled={confirmed || loading !== null}
-        className={`gap-1.5 ${textSize}`}
-        data-testid={`button-confirm-${placeId}`}
-      >
-        {loading === "confirm" ? (
-          <Loader2 className={`${iconSize} animate-spin`} />
-        ) : (
-          <ThumbsUp className={iconSize} />
-        )}
-        {confirmed ? "Confirme" : "Valider"}
-        {confirmations > 0 && (
-          <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0 h-4">{confirmations}</Badge>
-        )}
-      </Button>
-      <Button
-        variant={reported ? "destructive" : "outline"}
-        size="sm"
-        onClick={() => handleAction("report")}
-        disabled={reported || loading !== null}
-        className={`gap-1.5 ${textSize}`}
-        data-testid={`button-report-${placeId}`}
-      >
-        {loading === "report" ? (
-          <Loader2 className={`${iconSize} animate-spin`} />
-        ) : (
-          <AlertTriangle className={iconSize} />
-        )}
-        {reported ? "Signale" : "Signaler"}
-        {reports > 0 && (
-          <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0 h-4">{reports}</Badge>
-        )}
-      </Button>
-    </>
-  );
-
   return (
-    <div className="flex items-center gap-2 flex-wrap" data-testid={`location-validator-${placeId}`}>
-      {!compact && <span className="text-xs text-muted-foreground mr-1">Localisation correcte ?</span>}
-      {renderButtons(compact ? "w-3.5 h-3.5" : "w-4 h-4", compact ? "text-xs" : "")}
+    <div className="flex flex-col gap-2" data-testid={`location-validator-${placeId}`}>
+      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1.5">
+          <ThumbsUp className="w-3.5 h-3.5" />
+          {confirmations} confirmation{confirmations !== 1 ? "s" : ""}
+        </span>
+        <span className="text-muted-foreground/40">|</span>
+        <span className="flex items-center gap-1.5">
+          <Flag className="w-3.5 h-3.5" />
+          {reports} signalement{reports !== 1 ? "s" : ""}
+        </span>
+      </div>
+      <div className="flex items-center gap-2 flex-wrap">
+        <Button
+          variant={confirmed ? "default" : "outline"}
+          size="sm"
+          onClick={() => handleAction("confirm")}
+          disabled={confirmed || loading !== null}
+          className="gap-1.5 text-xs"
+          data-testid={`button-confirm-${placeId}`}
+        >
+          {loading === "confirm" ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <ThumbsUp className="w-3.5 h-3.5" />
+          )}
+          {confirmed ? "Confirme" : "Confirmer"}
+        </Button>
+        <Button
+          variant={reported ? "destructive" : "outline"}
+          size="sm"
+          onClick={() => handleAction("report")}
+          disabled={reported || loading !== null}
+          className="gap-1.5 text-xs"
+          data-testid={`button-report-${placeId}`}
+        >
+          {loading === "report" ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Flag className="w-3.5 h-3.5" />
+          )}
+          {reported ? "Signale" : "Signaler une erreur"}
+        </Button>
+      </div>
     </div>
   );
 }
