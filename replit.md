@@ -27,6 +27,11 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 - **Open Graph / SEO**: Added og:title, og:description, og:image, twitter:card meta tags for social sharing
 - **Dynamic Page Titles**: All 30+ pages now have unique Helmet titles (e.g. "Pharmacies - Burkina Watch")
 - **Admin Page**: Replaced hardcoded mock data with real database queries (signalements, stats)
+- **Cinema Program**: AI-generated weekly cinema schedules (Groq/OpenAI) with auto-refresh every Wednesday
+  - Endpoint: GET /api/cinema/program, POST /api/cinema/refresh
+  - Files: server/cineService.ts, client/src/pages/Cine.tsx
+  - 3 cinemas: Ciné Burkina, Ciné Neerwaya, CanalOlympia Yennenga
+  - Fallback to static data if AI unavailable
 - **Files**: client/index.html, client/src/App.tsx, client/src/pages/Admin.tsx, all page files
 
 ## Hybrid OTP Authentication (Jan 11, 2026)

@@ -28,6 +28,7 @@ import { signalementMutationLimiter } from "./securityHardening";
 import { generateChatResponse, isAIAvailable } from "./aiService";
 import { fetchBulletins, clearCache } from "./rssService";
 import { getOfficialNews } from "./newsService";
+import { getCinemaProgram, clearCinemaCache } from "./cineService";
 import { fetchEvents, clearEventsCache } from "./eventsService";
 import { overpassService } from "./overpassService";
 import { dataMigrationService } from "./dataMigrationService";
@@ -3860,6 +3861,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erreur alertes météo:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des alertes météo" });
+    }
+  });
+
+  app.get("/api/cinema/program", async (req, res) => {
+    try {
+      const program = await getCinemaProgram();
+      res.set("Cache-Control", "public, max-age=3600");
+      res.json(program);
+    } catch (error) {
+      console.error("Erreur programme cinéma:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération du programme cinéma" });
+    }
+  });
+
+  app.post("/api/cinema/refresh", isAuthenticated, async (req, res) => {
+    try {
+      clearCinemaCache();
+      const program = await getCinemaProgram();
+      res.json(program);
+    } catch (error) {
+      console.error("Erreur rafraîchissement cinéma:", error);
+      res.status(500).json({ error: "Erreur lors du rafraîchissement" });
     }
   });
 
