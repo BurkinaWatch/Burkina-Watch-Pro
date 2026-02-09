@@ -542,6 +542,94 @@ export class OverpassService {
       lastUpdated: results.length > 0 ? results[0].lastSyncedAt : null 
     };
   }
+
+  private async ensurePlaceExists(placeId: string): Promise<boolean> {
+    const existing = await db.select({ id: places.id }).from(places).where(eq(places.id, placeId)).limit(1);
+    return existing.length > 0;
+  }
+
+  async confirmPlace(placeId: string, userId: string | null, ipAddress: string): Promise<boolean> {
+    const placeExists = await this.ensurePlaceExists(placeId);
+    if (!placeExists) {
+      throw new Error("PLACE_NOT_FOUND");
+    }
+
+    const existing = await db.select().from(placeVerifications).where(
+      and(
+        eq(placeVerifications.placeId, placeId),
+        userId
+          ? eq(placeVerifications.userId, userId)
+          : eq(placeVerifications.ipAddress, ipAddress),
+        eq(placeVerifications.action, "confirm")
+      )
+    ).limit(1);
+
+    if (existing.length > 0) return false;
+
+    await db.insert(placeVerifications).values({
+      placeId,
+      userId,
+      action: "confirm",
+      ipAddress,
+    });
+
+    await db.update(places)
+      .set({ confirmations: sql`${places.confirmations} + 1` })
+      .where(eq(places.id, placeId));
+
+    return true;
+  }
+
+  async reportPlace(placeId: string, userId: string | null, comment: string | undefined, ipAddress: string): Promise<boolean> {
+    const placeExists = await this.ensurePlaceExists(placeId);
+    if (!placeExists) {
+      throw new Error("PLACE_NOT_FOUND");
+    }
+
+    const existing = await db.select().from(placeVerifications).where(
+      and(
+        eq(placeVerifications.placeId, placeId),
+        userId
+          ? eq(placeVerifications.userId, userId)
+          : eq(placeVerifications.ipAddress, ipAddress),
+        eq(placeVerifications.action, "report")
+      )
+    ).limit(1);
+
+    if (existing.length > 0) return false;
+
+    await db.insert(placeVerifications).values({
+      placeId,
+      userId,
+      action: "report",
+      comment: comment || null,
+      ipAddress,
+    });
+
+    await db.update(places)
+      .set({ reports: sql`${places.reports} + 1` })
+      .where(eq(places.id, placeId));
+
+    return true;
+  }
+
+  async getUserVerifications(placeId: string, userId: string | null): Promise<{ confirmed: boolean; reported: boolean }> {
+    if (!userId) return { confirmed: false, reported: false };
+
+    const results = await db.select({ action: placeVerifications.action })
+      .from(placeVerifications)
+      .where(
+        and(
+          eq(placeVerifications.placeId, placeId),
+          eq(placeVerifications.userId, userId)
+        )
+      );
+
+    return {
+      confirmed: results.some(r => r.action === "confirm"),
+      reported: results.some(r => r.action === "report"),
+    };
+  }
 }
 
 export const overpassService = OverpassService.getInstance();

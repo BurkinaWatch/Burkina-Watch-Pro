@@ -3206,17 +3206,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user?.claims?.sub || null;
       const ipAddress = req.ip || req.connection?.remoteAddress || "unknown";
-      
-      const success = await overpassService.confirmPlace(req.params.id, userId, ipAddress);
-      
-      if (!success) {
-        return res.status(400).json({ error: "Vous avez déjà confirmé ce lieu" });
+      const placeId = req.params.id;
+
+      try {
+        const success = await overpassService.confirmPlace(placeId, userId, ipAddress);
+        if (!success) {
+          return res.status(400).json({ error: "Vous avez déjà confirmé ce lieu", success: false });
+        }
+        return res.json({ message: "Confirmation enregistrée", success: true });
+      } catch (dbError: any) {
+        if (dbError?.message === "PLACE_NOT_FOUND") {
+          const key = `place-${placeId}`;
+          if (!placeInteractions[key]) {
+            placeInteractions[key] = { confirmations: 0, reports: 0, confirmedBy: new Set(), reportedBy: new Set() };
+          }
+          if (placeInteractions[key].confirmedBy.has(ipAddress)) {
+            return res.status(400).json({ error: "Vous avez déjà confirmé ce lieu", success: false });
+          }
+          placeInteractions[key].confirmations++;
+          placeInteractions[key].confirmedBy.add(ipAddress);
+          return res.json({ success: true, confirmations: placeInteractions[key].confirmations, reports: placeInteractions[key].reports });
+        }
+        throw dbError;
       }
-      
-      res.json({ message: "Confirmation enregistrée", success: true });
     } catch (error) {
       console.error("Erreur confirmation place:", error);
-      res.status(500).json({ error: "Erreur lors de la confirmation" });
+      res.status(500).json({ error: "Erreur lors de la confirmation", success: false });
     }
   });
 
@@ -3225,17 +3240,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user?.claims?.sub || null;
       const ipAddress = req.ip || req.connection?.remoteAddress || "unknown";
       const { comment } = req.body;
-      
-      const success = await overpassService.reportPlace(req.params.id, userId, comment, ipAddress);
-      
-      if (!success) {
-        return res.status(400).json({ error: "Vous avez déjà signalé ce lieu" });
+      const placeId = req.params.id;
+
+      try {
+        const success = await overpassService.reportPlace(placeId, userId, comment, ipAddress);
+        if (!success) {
+          return res.status(400).json({ error: "Vous avez déjà signalé ce lieu", success: false });
+        }
+        return res.json({ message: "Signalement enregistré", success: true });
+      } catch (dbError: any) {
+        if (dbError?.message === "PLACE_NOT_FOUND") {
+          const key = `place-${placeId}`;
+          if (!placeInteractions[key]) {
+            placeInteractions[key] = { confirmations: 0, reports: 0, confirmedBy: new Set(), reportedBy: new Set() };
+          }
+          if (placeInteractions[key].reportedBy.has(ipAddress)) {
+            return res.status(400).json({ error: "Vous avez déjà signalé ce lieu", success: false });
+          }
+          placeInteractions[key].reports++;
+          placeInteractions[key].reportedBy.add(ipAddress);
+          return res.json({ success: true, confirmations: placeInteractions[key].confirmations, reports: placeInteractions[key].reports });
+        }
+        throw dbError;
       }
-      
-      res.json({ message: "Signalement enregistré", success: true });
     } catch (error) {
       console.error("Erreur signalement place:", error);
-      res.status(500).json({ error: "Erreur lors du signalement" });
+      res.status(500).json({ error: "Erreur lors du signalement", success: false });
     }
   });
 
