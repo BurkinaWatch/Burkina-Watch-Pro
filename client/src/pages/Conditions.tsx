@@ -13,7 +13,6 @@ export default function Conditions() {
         <title>Conditions d'Utilisation - Burkina Watch</title>
       </Helmet>
       <Header />
-      
       <section className="container max-w-5xl mx-auto px-4 pt-24 pb-12">
         <Link href="/">
           <Button variant="ghost" className="mb-6" data-testid="button-back-home">
@@ -29,9 +28,7 @@ export default function Conditions() {
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Conditions d'Utilisation
           </h1>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Dernière mise à jour : 7 novembre 2024
-          </p>
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">Dernière mise à jour : 7 novembre 2025</p>
         </div>
 
         {/* Introduction */}
@@ -322,7 +319,6 @@ export default function Conditions() {
           </p>
         </div>
       </section>
-
       <BottomNav />
     </div>
   );
