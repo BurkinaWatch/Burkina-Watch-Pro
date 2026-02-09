@@ -1,96 +1,53 @@
 import { Helmet } from "react-helmet-async";
-import { ArrowLeft, Film, Clock, Info, CalendarDays, RefreshCw, MapPin } from "lucide-react";
-import { format, parseISO } from "date-fns";
-import { fr } from "date-fns/locale";
+import { ArrowLeft, Film, Clock, Info, MapPin, Phone, Navigation, Star, ExternalLink } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
 
-interface Movie {
+interface CinemaInfo {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  type: string;
+  description: string;
+  showtimes: string[];
+  prices: { label: string; amount: number }[];
+  features: string[];
+  mapUrl: string;
+  lat: number;
+  lon: number;
+}
+
+interface RecentFilm {
   id: string;
   title: string;
-  genre: string;
-  duration: string;
-  director: string;
-  synopsis: string;
-  rating: string;
-  posterUrl?: string;
-  country?: string;
-}
-
-interface Screening {
-  id: string;
-  movieId: string;
   cinema: string;
-  time: string;
-  date: string;
-  price: number;
+  genre?: string;
+  country?: string;
+  source: string;
 }
 
-interface CinemaProgram {
-  movies: Movie[];
-  screenings: Screening[];
-  weekLabel: string;
-  generatedAt: string;
-  validUntil: string;
-}
-
-const CINEMAS = ["Ciné Burkina", "Ciné Neerwaya"];
-
-const CINEMA_INFO: Record<string, { address: string; type: string }> = {
-  "Ciné Burkina": { address: "Avenue de la Nation, Ouagadougou", type: "Films burkinabè & africains" },
-  "Ciné Neerwaya": { address: "Secteur 4, Ouagadougou", type: "Films africains & art" },
-};
-
-function LoadingSkeleton() {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {[1, 2, 3].map((i) => (
-        <Card key={i} className="overflow-hidden border-none shadow-sm">
-          <div className="flex flex-col sm:flex-row">
-            <Skeleton className="w-full sm:w-1/3 aspect-[3/4]" />
-            <div className="flex-1 p-4 space-y-3">
-              <Skeleton className="h-5 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-8 w-full" />
-            </div>
-          </div>
-        </Card>
-      ))}
-    </div>
-  );
+interface CinemaData {
+  cinemas: CinemaInfo[];
+  recentFilms: RecentFilm[];
 }
 
 export default function Cine() {
   const [, setLocation] = useLocation();
 
-  const { data: program, isLoading, isError } = useQuery<CinemaProgram>({
-    queryKey: ["/api/cinema/program"],
-    staleTime: 1000 * 60 * 30,
+  const { data, isLoading } = useQuery<CinemaData>({
+    queryKey: ["/api/cinema/info"],
+    staleTime: 1000 * 60 * 60,
     refetchOnWindowFocus: false,
   });
 
-  const movies = program?.movies || [];
-  const screenings = program?.screenings || [];
-
-  function getUniqueScreeningDates(cinema: string, movieId: string): string[] {
-    const dates = screenings
-      .filter((s) => s.cinema === cinema && s.movieId === movieId)
-      .map((s) => s.date);
-    return Array.from(new Set(dates)).sort();
-  }
-
-  function getScreeningsForDate(cinema: string, movieId: string, date: string): Screening[] {
-    return screenings.filter(
-      (s) => s.cinema === cinema && s.movieId === movieId && s.date === date
-    );
-  }
+  const cinemas = data?.cinemas || [];
+  const recentFilms = data?.recentFilms || [];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -112,162 +69,202 @@ export default function Cine() {
           <div className="flex-1">
             <h1 className="text-2xl font-bold flex items-center gap-2" data-testid="text-page-title">
               <Film className="h-6 w-6 text-pink-600" />
-              Programme Ciné
+              Cinemas de Ouagadougou
             </h1>
             <p className="text-sm text-muted-foreground">
-              Horaires des séances à Ouagadougou
+              Salles de cinema, horaires et films recents
             </p>
           </div>
         </div>
 
-        {program?.weekLabel && (
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-6 px-3 py-2 rounded-lg bg-pink-50 dark:bg-pink-950/20">
-            <div className="flex items-center gap-2">
-              <CalendarDays className="w-4 h-4 text-pink-600" />
-              <span className="text-sm font-medium text-pink-800 dark:text-pink-200" data-testid="text-week-label">
-                Semaine du {program.weekLabel}
-              </span>
-            </div>
-            <Badge variant="secondary" className="text-[10px]" data-testid="badge-auto-update">
-              <RefreshCw className="w-3 h-3 mr-1" />
-              Mise à jour auto chaque mercredi
-            </Badge>
-          </div>
-        )}
-
-        {isError && (
-          <Card className="mb-6 border-none bg-red-50 dark:bg-red-950/20 shadow-none">
-            <CardContent className="p-4 text-center">
-              <p className="text-sm text-red-800 dark:text-red-200">
-                Impossible de charger le programme. Veuillez réessayer plus tard.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        <Tabs defaultValue="Ciné Burkina" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            {CINEMAS.map((cinema) => (
-              <TabsTrigger key={cinema} value={cinema} className="rounded-xl text-xs sm:text-sm" data-testid={`tab-${cinema.replace(/\s+/g, "-").toLowerCase()}`}>
-                {cinema}
-              </TabsTrigger>
+        {isLoading ? (
+          <div className="space-y-4">
+            {[1, 2].map((i) => (
+              <Card key={i} className="h-48 animate-pulse bg-muted/50" />
             ))}
-          </TabsList>
+          </div>
+        ) : (
+          <Tabs defaultValue={cinemas[0]?.id || "cine-burkina"} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              {cinemas.map((cinema) => (
+                <TabsTrigger
+                  key={cinema.id}
+                  value={cinema.id}
+                  className="rounded-xl text-xs sm:text-sm"
+                  data-testid={`tab-${cinema.id}`}
+                >
+                  {cinema.name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-          {CINEMAS.map((cinema) => (
-            <TabsContent key={cinema} value={cinema}>
-              {CINEMA_INFO[cinema] && (
-                <div className="flex flex-wrap items-center gap-3 mb-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    {CINEMA_INFO[cinema].address}
-                  </span>
-                  <Badge variant="outline" className="text-[10px]">{CINEMA_INFO[cinema].type}</Badge>
-                </div>
-              )}
+            {cinemas.map((cinema) => {
+              const films = recentFilms.filter((f) => f.cinema === cinema.name);
 
-              {isLoading ? (
-                <LoadingSkeleton />
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {movies.map((movie) => {
-                    const movieDates = getUniqueScreeningDates(cinema, movie.id);
-                    if (movieDates.length === 0) return null;
-
-                    const firstDateScreenings = getScreeningsForDate(cinema, movie.id, movieDates[0]);
-                    if (firstDateScreenings.length === 0) return null;
-
-                    return (
-                      <Card key={`${cinema}-${movie.id}`} className="overflow-visible hover-elevate transition-all border-none shadow-sm bg-card/50 backdrop-blur-sm" data-testid={`card-movie-${movie.id}`}>
-                        <div className="flex flex-col sm:flex-row">
-                          <div className="w-full sm:w-1/3 aspect-[3/4] bg-muted relative rounded-tl-md rounded-bl-md overflow-hidden">
-                            {movie.posterUrl ? (
-                              <img
-                                src={movie.posterUrl}
-                                alt={movie.title}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex flex-col items-center justify-center bg-pink-100 dark:bg-pink-900/20 gap-2">
-                                <Film className="w-12 h-12 text-pink-600/30" />
-                                <span className="text-[10px] text-pink-600/50 font-medium px-2 text-center">{movie.title}</span>
-                              </div>
-                            )}
-                            <Badge className="absolute top-2 left-2 bg-pink-600 text-white border-none">
-                              {movie.rating} ★
-                            </Badge>
-                            {movie.country && (
-                              <Badge variant="secondary" className="absolute bottom-2 left-2 text-[9px] h-4">
-                                {movie.country}
+              return (
+                <TabsContent key={cinema.id} value={cinema.id} className="space-y-4">
+                  <Card className="bg-gradient-to-r from-pink-500/10 to-pink-600/5 border-pink-500/20">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 bg-pink-500/20 rounded-lg shrink-0">
+                          <Film className="w-8 h-8 text-pink-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h2 className="font-bold text-lg">{cinema.name}</h2>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {cinema.description}
+                          </p>
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            {cinema.features.map((f, i) => (
+                              <Badge key={i} variant="outline" className="text-xs">
+                                {f}
                               </Badge>
-                            )}
-                          </div>
-                          <div className="flex-1 p-4 flex flex-col">
-                            <div className="flex-1">
-                              <h3 className="text-lg font-bold mb-1" data-testid={`text-movie-title-${movie.id}`}>{movie.title}</h3>
-                              <p className="text-xs text-muted-foreground mb-1">
-                                Réalisateur : {movie.director}
-                              </p>
-                              <div className="text-xs text-muted-foreground mb-3 flex flex-wrap items-center gap-1">
-                                <Badge variant="secondary" className="text-[10px] h-4">
-                                  {movie.genre}
-                                </Badge>
-                                <span>·</span>
-                                <span>{movie.duration}</span>
-                              </div>
-                              <p className="text-sm text-muted-foreground line-clamp-3 mb-4 italic">
-                                "{movie.synopsis}"
-                              </p>
-                            </div>
-
-                            <div className="space-y-3 pt-2 border-t border-border/50">
-                              <div className="flex flex-wrap items-center justify-between gap-2">
-                                <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1">
-                                  <CalendarDays className="w-3 h-3" />
-                                  {movieDates.length > 1
-                                    ? `${format(parseISO(movieDates[0]), "EEE d", { locale: fr })} - ${format(parseISO(movieDates[movieDates.length - 1]), "EEE d MMM", { locale: fr })}`
-                                    : format(parseISO(movieDates[0]), "EEEE d MMMM", { locale: fr })}
-                                </span>
-                                <span className="text-xs font-bold text-pink-600 bg-pink-50 dark:bg-pink-900/20 px-2 py-0.5 rounded-full">
-                                  {firstDateScreenings[0].price} FCFA
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Clock className="w-3 h-3 text-muted-foreground" />
-                                <span className="text-xs text-muted-foreground">Séances quotidiennes :</span>
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                {firstDateScreenings.map((s) => (
-                                  <Badge
-                                    key={s.id}
-                                    variant="outline"
-                                    className="h-8 px-3 rounded-lg border-pink-200 dark:border-pink-800 cursor-default"
-                                    data-testid={`badge-screening-${s.id}`}
-                                  >
-                                    {s.time}
-                                  </Badge>
-                                ))}
-                              </div>
-                              {movieDates.length > 1 && (
-                                <div className="flex flex-wrap gap-1 pt-1">
-                                  {movieDates.map((d) => (
-                                    <Badge key={d} variant="secondary" className="text-[10px] h-5">
-                                      {format(parseISO(d), "EEE d", { locale: fr })}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
+                            ))}
                           </div>
                         </div>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
-            </TabsContent>
-          ))}
-        </Tabs>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-pink-600" />
+                          Adresse et Contact
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <p className="text-sm text-muted-foreground">{cinema.address}</p>
+                        <a href={`tel:${cinema.phone.replace(/\s/g, "")}`} className="flex items-center gap-2 text-sm text-primary hover:underline" data-testid={`link-phone-${cinema.id}`}>
+                          <Phone className="w-4 h-4" />
+                          {cinema.phone}
+                        </a>
+                        <Badge variant="secondary" className="text-xs">{cinema.type}</Badge>
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 text-xs"
+                            onClick={() => window.open(cinema.mapUrl)}
+                            data-testid={`button-map-${cinema.id}`}
+                          >
+                            <Navigation className="w-3 h-3 mr-1" />
+                            Itineraire
+                          </Button>
+                          <a href={`tel:${cinema.phone.replace(/\s/g, "")}`} className="flex-1">
+                            <Button variant="default" size="sm" className="w-full text-xs" data-testid={`button-call-${cinema.id}`}>
+                              <Phone className="w-3 h-3 mr-1" />
+                              Appeler
+                            </Button>
+                          </a>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-pink-600" />
+                          Seances et Tarifs
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground mb-2">Horaires des seances :</p>
+                          <div className="flex flex-wrap gap-2">
+                            {cinema.showtimes.map((s, i) => {
+                              const isTime = /^\d{2}h\d{2}$/.test(s);
+                              return isTime ? (
+                                <Badge key={i} variant="outline" className="h-8 px-3 rounded-lg border-pink-200 dark:border-pink-800 text-sm font-mono">
+                                  {s}
+                                </Badge>
+                              ) : (
+                                <p key={i} className="text-xs text-muted-foreground italic">{s}</p>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <div className="pt-2 border-t">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">Tarifs :</p>
+                          <div className="space-y-1.5">
+                            {cinema.prices.map((p, i) => (
+                              <div key={i} className="flex items-center justify-between">
+                                <span className="text-sm">{p.label}</span>
+                                <span className="font-bold text-pink-600">{p.amount.toLocaleString()} FCFA</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <Star className="w-4 h-4 text-pink-600" />
+                            Films recemment projetes
+                          </CardTitle>
+                          <CardDescription className="text-xs">
+                            Source : sortir.bf - Pour le programme du jour, appelez le cinema
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {films.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          Aucun film recent enregistre pour cette salle
+                        </p>
+                      ) : (
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {films.map((film) => (
+                            <div
+                              key={film.id}
+                              className="flex items-center gap-3 p-3 rounded-md bg-muted/30"
+                              data-testid={`card-film-${film.id}`}
+                            >
+                              <div className="p-2 bg-pink-100 dark:bg-pink-900/20 rounded-md shrink-0">
+                                <Film className="w-4 h-4 text-pink-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">{film.title}</p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  {film.genre && (
+                                    <Badge variant="secondary" className="text-[10px] h-4">{film.genre}</Badge>
+                                  )}
+                                  {film.country && (
+                                    <span className="text-[10px] text-muted-foreground">{film.country}</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-none bg-amber-50 dark:bg-amber-950/20 shadow-none">
+                    <CardContent className="p-4 flex gap-3 items-start">
+                      <Phone className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                      <div className="space-y-1">
+                        <p className="text-sm font-bold text-amber-900 dark:text-amber-100">Programme du jour</p>
+                        <p className="text-xs text-amber-800/80 dark:text-amber-200/80 leading-relaxed">
+                          Le programme des films change regulierement. Pour connaitre les films projetes aujourd'hui,
+                          appelez directement le <a href={`tel:${cinema.phone.replace(/\s/g, "")}`} className="font-bold underline">{cinema.phone}</a>.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              );
+            })}
+          </Tabs>
+        )}
 
         <Card className="mt-8 border-none bg-blue-50 dark:bg-blue-950/20 shadow-none">
           <CardContent className="p-4 flex gap-3 items-start">
@@ -275,10 +272,21 @@ export default function Cine() {
             <div className="space-y-1">
               <p className="text-sm font-bold text-blue-900 dark:text-blue-100">Informations Pratiques</p>
               <p className="text-xs text-blue-800/80 dark:text-blue-200/80 leading-relaxed">
-                Les programmes sont générés et mis à jour automatiquement chaque mercredi.
-                Les tarifs peuvent varier lors des festivals (FESPACO) ou avant-premières.
-                Veuillez vous présenter 30 minutes avant le début de la séance.
+                Ouagadougou est consideree comme la capitale du cinema africain grace au FESPACO
+                (Festival panafricain du cinema et de la television), organise tous les deux ans (annees impaires).
+                Les tarifs peuvent varier lors des festivals ou avant-premieres.
+                Les films listes proviennent de sortir.bf et representent les projections recentes, pas necessairement le programme actuel.
               </p>
+              <a
+                href="https://sortir.bf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1"
+                data-testid="link-sortir-bf"
+              >
+                <ExternalLink className="w-3 h-3" />
+                sortir.bf - Evenements a Ouagadougou
+              </a>
             </div>
           </CardContent>
         </Card>
