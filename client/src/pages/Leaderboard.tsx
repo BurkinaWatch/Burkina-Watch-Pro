@@ -1,5 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
+import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LevelBadge } from "@/components/LevelBadge";
 import { useTranslation } from "react-i18next";
@@ -41,6 +42,9 @@ export default function Leaderboard() {
   
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <Helmet>
+        <title>Classement - Burkina Watch</title>
+      </Helmet>
       <div className="mb-4">
         <Button
           variant="ghost"

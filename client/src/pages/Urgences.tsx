@@ -1,5 +1,6 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { Helmet } from "react-helmet-async";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import EmergencyPanel from "@/components/EmergencyPanel";
@@ -450,6 +451,9 @@ export default function Urgences() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <Helmet>
+        <title>Numeros d'Urgence - Burkina Watch</title>
+      </Helmet>
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-6">

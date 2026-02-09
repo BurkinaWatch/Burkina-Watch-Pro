@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { Helmet } from "react-helmet-async";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import EmergencyPanel from "@/components/EmergencyPanel";
@@ -339,6 +340,9 @@ export default function StationsService() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-gray-900 dark:to-gray-800 pb-20">
+      <Helmet>
+        <title>Stations-Service - Burkina Watch</title>
+      </Helmet>
       <Header />
 
       <main className="container mx-auto px-4 py-6">

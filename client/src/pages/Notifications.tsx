@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -142,6 +143,9 @@ export default function Notifications() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <Helmet>
+        <title>Notifications - Burkina Watch</title>
+      </Helmet>
       <Header />
 
       <div className="max-w-4xl mx-auto px-4 py-6">

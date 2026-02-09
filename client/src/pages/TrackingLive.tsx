@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import Header from "@/components/Header";
@@ -213,6 +214,9 @@ export default function TrackingLive() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <Helmet>
+        <title>Suivi GPS - Burkina Watch</title>
+      </Helmet>
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-6">

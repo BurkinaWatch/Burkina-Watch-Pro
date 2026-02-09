@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { ArrowLeft, Shield, Eye, Zap, Users, Heart, Target, Award, HelpCircle, MapPin, Phone, Bot, Newspaper, Calendar, Navigation, Building2, Pill, Clock, Globe, Sparkles, CheckCircle } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,9 @@ import { TutorialTrigger } from "@/components/InteractiveTutorial";
 export default function APropos() {
   return (
     <div className="min-h-screen bg-background pb-20">
+      <Helmet>
+        <title>A Propos - Burkina Watch</title>
+      </Helmet>
       <Header />
       
       <section className="container max-w-5xl mx-auto px-4 pt-24 pb-12">

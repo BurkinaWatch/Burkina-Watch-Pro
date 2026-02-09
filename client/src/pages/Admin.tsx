@@ -12,48 +12,67 @@ import {
 } from "@/components/ui/table";
 import CategoryBadge from "@/components/CategoryBadge";
 import StatutBadge from "@/components/StatutBadge";
-import { AlertCircle, CheckCircle2, Clock, Users, FileText, Download } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, Users, FileText, Download, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useQuery } from "@tanstack/react-query";
+import { Helmet } from "react-helmet-async";
+import type { Signalement } from "@shared/schema";
+
+interface AdminStats {
+  totalSignalements: number;
+  sosCount: number;
+  totalUsers: number;
+  onlineUsers: number;
+}
 
 export default function Admin() {
-  const signalements = [
-    {
-      id: "1",
-      titre: "Accident de circulation",
-      categorie: "urgence" as const,
-      localisation: "Avenue Kwame Nkrumah",
-      statut: "en_cours" as const,
-      createdAt: new Date(Date.now() - 1000 * 60 * 15),
+  const { data: stats, isLoading: statsLoading } = useQuery<AdminStats>({
+    queryKey: ["/api/stats"],
+    queryFn: async () => {
+      const response = await fetch("/api/stats");
+      if (!response.ok) throw new Error("Erreur stats");
+      return response.json();
     },
-    {
-      id: "2",
-      titre: "Déchets non collectés",
-      categorie: "environnement" as const,
-      localisation: "Secteur 15",
-      statut: "en_attente" as const,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2),
+  });
+
+  const { data: signalements = [], isLoading: sigLoading } = useQuery<Signalement[]>({
+    queryKey: ["/api/signalements"],
+    queryFn: async () => {
+      const response = await fetch("/api/signalements");
+      if (!response.ok) throw new Error("Erreur signalements");
+      return response.json();
     },
-    {
-      id: "3",
-      titre: "Lampadaires défectueux",
-      categorie: "infrastructure" as const,
-      localisation: "Rue 13.25, Secteur 13",
-      statut: "resolu" as const,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
-    },
-    {
-      id: "4",
-      titre: "Problème d'eau potable",
-      categorie: "infrastructure" as const,
-      localisation: "Secteur 22",
-      statut: "en_cours" as const,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5),
-    },
-  ];
+  });
+
+  const enAttente = signalements.filter(s => s.statut === "en_attente").length;
+  const enCours = signalements.filter(s => s.statut === "en_cours").length;
+  const resolus = signalements.filter(s => s.statut === "resolu").length;
+
+  const recentSignalements = signalements.slice(0, 10);
+
+  const categoryCounts: Record<string, number> = {};
+  signalements.forEach(s => {
+    categoryCounts[s.categorie] = (categoryCounts[s.categorie] || 0) + 1;
+  });
+
+  const locationCounts: Record<string, number> = {};
+  signalements.forEach(s => {
+    const loc = s.localisation || "Non specifie";
+    locationCounts[loc] = (locationCounts[loc] || 0) + 1;
+  });
+  const topLocations = Object.entries(locationCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 4);
+
+  const isLoading = statsLoading || sigLoading;
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Administration - Burkina Watch</title>
+        <meta name="description" content="Tableau de bord administrateur pour la gestion des signalements citoyens au Burkina Faso." />
+      </Helmet>
       <Header showNotifications={false} />
 
       <div className="max-w-7xl mx-auto px-4 py-6">
@@ -64,156 +83,152 @@ export default function Admin() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            title="Total Signalements"
-            value="1,247"
-            icon={AlertCircle}
-            description="+12 aujourd'hui"
-            trend={{ value: 8, isPositive: true }}
-          />
-          <StatCard
-            title="En attente"
-            value="156"
-            icon={Clock}
-            description="Nécessitent attention"
-          />
-          <StatCard
-            title="En cours"
-            value="199"
-            icon={FileText}
-            description="En traitement"
-          />
-          <StatCard
-            title="Résolus ce mois"
-            value="892"
-            icon={CheckCircle2}
-            trend={{ value: 15, isPositive: true }}
-          />
-        </div>
-
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <CardTitle>Signalements récents</CardTitle>
-              <Button variant="outline" size="sm" data-testid="button-export">
-                <Download className="w-4 h-4 mr-2" />
-                Exporter PDF
-              </Button>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <span className="ml-3 text-muted-foreground">Chargement des donnees...</span>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <StatCard
+                title="Total Signalements"
+                value={stats?.totalSignalements || 0}
+                icon={AlertCircle}
+                description="Dans la base de donnees"
+                trend={signalements.length > 0 ? "up" : "neutral"}
+              />
+              <StatCard
+                title="En attente"
+                value={enAttente}
+                icon={Clock}
+                description="Necessitent attention"
+              />
+              <StatCard
+                title="En cours"
+                value={enCours}
+                icon={FileText}
+                description="En traitement"
+              />
+              <StatCard
+                title="Resolus"
+                value={resolus}
+                icon={CheckCircle2}
+                trend={resolus > 0 ? "up" : "neutral"}
+              />
             </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Titre</TableHead>
-                  <TableHead>Catégorie</TableHead>
-                  <TableHead>Localisation</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {signalements.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.titre}</TableCell>
-                    <TableCell>
-                      <CategoryBadge categorie={item.categorie} />
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {item.localisation}
-                    </TableCell>
-                    <TableCell>
-                      <StatutBadge statut={item.statut} />
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatDistanceToNow(item.createdAt, { addSuffix: true, locale: fr })}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="sm" data-testid={`button-respond-${item.id}`}>
-                          Répondre
-                        </Button>
-                        {item.statut !== "resolu" && (
-                          <Button variant="default" size="sm" data-testid={`button-resolve-${item.id}`}>
-                            Résoudre
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Statistiques par catégorie</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CategoryBadge categorie="infrastructure" />
-                    <span className="text-sm">Infrastructure</span>
-                  </div>
-                  <span className="font-bold">342</span>
+            <Card className="mb-6">
+              <CardHeader>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <CardTitle>Signalements recents</CardTitle>
+                  <Button variant="outline" size="sm" data-testid="button-export">
+                    <Download className="w-4 h-4 mr-2" />
+                    Exporter PDF
+                  </Button>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CategoryBadge categorie="environnement" />
-                    <span className="text-sm">Environnement</span>
-                  </div>
-                  <span className="font-bold">298</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CategoryBadge categorie="securite" />
-                    <span className="text-sm">Sécurité</span>
-                  </div>
-                  <span className="font-bold">267</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CategoryBadge categorie="urgence" />
-                    <span className="text-sm">Urgence</span>
-                  </div>
-                  <span className="font-bold">189</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent>
+                {recentSignalements.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    Aucun signalement pour le moment
+                  </p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Titre</TableHead>
+                        <TableHead>Categorie</TableHead>
+                        <TableHead>Localisation</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {recentSignalements.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium">{item.titre}</TableCell>
+                          <TableCell>
+                            <CategoryBadge categorie={item.categorie as any} />
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {item.localisation || "Non specifie"}
+                          </TableCell>
+                          <TableCell>
+                            <StatutBadge statut={item.statut as any} />
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {item.createdAt ? formatDistanceToNow(new Date(item.createdAt), { addSuffix: true, locale: fr }) : "-"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button variant="outline" size="sm" data-testid={`button-respond-${item.id}`}>
+                                Repondre
+                              </Button>
+                              {item.statut !== "resolu" && (
+                                <Button variant="default" size="sm" data-testid={`button-resolve-${item.id}`}>
+                                  Resoudre
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Zones les plus actives</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Secteur 15, Ouagadougou</span>
-                  <span className="font-bold">89</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Secteur 13, Ouagadougou</span>
-                  <span className="font-bold">76</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Avenue Kwame Nkrumah</span>
-                  <span className="font-bold">64</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Secteur 22, Ouagadougou</span>
-                  <span className="font-bold">52</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Statistiques par categorie</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {Object.keys(categoryCounts).length === 0 ? (
+                    <p className="text-center text-muted-foreground py-4">Aucune donnee</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {Object.entries(categoryCounts)
+                        .sort(([, a], [, b]) => b - a)
+                        .map(([cat, count]) => (
+                          <div key={cat} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <CategoryBadge categorie={cat as any} />
+                              <span className="text-sm capitalize">{cat}</span>
+                            </div>
+                            <span className="font-bold">{count}</span>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Zones les plus actives</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {topLocations.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-4">Aucune donnee</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {topLocations.map(([loc, count]) => (
+                        <div key={loc} className="flex items-center justify-between">
+                          <span className="text-sm">{loc}</span>
+                          <span className="font-bold">{count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

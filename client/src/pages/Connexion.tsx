@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -127,6 +128,9 @@ export default function Connexion() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <Helmet>
+        <title>Connexion - Burkina Watch</title>
+      </Helmet>
       <Header showNotifications={false} />
       <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-b from-background to-muted/20">
         <Card className="w-full max-w-md">

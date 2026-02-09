@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { ArrowLeft, FileText, Scale, Shield, AlertTriangle, CheckCircle } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,9 @@ import BottomNav from "@/components/BottomNav";
 export default function Conditions() {
   return (
     <div className="min-h-screen bg-background pb-20">
+      <Helmet>
+        <title>Conditions d'Utilisation - Burkina Watch</title>
+      </Helmet>
       <Header />
       
       <section className="container max-w-5xl mx-auto px-4 pt-24 pb-12">

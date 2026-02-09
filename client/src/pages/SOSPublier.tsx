@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
@@ -250,6 +251,9 @@ export default function SOSPublier() {
 
   return (
     <div className="min-h-screen bg-destructive/5 pb-24">
+      <Helmet>
+        <title>Alerte SOS - Burkina Watch</title>
+      </Helmet>
       <Header />
 
       <ModerationDialog

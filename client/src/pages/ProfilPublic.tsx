@@ -1,4 +1,5 @@
 
+import { Helmet } from "react-helmet-async";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -72,6 +73,9 @@ export default function ProfilPublic() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <Helmet>
+        <title>Profil Public - Burkina Watch</title>
+      </Helmet>
       <Header />
 
       <div className="max-w-4xl mx-auto px-4 py-6">

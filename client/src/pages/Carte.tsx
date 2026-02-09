@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import EmergencyPanel from "@/components/EmergencyPanel";
@@ -59,6 +60,9 @@ export default function Carte() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <Helmet>
+        <title>Carte Interactive - Burkina Watch</title>
+      </Helmet>
       <Header />
 
       <div className="relative h-[calc(100vh-4rem-4rem)] md:h-[calc(100vh-4rem)]">

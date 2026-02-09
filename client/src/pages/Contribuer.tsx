@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { Heart, Smartphone, ArrowLeft, Copy, Check } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,9 @@ export default function Contribuer() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <Helmet>
+        <title>Contribuer - Burkina Watch</title>
+      </Helmet>
       <Header />
 
       <section className="container max-w-4xl mx-auto px-4 pt-24">

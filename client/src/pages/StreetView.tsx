@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { Helmet } from "react-helmet-async";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import { Button } from "@/components/ui/button";
@@ -169,6 +170,9 @@ function TourViewer({
 
   return (
     <div className={`fixed inset-0 z-50 bg-black flex flex-col ${isFullscreen ? '' : 'p-4 md:p-8'}`}>
+      <Helmet>
+        <title>Vue Rue - Burkina Watch</title>
+      </Helmet>
       {/* Citizen disclaimer banner */}
       <div className="bg-amber-500/90 text-black px-4 py-2 flex items-center justify-center gap-2 text-sm">
         <Users className="h-4 w-4" />

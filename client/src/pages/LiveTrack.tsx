@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -125,6 +126,9 @@ export default function LiveTrack() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Suivi en Direct - Burkina Watch</title>
+      </Helmet>
       <div className="bg-red-600 text-white p-4 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">

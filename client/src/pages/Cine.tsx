@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { ArrowLeft, Film, Clock, Ticket, Info, Calendar, CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -16,6 +17,9 @@ export default function Cine() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <Helmet>
+        <title>Cinemas - Burkina Watch</title>
+      </Helmet>
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-6 pb-24">

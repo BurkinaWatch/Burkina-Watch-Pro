@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
@@ -338,6 +339,9 @@ export default function Publier() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <Helmet>
+        <title>Publier un Signalement - Burkina Watch</title>
+      </Helmet>
       <Header />
 
       <ModerationDialog

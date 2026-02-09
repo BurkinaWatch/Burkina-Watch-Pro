@@ -19,11 +19,15 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 - **AI Integration**: Groq (llama-3.3-70b-versatile) for intelligent features.
 - **Data Sources**: OpenStreetMap (OSM) via Overpass API.
 
-## Performance Optimization (Feb 9, 2026)
+## Improvements (Feb 9, 2026)
 - **Lazy Loading**: All 30+ pages use React.lazy() + Suspense for code splitting
 - **Bundle size**: Main bundle reduced from 1,726 kB to 422 kB (75% reduction)
 - **Loading UX**: Spinner "Chargement..." shown while pages load on demand
-- **Files**: client/src/App.tsx (all page imports are dynamic)
+- **Google Fonts**: Reduced from 25+ font families to only Inter + Open Sans (the only ones used)
+- **Open Graph / SEO**: Added og:title, og:description, og:image, twitter:card meta tags for social sharing
+- **Dynamic Page Titles**: All 30+ pages now have unique Helmet titles (e.g. "Pharmacies - Burkina Watch")
+- **Admin Page**: Replaced hardcoded mock data with real database queries (signalements, stats)
+- **Files**: client/index.html, client/src/App.tsx, client/src/pages/Admin.tsx, all page files
 
 ## Hybrid OTP Authentication (Jan 11, 2026)
 - **Email OTP**: Passwordless authentication with 6-digit codes via SMTP (Nodemailer)

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { Helmet } from "react-helmet-async";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import EmergencyPanel from "@/components/EmergencyPanel";
@@ -240,6 +241,9 @@ export default function Stations() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <Helmet>
+        <title>Stations - Burkina Watch</title>
+      </Helmet>
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-6 pb-24">

@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -192,6 +193,9 @@ export default function Events() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Evenements - Burkina Watch</title>
+      </Helmet>
       <Header />
 
       <main className="max-w-7xl mx-auto px-4 py-8 pb-24">
