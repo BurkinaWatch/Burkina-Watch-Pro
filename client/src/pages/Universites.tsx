@@ -318,14 +318,14 @@ export default function Universites() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {(u.filières || u.tags?.filieres) && (
-                    <div className="flex flex-wrap gap-1 mb-2">
+                    <div className="flex flex-wrap gap-1.5 mb-2">
                       {(Array.isArray(u.filières) ? u.filières : (u.tags?.filieres?.split(',') || [])).slice(0, 5).map((f: string, idx: number) => (
-                        <Badge key={idx} variant="outline" className="text-[9px] bg-primary/5 border-primary/20">
+                        <Badge key={idx} variant="outline" className="text-[11px] py-0.5 px-2 bg-primary/5 border-primary/20">
                           {typeof f === 'string' ? f.trim() : f}
                         </Badge>
                       ))}
                       {(Array.isArray(u.filières) ? u.filières : (u.tags?.filieres?.split(',') || [])).length > 5 && (
-                        <Badge variant="outline" className="text-[9px]">
+                        <Badge variant="outline" className="text-[11px] py-0.5 px-2">
                           +{(Array.isArray(u.filières) ? u.filières : (u.tags?.filieres?.split(',') || [])).length - 5}
                         </Badge>
                       )}
