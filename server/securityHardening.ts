@@ -50,6 +50,11 @@ export function applySecurityMiddlewares(app: Express) {
         frameSrc: ["'self'"],
       },
     },
+    hsts: {
+      maxAge: 31536000, // 1 an en secondes
+      includeSubDomains: true,
+      preload: true,
+    },
     crossOriginEmbedderPolicy: false,
   }));
 
