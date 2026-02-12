@@ -762,13 +762,22 @@ export default function Home() {
     setShowSearchResults(true);
   }, [searchQuery, signalements, selectedSearchFilters]);
 
-  const { data: stats } = useQuery<Stats>({
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery<Stats>({
     queryKey: ["/api/stats"],
     queryFn: async () => {
+      console.log("Fetching stats...");
       const response = await fetch("/api/stats");
-      if (!response.ok) throw new Error("Erreur lors du chargement des statistiques");
-      return response.json();
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("Stats fetch failed:", response.status, errText);
+        throw new Error("Erreur lors du chargement des statistiques");
+      }
+      const data = await response.json();
+      console.log("Stats received in frontend:", data);
+      return data;
     },
+    refetchInterval: 30000,
+    staleTime: 5000,
   });
 
   const recentReports = signalements.slice(0, 3);
@@ -841,37 +850,49 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8" data-testid="container-stats">
-            <StatCard
-              title="Signalements actifs"
-              value={stats?.totalSignalements ?? 0}
-              icon={TrendingUp}
-              description="Dans la base de données"
-              trend="up"
-            />
-            <StatCard
-              title="Alertes SOS"
-              value={stats?.sosCount ?? 0}
-              icon={AlertTriangle}
-              description="Nécessitant attention urgente"
-              variant="destructive"
-              trend={(stats?.sosCount ?? 0) > 0 ? "up" : "neutral"}
-            />
-            <StatCard
-              title="Citoyens engagés"
-              value={stats?.totalUsers ?? 0}
-              icon={Users}
-              description="Utilisateurs inscrits"
-              variant="success"
-              trend="up"
-            />
-            <StatCard
-              title="En ligne maintenant"
-              value={stats?.onlineUsers ?? 0}
-              icon={Users}
-              description="Utilisateurs connectés"
-              variant="info"
-              trend={(stats?.onlineUsers ?? 0) > 0 ? "up" : "neutral"}
-            />
+            {statsError ? (
+              <div className="col-span-full p-4 text-center text-destructive bg-destructive/10 rounded-lg">
+                Erreur de chargement des statistiques. Veuillez rafraîchir la page.
+              </div>
+            ) : (
+              <>
+                <StatCard
+                  title="Signalements actifs"
+                  value={stats?.totalSignalements ?? 0}
+                  icon={TrendingUp}
+                  description="Dans la base de données"
+                  trend="up"
+                  loading={statsLoading}
+                />
+                <StatCard
+                  title="Alertes SOS"
+                  value={stats?.sosCount ?? 0}
+                  icon={AlertTriangle}
+                  description="Nécessitant attention urgente"
+                  variant="destructive"
+                  trend={(stats?.sosCount ?? 0) > 0 ? "up" : "neutral"}
+                  loading={statsLoading}
+                />
+                <StatCard
+                  title="Citoyens engagés"
+                  value={stats?.totalUsers ?? 0}
+                  icon={Users}
+                  description="Utilisateurs inscrits"
+                  variant="success"
+                  trend="up"
+                  loading={statsLoading}
+                />
+                <StatCard
+                  title="En ligne maintenant"
+                  value={stats?.onlineUsers ?? 0}
+                  icon={Users}
+                  description="Utilisateurs connectés"
+                  variant="info"
+                  trend={(stats?.onlineUsers ?? 0) > 0 ? "up" : "neutral"}
+                  loading={statsLoading}
+                />
+              </>
+            )}
           </div>
 
           <div className="mt-6 sm:mt-8 text-center">

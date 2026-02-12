@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface StatCardProps {
@@ -9,6 +9,7 @@ interface StatCardProps {
   description?: string;
   variant?: "default" | "destructive" | "success" | "info";
   trend?: "up" | "down" | "neutral";
+  loading?: boolean;
 }
 
 export default function StatCard({
@@ -17,7 +18,8 @@ export default function StatCard({
   icon: Icon,
   description,
   variant = "default",
-  trend = "neutral"
+  trend = "neutral",
+  loading = false
 }: StatCardProps) {
   const variantStyles = {
     default: "from-primary/10 to-primary/5 border-primary/20 hover:border-primary/40",
@@ -112,11 +114,17 @@ export default function StatCard({
       </CardHeader>
       <CardContent className="relative z-10">
         <div className="flex items-baseline gap-2">
-          <span className="text-4xl font-bold tracking-tight">{value}</span>
-          {trend !== "neutral" && (
-            <span className={cn("text-sm font-medium", trendColors[trend])}>
-              {trend === "up" ? "↗" : "↘"}
-            </span>
+          {loading ? (
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          ) : (
+            <>
+              <span className="text-4xl font-bold tracking-tight">{value}</span>
+              {trend !== "neutral" && (
+                <span className={cn("text-sm font-medium", trendColors[trend])}>
+                  {trend === "up" ? "↗" : "↘"}
+                </span>
+              )}
+            </>
           )}
         </div>
         {description && (

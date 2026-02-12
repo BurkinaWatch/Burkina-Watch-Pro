@@ -682,7 +682,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   app.get("/api/stats", async (_req, res) => {
     try {
+      console.log("[STATS] Route called");
       const stats = await storage.getStats();
+      console.log("[STATS] Storage stats:", stats);
+      
       const fuelResponse = await overpassService.getPlaces({ placeType: "fuel" });
       const pharmacyResponse = await overpassService.getPlaces({ placeType: "pharmacy" });
       const bankResponse = await overpassService.getPlaces({ placeType: "bank" });
@@ -695,7 +698,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allFinancial = [...bankResponse.places, ...caisseResponse.places];
       const cities = new Set(allFinancial.map(p => p.ville).filter(v => v && v !== "Ville non spécifiée"));
 
-      res.json({
+      const finalStats = {
         ...stats,
         totalPharmacies: pharmacyResponse.places.length,
         totalStations: fuelResponse.places.length,
@@ -704,9 +707,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalGAB: gabs.length,
         importanceSystemique: ebis.length,
         nombreVilles: cities.size || 12
-      });
+      };
+
+      console.log("[STATS] API Sending finalStats:", JSON.stringify(finalStats));
+      res.header("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.json(finalStats);
     } catch (error) {
-      console.error("Error fetching stats:", error);
+      console.error("[STATS] Error fetching stats:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
     }
   });
