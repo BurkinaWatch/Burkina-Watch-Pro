@@ -680,7 +680,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   // ROUTES STATISTIQUES
   // ----------------------------------------
-  app.get("/api/stats", async (req, res) => {
+  app.get("/api/stats", async (_req, res) => {
     try {
       const stats = await storage.getStats();
       const fuelResponse = await overpassService.getPlaces({ placeType: "fuel" });
