@@ -48,9 +48,16 @@ export default function Universites() {
     universites.forEach(u => {
       const uFilieres = u.filières || u.tags?.filieres;
       if (Array.isArray(uFilieres)) {
-        uFilieres.forEach((f: string) => filieresSet.add(f));
+        uFilieres.forEach((f: string) => {
+          // Extraire le groupe principal pour un filtre plus propre (ex: "Sciences de la Santé (Médecine)" -> "Sciences de la Santé")
+          const cleanF = f.split('(')[0].trim();
+          filieresSet.add(cleanF);
+        });
       } else if (typeof uFilieres === 'string') {
-        uFilieres.split(',').forEach((f: string) => filieresSet.add(f.trim()));
+        uFilieres.split(',').forEach((f: string) => {
+          const cleanF = f.split('(')[0].trim();
+          filieresSet.add(cleanF);
+        });
       }
     });
     return Array.from(filieresSet).sort();
@@ -115,10 +122,11 @@ export default function Universites() {
     if (selectedFiliere !== "all") {
       result = result.filter(u => {
         const uFilieres = u.filières || u.tags?.filieres;
+        const process = (f: string) => f.split('(')[0].trim().toLowerCase();
         if (Array.isArray(uFilieres)) {
-          return uFilieres.includes(selectedFiliere);
+          return uFilieres.some(f => process(f) === selectedFiliere.toLowerCase());
         } else if (typeof uFilieres === 'string') {
-          return uFilieres.split(',').map((f: string) => f.trim()).includes(selectedFiliere);
+          return uFilieres.split(',').some(f => process(f) === selectedFiliere.toLowerCase());
         }
         return false;
       });

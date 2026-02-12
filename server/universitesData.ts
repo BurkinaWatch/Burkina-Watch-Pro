@@ -25,7 +25,7 @@ export const UNIVERSITES_DATA: Universite[] = [
     longitude: -1.5011,
     telephone: "+226 25 30 70 64",
     siteWeb: "www.ujkz.bf",
-    filières: ["Sciences Exactes", "Sciences de la Santé", "Lettres et Arts", "Droit", "Économie", "Sciences Humaines", "Sciences de la Vie", "STAPS"]
+    filières: ["Sciences de la Santé (Médecine, Pharmacie)", "Sciences et Technologies (Informatique, Mathématiques, Physique)", "Sciences Humaines (Géographie, Histoire, Sociologie)", "Sciences Juridiques et Politiques", "Sciences Économiques et Gestion", "Lettres, Arts et Communication", "Sciences de la Vie et de la Terre", "STAPS (Sport)"]
   },
   {
     id: "univ-002",
@@ -38,7 +38,7 @@ export const UNIVERSITES_DATA: Universite[] = [
     longitude: -4.4379,
     telephone: "+226 20 97 12 11",
     siteWeb: "www.unb.bf",
-    filières: ["Sciences de la Vie", "Polytechnique", "Sciences Humaines", "Médecine", "Informatique", "Agriculture"]
+    filières: ["Sciences de la Vie et de la Terre", "École Polytechnique (Génie Civil, Électronique, Informatique)", "Sciences Humaines", "Institut de Développement Rural (Agronomie)", "Sciences de la Santé (Médecine, Elevage)", "Gestion et Économie"]
   },
   {
     id: "univ-003",
@@ -51,7 +51,7 @@ export const UNIVERSITES_DATA: Universite[] = [
     longitude: -2.3589,
     telephone: "+226 25 44 04 44",
     siteWeb: "www.unz.bf",
-    filières: ["Éducation", "Sciences Économiques", "Lettres", "Management", "Droit", "Géographie"]
+    filières: ["Éducation et Pédagogie", "Sciences Économiques et Gestion", "Lettres et Langues", "Droit et Sciences Politiques", "Géographie", "Mathématiques et Informatique"]
   },
   {
     id: "univ-004",
@@ -64,7 +64,7 @@ export const UNIVERSITES_DATA: Universite[] = [
     longitude: -1.5034,
     telephone: "+226 25 36 25 25",
     siteWeb: "www.u-auben.com",
-    filières: ["Management", "Informatique", "Génie Civil", "Réseaux et Télécoms", "Banque et Finance", "Marketing"]
+    filières: ["Management et Business Administration", "Informatique et Génie Logiciel", "Génie Civil et Mines", "Réseaux et Télécommunications", "Banque et Microfinance", "Marketing et Communication"]
   },
   {
     id: "univ-005",
@@ -77,6 +77,6 @@ export const UNIVERSITES_DATA: Universite[] = [
     longitude: -1.5345,
     telephone: "+226 25 37 40 40",
     siteWeb: "www.istbf.com",
-    filières: ["Génie Industriel", "Agro-alimentaire", "Gestion", "Maintenance Biomédicale", "Électronique", "Comptabilité"]
+    filières: ["Génie Industriel et Maintenance", "Agro-alimentaire et Environnement", "Gestion et Comptabilité", "Maintenance Biomédicale", "Électronique et Informatique Industrielle", "Banque et Assurance"]
   }
 ];
