@@ -1,8 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import rateLimit from "express-rate-limit";
-import helmet from "helmet";
 import compression from "compression";
 import { pharmaciesService } from "./pharmaciesService";
 import { applySecurityMiddlewares } from "./securityHardening";
@@ -11,6 +9,8 @@ const app = express();
 
 // Appliquer les middlewares de sécurité EN PREMIER
 applySecurityMiddlewares(app);
+
+app.use(compression());
 
 declare module 'http' {
   interface IncomingMessage {

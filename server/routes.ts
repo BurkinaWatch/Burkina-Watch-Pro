@@ -453,8 +453,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   
   const { sendEmailOtp, sendSmsOtp, verifyOtp, checkTwilioAvailability } = await import("./hybridAuthService");
+  const { authLimiter } = await import("./securityHardening");
 
-  app.post("/api/auth/send-otp", async (req: any, res) => {
+  app.post("/api/auth/send-otp", authLimiter, async (req: any, res) => {
     const { identifier, type } = req.body;
     
     if (!identifier) {
@@ -484,7 +485,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/verify-otp", async (req: any, res) => {
+  app.post("/api/auth/verify-otp", authLimiter, async (req: any, res) => {
     const { identifier, code, type } = req.body;
     
     if (!identifier || !code || !type) {
