@@ -30,6 +30,7 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 export default function Universites() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("all");
+  const [selectedFiliere, setSelectedFiliere] = useState("all");
   const [sortByProximity, setSortByProximity] = useState(false);
   const [userLocation, setUserLocation] = useState<{lat: number, lon: number} | null>(null);
   const [isLocating, setIsLocating] = useState(false);
@@ -41,6 +42,19 @@ export default function Universites() {
   });
 
   const universites = data?.universites || [];
+
+  const allFilieres = useMemo(() => {
+    const filieresSet = new Set<string>();
+    universites.forEach(u => {
+      const uFilieres = u.filières || u.tags?.filieres;
+      if (Array.isArray(uFilieres)) {
+        uFilieres.forEach((f: string) => filieresSet.add(f));
+      } else if (typeof uFilieres === 'string') {
+        uFilieres.split(',').forEach((f: string) => filieresSet.add(f.trim()));
+      }
+    });
+    return Array.from(filieresSet).sort();
+  }, [universites]);
 
   const handleRefresh = async () => {
     toast({ title: "Actualisation...", description: "Mise à jour des données en cours" });
@@ -91,11 +105,23 @@ export default function Universites() {
       result = result.filter(u =>
         u.name.toLowerCase().includes(query) ||
         u.ville.toLowerCase().includes(query) ||
-        u.address.toLowerCase().includes(query)
+        u.address.toLowerCase().includes(query) ||
+        (u.filières && u.filières.some((f: string) => f.toLowerCase().includes(query)))
       );
     }
     if (selectedRegion !== "all") {
       result = result.filter(u => u.region === selectedRegion);
+    }
+    if (selectedFiliere !== "all") {
+      result = result.filter(u => {
+        const uFilieres = u.filières || u.tags?.filieres;
+        if (Array.isArray(uFilieres)) {
+          return uFilieres.includes(selectedFiliere);
+        } else if (typeof uFilieres === 'string') {
+          return uFilieres.split(',').map((f: string) => f.trim()).includes(selectedFiliere);
+        }
+        return false;
+      });
     }
     
     if (sortByProximity && userLocation) {
@@ -215,6 +241,17 @@ export default function Universites() {
                     ))}
                   </SelectContent>
                 </Select>
+                <Select value={selectedFiliere} onValueChange={setSelectedFiliere}>
+                  <SelectTrigger className="w-full sm:w-48" data-testid="select-filiere">
+                    <SelectValue placeholder="Filière" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes les filières</SelectItem>
+                    {allFilieres.map(f => (
+                      <SelectItem key={f} value={f}>{f}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex gap-2 flex-wrap">
                 <Button
@@ -280,6 +317,20 @@ export default function Universites() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
+                  {(u.filières || u.tags?.filieres) && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {(Array.isArray(u.filières) ? u.filières : (u.tags?.filieres?.split(',') || [])).slice(0, 5).map((f: string, idx: number) => (
+                        <Badge key={idx} variant="outline" className="text-[9px] bg-primary/5 border-primary/20">
+                          {typeof f === 'string' ? f.trim() : f}
+                        </Badge>
+                      ))}
+                      {(Array.isArray(u.filières) ? u.filières : (u.tags?.filieres?.split(',') || [])).length > 5 && (
+                        <Badge variant="outline" className="text-[9px]">
+                          +{(Array.isArray(u.filières) ? u.filières : (u.tags?.filieres?.split(',') || [])).length - 5}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
                   <div className="flex items-start gap-2 text-sm">
                     <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                     <span className="text-xs line-clamp-2">{u.address}</span>

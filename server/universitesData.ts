@@ -25,7 +25,7 @@ export const UNIVERSITES_DATA: Universite[] = [
     longitude: -1.5011,
     telephone: "+226 25 30 70 64",
     siteWeb: "www.ujkz.bf",
-    filières: ["Sciences Exactes", "Sciences de la Santé", "Lettres et Arts", "Droit", "Économie"]
+    filières: ["Sciences Exactes", "Sciences de la Santé", "Lettres et Arts", "Droit", "Économie", "Sciences Humaines", "Sciences de la Vie", "STAPS"]
   },
   {
     id: "univ-002",
@@ -38,7 +38,7 @@ export const UNIVERSITES_DATA: Universite[] = [
     longitude: -4.4379,
     telephone: "+226 20 97 12 11",
     siteWeb: "www.unb.bf",
-    filières: ["Sciences de la Vie", "Polytechnique", "Sciences Humaines"]
+    filières: ["Sciences de la Vie", "Polytechnique", "Sciences Humaines", "Médecine", "Informatique", "Agriculture"]
   },
   {
     id: "univ-003",
@@ -51,7 +51,7 @@ export const UNIVERSITES_DATA: Universite[] = [
     longitude: -2.3589,
     telephone: "+226 25 44 04 44",
     siteWeb: "www.unz.bf",
-    filières: ["Éducation", "Sciences Économiques", "Lettres"]
+    filières: ["Éducation", "Sciences Économiques", "Lettres", "Management", "Droit", "Géographie"]
   },
   {
     id: "univ-004",
@@ -64,7 +64,7 @@ export const UNIVERSITES_DATA: Universite[] = [
     longitude: -1.5034,
     telephone: "+226 25 36 25 25",
     siteWeb: "www.u-auben.com",
-    filières: ["Management", "Informatique", "Génie Civil"]
+    filières: ["Management", "Informatique", "Génie Civil", "Réseaux et Télécoms", "Banque et Finance", "Marketing"]
   },
   {
     id: "univ-005",
@@ -77,6 +77,6 @@ export const UNIVERSITES_DATA: Universite[] = [
     longitude: -1.5345,
     telephone: "+226 25 37 40 40",
     siteWeb: "www.istbf.com",
-    filières: ["Génie Industriel", "Agro-alimentaire", "Gestion"]
+    filières: ["Génie Industriel", "Agro-alimentaire", "Gestion", "Maintenance Biomédicale", "Électronique", "Comptabilité"]
   }
 ];
