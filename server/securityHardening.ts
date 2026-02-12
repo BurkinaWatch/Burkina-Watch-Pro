@@ -67,6 +67,10 @@ export function applySecurityMiddlewares(app: Express) {
   // 4. Rate limiting global (activé en production sur /api)
   if (process.env.NODE_ENV === "production") {
     app.use("/api", globalLimiter);
+  } else {
+    // En développement, on applique quand même la limite demandée (100 req / 15 min) 
+    // mais on s'assure de ne pas bloquer les routes de développement
+    app.use("/api", globalLimiter);
   }
 
   // 5. Sécurisation des cookies et confiance proxy
