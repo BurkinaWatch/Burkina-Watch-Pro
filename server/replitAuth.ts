@@ -18,10 +18,7 @@ export function getSession() {
     tableName: "sessions",
   });
   return session({
-    secret: process.env.SESSION_SECRET || (() => { 
-      if (process.env.NODE_ENV === "production") throw new Error("SESSION_SECRET must be set in production");
-      return "dev_secret_only";
-    })(),
+    secret: process.env.SESSION_SECRET || "default_secret_for_dev_only",
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
