@@ -329,7 +329,10 @@ export function hashSensitiveData(data: string): string {
 
 // Hash refresh tokens avec salt pour stockage sécurisé
 export function hashRefreshToken(token: string): string {
-  const salt = process.env.REFRESH_TOKEN_SALT || "default-salt-change-in-production";
+  const salt = process.env.REFRESH_TOKEN_SALT || (() => {
+    if (process.env.NODE_ENV === "production") throw new Error("REFRESH_TOKEN_SALT must be set in production");
+    return "dev-salt-only";
+  })();
   return crypto
     .createHash("sha256")
     .update(token + salt)
