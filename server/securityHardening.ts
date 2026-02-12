@@ -1,6 +1,3 @@
-declare module 'hpp';
-declare module 'xss-clean';
-
 import { Express, Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -74,7 +71,7 @@ export function applySecurityMiddlewares(app: Express) {
   if (process.env.NODE_ENV === "development") {
     // Autoriser les domaines de prévisualisation Replit en développement
     app.use(cors({
-      origin: (origin, callback) => {
+      origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
         if (!origin || origin.includes(".replit.app") || origin.includes("0.0.0.0") || origin.includes("localhost")) {
           callback(null, true);
         } else {
