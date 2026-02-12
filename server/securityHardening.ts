@@ -66,6 +66,9 @@ export function applySecurityMiddlewares(app: Express) {
       referrerPolicy: {
         policy: "strict-origin-when-cross-origin",
       },
+      xssFilter: true,
+      noSniff: true,
+      hidePoweredBy: true,
     })
   );
 
@@ -98,6 +101,8 @@ export function applySecurityMiddlewares(app: Express) {
 
   app.use("/api/auth/login", authLimiter);
   app.use("/api/auth/register", authLimiter);
+  app.use("/api/auth/send-otp", authLimiter);
+  app.use("/api/auth/verify-otp", authLimiter);
 
   // Rate limiting pour le chatbot
   const chatbotLimiter = rateLimit({
