@@ -28,7 +28,7 @@ app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+  let capturedJsonResponse: any = undefined;
 
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
@@ -39,13 +39,33 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+      // Nettoyage des données sensibles avant le log
+      let logBody = capturedJsonResponse;
+      
+      if (logBody && typeof logBody === 'object') {
+        logBody = { ...logBody };
+        const sensitiveFields = ['password', 'token', 'sessionId', 'otp', 'code', 'secret'];
+        
+        const maskSensitive = (obj: any) => {
+          for (const key in obj) {
+            if (sensitiveFields.some(f => key.toLowerCase().includes(f))) {
+              obj[key] = '[MASKED]';
+            } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+              maskSensitive(obj[key]);
+            }
+          }
+        };
+        maskSensitive(logBody);
       }
 
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
+      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+      if (logBody) {
+        logLine += ` :: ${JSON.stringify(logBody)}`;
+      }
+
+      // Ne jamais logger les cookies ou les headers sensibles
+      if (logLine.length > 200) {
+        logLine = logLine.slice(0, 199) + "…";
       }
 
       log(logLine);
