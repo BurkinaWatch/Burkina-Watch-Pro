@@ -843,14 +843,14 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8" data-testid="container-stats">
             <StatCard
               title="Signalements actifs"
-              value={stats?.totalSignalements || 0}
+              value={stats?.totalSignalements ?? 0}
               icon={TrendingUp}
               description="Dans la base de données"
               trend="up"
             />
             <StatCard
               title="Alertes SOS"
-              value={stats?.sosCount || 0}
+              value={stats?.sosCount ?? 0}
               icon={AlertTriangle}
               description="Nécessitant attention urgente"
               variant="destructive"
@@ -858,7 +858,7 @@ export default function Home() {
             />
             <StatCard
               title="Citoyens engagés"
-              value={stats?.totalUsers || 0}
+              value={stats?.totalUsers ?? 0}
               icon={Users}
               description="Utilisateurs inscrits"
               variant="success"
@@ -866,7 +866,7 @@ export default function Home() {
             />
             <StatCard
               title="En ligne maintenant"
-              value={stats?.onlineUsers || 0}
+              value={stats?.onlineUsers ?? 0}
               icon={Users}
               description="Utilisateurs connectés"
               variant="info"
