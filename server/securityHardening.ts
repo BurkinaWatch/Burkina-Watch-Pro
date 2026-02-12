@@ -6,6 +6,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import hpp from "hpp";
 import xss from "xss-clean";
+import cors from "cors";
 
 // Rate limiting global
 export const globalLimiter = rateLimit({
@@ -64,6 +65,31 @@ export function applySecurityMiddlewares(app: Express) {
     app.use("/api", globalLimiter);
   }
 
-  // 5. Sécurisation des cookies et confiance proxy
+  // 5. Configuration CORS sécurisée
+  const allowedOrigins = [
+    "https://burkinawatch.com",
+    "https://www.burkinawatch.com",
+  ];
+
+  if (process.env.NODE_ENV === "development") {
+    // Autoriser les domaines de prévisualisation Replit en développement
+    app.use(cors({
+      origin: (origin, callback) => {
+        if (!origin || origin.includes(".replit.app") || origin.includes("0.0.0.0") || origin.includes("localhost")) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
+      credentials: true
+    }));
+  } else {
+    app.use(cors({
+      origin: allowedOrigins,
+      credentials: true
+    }));
+  }
+
+  // 6. Sécurisation des cookies et confiance proxy
   app.set("trust proxy", 1); 
 }
