@@ -691,6 +691,13 @@ export class DbStorage implements IStorage {
     // Compter les utilisateurs en ligne
     const onlineUsers = await this.countOnlineUsers();
 
+    console.log("Stats debug:", {
+      totalSignalements: totalSignalementsResult?.count,
+      sosCount: sosCountResult?.count,
+      totalUsers: totalUsersResult?.count,
+      onlineUsers
+    });
+
     return {
       totalSignalements: totalSignalementsResult?.count || 0,
       sosCount: sosCountResult?.count || 0,
