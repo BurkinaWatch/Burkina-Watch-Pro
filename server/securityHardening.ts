@@ -1,3 +1,6 @@
+declare module 'hpp';
+declare module 'xss-clean';
+
 import { Express, Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -54,14 +57,13 @@ export function applySecurityMiddlewares(app: Express) {
   app.use(hpp());
 
   // 3. Nettoyage basique des entrées XSS
-  // Note: xss-clean est un middleware simple, mais Zod est notre défense principale
   app.use(xss());
 
-  // 4. Rate limiting global (sauf en développement pour éviter les blocages pendant les tests)
+  // 4. Rate limiting global (activé en production sur /api)
   if (process.env.NODE_ENV === "production") {
     app.use("/api", globalLimiter);
   }
 
-  // 5. Sécurisation des cookies (si session présente)
-  app.set("trust proxy", 1); // Nécessaire pour Replit (proxy inverse)
+  // 5. Sécurisation des cookies et confiance proxy
+  app.set("trust proxy", 1); 
 }
