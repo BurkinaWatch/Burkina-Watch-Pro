@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Home, Map, Plus, AlertCircle, User, Cross } from "lucide-react";
+import { Home, Map, Plus, AlertCircle, User } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { OnboardingTip } from "@/components/OnboardingTip";
@@ -11,7 +11,6 @@ export default function BottomNav() {
   const navItems = [
     { icon: Home, label: "Accueil", path: "/", testId: "nav-home", color: "from-emerald-400 to-emerald-600", tipId: "nav-home", tip: "Tableau de bord principal" },
     { icon: Map, label: "Carte", path: "/carte", testId: "nav-map", color: "from-blue-400 to-blue-600", tipId: "nav-map", tip: "Carte interactive des alertes" },
-    { icon: Cross, label: "Pharmacies", path: "/pharmacies", testId: "nav-pharmacies", color: "from-red-400 to-red-600", tipId: "nav-pharmacies", tip: "Pharmacies du Faso" },
     { icon: Plus, label: "Publier", path: "/publier", testId: "nav-publish", highlight: true, color: "from-red-500 via-orange-400 to-yellow-400", tipId: "nav-publish", tip: "Signalez un incident" },
     { icon: AlertCircle, label: "SOS", path: "/fil-actualite", testId: "nav-sos", color: "from-red-500 to-red-600", tipId: "nav-sos", tip: "Fil des signalements" },
     { icon: User, label: "Profil", path: "/profil", testId: "nav-profile", color: "from-purple-400 to-purple-600", tipId: "nav-profile", tip: "Vos paramètres et contacts" },
