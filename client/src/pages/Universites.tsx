@@ -44,49 +44,22 @@ export default function Universites() {
   const universites = data?.universites || [];
 
   const allFilieres = useMemo(() => {
-    const filieresSet = new Set<string>();
-    
-    // Liste de mots clés à exclure (noms d'écoles, descriptions, etc.)
-    const excludeKeywords = [
-      "institut", "université", "college", "school", "b2i", "2ie", 
-      "etablissement", "formation", "recherche", "ingénieur",
-      "established", "act of parliament", "propose", "centre",
-      "located", "offering", "specialized", "education", "supérieur"
+    // Liste des catégories simplifiées basée sur le document fourni
+    return [
+      "Sciences juridiques, politiques & sociales",
+      "Économie, gestion, commerce & finance",
+      "Sciences informatiques & numérique",
+      "Mathématiques, physique & sciences exactes",
+      "Sciences de la vie & biologie",
+      "Agriculture, environnement & ressources naturelles",
+      "Sciences de l’ingénieur & technologies",
+      "Communication, médias & arts",
+      "Langues, lettres & sciences humaines",
+      "Éducation & formation",
+      "Tourisme, hôtellerie & services",
+      "Santé & paramédical"
     ];
-
-    const isValidFiliere = (f: string) => {
-      const lowerF = f.toLowerCase();
-      // Trop long (probablement une description)
-      if (f.length > 60) return false;
-      // Contient des mots clés d'exclusion
-      if (excludeKeywords.some(keyword => lowerF.includes(keyword) && !lowerF.includes("informatique") && !lowerF.includes("gestion"))) {
-        return false;
-      }
-      // Trop court (probablement du bruit)
-      if (f.length < 3) return false;
-      return true;
-    };
-
-    universites.forEach(u => {
-      const uFilieres = u.filières || u.tags?.filieres;
-      if (Array.isArray(uFilieres)) {
-        uFilieres.forEach((f: string) => {
-          const cleanF = f.split('(')[0].trim();
-          if (isValidFiliere(cleanF)) {
-            filieresSet.add(cleanF);
-          }
-        });
-      } else if (typeof uFilieres === 'string') {
-        uFilieres.split(',').forEach((f: string) => {
-          const cleanF = f.split('(')[0].trim();
-          if (isValidFiliere(cleanF)) {
-            filieresSet.add(cleanF);
-          }
-        });
-      }
-    });
-    return Array.from(filieresSet).sort();
-  }, [universites]);
+  }, []);
 
   const handleRefresh = async () => {
     toast({ title: "Actualisation...", description: "Mise à jour des données en cours" });
@@ -147,13 +120,30 @@ export default function Universites() {
     if (selectedFiliere !== "all") {
       result = result.filter(u => {
         const uFilieres = u.filières || u.tags?.filieres;
-        const process = (f: string) => f.split('(')[0].trim().toLowerCase();
-        if (Array.isArray(uFilieres)) {
-          return uFilieres.some(f => process(f) === selectedFiliere.toLowerCase());
-        } else if (typeof uFilieres === 'string') {
-          return uFilieres.split(',').some(f => process(f) === selectedFiliere.toLowerCase());
-        }
-        return false;
+        const filiereList = Array.isArray(uFilieres) 
+          ? uFilieres 
+          : (typeof uFilieres === 'string' ? uFilieres.split(',') : []);
+        
+        // Mapping de correspondance entre catégories et mots-clés
+        const categoryKeywords: Record<string, string[]> = {
+          "Sciences juridiques, politiques & sociales": ["droit", "juridique", "politique", "sociale", "sociologie", "anthropologie", "relations internationales"],
+          "Économie, gestion, commerce & finance": ["économie", "gestion", "finance", "comptabilité", "banque", "assurance", "marketing", "management", "commerce", "logistique"],
+          "Sciences informatiques & numérique": ["informatique", "logiciel", "réseau", "télécom", "cybersécurité", "web", "data", "intelligence artificielle"],
+          "Mathématiques, physique & sciences exactes": ["mathématiques", "physique", "chimie", "statistique"],
+          "Sciences de la vie & biologie": ["biologie", "biochimie", "microbiologie", "génétique", "biomédicale"],
+          "Agriculture, environnement & ressources naturelles": ["agronomie", "agriculture", "élevage", "environnement", "naturelle", " rural", "eau", "assainissement"],
+          "Sciences de l’ingénieur & technologies": ["génie", "électrique", "mécanique", "industriel", "énergétique", "technologie", "btp", "maintenance"],
+          "Communication, médias & arts": ["communication", "journalisme", "multimédia", "publicité", "audiovisuel", "cinéma", "art", "culture", "patrimoine"],
+          "Langues, lettres & sciences humaines": ["langue", "lettre", "linguistique", "traduction", "histoire", "géographie", "philosophie", "psychologie"],
+          "Éducation & formation": ["éducation", "pédagogie", "enseignant", "didactique", "scolaire"],
+          "Tourisme, hôtellerie & services": ["tourisme", "hôtellerie", "restauration"],
+          "Santé & paramédical": ["médecine", "pharmacie", "infirmier", "sage-femme", "santé", "nutrition"]
+        };
+
+        const keywords = categoryKeywords[selectedFiliere] || [];
+        return filiereList.some(f => 
+          keywords.some(k => f.toLowerCase().includes(k.toLowerCase()))
+        );
       });
     }
     
