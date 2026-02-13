@@ -13,14 +13,15 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import type { Place } from "@shared/schema";
 
+import { REGION_NAMES } from "@/lib/regions";
+
 interface PlacesListPageProps {
   placeType: string;
   title: string;
   description: string;
   icon: React.ReactNode;
+  renderStats?: (places: Place[]) => React.ReactNode;
 }
-
-import { REGION_NAMES } from "@/lib/regions";
 
 const REGIONS = REGION_NAMES;
 
@@ -203,11 +204,13 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-2 gap-4 mb-6">
-          <Card>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <Card className="hover-elevate transition-all border-primary/10">
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-primary" />
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Building2 className="h-5 w-5 text-primary" />
+                </div>
                 <div>
                   <p className="text-2xl font-bold">{places.length}</p>
                   <p className="text-xs text-muted-foreground">Total</p>
@@ -215,10 +218,12 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="hover-elevate transition-all border-blue-100 dark:border-blue-900">
             <CardContent className="pt-4">
               <div className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-blue-500" />
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                  <MapPin className="h-5 w-5 text-blue-500" />
+                </div>
                 <div>
                   <p className="text-2xl font-bold">{Object.keys(regionCounts).length}</p>
                   <p className="text-xs text-muted-foreground">Régions</p>
@@ -226,6 +231,7 @@ export function PlacesListPage({ placeType, title, description, icon }: PlacesLi
               </div>
             </CardContent>
           </Card>
+          {renderStats && renderStats(places)}
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 mb-6">
