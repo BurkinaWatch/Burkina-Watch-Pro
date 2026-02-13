@@ -39,7 +39,7 @@ export default function Hotels() {
           }).length;
 
           return (
-            <>
+            <div className="flex flex-wrap gap-4 mb-6">
               <Card 
                 className={`hover-elevate transition-all border-primary/10 cursor-pointer flex-1 min-w-[140px] ${selectedType === "all" ? "ring-2 ring-primary" : ""}`}
                 onClick={() => setSelectedType("all")}
@@ -107,7 +107,7 @@ export default function Hotels() {
                   </div>
                 </CardContent>
               </Card>
-            </>
+            </div>
           );
         }}
       />
