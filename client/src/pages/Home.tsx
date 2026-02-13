@@ -1328,9 +1328,9 @@ export default function Home() {
                 </span>
               </Link>
               <span className="text-muted-foreground">•</span>
-              <Link href="/conditions">
+              <Link href="/confidentialite">
                 <span className="text-muted-foreground hover:text-primary transition-colors cursor-pointer">
-                  Mentions légales
+                  Politique de confidentialite
                 </span>
               </Link>
             </div>

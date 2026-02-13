@@ -1,0 +1,137 @@
+POLITIQUE DE CONFIDENTIALITÉ – BURKINAWATCH
+Sécurité, confidentialité et responsabilité
+
+Dernière mise à jour : Février 2026
+
+Dans le contexte sécuritaire actuel au Burkina Faso, la protection des données personnelles est une priorité absolue pour BurkinaWatch.
+
+Nous sommes conscients que signaler une situation, partager une information ou utiliser un bouton d’alerte peut exposer l’utilisateur à des risques si ses données ne sont pas correctement protégées.
+C’est pourquoi nous avons mis en place des mesures strictes pour garantir la confidentialité, la sécurité et la discrétion des informations traitées.
+
+1. Notre engagement
+
+BurkinaWatch est une plateforme citoyenne indépendante destinée à renforcer la vigilance communautaire et la circulation d’informations utiles.
+
+Nous nous engageons à :
+
+Ne jamais exposer inutilement l’identité d’un utilisateur
+
+Ne jamais vendre ou exploiter les données à des fins commerciales
+
+Limiter strictement l’accès aux informations sensibles
+
+Protéger les utilisateurs contre toute utilisation abusive de leurs données
+
+La sécurité des citoyens passe aussi par la sécurité numérique.
+
+2. Données collectées : uniquement le strict nécessaire
+
+Nous appliquons le principe de minimisation des données.
+
+Données d’identification
+
+Uniquement si vous créez un compte :
+
+Nom ou pseudonyme
+
+Adresse e-mail
+
+Numéro de téléphone
+
+Données liées aux signalements
+
+Description des faits
+
+Localisation (uniquement si vous l’activez volontairement)
+
+Photos ou vidéos jointes
+
+Données techniques
+
+Informations nécessaires au fonctionnement et à la sécurité du service
+
+Aucune donnée n’est collectée à votre insu.
+
+3. Confidentialité des signalements
+
+Les signalements peuvent, selon les fonctionnalités activées, être :
+
+Anonymes
+
+Confidentiels
+
+Limités à un cercle de traitement restreint
+
+L’identité d’un utilisateur n’est jamais rendue publique sans son consentement explicite.
+
+4. Sécurité renforcée des données
+
+BurkinaWatch met en œuvre :
+
+Des systèmes de protection contre les intrusions
+
+Des protocoles de chiffrement des données sensibles
+
+Des accès internes strictement contrôlés
+
+Une surveillance technique continue
+
+Seules les personnes autorisées et formées peuvent accéder aux informations nécessaires au traitement des alertes.
+
+5. Partage encadré des informations
+
+Les données ne sont jamais vendues ni utilisées à des fins commerciales.
+
+Elles peuvent être transmises uniquement :
+
+Aux équipes internes responsables du traitement des alertes
+
+Aux autorités compétentes lorsque la loi l’exige ou en cas de danger grave
+
+À des prestataires techniques liés par des obligations strictes de confidentialité
+
+Toute transmission est limitée au strict nécessaire.
+
+6. Conservation limitée
+
+Les données sont conservées uniquement pendant la durée nécessaire :
+
+Pour traiter le signalement
+
+Pour assurer la sécurité du système
+
+Pour respecter les obligations légales
+
+Les données inutiles ou obsolètes sont supprimées régulièrement.
+
+7. Vos droits
+
+Vous pouvez à tout moment :
+
+Demander l’accès à vos données
+
+Demander leur modification
+
+Demander leur suppression
+
+Limiter leur traitement
+
+BurkinaWatch respecte votre droit au contrôle de vos informations personnelles.
+
+8. Responsabilité et usage citoyen
+
+BurkinaWatch est un outil citoyen.
+Il ne remplace pas les autorités compétentes mais peut contribuer à renforcer la vigilance collective.
+
+Chaque utilisateur est responsable de l’usage qu’il fait de la plateforme et s’engage à ne pas transmettre de fausses informations ou de contenus malveillants.
+
+9. Mise à jour de la politique
+
+Cette politique peut évoluer pour s’adapter aux réalités sécuritaires, techniques ou légales du Burkina Faso.
+
+Toute modification importante sera communiquée clairement aux utilisateurs.
+
+Message important aux utilisateurs
+
+Votre sécurité est notre priorité.
+Si vous estimez qu’une information que vous avez transmise présente un risque pour vous, contactez immédiatement l’équipe BurkinaWatch via les canaux officiels afin que des mesures appropriées soient prises.

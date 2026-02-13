@@ -52,6 +52,7 @@ const Cine = lazy(() => import("@/pages/Cine"));
 const Weather = lazy(() => import("@/pages/Weather"));
 const Hotels = lazy(() => import("@/pages/Hotels"));
 const Fiabilite = lazy(() => import("@/pages/Fiabilite"));
+const Confidentialite = lazy(() => import("@/pages/Confidentialite"));
 const Connexion = lazy(() => import("@/pages/Connexion"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 const ChatBot = lazy(() => import("@/components/ChatBot"));
@@ -110,6 +111,7 @@ function Router() {
         <Route path="/a-propos" component={APropos} />
         <Route path="/fiabilite" component={Fiabilite} />
         <Route path="/conditions" component={Conditions} />
+        <Route path="/confidentialite" component={Confidentialite} />
         <Route path="/notifications" component={Notifications} />
         <Route path="/track/:shareToken" component={LiveTrack} />
         <Route path="/connexion" component={Connexion} />
