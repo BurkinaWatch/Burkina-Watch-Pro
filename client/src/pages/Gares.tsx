@@ -33,7 +33,7 @@ import {
   CircleDot,
   Locate
 } from "lucide-react";
-import { VoiceSearchButton } from "@/components/VoiceSearchButton";
+import { VoiceSearchInput } from "@/components/VoiceSearchInput";
 import { LocationValidator } from "@/components/LocationValidator";
 import { Link } from "wouter";
 import { Helmet } from "react-helmet-async";

@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Search, MapPin, Phone, AlertTriangle, Shield, Activity, Heart, Users, ArrowLeft, RefreshCw, Download, Smartphone, Loader2, Navigation } from "lucide-react";
-import { VoiceSearchButton } from "@/components/VoiceSearchButton";
+import { VoiceSearchInput } from "@/components/VoiceSearchInput";
 import { SiWhatsapp } from "react-icons/si";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -593,7 +593,7 @@ export default function Urgences() {
                     className="pl-10"
                   />
                 </div>
-                <VoiceSearchButton onQueryChange={setSearchTerm} />
+                <VoiceSearchInput onQueryChange={setSearchTerm} />
               </div>
               <Select value={selectedType} onValueChange={setSelectedType}>
                 <SelectTrigger className="w-full sm:w-[200px]">

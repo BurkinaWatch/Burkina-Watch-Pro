@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
-import { VoiceSearchButton } from "@/components/VoiceSearchButton";
+import { VoiceSearchInput } from "@/components/VoiceSearchInput";
 import { Loader2, MapPin, Calendar, Clock, ExternalLink, Search, Filter, ArrowLeft, RefreshCw, Music, Film, Theater, Mic2, BookOpen, Trophy, AlertTriangle, Flag, Building2, PartyPopper, ImageOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -246,7 +246,7 @@ export default function Events() {
                     className="pl-10"
                   />
                 </div>
-                <VoiceSearchButton onQueryChange={setSearchQuery} />
+                <VoiceSearchInput onQueryChange={setSearchQuery} />
               </div>
 
               {/* Filtre par type */}

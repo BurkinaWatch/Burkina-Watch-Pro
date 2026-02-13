@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, ShoppingBag, Truck, Car, Snowflake, CreditCard, Locate, Store, Shield, Info } from "lucide-react";
-import { VoiceSearchButton } from "@/components/VoiceSearchButton";
+import { VoiceSearchInput } from "@/components/VoiceSearchInput";
 import PageStatCard from "@/components/PageStatCard";
 import { ReliabilityBadge, TrustMessage } from "@/components/ReliabilityBadge";
 import { Link } from "wouter";
@@ -374,7 +374,7 @@ export default function Boutiques() {
                   data-testid="input-search"
                 />
               </div>
-              <VoiceSearchButton onQueryChange={setSearchQuery} />
+              <VoiceSearchInput onQueryChange={setSearchQuery} />
             </div>
 
             <div className="relative z-50">

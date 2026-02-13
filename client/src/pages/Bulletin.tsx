@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
-import { VoiceSearchButton } from "@/components/VoiceSearchButton";
+import { VoiceSearchInput } from "@/components/VoiceSearchInput";
 import { Loader2, ExternalLink, RefreshCw, Search, Filter, Calendar, FileText, ArrowLeft, Building2, Megaphone, Newspaper, Globe, Radio, BookOpen, Tv, Mic, ImageOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -222,7 +222,7 @@ export default function Bulletin() {
                     className="pl-10"
                   />
                 </div>
-                <VoiceSearchButton onQueryChange={setSearchQuery} />
+                <VoiceSearchInput onQueryChange={setSearchQuery} />
               </div>
 
               {/* Filtre par source */}

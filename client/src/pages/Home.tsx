@@ -15,7 +15,7 @@ import { RiskZonesPanel, RecommendationsPanel } from "@/components/RiskAnalysis"
 import { WeatherAlertsBanner } from "@/components/WeatherAlerts";
 import { NewsTicker } from "@/components/NewsTicker";
 import { AlertCircle, Shield, Users, TrendingUp, ArrowRight, Loader2, Heart, AlertTriangle, Search, X, MapPin, Filter, BookOpen, Download, Phone, MessageCircle, Mail } from "lucide-react";
-import { VoiceSearchButton } from "@/components/VoiceSearchButton";
+import { VoiceSearchInput } from "@/components/VoiceSearchInput";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { Signalement } from "@shared/schema";
@@ -1055,7 +1055,7 @@ export default function Home() {
               data-testid="input-search-home"
             />
             <div className="absolute right-1 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
-              <VoiceSearchButton
+              <VoiceSearchInput
                 onResult={(transcript) => {
                   setSearchQuery(transcript);
                   if (transcript.trim() && !searchHistory.includes(transcript.trim())) {

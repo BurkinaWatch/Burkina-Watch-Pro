@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Phone, Clock, Navigation, RefreshCw, Fuel, Droplets, Locate, ChevronLeft, ArrowLeft, Building2 } from "lucide-react";
 import { Link } from "wouter";
-import { VoiceSearchButton } from "@/components/VoiceSearchButton";
+import { VoiceSearchInput } from "@/components/VoiceSearchInput";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { LocationValidator } from "@/components/LocationValidator";
@@ -448,8 +448,8 @@ export default function StationsService() {
                   className="pl-10 pr-10"
                   data-testid="input-search-stations"
                 />
-                <VoiceSearchButton
-                  onResult={setSearchQuery}
+                <VoiceSearchInput
+                  onChange={setSearchQuery}
                   className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
                 />
               </div>
