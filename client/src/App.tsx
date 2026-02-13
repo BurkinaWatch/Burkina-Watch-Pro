@@ -50,6 +50,7 @@ const Hopitaux = lazy(() => import("@/pages/Hopitaux"));
 const Universites = lazy(() => import("@/pages/Universites"));
 const Cine = lazy(() => import("@/pages/Cine"));
 const Weather = lazy(() => import("@/pages/Weather"));
+const Hotels = lazy(() => import("@/pages/Hotels"));
 const Fiabilite = lazy(() => import("@/pages/Fiabilite"));
 const Connexion = lazy(() => import("@/pages/Connexion"));
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -105,6 +106,7 @@ function Router() {
         <Route path="/gares" component={Gares} />
         <Route path="/cine" component={Cine} />
         <Route path="/meteo" component={Weather} />
+        <Route path="/hotels" component={Hotels} />
         <Route path="/a-propos" component={APropos} />
         <Route path="/fiabilite" component={Fiabilite} />
         <Route path="/conditions" component={Conditions} />
