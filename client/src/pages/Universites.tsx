@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { GraduationCap, MapPin, Phone, Globe, ChevronLeft, Search, Building2, BookOpen, Navigation, Library, RefreshCw, Locate } from "lucide-react";
-import { VoiceSearchButton } from "@/components/VoiceSearchButton";
+import { VoiceSearchInput } from "@/components/VoiceSearchInput";
 import { Link, useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
@@ -240,19 +240,12 @@ export default function Universites() {
           <CardContent className="p-4">
             <div className="flex flex-col gap-3">
               <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1 flex gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Rechercher une université, un institut..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9"
-                      data-testid="input-search-university"
-                    />
-                  </div>
-                  <VoiceSearchButton onQueryChange={setSearchQuery} />
-                </div>
+                <VoiceSearchInput 
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Rechercher une université, un institut..."
+                  className="flex-1"
+                />
                 <Select value={selectedRegion} onValueChange={setSelectedRegion}>
                   <SelectTrigger className="w-full sm:w-48" data-testid="select-region">
                     <SelectValue placeholder="Région" />

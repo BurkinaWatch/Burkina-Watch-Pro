@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Mic, MicOff } from "lucide-react";
+import { Mic, MicOff, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -211,32 +211,30 @@ export function VoiceSearchInput({
   const [isListening, setIsListening] = useState(false);
 
   return (
-    <div className={cn("relative flex items-center gap-2", className)}>
-      <div className="relative flex-1">
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          className={cn(
-            "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors",
-            "file:border-0 file:bg-transparent file:text-sm file:font-medium",
-            "placeholder:text-muted-foreground",
-            "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-            "disabled:cursor-not-allowed disabled:opacity-50",
-            "pr-10",
-            isListening && "ring-2 ring-destructive animate-pulse"
-          )}
-          data-testid="input-voice-search"
+    <div className={cn("relative flex items-center w-full", className)}>
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={cn(
+          "flex h-10 w-full rounded-md border border-input bg-background pl-10 pr-10 py-2 text-sm ring-offset-background transition-all",
+          "placeholder:text-muted-foreground",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          isListening && "ring-2 ring-destructive animate-pulse"
+        )}
+        data-testid="input-voice-search"
+      />
+      <div className="absolute right-1 top-1/2 -translate-y-1/2">
+        <VoiceSearchButton
+          onResult={onChange}
+          onListeningChange={setIsListening}
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8"
         />
-        <div className="absolute right-1 top-1/2 -translate-y-1/2">
-          <VoiceSearchButton
-            onResult={onChange}
-            onListeningChange={setIsListening}
-            size="sm"
-            variant="ghost"
-          />
-        </div>
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ import {
   PlusSquare, ShieldCheck, Info, Accessibility, Pill, Activity,
   ChevronLeft
 } from "lucide-react";
-import { VoiceSearchButton } from "@/components/VoiceSearchButton";
+import { VoiceSearchInput } from "@/components/VoiceSearchInput";
 import { useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Place } from "@shared/schema";
@@ -271,18 +271,12 @@ export default function PharmaciesDuFaso() {
           </div>
 
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Rechercher une pharmacie, quartier..."
-                  className="pl-9 h-11"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <VoiceSearchButton onQueryChange={setSearchTerm} />
-            </div>
+            <VoiceSearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="Rechercher une pharmacie, quartier..."
+              className="flex-1"
+            />
             <div className="flex gap-2">
               <Select value={selectedRegion} onValueChange={setSelectedRegion}>
                 <SelectTrigger className="w-[200px] h-11">
