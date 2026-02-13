@@ -311,7 +311,6 @@ export default function Stations() {
               setShow24hOnly(false);
             }}
             clickable
-            className="flex-1 min-w-[140px]"
           />
           <PageStatCard
             title="Barka Énergies"
@@ -321,7 +320,6 @@ export default function Stations() {
             variant="red"
             onClick={() => setSelectedMarque("Barka Énergies")}
             clickable
-            className="flex-1 min-w-[140px]"
           />
           <PageStatCard
             title="Shell"
@@ -331,7 +329,6 @@ export default function Stations() {
             variant="yellow"
             onClick={() => setSelectedMarque("Shell")}
             clickable
-            className="flex-1 min-w-[140px]"
           />
           <PageStatCard
             title="Oryx"
@@ -341,7 +338,6 @@ export default function Stations() {
             variant="blue"
             onClick={() => setSelectedMarque("Oryx")}
             clickable
-            className="flex-1 min-w-[140px]"
           />
           <PageStatCard
             title="Sonabhy"
@@ -351,7 +347,6 @@ export default function Stations() {
             variant="purple"
             onClick={() => setSelectedMarque("Sonabhy")}
             clickable
-            className="flex-1 min-w-[140px]"
           />
           <PageStatCard
             title="Ouvertes 24h/24"
@@ -361,7 +356,6 @@ export default function Stations() {
             variant="green"
             onClick={() => setShow24hOnly(!show24hOnly)}
             clickable
-            className="flex-1 min-w-[140px]"
           />
         </div>
 
