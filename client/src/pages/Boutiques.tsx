@@ -330,13 +330,19 @@ export default function Boutiques() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div className="flex flex-wrap gap-3 mb-6">
           <PageStatCard
             title="Total boutiques"
             value={stats?.total || 0}
             icon={ShoppingBag}
             description={`Dans ${stats?.nombreVilles || 0} villes`}
             variant="purple"
+            onClick={() => {
+              setSelectedCategorie("all");
+              setShowLivraisonOnly(false);
+              setShowClimOnly(false);
+            }}
+            clickable
           />
           <PageStatCard
             title="Supermarches"
@@ -344,6 +350,17 @@ export default function Boutiques() {
             icon={Store}
             description="Grandes surfaces"
             variant="green"
+            onClick={() => setSelectedCategorie("Supermarché")}
+            clickable
+          />
+          <PageStatCard
+            title="Alimentation"
+            value={stats?.parCategorie?.["Alimentation"] || 0}
+            icon={ShoppingBag}
+            description="Alimentations generales"
+            variant="amber"
+            onClick={() => setSelectedCategorie("Alimentation")}
+            clickable
           />
           <PageStatCard
             title="Avec livraison"
@@ -351,6 +368,11 @@ export default function Boutiques() {
             icon={Truck}
             description="Service a domicile"
             variant="blue"
+            onClick={() => {
+              setShowLivraisonOnly(!showLivraisonOnly);
+              setShowClimOnly(false);
+            }}
+            clickable
           />
           <PageStatCard
             title="Climatisees"
@@ -358,6 +380,11 @@ export default function Boutiques() {
             icon={Snowflake}
             description="Confort assure"
             variant="cyan"
+            onClick={() => {
+              setShowClimOnly(!showClimOnly);
+              setShowLivraisonOnly(false);
+            }}
+            clickable
           />
         </div>
 

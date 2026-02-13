@@ -1832,5 +1832,24 @@ export const BOUTIQUES_DATA: Boutique[] = [
     climatisation: true,
     parking: true,
     livraison: true
+  },
+  {
+    id: "bout-101",
+    nom: "Alimentations Le Bon Samaritain",
+    categorie: "Alimentation",
+    adresse: "Secteur 30, Ouagadougou",
+    quartier: "Secteur 30",
+    ville: "Ouagadougou",
+    region: "Centre",
+    latitude: 12.3547,
+    longitude: -1.5103,
+    telephone: "+226 70 00 00 00",
+    horaires: "07h00 - 21h00",
+    produits: ["Alimentation generale", "Boissons", "Produits frais", "Conserves", "Cereales", "Condiments", "Produits laitiers"],
+    services: ["Vente au detail", "Vente en gros"],
+    paiements: ["Especes", "Mobile Money"],
+    climatisation: false,
+    parking: false,
+    livraison: false
   }
 ];
