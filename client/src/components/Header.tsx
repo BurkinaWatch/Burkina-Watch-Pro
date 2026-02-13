@@ -137,13 +137,13 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
             </>
           ) : (
             <Button
-              size="sm"
+              size="icon"
+              variant="ghost"
               onClick={handleLogin}
               data-testid="button-login"
-              className="bg-yellow-600 hover:bg-yellow-700 text-white gap-2"
+              title="Se connecter"
             >
-              <LogIn className="w-4 h-4" />
-              <span className="hidden sm:inline">{t("header.loginButton")}</span>
+              <LogIn className="w-5 h-5" />
             </Button>
           )}
           <LanguageSelector />
