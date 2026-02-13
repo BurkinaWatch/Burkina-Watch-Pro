@@ -7,12 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowLeft, RefreshCw, MapPin, Building2, Map, Locate } from "lucide-react";
+import { Search, ArrowLeft, RefreshCw, MapPin, Building2, Locate } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import type { Place } from "@shared/schema";
-
 import { REGION_NAMES } from "@/lib/regions";
 
 interface PlacesListPageProps {
@@ -34,7 +33,7 @@ interface ApiResponse {
   total: number;
 }
 
-export function PlacesListPage({ placeType, title, description, icon }: PlacesListPageProps) {
+export function PlacesListPage({ placeType, title, description, icon, renderStats }: PlacesListPageProps) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
