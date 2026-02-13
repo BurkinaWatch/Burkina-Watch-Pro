@@ -840,7 +840,7 @@ export default function Gares() {
                         <Locate className={`w-3.5 h-3.5 ${isLocatingForSort ? 'animate-spin' : ''}`} />
                         {isLocatingForSort ? "Localisation..." : sortByNearest ? "Les plus proches" : "Les plus proches"}
                       </Button>
-                      <span className="text-xs text-muted-foreground hidden sm:inline">Source: Donnees verifiees + OSM</span>
+
                     </div>
                   </div>
                 </CardContent>
