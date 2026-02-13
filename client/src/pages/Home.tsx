@@ -863,6 +863,7 @@ export default function Home() {
                   description="Dans la base de données"
                   trend="up"
                   loading={statsLoading}
+                  onClick={() => setLocation("/feed")}
                 />
                 <StatCard
                   title="Alertes SOS"
@@ -872,6 +873,7 @@ export default function Home() {
                   variant="destructive"
                   trend={(stats?.sosCount ?? 0) > 0 ? "up" : "neutral"}
                   loading={statsLoading}
+                  onClick={() => setLocation("/feed")}
                 />
                 <StatCard
                   title="Citoyens engagés"

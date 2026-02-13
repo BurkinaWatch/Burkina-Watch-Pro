@@ -10,6 +10,7 @@ interface StatCardProps {
   variant?: "default" | "destructive" | "success" | "info";
   trend?: "up" | "down" | "neutral";
   loading?: boolean;
+  onClick?: () => void;
 }
 
 export default function StatCard({
@@ -19,7 +20,8 @@ export default function StatCard({
   description,
   variant = "default",
   trend = "neutral",
-  loading = false
+  loading = false,
+  onClick
 }: StatCardProps) {
   const variantStyles = {
     default: "from-primary/10 to-primary/5 border-primary/20 hover:border-primary/40",
@@ -72,11 +74,15 @@ export default function StatCard({
   const colors = coatOfArmsColors[variant];
 
   return (
-    <Card className={cn(
-      "relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group",
-      "bg-gradient-to-br",
-      variantStyles[variant]
-    )}>
+    <Card 
+      className={cn(
+        "relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group",
+        "bg-gradient-to-br",
+        variantStyles[variant],
+        onClick && "cursor-pointer"
+      )}
+      onClick={onClick}
+    >
       {/* Effet de lumière au survol */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
       
