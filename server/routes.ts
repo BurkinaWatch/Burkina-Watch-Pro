@@ -289,13 +289,65 @@ function transformOsmToMarche(place: Place) {
 
 function transformOsmToBanque(place: Place) {
   const tags = place.tags as Record<string, any> || {};
-  const name = place.name || tags.name || tags["name:fr"] || tags["name:en"] || tags.operator || (place.placeType === "atm" ? "GAB" : "Banque");
+  const rawName = place.name || tags.name || tags["name:fr"] || tags["name:en"] || tags.operator || tags.brand || "";
+  const operator = tags.operator || tags.brand || "";
+
+  const knownBanks: Record<string, { nom: string; sigle: string }> = {
+    "coris": { nom: "Coris Bank International", sigle: "CBI" },
+    "ecobank": { nom: "Ecobank Burkina", sigle: "EBF" },
+    "boa": { nom: "Bank of Africa", sigle: "BOA-BF" },
+    "bank of africa": { nom: "Bank of Africa", sigle: "BOA-BF" },
+    "bicia": { nom: "BICIA-B (Groupe BNP Paribas)", sigle: "BICIA-B" },
+    "bnp": { nom: "BICIA-B (Groupe BNP Paribas)", sigle: "BICIA-B" },
+    "sgbf": { nom: "Société Générale Burkina Faso", sigle: "SGBF" },
+    "societe generale": { nom: "Société Générale Burkina Faso", sigle: "SGBF" },
+    "société générale": { nom: "Société Générale Burkina Faso", sigle: "SGBF" },
+    "uba": { nom: "United Bank for Africa", sigle: "UBA-BF" },
+    "united bank": { nom: "United Bank for Africa", sigle: "UBA-BF" },
+    "bcb": { nom: "Banque Commerciale du Burkina", sigle: "BCB" },
+    "bsic": { nom: "Banque Sahélo-Saharienne pour l'Investissement et le Commerce", sigle: "BSIC-BF" },
+    "wendkuni": { nom: "Banque Wendkuni", sigle: "WENDKUNI" },
+    "cbao": { nom: "Compagnie Bancaire de l'Afrique de l'Ouest", sigle: "CBAO" },
+    "orabank": { nom: "Orabank Burkina Faso", sigle: "ORABANK" },
+    "bab": { nom: "Banque Agricole du Burkina", sigle: "BAB" },
+    "banque agricole": { nom: "Banque Agricole du Burkina", sigle: "BAB" },
+    "bhbf": { nom: "Banque de l'Habitat du Burkina Faso", sigle: "BHBF" },
+    "habitat": { nom: "Banque de l'Habitat du Burkina Faso", sigle: "BHBF" },
+    "sonapost": { nom: "SONAPOST - Services Financiers Postaux", sigle: "SONAPOST" },
+    "rcpb": { nom: "Réseau des Caisses Populaires du Burkina", sigle: "RCPB" },
+    "caisses populaires": { nom: "Réseau des Caisses Populaires du Burkina", sigle: "RCPB" },
+    "caisse populaire": { nom: "Caisse Populaire du Burkina", sigle: "CP" },
+    "premiere caisse": { nom: "Première Caisse d'Épargne", sigle: "PCE" },
+    "pamf": { nom: "Première Agence de Microfinance", sigle: "PAMF" },
+    "western union": { nom: "Western Union", sigle: "WU" },
+    "moneygram": { nom: "MoneyGram", sigle: "MG" },
+    "orange money": { nom: "Orange Money", sigle: "OM" },
+    "moov money": { nom: "Moov Money", sigle: "MM" },
+    "ria": { nom: "Ria Money Transfer", sigle: "RIA" },
+  };
+
+  const searchStr = (rawName + " " + operator).toLowerCase();
+  let matchedBank: { nom: string; sigle: string } | null = null;
+  for (const [key, value] of Object.entries(knownBanks)) {
+    if (searchStr.includes(key)) {
+      matchedBank = value;
+      break;
+    }
+  }
+
+  const isAtm = place.placeType === "atm";
+  const nom = matchedBank?.nom || rawName || (isAtm ? "GAB" : "Banque");
+  const sigle = matchedBank?.sigle || (rawName ? rawName.split(/\s+/).map(w => w[0]).join("").toUpperCase().slice(0, 5) : (isAtm ? "GAB" : "BQ"));
+
+  const displayNom = matchedBank ? matchedBank.nom : (rawName || (isAtm ? "Guichet Automatique" : "Etablissement bancaire"));
+
   return {
     id: `osm-bank-${place.id}`,
-    nom: name,
-    type: place.placeType === "atm" ? "GAB" : "Banque",
+    nom: displayNom,
+    sigle: sigle,
+    type: isAtm ? "GAB" : (searchStr.includes("caisse") || searchStr.includes("rcpb") ? "Caisse Populaire" : (searchStr.includes("microfinance") || searchStr.includes("pamf") ? "Microfinance" : "Banque")),
     categorie: "Commerciale",
-    adresse: place.address || "Burkina Faso",
+    adresse: place.address || tags["addr:street"] || tags["addr:full"] || place.quartier || place.ville || "Adresse non precisee",
     quartier: place.quartier || "Quartier non spécifié",
     ville: place.ville || "Ville non spécifiée",
     region: place.region || "Région non spécifiée",
@@ -304,8 +356,8 @@ function transformOsmToBanque(place: Place) {
     telephone: place.telephone || undefined,
     horaires: place.horaires || "8h-16h",
     services: [],
-    nombreGAB: tags.hasGAB ? 1 : 0,
-    hasGAB: tags.hasGAB || false,
+    nombreGAB: isAtm ? 1 : (tags.hasGAB ? 1 : 0),
+    hasGAB: isAtm || tags.hasGAB || false,
     importanceSystemique: tags.importanceSystemique || false,
     source: "OSM" as const,
     placeId: place.id,

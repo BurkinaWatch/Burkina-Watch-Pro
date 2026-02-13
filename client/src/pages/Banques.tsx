@@ -665,8 +665,11 @@ export default function Banques() {
                         >
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <Building2 className="h-3 w-3 shrink-0" />
-                            <span className="font-medium">{etab.sigle}</span>
-                            <span className="text-xs truncate">- {etab.adresse}</span>
+                            <span className="font-medium">{etab.nom || etab.sigle}</span>
+                            {etab.sigle && etab.nom && etab.sigle !== etab.nom && (
+                              <Badge variant="outline" className="text-xs shrink-0">{etab.sigle}</Badge>
+                            )}
+                            <span className="text-xs truncate">- {etab.quartier || etab.adresse}</span>
                           </div>
                           <Navigation className="h-3 w-3 text-primary shrink-0" />
                         </div>
@@ -719,8 +722,11 @@ export default function Banques() {
                         >
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <Building2 className="h-3 w-3 shrink-0" />
-                            <span className="font-medium">{etab.sigle}</span>
-                            <span className="text-xs truncate">- {etab.adresse}</span>
+                            <span className="font-medium">{etab.nom || etab.sigle}</span>
+                            {etab.sigle && etab.nom && etab.sigle !== etab.nom && (
+                              <Badge variant="outline" className="text-xs shrink-0">{etab.sigle}</Badge>
+                            )}
+                            <span className="text-xs truncate">- {etab.quartier || etab.adresse}</span>
                           </div>
                           <Navigation className="h-3 w-3 text-primary shrink-0" />
                         </div>
