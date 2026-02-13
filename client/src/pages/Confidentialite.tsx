@@ -379,8 +379,7 @@ export default function Confidentialite() {
                 <h3 className="font-semibold text-foreground mb-2">Message important aux utilisateurs</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   <strong className="text-foreground">Votre securite est notre priorite.</strong> Si vous estimez
-                  qu'une information que vous avez transmise presente un risque pour vous, contactez immediatement
-                  l'equipe BurkinaWatch via les canaux officiels afin que des mesures appropriees soient prises.
+                  qu'une information que vous avez transmise presente un risque pour vous, PRIORISEZ VOTRE SECURITE.
                 </p>
               </div>
             </div>
