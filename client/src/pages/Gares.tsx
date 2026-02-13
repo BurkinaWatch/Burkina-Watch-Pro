@@ -1352,11 +1352,29 @@ export default function Gares() {
                           {gare.destinations && gare.destinations.length > 0 && (
                             <div className="mt-2 pt-2 border-t overflow-hidden">
                               <p className="text-xs text-muted-foreground mb-1">Lignes desservies:</p>
-                              <div className="flex flex-col gap-0.5 max-h-48 overflow-y-auto">
+                              <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto">
                                 {gare.destinations.map((dest, i) => (
-                                  <div key={i} className="text-xs text-muted-foreground truncate">
-                                    {dest.ville}
-                                    {dest.prix && ` - ${dest.prix} F`}
+                                  <div key={i} className="bg-muted/30 rounded-md p-2 space-y-0.5">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <span className="text-xs font-medium truncate">{dest.ville}</span>
+                                      {dest.prix && (
+                                        <Badge variant="secondary" className="text-xs font-mono shrink-0">
+                                          {dest.prix} F
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    {dest.horaires && dest.horaires.length > 0 && (
+                                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                        <Clock className="w-3 h-3 shrink-0" />
+                                        {dest.horaires[0]}
+                                      </p>
+                                    )}
+                                    {dest.duree && (
+                                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                        <ArrowRight className="w-3 h-3 shrink-0" />
+                                        Duree: {dest.duree}
+                                      </p>
+                                    )}
                                   </div>
                                 ))}
                               </div>
