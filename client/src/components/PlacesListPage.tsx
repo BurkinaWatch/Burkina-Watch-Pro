@@ -219,40 +219,40 @@ export function PlacesListPage({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="flex flex-wrap gap-4 mb-6">
           {!hideDefaultStats && (
             <>
               <Card 
-                className="hover-elevate transition-all border-primary/10 cursor-pointer"
+                className="hover-elevate transition-all border-primary/10 cursor-pointer flex-1 min-w-[140px]"
                 onClick={() => {
                   setSearchTerm("");
                   setSelectedRegion("all");
                 }}
               >
-                <CardContent className="pt-4">
+                <CardContent className="p-4">
                   <div className="flex items-center gap-2">
-                    <div className="p-2 bg-primary/10 rounded-lg">
+                    <div className="p-2 bg-primary/10 rounded-lg shrink-0">
                       <Building2 className="h-5 w-5 text-primary" />
                     </div>
-                    <div>
-                      <p className="text-2xl font-bold">{places.length}</p>
-                      <p className="text-xs text-muted-foreground">Total</p>
+                    <div className="min-w-0">
+                      <p className="text-2xl font-bold truncate">{places.length}</p>
+                      <p className="text-xs text-muted-foreground truncate">Total</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
               <Card 
-                className="hover-elevate transition-all border-blue-100 dark:border-blue-900 cursor-pointer"
+                className="hover-elevate transition-all border-blue-100 dark:border-blue-900 cursor-pointer flex-1 min-w-[140px]"
                 onClick={() => setSelectedRegion("all")}
               >
-                <CardContent className="pt-4">
+                <CardContent className="p-4">
                   <div className="flex items-center gap-2">
-                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg shrink-0">
                       <MapPin className="h-5 w-5 text-blue-500" />
                     </div>
-                    <div>
-                      <p className="text-2xl font-bold">{Object.keys(regionCounts).length}</p>
-                      <p className="text-xs text-muted-foreground">Régions</p>
+                    <div className="min-w-0">
+                      <p className="text-2xl font-bold truncate">{Object.keys(regionCounts).length}</p>
+                      <p className="text-xs text-muted-foreground truncate">Régions</p>
                     </div>
                   </div>
                 </CardContent>

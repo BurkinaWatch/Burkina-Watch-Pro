@@ -49,68 +49,68 @@ export default function Restaurants() {
           return (
             <>
               <Card 
-                className={`hover-elevate transition-all border-primary/10 cursor-pointer ${selectedType === "all" ? "ring-2 ring-primary" : ""}`}
+                className={`hover-elevate transition-all border-primary/10 cursor-pointer flex-1 min-w-[140px] ${selectedType === "all" ? "ring-2 ring-primary" : ""}`}
                 onClick={() => setSelectedType("all")}
               >
-                <CardContent className="pt-4">
+                <CardContent className="p-4">
                   <div className="flex items-center gap-2">
-                    <div className="p-2 bg-primary/10 rounded-lg">
+                    <div className="p-2 bg-primary/10 rounded-lg shrink-0">
                       <Building2 className="h-5 w-5 text-primary" />
                     </div>
-                    <div>
-                      <p className="text-2xl font-bold">{places.length}</p>
-                      <p className="text-xs text-muted-foreground">Total</p>
+                    <div className="min-w-0">
+                      <p className="text-2xl font-bold truncate">{places.length}</p>
+                      <p className="text-xs text-muted-foreground truncate">Total</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card 
-                className={`hover-elevate transition-all border-blue-100 dark:border-blue-900 cursor-pointer ${selectedType === "café" ? "ring-2 ring-blue-500" : ""}`}
+                className={`hover-elevate transition-all border-blue-100 dark:border-blue-900 cursor-pointer flex-1 min-w-[140px] ${selectedType === "café" ? "ring-2 ring-blue-500" : ""}`}
                 onClick={() => setSelectedType("café")}
               >
-                <CardContent className="pt-4">
+                <CardContent className="p-4">
                   <div className="flex items-center gap-2">
-                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg shrink-0">
                       <Coffee className="h-5 w-5 text-blue-600" />
                     </div>
-                    <div>
-                      <p className="text-2xl font-bold">{cafeKiosqueCount}</p>
-                      <p className="text-xs text-muted-foreground">Café & Kiosque</p>
+                    <div className="min-w-0">
+                      <p className="text-2xl font-bold truncate">{cafeKiosqueCount}</p>
+                      <p className="text-xs text-muted-foreground truncate">Café & Kiosque</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card 
-                className={`hover-elevate transition-all border-amber-100 dark:border-amber-900 cursor-pointer ${selectedType === "specialité" ? "ring-2 ring-amber-500" : ""}`}
+                className={`hover-elevate transition-all border-amber-100 dark:border-amber-900 cursor-pointer flex-1 min-w-[140px] ${selectedType === "specialité" ? "ring-2 ring-amber-500" : ""}`}
                 onClick={() => setSelectedType("specialité")}
               >
-                <CardContent className="pt-4">
+                <CardContent className="p-4">
                   <div className="flex items-center gap-2">
-                    <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                    <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg shrink-0">
                       <Soup className="h-5 w-5 text-amber-600" />
                     </div>
-                    <div>
-                      <p className="text-2xl font-bold">{specialized}</p>
-                      <p className="text-xs text-muted-foreground">Spécialités</p>
+                    <div className="min-w-0">
+                      <p className="text-2xl font-bold truncate">{specialized}</p>
+                      <p className="text-xs text-muted-foreground truncate">Spécialités</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
               
               <Card 
-                className={`hover-elevate transition-all border-orange-100 dark:border-orange-900 cursor-pointer ${selectedType === "maquis" ? "ring-2 ring-orange-500" : ""}`}
+                className={`hover-elevate transition-all border-orange-100 dark:border-orange-900 cursor-pointer flex-1 min-w-[140px] ${selectedType === "maquis" ? "ring-2 ring-orange-500" : ""}`}
                 onClick={() => setSelectedType("maquis")}
               >
-                <CardContent className="pt-4">
+                <CardContent className="p-4">
                   <div className="flex items-center gap-2">
-                    <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                    <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg shrink-0">
                       <Beer className="h-5 w-5 text-orange-600" />
                     </div>
-                    <div>
-                      <p className="text-2xl font-bold">{maquisCount}</p>
-                      <p className="text-xs text-muted-foreground">Maquis, Bar & Cave</p>
+                    <div className="min-w-0">
+                      <p className="text-2xl font-bold truncate">{maquisCount}</p>
+                      <p className="text-xs text-muted-foreground truncate">Maquis, Bar & Cave</p>
                     </div>
                   </div>
                 </CardContent>
