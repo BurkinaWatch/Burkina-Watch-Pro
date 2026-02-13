@@ -15,7 +15,7 @@ import type { Categorie } from '@shared/schema';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, AlertTriangle, Locate, Flame, Navigation, GripVertical, Search, X, Filter, Layers, RefreshCw } from 'lucide-react';
+import { MapPin, AlertTriangle, Locate, Flame, Navigation, GripVertical, Search, X, Filter, Layers } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import Draggable from 'react-draggable';
 import {
@@ -732,7 +732,7 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
         setMapError(true);
       }
       clearInterval(checkInterval);
-    }, 15000);
+    }, 5000);
 
     return () => {
       clearInterval(checkInterval);
@@ -763,59 +763,29 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
     setShowSearchResults(false);
   };
 
-  if (!apiKey || mapError) {
-    const osmCenter = BURKINA_FASO_CENTER;
-    const osmZoom = 7;
-    const osmUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${osmCenter.lng - 4},${osmCenter.lat - 3},${osmCenter.lng + 4},${osmCenter.lat + 3}&layer=mapnik`;
-    
+  if (!apiKey) {
     return (
-      <div className={`relative ${className}`}>
-        <iframe
-          src={osmUrl}
-          className="w-full h-full border-0"
-          title="Carte OpenStreetMap du Burkina Faso"
-          loading="lazy"
-        />
-        <div className="absolute top-4 left-4 right-4 z-20 flex flex-col gap-2">
-          <div className="bg-background/95 backdrop-blur rounded-lg shadow-lg p-3 border flex items-center gap-3 max-w-md">
-            <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium">Carte OpenStreetMap</p>
-              <p className="text-[10px] text-muted-foreground">
-                {markers.length} signalement{markers.length > 1 ? 's' : ''} disponible{markers.length > 1 ? 's' : ''}
-              </p>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setMapError(false);
-                setMapLoaded(false);
-              }}
-              className="text-xs flex-shrink-0"
-              data-testid="button-retry-map"
-            >
-              <RefreshCw className="w-3 h-3 mr-1" />
-              Recharger
-            </Button>
-          </div>
+      <div className={`flex flex-col items-center justify-center bg-muted/10 p-8 ${className}`}>
+        <AlertTriangle className="w-12 h-12 mb-4 text-destructive" />
+        <p className="text-muted-foreground text-center">Clé API Google Maps non configurée</p>
+      </div>
+    );
+  }
+
+  if (mapError) {
+    return (
+      <div className={`flex flex-col items-center justify-center bg-muted/10 p-8 ${className}`}>
+        <AlertTriangle className="w-12 h-12 mb-4 text-destructive" />
+        <h3 className="font-semibold text-lg mb-2">Erreur de chargement de la carte</h3>
+        <p className="text-muted-foreground text-center max-w-md mb-4">
+          La carte Google Maps n'a pas pu être chargée.
+        </p>
+        <div className="bg-card p-4 rounded-md border max-w-md">
+          <h4 className="font-medium mb-2 text-sm">Données disponibles :</h4>
+          <p className="text-sm text-muted-foreground">
+            {markers.length} signalement{markers.length > 1 ? 's' : ''} géolocalisé{markers.length > 1 ? 's' : ''}
+          </p>
         </div>
-        {markers.length > 0 && (
-          <div className="absolute bottom-4 left-4 right-4 z-20">
-            <div className="bg-background/95 backdrop-blur rounded-lg shadow-lg p-3 border max-w-md">
-              <p className="text-xs font-medium mb-2">Signalements recents :</p>
-              <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                {markers.slice(0, 5).map((m) => (
-                  <div key={m.id} className="flex items-center gap-2 text-xs text-muted-foreground">
-                    {m.isSOS && <span className="w-2 h-2 rounded-full bg-destructive flex-shrink-0" />}
-                    {!m.isSOS && <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />}
-                    <span className="truncate">{m.titre}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
