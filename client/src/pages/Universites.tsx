@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, MapPin, Phone, Globe, ChevronLeft, Search, Building2, BookOpen, Navigation, Library, RefreshCw, Locate } from "lucide-react";
+import { GraduationCap, MapPin, Phone, Globe, ChevronLeft, Search, Building2, BookOpen, Navigation, Library, RefreshCw, Locate, School } from "lucide-react";
 import { VoiceSearchInput } from "@/components/VoiceSearchInput";
+import PageStatCard from "@/components/PageStatCard";
 import { Link, useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
@@ -31,6 +32,7 @@ export default function Universites() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [selectedFiliere, setSelectedFiliere] = useState("all");
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState<"all" | "universite" | "institut">("all");
   const [sortByProximity, setSortByProximity] = useState(false);
   const [userLocation, setUserLocation] = useState<{lat: number, lon: number} | null>(null);
   const [isLocating, setIsLocating] = useState(false);
@@ -95,11 +97,16 @@ export default function Universites() {
   };
 
   const stats = useMemo(() => {
+    const instituts = universites.filter(u => {
+      const type = (u.tags?.type || u.name || "").toLowerCase();
+      return type.includes("institut") || type.includes("centre") || type.includes("ecole") || type.includes("école") || type.includes("formation");
+    }).length;
     return {
       total: universites.length,
       villes: new Set(universites.map(u => u.ville)).size,
       regions: new Set(universites.map(u => u.region)).size,
-      instituts: universites.filter(u => u.tags?.type?.toLowerCase().includes("institut")).length
+      universites: universites.length - instituts,
+      instituts
     };
   }, [universites]);
 
@@ -116,6 +123,13 @@ export default function Universites() {
     }
     if (selectedRegion !== "all") {
       result = result.filter(u => u.region === selectedRegion);
+    }
+    if (selectedTypeFilter !== "all") {
+      result = result.filter(u => {
+        const type = (u.tags?.type || u.name || "").toLowerCase();
+        const isInstitut = type.includes("institut") || type.includes("centre") || type.includes("ecole") || type.includes("école") || type.includes("formation");
+        return selectedTypeFilter === "institut" ? isInstitut : !isInstitut;
+      });
     }
     if (selectedFiliere !== "all") {
       result = result.filter(u => {
@@ -155,7 +169,7 @@ export default function Universites() {
     }
     
     return result;
-  }, [universites, searchQuery, selectedRegion, sortByProximity, userLocation]);
+  }, [universites, searchQuery, selectedRegion, selectedTypeFilter, selectedFiliere, sortByProximity, userLocation]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -181,59 +195,45 @@ export default function Universites() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
-            <CardContent className="p-4 relative z-10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Établissements</p>
-                  <span className="text-2xl font-bold tracking-tight">{stats.total}</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-blue-500/10 group-hover:scale-110 transition-transform">
-                  <GraduationCap className="w-5 h-5 text-blue-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
-            <CardContent className="p-4 relative z-10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Villes</p>
-                  <span className="text-2xl font-bold tracking-tight">{stats.villes}</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-green-500/10 group-hover:scale-110 transition-transform">
-                  <MapPin className="w-5 h-5 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
-            <CardContent className="p-4 relative z-10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Instituts</p>
-                  <span className="text-2xl font-bold tracking-tight">{stats.instituts}</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-purple-500/10 group-hover:scale-110 transition-transform">
-                  <Library className="w-5 h-5 text-purple-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20">
-            <CardContent className="p-4 relative z-10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground">Régions</p>
-                  <span className="text-2xl font-bold tracking-tight">{stats.regions}</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-orange-500/10 group-hover:scale-110 transition-transform">
-                  <Building2 className="w-5 h-5 text-orange-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="flex flex-wrap gap-3">
+          <PageStatCard
+            title="Total"
+            value={stats.total}
+            icon={GraduationCap}
+            description={`${stats.villes} villes`}
+            variant="blue"
+            onClick={() => {
+              setSelectedTypeFilter("all");
+              setSelectedRegion("all");
+              setSelectedFiliere("all");
+            }}
+            clickable
+          />
+          <PageStatCard
+            title="Universites"
+            value={stats.universites}
+            icon={School}
+            description="Enseignement superieur"
+            variant="green"
+            onClick={() => setSelectedTypeFilter(selectedTypeFilter === "universite" ? "all" : "universite")}
+            clickable
+          />
+          <PageStatCard
+            title="Instituts"
+            value={stats.instituts}
+            icon={Library}
+            description="Ecoles et centres"
+            variant="purple"
+            onClick={() => setSelectedTypeFilter(selectedTypeFilter === "institut" ? "all" : "institut")}
+            clickable
+          />
+          <PageStatCard
+            title="Regions"
+            value={stats.regions}
+            icon={Building2}
+            description="Couverture nationale"
+            variant="amber"
+          />
         </div>
 
         <Card className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-primary/30">
