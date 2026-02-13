@@ -45,18 +45,43 @@ export default function Universites() {
 
   const allFilieres = useMemo(() => {
     const filieresSet = new Set<string>();
+    
+    // Liste de mots clés à exclure (noms d'écoles, descriptions, etc.)
+    const excludeKeywords = [
+      "institut", "université", "college", "school", "b2i", "2ie", 
+      "etablissement", "formation", "recherche", "ingénieur",
+      "established", "act of parliament", "propose", "centre",
+      "located", "offering", "specialized", "education", "supérieur"
+    ];
+
+    const isValidFiliere = (f: string) => {
+      const lowerF = f.toLowerCase();
+      // Trop long (probablement une description)
+      if (f.length > 60) return false;
+      // Contient des mots clés d'exclusion
+      if (excludeKeywords.some(keyword => lowerF.includes(keyword) && !lowerF.includes("informatique") && !lowerF.includes("gestion"))) {
+        return false;
+      }
+      // Trop court (probablement du bruit)
+      if (f.length < 3) return false;
+      return true;
+    };
+
     universites.forEach(u => {
       const uFilieres = u.filières || u.tags?.filieres;
       if (Array.isArray(uFilieres)) {
         uFilieres.forEach((f: string) => {
-          // Extraire le groupe principal pour un filtre plus propre (ex: "Sciences de la Santé (Médecine)" -> "Sciences de la Santé")
           const cleanF = f.split('(')[0].trim();
-          filieresSet.add(cleanF);
+          if (isValidFiliere(cleanF)) {
+            filieresSet.add(cleanF);
+          }
         });
       } else if (typeof uFilieres === 'string') {
         uFilieres.split(',').forEach((f: string) => {
           const cleanF = f.split('(')[0].trim();
-          filieresSet.add(cleanF);
+          if (isValidFiliere(cleanF)) {
+            filieresSet.add(cleanF);
+          }
         });
       }
     });
