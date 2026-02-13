@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { PlacesListPage } from "@/components/PlacesListPage";
-import { Utensils, Star, Soup, Beer, Coffee, Store, Wine, Building2 } from "lucide-react";
+import { Utensils, Star, Soup, Beer, Coffee, Store, Wine, Building2, MapPin } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -21,7 +21,7 @@ export default function Restaurants() {
         hideDefaultStats={true}
         searchTerm={selectedType !== "all" ? selectedType : undefined}
         renderStats={(places) => {
-          const specialized = places.filter(p => (p.tags as any)?.cuisine).length;
+          const villesCount = new Set(places.map(p => p.ville || (p.tags as any)?.city || "")).size;
           const maquisCount = places.filter(p => {
             const name = p.name.toLowerCase();
             const tags = p.tags as any || {};
@@ -83,17 +83,16 @@ export default function Restaurants() {
               </Card>
 
               <Card 
-                className={`hover-elevate transition-all border-amber-100 dark:border-amber-900 cursor-pointer flex-1 min-w-[140px] ${selectedType === "specialité" ? "ring-2 ring-amber-500" : ""}`}
-                onClick={() => setSelectedType("specialité")}
+                className="hover-elevate transition-all border-green-100 dark:border-green-900 flex-1 min-w-[140px]"
               >
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2">
-                    <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg shrink-0">
-                      <Soup className="h-5 w-5 text-amber-600" />
+                    <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg shrink-0">
+                      <MapPin className="h-5 w-5 text-green-600" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-2xl font-bold truncate">{specialized}</p>
-                      <p className="text-xs text-muted-foreground truncate">Spécialités</p>
+                      <p className="text-2xl font-bold truncate">{villesCount}</p>
+                      <p className="text-xs text-muted-foreground truncate">Villes</p>
                     </div>
                   </div>
                 </CardContent>
