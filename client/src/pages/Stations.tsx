@@ -414,17 +414,13 @@ export default function Stations() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 relative z-50">
             <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Rechercher une station..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                  data-testid="input-search"
-                />
-              </div>
-              <VoiceSearchInput onQueryChange={setSearchQuery} />
+              <VoiceSearchInput 
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Rechercher une station..."
+                className="flex-1"
+                data-testid="input-search"
+              />
             </div>
 
             <div className="relative z-50">
