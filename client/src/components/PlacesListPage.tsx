@@ -20,6 +20,7 @@ interface PlacesListPageProps {
   description: string;
   icon: React.ReactNode;
   renderStats?: (places: Place[]) => React.ReactNode;
+  hideDefaultStats?: boolean;
 }
 
 const REGIONS = REGION_NAMES;
@@ -33,7 +34,7 @@ interface ApiResponse {
   total: number;
 }
 
-export function PlacesListPage({ placeType, title, description, icon, renderStats }: PlacesListPageProps) {
+export function PlacesListPage({ placeType, title, description, icon, renderStats, hideDefaultStats }: PlacesListPageProps) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
@@ -204,32 +205,36 @@ export function PlacesListPage({ placeType, title, description, icon, renderStat
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <Card className="hover-elevate transition-all border-primary/10">
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Building2 className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{places.length}</p>
-                  <p className="text-xs text-muted-foreground">Total</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="hover-elevate transition-all border-blue-100 dark:border-blue-900">
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                  <MapPin className="h-5 w-5 text-blue-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{Object.keys(regionCounts).length}</p>
-                  <p className="text-xs text-muted-foreground">Régions</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {!hideDefaultStats && (
+            <>
+              <Card className="hover-elevate transition-all border-primary/10">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Building2 className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{places.length}</p>
+                      <p className="text-xs text-muted-foreground">Total</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="hover-elevate transition-all border-blue-100 dark:border-blue-900">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                      <MapPin className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{Object.keys(regionCounts).length}</p>
+                      <p className="text-xs text-muted-foreground">Régions</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
           {renderStats && renderStats(places)}
         </div>
 
