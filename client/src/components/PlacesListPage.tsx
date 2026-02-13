@@ -21,6 +21,7 @@ interface PlacesListPageProps {
   icon: React.ReactNode;
   renderStats?: (places: Place[]) => React.ReactNode;
   hideDefaultStats?: boolean;
+  searchTerm?: string;
 }
 
 const REGIONS = REGION_NAMES;
@@ -34,7 +35,15 @@ interface ApiResponse {
   total: number;
 }
 
-export function PlacesListPage({ placeType, title, description, icon, renderStats, hideDefaultStats }: PlacesListPageProps) {
+export function PlacesListPage({ 
+  placeType, 
+  title, 
+  description, 
+  icon, 
+  renderStats, 
+  hideDefaultStats,
+  searchTerm: externalSearchTerm
+}: PlacesListPageProps) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,6 +51,12 @@ export function PlacesListPage({ placeType, title, description, icon, renderStat
   const [showNearestOnly, setShowNearestOnly] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+
+  useEffect(() => {
+    if (externalSearchTerm !== undefined) {
+      setSearchTerm(externalSearchTerm === "all" ? "" : externalSearchTerm);
+    }
+  }, [externalSearchTerm]);
 
   const calculateDistance = useCallback((lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371;
@@ -207,7 +222,13 @@ export function PlacesListPage({ placeType, title, description, icon, renderStat
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {!hideDefaultStats && (
             <>
-              <Card className="hover-elevate transition-all border-primary/10">
+              <Card 
+                className="hover-elevate transition-all border-primary/10 cursor-pointer"
+                onClick={() => {
+                  setSearchTerm("");
+                  setSelectedRegion("all");
+                }}
+              >
                 <CardContent className="pt-4">
                   <div className="flex items-center gap-2">
                     <div className="p-2 bg-primary/10 rounded-lg">
@@ -220,7 +241,10 @@ export function PlacesListPage({ placeType, title, description, icon, renderStat
                   </div>
                 </CardContent>
               </Card>
-              <Card className="hover-elevate transition-all border-blue-100 dark:border-blue-900">
+              <Card 
+                className="hover-elevate transition-all border-blue-100 dark:border-blue-900 cursor-pointer"
+                onClick={() => setSelectedRegion("all")}
+              >
                 <CardContent className="pt-4">
                   <div className="flex items-center gap-2">
                     <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">

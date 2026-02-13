@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { PlacesListPage } from "@/components/PlacesListPage";
-import { Utensils, Star, Soup, Beer, Coffee, Store, Wine } from "lucide-react";
+import { Utensils, Star, Soup, Beer, Coffee, Store, Wine, Building2 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function Restaurants() {
+  const [selectedType, setSelectedType] = useState<string>("all");
+
   return (
     <>
       <Helmet>
@@ -16,6 +19,7 @@ export default function Restaurants() {
         description="Restaurants, Maquis et Cafés"
         icon={<Utensils className="h-8 w-8 text-amber-600" />}
         hideDefaultStats={true}
+        searchTerm={selectedType !== "all" ? selectedType : undefined}
         renderStats={(places) => {
           const specialized = places.filter(p => (p.tags as any)?.cuisine).length;
           const maquisCount = places.filter(p => {
@@ -25,7 +29,7 @@ export default function Restaurants() {
                    name.includes('bar') || 
                    name.includes('cave') ||
                    name.includes('vin') ||
-                   tags.amenity === 'bar' ||
+                   tags.amenity === 'bar' || 
                    tags.cuisine === 'bar' ||
                    tags.amenity === 'pub' ||
                    tags.shop === 'wine' ||
@@ -44,7 +48,10 @@ export default function Restaurants() {
 
           return (
             <>
-              <Card className="hover-elevate transition-all border-primary/10">
+              <Card 
+                className={`hover-elevate transition-all border-primary/10 cursor-pointer ${selectedType === "all" ? "ring-2 ring-primary" : ""}`}
+                onClick={() => setSelectedType("all")}
+              >
                 <CardContent className="pt-4">
                   <div className="flex items-center gap-2">
                     <div className="p-2 bg-primary/10 rounded-lg">
@@ -58,7 +65,10 @@ export default function Restaurants() {
                 </CardContent>
               </Card>
 
-              <Card className="hover-elevate transition-all border-blue-100 dark:border-blue-900">
+              <Card 
+                className={`hover-elevate transition-all border-blue-100 dark:border-blue-900 cursor-pointer ${selectedType === "café" ? "ring-2 ring-blue-500" : ""}`}
+                onClick={() => setSelectedType("café")}
+              >
                 <CardContent className="pt-4">
                   <div className="flex items-center gap-2">
                     <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
@@ -72,7 +82,10 @@ export default function Restaurants() {
                 </CardContent>
               </Card>
 
-              <Card className="hover-elevate transition-all border-amber-100 dark:border-amber-900">
+              <Card 
+                className={`hover-elevate transition-all border-amber-100 dark:border-amber-900 cursor-pointer ${selectedType === "specialité" ? "ring-2 ring-amber-500" : ""}`}
+                onClick={() => setSelectedType("specialité")}
+              >
                 <CardContent className="pt-4">
                   <div className="flex items-center gap-2">
                     <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
@@ -86,7 +99,10 @@ export default function Restaurants() {
                 </CardContent>
               </Card>
               
-              <Card className="hover-elevate transition-all border-orange-100 dark:border-orange-900">
+              <Card 
+                className={`hover-elevate transition-all border-orange-100 dark:border-orange-900 cursor-pointer ${selectedType === "maquis" ? "ring-2 ring-orange-500" : ""}`}
+                onClick={() => setSelectedType("maquis")}
+              >
                 <CardContent className="pt-4">
                   <div className="flex items-center gap-2">
                     <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
@@ -106,5 +122,3 @@ export default function Restaurants() {
     </>
   );
 }
-
-import { Building2 } from "lucide-react";
