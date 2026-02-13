@@ -137,13 +137,14 @@ export default function Header({ onMenuClick, showNotifications = true, showLogo
             </>
           ) : (
             <Button
-              size="icon"
+              size="sm"
               variant="ghost"
               onClick={handleLogin}
               data-testid="button-login"
               title="Se connecter"
             >
-              <LogIn className="w-5 h-5" />
+              <LogIn className="w-4 h-4" />
+              <span className="text-xs">Connexion</span>
             </Button>
           )}
           <LanguageSelector />
