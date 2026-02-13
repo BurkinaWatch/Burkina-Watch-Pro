@@ -283,6 +283,11 @@ export default function Stations() {
             icon={Fuel}
             description={`Dans ${stats?.nombreVilles || 0} villes`}
             variant="blue"
+            onClick={() => {
+              setSelectedMarque("all");
+              setShow24hOnly(false);
+            }}
+            clickable
           />
           <PageStatCard
             title="Barka Énergies"
@@ -290,6 +295,8 @@ export default function Stations() {
             icon={Gauge}
             description="Ex-TotalEnergies BF"
             variant="red"
+            onClick={() => setSelectedMarque("Barka Énergies")}
+            clickable
           />
           <PageStatCard
             title="Shell"
@@ -297,6 +304,8 @@ export default function Stations() {
             icon={Gauge}
             description="Reseau international"
             variant="yellow"
+            onClick={() => setSelectedMarque("Shell")}
+            clickable
           />
           <PageStatCard
             title="Oryx"
@@ -304,6 +313,8 @@ export default function Stations() {
             icon={Gauge}
             description="Reseau regional"
             variant="blue"
+            onClick={() => setSelectedMarque("Oryx")}
+            clickable
           />
           <PageStatCard
             title="Sonabhy"
@@ -311,6 +322,8 @@ export default function Stations() {
             icon={Gauge}
             description="National petrolier"
             variant="purple"
+            onClick={() => setSelectedMarque("Sonabhy")}
+            clickable
           />
           <PageStatCard
             title="Ouvertes 24h/24"
@@ -318,7 +331,7 @@ export default function Stations() {
             icon={Clock}
             description="Cliquez pour la liste"
             variant="green"
-            onClick={() => setShow24hDetails(!show24hDetails)}
+            onClick={() => setShow24hOnly(!show24hOnly)}
             clickable
           />
         </div>
