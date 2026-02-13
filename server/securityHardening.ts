@@ -35,56 +35,27 @@ export const signalementMutationLimiter = rateLimit({
 });
 
 export function applySecurityMiddlewares(app: Express) {
-  const isDev = process.env.NODE_ENV !== "production";
-
+  // 1. Protection des headers HTTP avec Helmet
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: [
-          "'self'",
-          "'unsafe-inline'",
-          ...(isDev ? ["'unsafe-eval'"] : []),
-          "https://*.openstreetmap.org",
-          "https://unpkg.com",
-          "https://cdnjs.cloudflare.com",
-        ],
-        styleSrc: [
-          "'self'",
-          "'unsafe-inline'",
-          "https://fonts.googleapis.com",
-          "https://unpkg.com",
-          "https://cdnjs.cloudflare.com",
-        ],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.openstreetmap.org", "https://unpkg.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://unpkg.com"],
         imgSrc: ["'self'", "data:", "https:", "blob:"],
-        connectSrc: [
-          "'self'",
-          "https://*.openstreetmap.org",
-          "https://nominatim.openstreetmap.org",
-          "https://overpass-api.de",
-          "https://cdnjs.cloudflare.com",
-          ...(isDev ? ["ws:", "wss:"] : []),
-        ],
-        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+        connectSrc: ["'self'", "https://*.openstreetmap.org", "https://nominatim.openstreetmap.org"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
         objectSrc: ["'none'"],
-        mediaSrc: ["'self'", "blob:"],
+        mediaSrc: ["'self'"],
         frameSrc: ["'self'"],
-        frameAncestors: ["'self'", "https://*.replit.dev", "https://*.repl.co"],
-        baseUri: ["'self'"],
-        formAction: ["'self'"],
-        workerSrc: ["'self'", "blob:"],
-        manifestSrc: ["'self'"],
-        upgradeInsecureRequests: isDev ? null : [],
       },
     },
     hsts: {
-      maxAge: 63072000,
+      maxAge: 31536000, // 1 an en secondes
       includeSubDomains: true,
       preload: true,
     },
     crossOriginEmbedderPolicy: false,
-    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
-    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
   }));
 
   // 2. Protection contre la pollution des paramètres HTTP (HPP)
