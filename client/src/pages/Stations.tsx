@@ -40,6 +40,15 @@ const marqueColors: Record<string, string> = {
   "TotalEnergies": "bg-red-600 text-white",
   "Shell": "bg-yellow-500 text-black",
   "Oryx": "bg-blue-600 text-white",
+  "Petrofa": "bg-green-700 text-white",
+  "April Oil": "bg-orange-600 text-white",
+  "Eco Oil": "bg-emerald-600 text-white",
+  "Hafa": "bg-blue-800 text-white",
+  "Otam": "bg-yellow-600 text-white",
+  "Kobi": "bg-indigo-600 text-white",
+  "Sodis": "bg-slate-700 text-white",
+  "Gex": "bg-cyan-700 text-white",
+  "Petro-B": "bg-red-700 text-white",
   "SOB Petrol": "bg-green-600 text-white",
   "Sonabhy": "bg-purple-600 text-white",
   "Star Oil": "bg-orange-500 text-white",
@@ -56,17 +65,31 @@ const marques = [
   "Barka Énergies",
   "Shell",
   "Oryx",
-  "SOB Petrol",
+  "Petrofa",
+  "April Oil",
+  "Eco Oil",
   "Sonabhy",
   "Star Oil",
   "Nafex",
-  "Vivo Energy"
+  "Vivo Energy",
+  "Hafa",
+  "Otam",
+  "Kobi",
+  "Sodis",
+  "Gex",
+  "Petro-B"
 ];
 
 function createStationIcon(marque: string, is24h: boolean) {
   const color = marque === "Barka Énergies" || marque === "TotalEnergies" ? "#DC2626" :
                 marque === "Shell" ? "#EAB308" :
                 marque === "Oryx" ? "#2563EB" :
+                marque === "Petrofa" ? "#15803d" :
+                marque === "April Oil" ? "#ea580c" :
+                marque === "Eco Oil" ? "#059669" :
+                marque === "Hafa" ? "#1e40af" :
+                marque === "Otam" ? "#ca8a04" :
+                marque === "Kobi" ? "#4f46e5" :
                 marque === "SOB Petrol" ? "#16A34A" :
                 marque === "Sonabhy" ? "#9333EA" :
                 "#6B7280";
