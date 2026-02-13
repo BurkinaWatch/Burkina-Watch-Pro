@@ -10,6 +10,7 @@ import {
   ChevronLeft
 } from "lucide-react";
 import { VoiceSearchInput } from "@/components/VoiceSearchInput";
+import PageStatCard from "@/components/PageStatCard";
 import { useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Place } from "@shared/schema";
@@ -200,74 +201,45 @@ export default function PharmaciesDuFaso() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 group bg-gradient-to-br from-red-500/20 via-red-500/10 to-transparent border-red-500/30 backdrop-blur-sm shadow-lg shadow-red-500/5">
-              <CardContent className="p-5 relative z-10">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1.5">
-                    <p className="text-[10px] font-bold text-red-400 uppercase tracking-[0.2em] opacity-80">Pharmacies</p>
-                    <h3 className="text-4xl font-black tracking-tighter text-foreground">{pharmacies.length}</h3>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-red-500/20 group-hover:bg-red-500/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-inner">
-                    <Pill className="h-7 w-7 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
-                  </div>
-                </div>
-              </CardContent>
-              {/* Animated background elements matching Home.tsx effects */}
-              <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-red-500/10 rounded-full blur-3xl group-hover:bg-red-500/20 transition-all duration-700 animate-pulse-slow" />
-              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            </Card>
-
-            <Card className="relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 group bg-gradient-to-br from-green-500/20 via-green-500/10 to-transparent border-green-500/30 backdrop-blur-sm shadow-lg shadow-green-500/5">
-              <CardContent className="p-5 relative z-10">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1.5">
-                    <p className="text-[10px] font-bold text-green-400 uppercase tracking-[0.2em] opacity-80">De Garde</p>
-                    <h3 className="text-4xl font-black tracking-tighter text-foreground">{onDutyCount}</h3>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-green-500/20 group-hover:bg-green-500/30 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 shadow-inner">
-                    <ShieldCheck className="h-7 w-7 text-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-                  </div>
-                </div>
-              </CardContent>
-              <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-green-500/10 rounded-full blur-3xl group-hover:bg-green-500/20 transition-all duration-700 animate-pulse-slow" />
-              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            </Card>
-
-            <Card className="relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 group bg-gradient-to-br from-blue-500/20 via-blue-500/10 to-transparent border-blue-500/30 backdrop-blur-sm shadow-lg shadow-blue-500/5">
-              <CardContent className="p-5 relative z-10">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1.5">
-                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.2em] opacity-80">Villes</p>
-                    <h3 className="text-4xl font-black tracking-tighter text-foreground">{new Set(pharmacies.map(p => p.city || p.ville)).size}</h3>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-blue-500/20 group-hover:bg-blue-500/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-inner">
-                    <MapPin className="h-7 w-7 text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-                  </div>
-                </div>
-              </CardContent>
-              <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all duration-700 animate-pulse-slow" />
-              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            </Card>
-
-            <Card 
-              className="relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 group bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-transparent border-amber-500/30 backdrop-blur-sm shadow-lg shadow-amber-500/5 cursor-pointer"
+          <div className="flex flex-wrap gap-3">
+            <PageStatCard
+              title="Pharmacies"
+              value={pharmacies.length}
+              icon={Pill}
+              description="Toutes les pharmacies"
+              variant="red"
+              onClick={() => {
+                setGardeFilter("all");
+                setSelectedRegion("all");
+                setSearchTerm("");
+              }}
+              clickable
+            />
+            <PageStatCard
+              title="De Garde"
+              value={onDutyCount}
+              icon={ShieldCheck}
+              description="24h/24 et nuit"
+              variant="green"
+              onClick={() => setGardeFilter(gardeFilter === "garde" ? "all" : "garde")}
+              clickable
+            />
+            <PageStatCard
+              title="Villes"
+              value={new Set(pharmacies.map(p => p.city || p.ville)).size}
+              icon={MapPin}
+              description="Couverture nationale"
+              variant="blue"
+            />
+            <PageStatCard
+              title="Urgence"
+              value="SOS"
+              icon={Activity}
+              description="Contacts d'urgence"
+              variant="amber"
               onClick={() => setLocation("/sos")}
-            >
-              <CardContent className="p-5 relative z-10">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1.5">
-                    <p className="text-[10px] font-bold text-amber-400 uppercase tracking-[0.2em] opacity-80">Urgence</p>
-                    <h3 className="text-4xl font-black tracking-tighter italic text-foreground">SOS</h3>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-amber-500/20 group-hover:bg-amber-500/30 group-hover:scale-125 transition-all duration-500 shadow-inner animate-pulse">
-                    <Activity className="h-7 w-7 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-                  </div>
-                </div>
-              </CardContent>
-              <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl group-hover:bg-amber-500/20 transition-all duration-700 animate-pulse-slow" />
-              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            </Card>
+              clickable
+            />
           </div>
 
           <div className="flex flex-col md:flex-row gap-4">
