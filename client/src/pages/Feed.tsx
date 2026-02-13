@@ -8,7 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Categorie, Signalement } from "@shared/schema";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
 
 export default function Feed() {
   const [filter, setFilter] = useState<Categorie | "tous">("tous");
@@ -44,6 +46,12 @@ export default function Feed() {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-6">
+        <Link href="/">
+          <Button variant="ghost" className="mb-4" data-testid="button-back-home">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Accueil
+          </Button>
+        </Link>
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Fil d'actualité</h1>
           <p className="text-muted-foreground">
