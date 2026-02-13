@@ -290,8 +290,11 @@ export default function Marches() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20">
+        <div className="flex flex-wrap gap-4 mb-6">
+          <Card 
+            className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20 cursor-pointer flex-1 min-w-[140px] ${selectedType === "all" ? "ring-2 ring-amber-500" : ""}`}
+            onClick={() => setSelectedType("all")}
+          >
             <CardContent className="p-4 relative z-10">
               <div className="flex items-center justify-between">
                 <div>
@@ -304,7 +307,10 @@ export default function Marches() {
               </div>
             </CardContent>
           </Card>
-          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+          <Card 
+            className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20 cursor-pointer flex-1 min-w-[140px] ${selectedType === "Quartier" ? "ring-2 ring-green-500" : ""}`}
+            onClick={() => setSelectedType("Quartier")}
+          >
             <CardContent className="p-4 relative z-10">
               <div className="flex items-center justify-between">
                 <div>
@@ -317,7 +323,10 @@ export default function Marches() {
               </div>
             </CardContent>
           </Card>
-          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
+          <Card 
+            className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20 cursor-pointer flex-1 min-w-[140px] ${selectedType === "Hebdomadaire" ? "ring-2 ring-blue-500" : ""}`}
+            onClick={() => setSelectedType("Hebdomadaire")}
+          >
             <CardContent className="p-4 relative z-10">
               <div className="flex items-center justify-between">
                 <div>
@@ -330,7 +339,7 @@ export default function Marches() {
               </div>
             </CardContent>
           </Card>
-          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
+          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20 flex-1 min-w-[140px]">
             <CardContent className="p-4 relative z-10">
               <div className="flex items-center justify-between">
                 <div>
@@ -343,7 +352,7 @@ export default function Marches() {
               </div>
             </CardContent>
           </Card>
-          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20">
+          <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20 flex-1 min-w-[140px]">
             <CardContent className="p-4 relative z-10">
               <div className="flex items-center justify-between">
                 <div>
