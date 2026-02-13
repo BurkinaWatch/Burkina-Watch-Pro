@@ -787,20 +787,13 @@ export default function Banques() {
 
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 relative z-50">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher une banque..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-10"
-                data-testid="input-search"
-              />
-              <VoiceSearchButton
-                onResult={setSearchQuery}
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-              />
-            </div>
+            <VoiceSearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Rechercher une banque..."
+              className="w-full"
+              data-testid="input-search"
+            />
 
             <div className="relative z-50">
               <Select value={selectedRegion} onValueChange={setSelectedRegion}>
