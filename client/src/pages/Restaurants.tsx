@@ -1,5 +1,5 @@
 import { PlacesListPage } from "@/components/PlacesListPage";
-import { Utensils, Star, Soup, UtensilsCrossed, Coffee, Store } from "lucide-react";
+import { Utensils, Star, Soup, Beer, Coffee, Store, Wine } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -18,11 +18,19 @@ export default function Restaurants() {
         hideDefaultStats={true}
         renderStats={(places) => {
           const specialized = places.filter(p => (p.tags as any)?.cuisine).length;
-          const maquisCount = places.filter(p => 
-            p.name.toLowerCase().includes('maquis') || 
-            (p.tags as any)?.amenity === 'bar' ||
-            (p.tags as any)?.cuisine === 'bar'
-          ).length;
+          const maquisCount = places.filter(p => {
+            const name = p.name.toLowerCase();
+            const tags = p.tags as any || {};
+            return name.includes('maquis') || 
+                   name.includes('bar') || 
+                   name.includes('cave') ||
+                   name.includes('vin') ||
+                   tags.amenity === 'bar' ||
+                   tags.cuisine === 'bar' ||
+                   tags.amenity === 'pub' ||
+                   tags.shop === 'wine' ||
+                   tags.shop === 'alcohol';
+          }).length;
           
           const cafeKiosqueCount = places.filter(p => {
             const tags = p.tags as any || {};
@@ -82,11 +90,11 @@ export default function Restaurants() {
                 <CardContent className="pt-4">
                   <div className="flex items-center gap-2">
                     <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-                      <UtensilsCrossed className="h-5 w-5 text-orange-600" />
+                      <Beer className="h-5 w-5 text-orange-600" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{maquisCount}</p>
-                      <p className="text-xs text-muted-foreground">Maquis/Bars</p>
+                      <p className="text-xs text-muted-foreground">Maquis, Bar & Cave</p>
                     </div>
                   </div>
                 </CardContent>
