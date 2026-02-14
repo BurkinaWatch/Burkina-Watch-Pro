@@ -58,6 +58,7 @@ const NotFound = lazy(() => import("@/pages/not-found"));
 const ChatBot = lazy(() => import("@/components/ChatBot"));
 const StationsService = lazy(() => import("@/pages/StationsService"));
 const Landing = lazy(() => import("@/pages/Landing"));
+const Guide = lazy(() => import("@/pages/Guide"));
 
 function PageLoader() {
   return (
@@ -116,6 +117,7 @@ function Router() {
         <Route path="/track/:shareToken" component={LiveTrack} />
         <Route path="/connexion" component={Connexion} />
         <Route path="/login" component={Connexion} />
+        <Route path="/guide" component={Guide} />
         <Route component={NotFound} />
       </Switch>
     </Suspense>

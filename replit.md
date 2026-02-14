@@ -19,6 +19,17 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 - **AI Integration**: Groq (llama-3.3-70b-versatile) for intelligent features.
 - **Data Sources**: OpenStreetMap (OSM) via Overpass API.
 
+## Recent Changes (Feb 14, 2026)
+- **Guide Utilisateur**: Comprehensive downloadable guide page with PDF export
+  - Page: /guide (client/src/pages/Guide.tsx)
+  - Visual PagePreview cards representing each app section with stat cards and data
+  - Print-optimized CSS for clean PDF generation via window.print()
+  - Covers all features: signalements, urgences, pharmacies, banques, stations, hotels, universites, transport, etc.
+  - "Telecharger en PDF" button at top and bottom
+  - Added to hamburger menu under "Informations & Engagement"
+  - 4-step "How to use" guide section
+  - Footer with generation date and attribution
+
 ## Recent Changes (Feb 9, 2026)
 - **Image Blur Editor**: Canvas-based face/object blurring for signalement images
   - Users can draw rectangles over faces or objects to pixelate them before publishing
