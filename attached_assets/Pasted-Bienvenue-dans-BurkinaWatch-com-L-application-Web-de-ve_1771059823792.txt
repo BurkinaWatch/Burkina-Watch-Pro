@@ -1,0 +1,110 @@
+Bienvenue dans BurkinaWatch.com
+
+L'application Web de veille citoyenne 100% Burkinabè.
+
+C'est une application utile et pratique que tout Burkinabè avec un Smartphone ou un Ordinateur devrait utiliser. Pourquoi ?
+
+🔵 NAVIGATION
+
+1* Accueil
+La page d’accueil centralise les informations principales et permet d’accéder rapidement à toutes les fonctionnalités de l’application.
+
+2* Carte Interactive
+Permet de visualiser, selon votre position, les zones où des alertes ou signalements ont été enregistrés.
+Elle permet d’identifier les zones sensibles et d’adapter ses trajets en fonction des alertes affichées.
+
+3* Signalements
+Les utilisateurs publient des signalements de bavures, d’abus ou de situations suspectes, visibles par l’ensemble de la communauté.
+
+4* Alerte SOS
+Permet d’envoyer instantanément votre position live via WhatsApp à un contact de votre choix en cas de danger.
+
+5* Classement
+Affiche les signalements ou contributions les plus consultés ou les plus récents selon les critères définis par l’application.
+
+🟡 SERVICES & ACTUALITÉS
+
+6* Actualités
+Donne accès aux informations officielles avec leurs sources clairement indiquées.
+
+7* Événements
+Permet de consulter les programmes, dates, lieux et détails des événements à l’avance.
+
+8* Suivi en Direct
+Lorsqu’il est activé, permet de retracer la trajectoire complète d’un utilisateur et de consulter son dernier emplacement enregistré.
+
+9* StreetView (Vision Structure 3D)
+Permet de générer une reconstitution visuelle ou 3D à partir des photos prises par l’utilisateur sur un lieu précis.
+
+🔴 URGENCES & SANTÉ
+
+10* Numéros d’Urgence
+Regroupe les contacts officiels : police, gendarmerie, ambulances, pompiers et autres services d’intervention.
+
+11* Pharmacies du Faso
+Répertorie les pharmacies dans tout le Burkina Faso, avec possibilité de filtrer par région et d’identifier les plus proches.
+
+12* Hôpitaux & Santé
+Regroupe les hôpitaux publics, privés et centres de santé.
+Permet de filtrer par région et d’identifier l’établissement médical le plus proche.
+
+🟢 VIE QUOTIDIENNE
+
+Toutes les catégories suivantes permettent :
+
+De répertorier les lieux dans tout le Burkina Faso
+
+De filtrer par région
+
+D’afficher les points les plus proches de votre position
+
+D’accéder aux informations essentielles rapidement
+
+13* Restaurants
+Affiche tous les restaurants répertoriés, avec filtrage par région et localisation des plus proches.
+
+14* Hôtels & Auberges
+Répertorie les établissements d’hébergement, avec filtrage par région et affichage des plus proches.
+
+15* Programme Ciné
+Permet de consulter les films à l’affiche et les salles disponibles.
+
+16* Marchés
+Classifiés par type : marchés à légumes, marchés de fruits, marchés de bétail ou marchés généralistes.
+Filtrage par région et affichage des plus proches.
+
+17* Boutiques
+Classifiées par catégories : électronique, vêtements, boutiques générales et commerces spécialisés.
+Filtrage par région et affichage des plus proches.
+
+18* Banques
+Répertorie les banques et agences bancaires, avec possibilité d’identifier celles situées le plus près.
+
+19* Stations-Service
+Permet de localiser les stations-service dans tout le pays et d’identifier la plus proche.
+
+20* Universités
+Liste les universités répertoriées avec filtrage par région.
+
+21* Gares Routières
+Permet d’identifier les gares classifiées par région et de localiser la plus proche.
+
+ℹ️ INFORMATIONS
+
+22* À propos
+Présente l’application et son fonctionnement.
+
+23* Conditions
+Permet de consulter les conditions d’utilisation de la plateforme.
+
+👤 MON COMPTE
+
+24* Contribuer
+Permet aux utilisateurs de soutenir les efforts de BurkinaWatch.
+Ils peuvent effectuer une contribution en espèces ou en nature afin d’aider au financement de l’hébergement, du développement et de la maintenance de la plateforme, qui reste accessible gratuitement.
+
+25* Mon Profil
+Permet de gérer ses informations personnelles et ses activités sur la plateforme.
+
+26* Se Déconnecter
+Permet de quitter son compte sécurisé.
