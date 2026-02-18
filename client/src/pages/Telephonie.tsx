@@ -401,19 +401,26 @@ export default function Telephonie() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {[
-                    { code: "*121#", desc: "Consulter le solde" },
-                    { code: "123*code#", desc: "Recharger avec carte" },
-                    { code: "*103#", desc: "Forfaits internet / appels / SMS" },
-                    { code: "*160*2#", desc: "Consulter consommation internet" },
-                    { code: "*303#", desc: "Transferer du credit" },
-                    { code: "*144#", desc: "Orange Money" },
-                    { code: "*144*2*3*agent*montant*PIN#", desc: "Retrait Orange Money" },
-                    { code: "3900", desc: "Service client" },
+                    { code: "*121#", desc: "Consulter le solde", dialable: true },
+                    { code: "123*code#", desc: "Recharger avec carte", dialable: false },
+                    { code: "*103#", desc: "Forfaits internet / appels / SMS", dialable: true },
+                    { code: "*160*2#", desc: "Consulter consommation internet", dialable: true },
+                    { code: "*303#", desc: "Transferer du credit", dialable: true },
+                    { code: "*144#", desc: "Orange Money", dialable: true },
+                    { code: "*144*2*3*agent*montant*PIN#", desc: "Retrait Orange Money", dialable: false },
+                    { code: "3900", desc: "Service client", dialable: true },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2 rounded-md bg-orange-500/5 border border-orange-500/10" data-testid={`code-orange-${i}`}>
+                    <a
+                      key={i}
+                      href={item.dialable ? `tel:${encodeURIComponent(item.code)}` : undefined}
+                      onClick={item.dialable ? undefined : (e) => e.preventDefault()}
+                      className={`flex items-center gap-3 p-2 rounded-md bg-orange-500/5 border border-orange-500/10 ${item.dialable ? "hover-elevate cursor-pointer" : "opacity-70 cursor-default"}`}
+                      data-testid={`code-orange-${i}`}
+                    >
                       <Badge className="bg-orange-500 text-white font-mono text-xs shrink-0 no-default-hover-elevate">{item.code}</Badge>
-                      <span className="text-xs text-foreground">{item.desc}</span>
-                    </div>
+                      <span className="text-xs text-foreground flex-1">{item.desc}</span>
+                      {item.dialable && <Phone className="h-3 w-3 text-orange-500 shrink-0" />}
+                    </a>
                   ))}
                 </div>
               </div>
@@ -425,19 +432,26 @@ export default function Telephonie() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {[
-                    { code: "*555*1#", desc: "Consulter le solde" },
-                    { code: "*100*code#", desc: "Recharger avec carte" },
-                    { code: "*200#", desc: "Forfaits internet / appels" },
-                    { code: "*200*12#", desc: "Verifier compatibilite 4G" },
-                    { code: "*555*3#", desc: "Transferer du credit" },
-                    { code: "*855#", desc: "Moov Money" },
-                    { code: "*855*1*1*1*num*montant*code#", desc: "Transfert Moov Money" },
-                    { code: "1102", desc: "Service client" },
+                    { code: "*555*1#", desc: "Consulter le solde", dialable: true },
+                    { code: "*100*code#", desc: "Recharger avec carte", dialable: false },
+                    { code: "*200#", desc: "Forfaits internet / appels", dialable: true },
+                    { code: "*200*12#", desc: "Verifier compatibilite 4G", dialable: true },
+                    { code: "*555*3#", desc: "Transferer du credit", dialable: true },
+                    { code: "*855#", desc: "Moov Money", dialable: true },
+                    { code: "*855*1*1*1*num*montant*code#", desc: "Transfert Moov Money", dialable: false },
+                    { code: "1102", desc: "Service client", dialable: true },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2 rounded-md bg-sky-600/5 border border-sky-600/10" data-testid={`code-moov-${i}`}>
+                    <a
+                      key={i}
+                      href={item.dialable ? `tel:${encodeURIComponent(item.code)}` : undefined}
+                      onClick={item.dialable ? undefined : (e) => e.preventDefault()}
+                      className={`flex items-center gap-3 p-2 rounded-md bg-sky-600/5 border border-sky-600/10 ${item.dialable ? "hover-elevate cursor-pointer" : "opacity-70 cursor-default"}`}
+                      data-testid={`code-moov-${i}`}
+                    >
                       <Badge className="bg-sky-600 text-white font-mono text-xs shrink-0 no-default-hover-elevate">{item.code}</Badge>
-                      <span className="text-xs text-foreground">{item.desc}</span>
-                    </div>
+                      <span className="text-xs text-foreground flex-1">{item.desc}</span>
+                      {item.dialable && <Phone className="h-3 w-3 text-sky-600 shrink-0" />}
+                    </a>
                   ))}
                 </div>
               </div>
@@ -449,21 +463,28 @@ export default function Telephonie() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {[
-                    { code: "*110#", desc: "Consulter le solde" },
-                    { code: "*109*code#", desc: "Recharger avec carte" },
-                    { code: "*160#", desc: "Forfaits internet (menu principal)" },
-                    { code: "*160*1*1#", desc: "Forfaits internet jour" },
-                    { code: "*160*1*2#", desc: "Forfaits internet semaine" },
-                    { code: "*160*1*4#", desc: "Forfaits nuit (00h-07h)" },
-                    { code: "*104#", desc: "Transferer du credit" },
-                    { code: "*444#", desc: "Bip gratuit (rappelez-moi)" },
-                    { code: "*633#", desc: "Services souscrits" },
-                    { code: "888", desc: "Service client" },
+                    { code: "*110#", desc: "Consulter le solde", dialable: true },
+                    { code: "*109*code#", desc: "Recharger avec carte", dialable: false },
+                    { code: "*160#", desc: "Forfaits internet (menu principal)", dialable: true },
+                    { code: "*160*1*1#", desc: "Forfaits internet jour", dialable: true },
+                    { code: "*160*1*2#", desc: "Forfaits internet semaine", dialable: true },
+                    { code: "*160*1*4#", desc: "Forfaits nuit (00h-07h)", dialable: true },
+                    { code: "*104#", desc: "Transferer du credit", dialable: true },
+                    { code: "*444#", desc: "Bip gratuit (rappelez-moi)", dialable: true },
+                    { code: "*633#", desc: "Services souscrits", dialable: true },
+                    { code: "888", desc: "Service client", dialable: true },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2 rounded-md bg-emerald-600/5 border border-emerald-600/10" data-testid={`code-telecel-${i}`}>
+                    <a
+                      key={i}
+                      href={item.dialable ? `tel:${encodeURIComponent(item.code)}` : undefined}
+                      onClick={item.dialable ? undefined : (e) => e.preventDefault()}
+                      className={`flex items-center gap-3 p-2 rounded-md bg-emerald-600/5 border border-emerald-600/10 ${item.dialable ? "hover-elevate cursor-pointer" : "opacity-70 cursor-default"}`}
+                      data-testid={`code-telecel-${i}`}
+                    >
                       <Badge className="bg-emerald-600 text-white font-mono text-xs shrink-0 no-default-hover-elevate">{item.code}</Badge>
-                      <span className="text-xs text-foreground">{item.desc}</span>
-                    </div>
+                      <span className="text-xs text-foreground flex-1">{item.desc}</span>
+                      {item.dialable && <Phone className="h-3 w-3 text-emerald-600 shrink-0" />}
+                    </a>
                   ))}
                 </div>
               </div>
