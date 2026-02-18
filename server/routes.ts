@@ -3015,7 +3015,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const ministresCount = ministeres.filter(m => m.rang === "Ministre").length;
       const deleguesCount = ministeres.filter(m => m.rang === "Ministre Delegue").length;
 
-      res.set('Cache-Control', 'public, max-age=3600');
+      res.set('Cache-Control', 'no-cache');
       res.json({
         institutions,
         ministeres,
