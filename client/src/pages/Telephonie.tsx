@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, Locate, Globe, Building2, Mail, Smartphone, Signal, Wifi } from "lucide-react";
+import { Search, MapPin, Phone, Clock, Navigation, ArrowLeft, RefreshCw, Locate, Globe, Building2, Mail, Smartphone, Signal, Wifi, Hash, ChevronDown, ChevronUp, Headphones, CreditCard, MessageSquare } from "lucide-react";
 import { VoiceSearchInput } from "@/components/VoiceSearchInput";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -115,6 +115,7 @@ export default function Telephonie() {
   const [showNearestOnly, setShowNearestOnly] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+  const [showCodesUSSD, setShowCodesUSSD] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
 
   const calculateDistance = useCallback((lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -374,6 +375,101 @@ export default function Telephonie() {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="mb-6" data-testid="card-codes-ussd">
+          <CardHeader
+            className="cursor-pointer pb-3"
+            onClick={() => setShowCodesUSSD(!showCodesUSSD)}
+          >
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Hash className="h-5 w-5 text-primary" />
+                Codes & Numeros utiles des operateurs
+              </CardTitle>
+              {showCodesUSSD ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+            </div>
+            {!showCodesUSSD && (
+              <p className="text-xs text-muted-foreground mt-1">Appuyez pour voir les codes USSD, numeros de service client et Mobile Money</p>
+            )}
+          </CardHeader>
+          {showCodesUSSD && (
+            <CardContent className="space-y-6 pt-0">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-3 h-3 rounded-full bg-orange-500" />
+                  <h3 className="text-sm font-bold">Orange Burkina</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    { code: "*121#", desc: "Consulter le solde" },
+                    { code: "123*code#", desc: "Recharger avec carte" },
+                    { code: "*103#", desc: "Forfaits internet / appels / SMS" },
+                    { code: "*160*2#", desc: "Consulter consommation internet" },
+                    { code: "*303#", desc: "Transferer du credit" },
+                    { code: "*144#", desc: "Orange Money" },
+                    { code: "*144*2*3*agent*montant*PIN#", desc: "Retrait Orange Money" },
+                    { code: "3900", desc: "Service client" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 p-2 rounded-md bg-orange-500/5 border border-orange-500/10" data-testid={`code-orange-${i}`}>
+                      <Badge className="bg-orange-500 text-white font-mono text-xs shrink-0 no-default-hover-elevate">{item.code}</Badge>
+                      <span className="text-xs text-foreground">{item.desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-3 h-3 rounded-full bg-sky-600" />
+                  <h3 className="text-sm font-bold">Moov Africa</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    { code: "*555*1#", desc: "Consulter le solde" },
+                    { code: "*100*code#", desc: "Recharger avec carte" },
+                    { code: "*200#", desc: "Forfaits internet / appels" },
+                    { code: "*200*12#", desc: "Verifier compatibilite 4G" },
+                    { code: "*555*3#", desc: "Transferer du credit" },
+                    { code: "*855#", desc: "Moov Money" },
+                    { code: "*855*1*1*1*num*montant*code#", desc: "Transfert Moov Money" },
+                    { code: "1102", desc: "Service client" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 p-2 rounded-md bg-sky-600/5 border border-sky-600/10" data-testid={`code-moov-${i}`}>
+                      <Badge className="bg-sky-600 text-white font-mono text-xs shrink-0 no-default-hover-elevate">{item.code}</Badge>
+                      <span className="text-xs text-foreground">{item.desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-3 h-3 rounded-full bg-emerald-600" />
+                  <h3 className="text-sm font-bold">Telecel Faso</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    { code: "*110#", desc: "Consulter le solde" },
+                    { code: "*109*code#", desc: "Recharger avec carte" },
+                    { code: "*160#", desc: "Forfaits internet (menu principal)" },
+                    { code: "*160*1*1#", desc: "Forfaits internet jour" },
+                    { code: "*160*1*2#", desc: "Forfaits internet semaine" },
+                    { code: "*160*1*4#", desc: "Forfaits nuit (00h-07h)" },
+                    { code: "*104#", desc: "Transferer du credit" },
+                    { code: "*444#", desc: "Bip gratuit (rappelez-moi)" },
+                    { code: "*633#", desc: "Services souscrits" },
+                    { code: "888", desc: "Service client" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 p-2 rounded-md bg-emerald-600/5 border border-emerald-600/10" data-testid={`code-telecel-${i}`}>
+                      <Badge className="bg-emerald-600 text-white font-mono text-xs shrink-0 no-default-hover-elevate">{item.code}</Badge>
+                      <span className="text-xs text-foreground">{item.desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          )}
+        </Card>
 
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 relative z-50">
