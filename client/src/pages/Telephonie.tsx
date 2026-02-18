@@ -201,6 +201,13 @@ export default function Telephonie() {
         }))
         .sort((a, b) => (a.distance || 0) - (b.distance || 0))
         .slice(0, 20);
+    } else {
+      const typeOrder: Record<string, number> = { "Direction": 0, "Agence Principale": 1, "Centre de Service": 2, "Boutique": 3, "Point de Vente": 4 };
+      result = [...result].sort((a, b) => {
+        const diff = (typeOrder[a.type] ?? 99) - (typeOrder[b.type] ?? 99);
+        if (diff !== 0) return diff;
+        return a.nom.localeCompare(b.nom);
+      });
     }
 
     return result;
