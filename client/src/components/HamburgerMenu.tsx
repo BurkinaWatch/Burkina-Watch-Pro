@@ -56,6 +56,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     { href: "/telephonie", icon: Smartphone, label: "Agences Telephonie", color: "text-orange-500 dark:text-orange-400" },
     { href: "/banques", icon: Landmark, label: "Banques", color: "text-blue-600 dark:text-blue-500" },
     { href: "/boutiques", icon: ShoppingBag, label: "Boutiques", color: "text-pink-600 dark:text-pink-500" },
+    { href: "/cimetieres", icon: Cross, label: "Cimetières", color: "text-slate-600 dark:text-slate-500" },
     { href: "/lieux-de-culte", icon: Heart, label: "Eglises & Mosquees", color: "text-emerald-600 dark:text-emerald-500" },
     { href: "/gares", icon: Bus, label: "Gares Routieres", color: "text-blue-600 dark:text-blue-500" },
     { href: "/hotels", icon: Hotel, label: "Hotels & Auberges", color: "text-indigo-600 dark:text-indigo-500" },
@@ -67,7 +68,6 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     { href: "/sonabel-onea", icon: Zap, label: "SONABEL & ONEA", color: "text-amber-500 dark:text-amber-400" },
     { href: "/stations", icon: Fuel, label: "Stations-Service", color: "text-red-600 dark:text-red-500" },
     { href: "/universites", icon: GraduationCap, label: "Universites", color: "text-indigo-600 dark:text-indigo-500" },
-    { href: "/cimetieres", icon: Cross, label: "Cimetieres", color: "text-slate-600 dark:text-slate-500" },
   ];
 
   // Informations & Engagement
