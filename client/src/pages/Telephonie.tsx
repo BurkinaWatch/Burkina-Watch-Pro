@@ -376,20 +376,25 @@ export default function Telephonie() {
           </Card>
         </div>
 
-        <Card className="mb-6" data-testid="card-codes-ussd">
+        <Card className="mb-6 border-2 border-orange-500/30 dark:border-orange-500/20" data-testid="card-codes-ussd">
           <CardHeader
-            className="cursor-pointer pb-3"
+            className="cursor-pointer pb-3 bg-gradient-to-r from-orange-500/10 via-sky-500/10 to-emerald-500/10 hover-elevate"
             onClick={() => setShowCodesUSSD(!showCodesUSSD)}
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <CardTitle className="text-base flex items-center gap-2">
-                <Hash className="h-5 w-5 text-primary" />
-                Codes & Numeros utiles des operateurs
+                <div className="p-1.5 rounded-md bg-gradient-to-br from-orange-500 via-sky-500 to-emerald-500">
+                  <Hash className="h-4 w-4 text-white" />
+                </div>
+                Codes USSD & Numeros utiles
               </CardTitle>
-              {showCodesUSSD ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs border-orange-500/30 text-orange-600 dark:text-orange-400">80+ codes</Badge>
+                {showCodesUSSD ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              </div>
             </div>
             {!showCodesUSSD && (
-              <p className="text-xs text-muted-foreground mt-1">Appuyez pour voir les codes USSD, numeros de service client et Mobile Money</p>
+              <p className="text-xs text-muted-foreground mt-1.5">Solde, forfaits, Orange Money, Moov Money, Telecel Money, SOS credit, renvoi d'appel...</p>
             )}
           </CardHeader>
           {showCodesUSSD && (
