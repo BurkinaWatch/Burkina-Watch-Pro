@@ -2203,6 +2203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   // ROUTES CHATBOT
   // ----------------------------------------
+  let chatStaticDataCache: any = null;
   const chatRequestSchema = insertChatMessageSchema.omit({ role: true });
 
   app.post("/api/chat", async (req: any, res) => {
@@ -2244,7 +2245,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const appContext: any = {};
       
       try {
-        // Récupérer les données pertinentes de l'application
         const [stats, recentSignalements] = await Promise.all([
           storage.getStats(),
           storage.getSignalements({ limit: 5 })
@@ -2253,15 +2253,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         appContext.stats = stats;
         appContext.signalements = recentSignalements;
         
-        // Importer les données statiques
-        const { PHARMACIES_DATA } = await import('./pharmaciesData');
-        const { EMERGENCY_SERVICES } = await import('./urgenciesService');
+        if (!chatStaticDataCache) {
+          const [
+            { PHARMACIES_DATA },
+            { EMERGENCY_SERVICES },
+            { PRESIDENCE_PRIMATURE, MINISTERES },
+            { ALL_AGENCES_TELEPHONIE },
+            { BANQUES_DATA },
+            { GOUVERNORATS, HAUTS_COMMISSARIATS, MAIRIES, PREFECTURES },
+            { ALL_AGENCES },
+            { RESTAURANTS_DATA },
+            { UNIVERSITES_DATA },
+          ] = await Promise.all([
+            import('./pharmaciesData'),
+            import('./urgenciesService'),
+            import('./ministeresData'),
+            import('./telephonieData'),
+            import('./banquesData'),
+            import('./mairiesPrefecturesData'),
+            import('./sonabelOneaData'),
+            import('./restaurantsData'),
+            import('./universitesData'),
+          ]);
+          chatStaticDataCache = {
+            pharmacies: PHARMACIES_DATA,
+            urgences: EMERGENCY_SERVICES,
+            ministeres: [...PRESIDENCE_PRIMATURE, ...MINISTERES],
+            telephonie: ALL_AGENCES_TELEPHONIE,
+            banques: BANQUES_DATA,
+            mairiesPrefectures: [...GOUVERNORATS, ...HAUTS_COMMISSARIATS, ...MAIRIES, ...PREFECTURES],
+            sonabelOnea: ALL_AGENCES,
+            restaurants: RESTAURANTS_DATA,
+            universites: UNIVERSITES_DATA,
+          };
+        }
         
-        appContext.pharmacies = PHARMACIES_DATA;
-        appContext.urgences = EMERGENCY_SERVICES;
+        Object.assign(appContext, chatStaticDataCache);
       } catch (contextError) {
         console.error("Erreur récupération contexte:", contextError);
-        // Continuer même si le contexte n'est pas disponible
       }
 
       // Appeler le service IA (Gemini avec fallback Groq) avec le contexte

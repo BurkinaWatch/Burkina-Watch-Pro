@@ -261,7 +261,7 @@ export default function ChatBot() {
           </Button>
         </div>
         <p className="text-[10px] md:text-xs text-white/90 mt-1">
-          Votre assistant pour signaler et rester en sécurité
+          Navigation, numeros, lieux, codes USSD et plus
         </p>
       </CardHeader>
 
@@ -276,27 +276,21 @@ export default function ChatBot() {
             <div className="flex flex-col items-center justify-center h-full text-center p-3 md:p-6 space-y-2 md:space-y-4">
               <Shield className="w-12 h-12 md:w-16 md:h-16 text-primary/30" />
               <div>
-                <h3 className="font-semibold text-base md:text-lg mb-1 md:mb-2">Bonjour ! 👋</h3>
+                <h3 className="font-semibold text-base md:text-lg mb-1 md:mb-2">Bienvenue !</h3>
                 <p className="text-xs md:text-sm text-muted-foreground">
-                  Je suis là pour vous aider à utiliser Burkina Watch.
+                  Je connais toute l'application et peux vous guider.
                 </p>
                 <p className="text-[10px] md:text-xs text-muted-foreground mt-1 md:mt-2">
-                  Posez-moi des questions sur :
+                  Demandez-moi par exemple :
                 </p>
                 <ul className="text-[10px] md:text-xs text-muted-foreground mt-1 md:mt-2 space-y-0.5 md:space-y-1">
-                  <li>• Comment créer un signalement</li>
-                  <li>• Les conseils de sécurité</li>
-                  <li>• Comment fonctionne l'anonymat</li>
-                  <li>• Les numéros d'urgence</li>
+                  <li>- Numero du ministere de la sante ?</li>
+                  <li>- Comment consulter mon solde Orange ?</li>
+                  <li>- Ou trouver une pharmacie proche ?</li>
+                  <li>- Comment envoyer de l'argent via Orange Money ?</li>
+                  <li>- Numeros d'urgence au Burkina</li>
+                  <li>- Ou trouver la mairie la plus proche ?</li>
                 </ul>
-                <p className="text-xs text-muted-foreground mt-3 flex items-center gap-2">
-                  <span>Propulsé par:</span>
-                  <span className="flex items-center gap-1">
-                    <span>🟢 Gemini</span>
-                    <span className="text-muted-foreground/50">|</span>
-                    <span>🔵 Groq</span>
-                  </span>
-                </p>
               </div>
             </div>
           ) : null}
