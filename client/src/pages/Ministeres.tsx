@@ -123,6 +123,11 @@ export default function Ministeres() {
       <Helmet>
         <title>Ministeres du Burkina Faso - Burkina Watch</title>
         <meta name="description" content="Annuaire complet des ministeres du Burkina Faso - Contacts, attributions et informations detaillees" />
+        <meta property="og:title" content="Ministeres du Burkina Faso - Burkina Watch" />
+        <meta property="og:description" content="Annuaire complet des ministeres du Burkina Faso - Contacts, attributions et informations detaillees" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="/ministeres" />
+        <meta name="twitter:card" content="summary" />
       </Helmet>
       <Header />
       
