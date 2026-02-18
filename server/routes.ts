@@ -2985,9 +2985,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/ministeres", async (req, res) => {
     try {
       const { rang, search } = req.query;
-      const { MINISTERES } = await import("./ministeresData");
+      const { MINISTERES, PRESIDENCE_PRIMATURE } = await import("./ministeresData");
 
       let ministeres = [...MINISTERES];
+      const institutions = [...PRESIDENCE_PRIMATURE];
 
       if (search) {
         const query = (search as string).toLowerCase();
@@ -3016,6 +3017,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.set('Cache-Control', 'public, max-age=3600');
       res.json({
+        institutions,
         ministeres,
         total: ministeres.length,
         ministresEtat,

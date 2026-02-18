@@ -3,7 +3,7 @@ export interface Ministere {
   nom: string;
   nomCourt: string;
   ministre: string;
-  rang: "Ministre d'Etat" | "Ministre" | "Ministre Delegue";
+  rang: "Presidence" | "Primature" | "Ministre d'Etat" | "Ministre" | "Ministre Delegue";
   domaines: string[];
   adresse: string;
   quartier: string;
@@ -19,7 +19,142 @@ export interface Ministere {
   porteparole?: boolean;
   gardeDesSceaux?: boolean;
   attributions: string[];
+  titreComplet?: string;
+  dateNomination?: string;
+  biographie?: string[];
+  reseauxSociaux?: { plateforme: string; url: string }[];
+  servicesRattaches?: string[];
 }
+
+export const PRESIDENCE_PRIMATURE: Ministere[] = [
+  {
+    id: "presidence-du-faso",
+    nom: "Presidence du Faso",
+    nomCourt: "Presidence",
+    ministre: "Capitaine Ibrahim TRAORE",
+    rang: "Presidence",
+    titreComplet: "President du Faso, Chef de l'Etat, Chef Supreme des Forces Armees Nationales",
+    dateNomination: "21 octobre 2022",
+    domaines: ["Chef de l'Etat", "Defense nationale", "Politique etrangere", "Unite nationale", "Transition"],
+    adresse: "Palais de Kosyam, Avenue Charles de Gaulle",
+    quartier: "Ouaga 2000",
+    ville: "Ouagadougou",
+    telephone: "+226 25 30 66 30",
+    telephoneSecondaire: "+226 25 30 66 31",
+    email: "contact@presidencedufaso.bf",
+    website: "https://www.presidencedufaso.bf",
+    bp: "BP 03 Ouagadougou 03",
+    horaires: "Lun-Ven: 07h30-12h30, 15h00-17h30",
+    latitude: 12.3433,
+    longitude: -1.5094,
+    biographie: [
+      "Ne le 1er octobre 1988 a Tambarga (province de la Kompienga)",
+      "Capitaine de l'Armee de terre du Burkina Faso",
+      "Formation a l'Academie militaire Georges Namoano de Po",
+      "Artilleur de formation, officier des Forces speciales",
+      "Chef de l'Etat depuis le 30 septembre 2022",
+      "Plus jeune chef d'Etat au monde lors de sa prise de fonction (34 ans)",
+      "Prestation de serment le 21 octobre 2022 devant le Conseil constitutionnel"
+    ],
+    reseauxSociaux: [
+      { plateforme: "Twitter/X", url: "https://x.com/presidencebf" },
+      { plateforme: "Twitter/X Personnel", url: "https://x.com/CapitaineIb226" },
+      { plateforme: "Instagram", url: "https://www.instagram.com/president_ibrahim_traore/" },
+      { plateforme: "Facebook", url: "https://www.facebook.com/PresidenceBF" },
+      { plateforme: "YouTube", url: "https://www.youtube.com/@presidencedufaso" }
+    ],
+    servicesRattaches: [
+      "Secretariat general de la Presidence du Faso",
+      "Cabinet civil du President du Faso",
+      "Cabinet militaire du President du Faso",
+      "Etat-Major particulier du President du Faso",
+      "Direction de la Communication presidentielle",
+      "Conseil superieur de la Defense nationale",
+      "Haut Conseil pour la Reconciliation et l'Unite nationale",
+      "Conseil economique et social",
+      "Conseil constitutionnel",
+      "Comite national de la Transition",
+      "Mediateur du Faso",
+      "Commission electorale nationale independante (CENI)",
+      "Autorite superieure de controle d'Etat et de lutte contre la corruption (ASCE-LC)"
+    ],
+    attributions: [
+      "Chef de l'Etat et garant de l'unite nationale",
+      "Chef Supreme des Forces Armees Nationales",
+      "Conduite de la Transition",
+      "Politique de defense et de securite",
+      "Politique etrangere et cooperation internationale",
+      "Nomination aux hautes fonctions civiles et militaires",
+      "Presidence du Conseil des ministres",
+      "Promulgation des lois",
+      "Droit de grace",
+      "Accreditation des ambassadeurs",
+      "Garant de l'independance de la justice"
+    ]
+  },
+  {
+    id: "primature",
+    nom: "Primature du Burkina Faso",
+    nomCourt: "Primature",
+    ministre: "Rimtalba Jean Emmanuel OUEDRAOGO",
+    rang: "Primature",
+    titreComplet: "Premier Ministre, Chef du Gouvernement",
+    dateNomination: "7 decembre 2024",
+    domaines: ["Chef du Gouvernement", "Coordination gouvernementale", "Politique generale", "Action gouvernementale"],
+    adresse: "Avenue de l'Independance",
+    quartier: "Centre-ville",
+    ville: "Ouagadougou",
+    telephone: "+226 25 32 48 89",
+    telephoneSecondaire: "+226 25 33 62 65",
+    email: "contact@primature.gov.bf",
+    website: "https://primature.gov.bf",
+    bp: "BP 7027 Ouagadougou 03",
+    horaires: "Lun-Ven: 07h30-12h30, 15h00-17h30",
+    latitude: 12.3686,
+    longitude: -1.5246,
+    porteparole: false,
+    biographie: [
+      "Ne le 26 decembre 1980",
+      "Journaliste et homme de medias de formation",
+      "Diplome en Sciences et Techniques de l'Information et de la Communication (CSTIC cycle A)",
+      "Licence en Sociologie rurale et sociologie du developpement",
+      "Master en mediation et gestion des conflits (Universite de Ouagadougou)",
+      "Ex-Directeur de la Television nationale du Burkina (RTB)",
+      "Ex-Redacteur en chef de la Television du Burkina (2016-2021)",
+      "Ex-Ministre d'Etat en charge de la Communication, de la Culture, des Arts et du Tourisme (2022-2024)",
+      "Ex-Porte-parole du Gouvernement (2022-2024)",
+      "Animateur des emissions: Sur la Breche, Techno Inno, Zoommine, Vision environnement",
+      "Nomme Premier Ministre le 7 decembre 2024"
+    ],
+    reseauxSociaux: [
+      { plateforme: "Site officiel", url: "https://primature.gov.bf" },
+      { plateforme: "Gouvernement", url: "https://gouvernement.gov.bf" }
+    ],
+    servicesRattaches: [
+      "Secretariat general du Gouvernement et du Conseil des ministres",
+      "Cabinet du Premier Ministre",
+      "Direction generale des etudes et des statistiques sectorielles",
+      "Service d'information du Gouvernement (SIG)",
+      "Autorite de regulation des communications electroniques et des postes (ARCEP)",
+      "Commission de l'informatique et des libertes (CIL)",
+      "Conseil national de lutte contre le SIDA (CNLS)",
+      "Coordination nationale de lutte contre la fraude",
+      "Comite national de pilotage du Plan national de developpement economique et social (PNDES II)"
+    ],
+    attributions: [
+      "Chef du Gouvernement",
+      "Coordination de l'action gouvernementale",
+      "Execution de la politique de la Nation",
+      "Direction de l'administration publique",
+      "Application des lois et reglements",
+      "Presidence du Conseil de cabinet",
+      "Proposition de nomination des membres du Gouvernement",
+      "Convocation des reunions interministerielles",
+      "Suivi de l'execution des decisions du Conseil des ministres",
+      "Relations avec les institutions de la Republique"
+    ]
+  }
+];
 
 export const MINISTERES: Ministere[] = [
   {
