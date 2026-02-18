@@ -53,21 +53,21 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
 
   // Vie Quotidienne - Restaurants et Commerces
   const vieQuotidienneItems = [
-    { href: "/restaurants", icon: Utensils, label: "Restaurants", color: "text-amber-600 dark:text-amber-500" },
-    { href: "/hotels", icon: Hotel, label: "Hôtels & Auberges", color: "text-indigo-600 dark:text-indigo-500" },
-    { href: "/cine", icon: Film, label: "Programme Ciné", color: "text-pink-600 dark:text-pink-500" },
-    { href: "/marches", icon: Store, label: "Marches", color: "text-amber-700 dark:text-amber-400" },
-    { href: "/boutiques", icon: ShoppingBag, label: "Boutiques", color: "text-pink-600 dark:text-pink-500" },
-    { href: "/banques", icon: Landmark, label: "Banques", color: "text-blue-600 dark:text-blue-500" },
-    { href: "/stations", icon: Fuel, label: "Stations-Service", color: "text-red-600 dark:text-red-500" },
-    { href: "/universites", icon: GraduationCap, label: "Universités", color: "text-indigo-600 dark:text-indigo-500" },
-    { href: "/gares", icon: Bus, label: "Gares Routieres", color: "text-blue-600 dark:text-blue-500" },
-    { href: "/cimetieres", icon: Cross, label: "Cimetieres", color: "text-slate-600 dark:text-slate-500" },
-    { href: "/sonabel-onea", icon: Zap, label: "SONABEL & ONEA", color: "text-amber-500 dark:text-amber-400" },
-    { href: "/mairies-prefectures", icon: Landmark, label: "Mairies & Prefectures", color: "text-blue-600 dark:text-blue-500" },
     { href: "/telephonie", icon: Smartphone, label: "Agences Telephonie", color: "text-orange-500 dark:text-orange-400" },
-    { href: "/ministeres", icon: Building2, label: "Ministeres", color: "text-red-600 dark:text-red-500" },
+    { href: "/banques", icon: Landmark, label: "Banques", color: "text-blue-600 dark:text-blue-500" },
+    { href: "/boutiques", icon: ShoppingBag, label: "Boutiques", color: "text-pink-600 dark:text-pink-500" },
     { href: "/lieux-de-culte", icon: Heart, label: "Eglises & Mosquees", color: "text-emerald-600 dark:text-emerald-500" },
+    { href: "/gares", icon: Bus, label: "Gares Routieres", color: "text-blue-600 dark:text-blue-500" },
+    { href: "/hotels", icon: Hotel, label: "Hotels & Auberges", color: "text-indigo-600 dark:text-indigo-500" },
+    { href: "/mairies-prefectures", icon: Landmark, label: "Mairies & Prefectures", color: "text-blue-600 dark:text-blue-500" },
+    { href: "/marches", icon: Store, label: "Marches", color: "text-amber-700 dark:text-amber-400" },
+    { href: "/ministeres", icon: Building2, label: "Ministeres", color: "text-red-600 dark:text-red-500" },
+    { href: "/cine", icon: Film, label: "Programme Cine", color: "text-pink-600 dark:text-pink-500" },
+    { href: "/restaurants", icon: Utensils, label: "Restaurants", color: "text-amber-600 dark:text-amber-500" },
+    { href: "/sonabel-onea", icon: Zap, label: "SONABEL & ONEA", color: "text-amber-500 dark:text-amber-400" },
+    { href: "/stations", icon: Fuel, label: "Stations-Service", color: "text-red-600 dark:text-red-500" },
+    { href: "/universites", icon: GraduationCap, label: "Universites", color: "text-indigo-600 dark:text-indigo-500" },
+    { href: "/cimetieres", icon: Cross, label: "Cimetieres", color: "text-slate-600 dark:text-slate-500" },
   ];
 
   // Informations & Engagement
