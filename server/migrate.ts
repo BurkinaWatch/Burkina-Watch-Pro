@@ -1,6 +1,5 @@
-
 import { db } from "./db";
-import { migrate } from "drizzle-orm/neon-http/migrator";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
 
 async function runMigrations() {
   console.log("Running migrations...");
