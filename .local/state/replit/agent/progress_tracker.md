@@ -49,3 +49,4 @@ Additional completed tasks:
 [x] 47. Reinstalled tsx package, reinstalled dependencies, and verified application running with all services initialized (Feb 12, 2026)
 [x] 48. Reinstalled dependencies, recreated PostgreSQL database, pushed schema, and verified application running with all services initialized (Feb 18, 2026)
 [x] 49. Migrated database from Neon to Railway PostgreSQL - exported all 29 tables and 35,482+ records, switched driver from @neondatabase/serverless to pg (node-postgres), configured RAILWAY_DATABASE_URL, verified application running successfully (Feb 18, 2026)
+[x] 50. Imported user data from external Neon database - 24 users, 1 signalement, 6 chat messages, 1 commentaire, 2 likes, 23 notifications, 82 online sessions, 5 notification preferences, 2 panic alerts, 3 tracking sessions, 1 audit log (Feb 18, 2026)
