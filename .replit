@@ -49,7 +49,6 @@ expertMode = true
 [userenv]
 
 [userenv.shared]
-VITE_GOOGLE_MAPS_API_KEY = "AIzaSyBZQjm2KVXX9FZW4sd9ZVv6JVKOZPQ31KY"
 VAPID_PUBLIC_KEY = "BKU1jyFb2AnQ9xzEs6NYkinUZhuFLTzBxhQ99LAASEvxrCXpYtSyMJB8eIUHdLNGo70DTGUBbwMdXnWFuFwVAoo"
 VITE_VAPID_PUBLIC_KEY = "BKU1jyFb2AnQ9xzEs6NYkinUZhuFLTzBxhQ99LAASEvxrCXpYtSyMJB8eIUHdLNGo70DTGUBbwMdXnWFuFwVAoo"
 RAILWAY_DATABASE_URL = "postgresql://postgres:DQOaxgYeIozBTTLlQiwvQAXGyveLPjZO@shinkansen.proxy.rlwy.net:25133/railway"
