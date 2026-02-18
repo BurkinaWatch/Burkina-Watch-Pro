@@ -173,6 +173,10 @@ const PLACE_TYPE_QUERIES: Record<string, string> = {
   viewpoint: `["tourism"="viewpoint"]`,
   artwork: `["tourism"="artwork"]`,
   
+  // Cimetières
+  cemetery: `["landuse"="cemetery"]`,
+  grave_yard: `["amenity"="grave_yard"]`,
+
   // Espaces verts
   park: `["leisure"="park"]`,
   garden: `["leisure"="garden"]`,

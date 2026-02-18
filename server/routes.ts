@@ -483,6 +483,48 @@ function transformOsmToUniversity(place: Place) {
   };
 }
 
+function transformOsmToCimetiere(place: Place) {
+  const tags = place.tags as Record<string, string> || {};
+  const name = place.name || tags.name || tags["name:fr"] || "Cimetiere";
+
+  let type = "Municipal";
+  const nameLower = name.toLowerCase();
+  if (tags.religion === "muslim" || tags.religion === "islam" || nameLower.includes("musulman") || nameLower.includes("islam")) {
+    type = "Musulman";
+  } else if (tags.religion === "christian" || nameLower.includes("chretien") || nameLower.includes("catholique") || nameLower.includes("protestant")) {
+    type = "Chretien";
+  } else if (tags.religion === "animist" || nameLower.includes("traditionnel")) {
+    type = "Traditionnel";
+  } else if (tags.ownership === "private" || nameLower.includes("prive")) {
+    type = "Prive";
+  } else if (tags.denomination || tags.religion) {
+    type = "Religieux";
+  }
+
+  return {
+    id: `osm-cim-${place.id}`,
+    nom: name,
+    type,
+    adresse: place.address || tags["addr:full"] || tags["addr:street"] || "Burkina Faso",
+    quartier: place.quartier || tags["addr:suburb"] || "Quartier non specifie",
+    ville: place.ville || tags["addr:city"] || "Ville non specifiee",
+    region: place.region || "Region non specifiee",
+    latitude: parseFloat(place.latitude),
+    longitude: parseFloat(place.longitude),
+    telephone: place.telephone || tags.phone || tags["contact:phone"] || undefined,
+    horaires: place.horaires || tags.opening_hours || "06:00 - 18:00",
+    superficie: tags.area ? `${Math.round(parseFloat(tags.area))} m2` : undefined,
+    gestionnaire: tags.operator || undefined,
+    religion: tags.religion || undefined,
+    denomination: tags.denomination || undefined,
+    website: place.website || tags.website || undefined,
+    source: "OSM" as const,
+    placeId: place.id,
+    confirmations: place.confirmations || 0,
+    reports: place.reports || 0,
+  };
+}
+
 function mapOsmBrandToMarque(brand: string): string {
   const brandLower = brand.toLowerCase();
   if (brandLower.includes("total")) return "TotalEnergies";
@@ -2660,6 +2702,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erreur récupération marchés:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des marchés" });
+    }
+  });
+
+  // ----------------------------------------
+  // ROUTES CIMETIERES
+  // ----------------------------------------
+  app.get("/api/cimetieres", async (req, res) => {
+    try {
+      const { region, search } = req.query;
+
+      const [cemeteries, graveYards] = await Promise.all([
+        overpassService.getPlaces({ placeType: "cemetery" }),
+        overpassService.getPlaces({ placeType: "grave_yard" })
+      ]);
+
+      let allPlaces = [
+        ...(cemeteries.places || []),
+        ...(graveYards.places || [])
+      ];
+
+      if (allPlaces.length < 5) {
+        console.log("[API] Peu de cimetieres trouves, lancement de la synchronisation OSM...");
+        try {
+          await Promise.all([
+            overpassService.syncPlaceType("cemetery"),
+            overpassService.syncPlaceType("grave_yard")
+          ]);
+          const [retryCem, retryGrave] = await Promise.all([
+            overpassService.getPlaces({ placeType: "cemetery" }),
+            overpassService.getPlaces({ placeType: "grave_yard" })
+          ]);
+          allPlaces = [
+            ...(retryCem.places || []),
+            ...(retryGrave.places || [])
+          ];
+        } catch (syncError) {
+          console.error("Erreur sync cimetieres:", syncError);
+        }
+      }
+
+      const uniqueIds = new Set<string>();
+      const uniquePlaces = allPlaces.filter(p => {
+        const key = `${p.latitude}-${p.longitude}`;
+        if (uniqueIds.has(key)) return false;
+        uniqueIds.add(key);
+        return true;
+      });
+
+      let cimetieres = uniquePlaces.map(p => transformOsmToCimetiere(p));
+
+      if (search) {
+        const query = (search as string).toLowerCase();
+        cimetieres = cimetieres.filter(c =>
+          c.nom.toLowerCase().includes(query) ||
+          c.ville.toLowerCase().includes(query) ||
+          c.quartier.toLowerCase().includes(query)
+        );
+      }
+      if (region && region !== "all") {
+        cimetieres = cimetieres.filter(c => c.region === region);
+      }
+
+      cimetieres.sort((a, b) => a.nom.localeCompare(b.nom));
+
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json({ cimetieres, total: cimetieres.length });
+    } catch (error) {
+      console.error("Erreur recuperation cimetieres:", error);
+      res.status(500).json({ error: "Erreur lors de la recuperation des cimetieres" });
     }
   });
 

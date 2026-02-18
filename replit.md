@@ -19,6 +19,18 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 - **AI Integration**: Groq (llama-3.3-70b-versatile) for intelligent features.
 - **Data Sources**: OpenStreetMap (OSM) via Overpass API.
 
+## Recent Changes (Feb 18, 2026)
+- **Cimetieres Page**: Full cemetery directory from OpenStreetMap data
+  - OSM queries: cemetery (landuse=cemetery) + grave_yard (amenity=grave_yard)
+  - 322+ cemeteries across Burkina Faso with auto-sync on first load
+  - Types: Municipal, Musulman, Chretien, Traditionnel, Prive, Religieux (auto-detected from OSM tags)
+  - Map view with colored markers per type, search, region/type filters, geolocation "Les plus proches"
+  - LocationValidator integration for community location verification
+  - Endpoint: GET /api/cimetieres
+  - Files: client/src/pages/Cimetieres.tsx, server/routes.ts (transformOsmToCimetiere), server/overpassService.ts
+  - Added to HamburgerMenu under "Vie Quotidienne"
+  - Route: /cimetieres
+
 ## Recent Changes (Feb 14, 2026)
 - **Guide Utilisateur**: Comprehensive downloadable guide page with PDF export
   - Page: /guide (client/src/pages/Guide.tsx)
