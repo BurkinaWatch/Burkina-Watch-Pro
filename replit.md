@@ -20,6 +20,18 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 - **Data Sources**: OpenStreetMap (OSM) via Overpass API.
 
 ## Recent Changes (Feb 18, 2026)
+- **SONABEL & ONEA Page**: Complete directory of utility company agencies
+  - 59 agencies: 34 SONABEL (electricity) + 25 ONEA (water/sanitation) across 29 cities
+  - Types: Siege, Direction Regionale, Agence Commerciale, Centre, Antenne
+  - Emergency hotline numbers: SONABEL 80 00 11 30, ONEA 80 00 11 11
+  - Full contact details: phone, secondary phone, email, website, hours, services
+  - Map with color-coded markers (amber=SONABEL, blue=ONEA)
+  - Filters: societe, region, type, search, geolocation "Les plus proches"
+  - Data file: server/sonabelOneaData.ts (comprehensive static data)
+  - Endpoint: GET /api/sonabel-onea
+  - Page: client/src/pages/SonabelOnea.tsx
+  - Route: /sonabel-onea
+  - Added to HamburgerMenu under "Vie Quotidienne"
 - **Cimetieres Page**: Full cemetery directory from OpenStreetMap data
   - OSM queries: cemetery (landuse=cemetery) + grave_yard (amenity=grave_yard)
   - 322+ cemeteries across Burkina Faso with auto-sync on first load

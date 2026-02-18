@@ -2706,6 +2706,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----------------------------------------
+  // ROUTES SONABEL & ONEA
+  // ----------------------------------------
+  app.get("/api/sonabel-onea", async (req, res) => {
+    try {
+      const { region, societe, type, search } = req.query;
+      const { ALL_AGENCES } = await import("./sonabelOneaData");
+
+      let agences = [...ALL_AGENCES];
+
+      if (search) {
+        const query = (search as string).toLowerCase();
+        agences = agences.filter(a =>
+          a.nom.toLowerCase().includes(query) ||
+          a.ville.toLowerCase().includes(query) ||
+          a.quartier.toLowerCase().includes(query) ||
+          a.adresse.toLowerCase().includes(query) ||
+          a.services.some(s => s.toLowerCase().includes(query))
+        );
+      }
+      if (societe && societe !== "all") {
+        agences = agences.filter(a => a.societe === societe);
+      }
+      if (type && type !== "all") {
+        agences = agences.filter(a => a.type === type);
+      }
+      if (region && region !== "all") {
+        agences = agences.filter(a => a.region === region);
+      }
+
+      agences.sort((a, b) => {
+        const typeOrder: Record<string, number> = { "Siege": 0, "Direction Regionale": 1, "Agence Commerciale": 2, "Centre": 3, "Antenne": 4 };
+        const diff = (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99);
+        if (diff !== 0) return diff;
+        return a.nom.localeCompare(b.nom);
+      });
+
+      const sonabelCount = agences.filter(a => a.societe === "SONABEL").length;
+      const oneaCount = agences.filter(a => a.societe === "ONEA").length;
+      const villes = new Set(agences.map(a => a.ville));
+
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json({
+        agences,
+        total: agences.length,
+        sonabelCount,
+        oneaCount,
+        villesCount: villes.size,
+      });
+    } catch (error) {
+      console.error("Erreur recuperation agences SONABEL/ONEA:", error);
+      res.status(500).json({ error: "Erreur lors de la recuperation des agences" });
+    }
+  });
+
+  // ----------------------------------------
   // ROUTES CIMETIERES
   // ----------------------------------------
   app.get("/api/cimetieres", async (req, res) => {
