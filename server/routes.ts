@@ -2706,6 +2706,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----------------------------------------
+  // ROUTES MAIRIES & PREFECTURES
+  // ----------------------------------------
+  app.get("/api/mairies-prefectures", async (req, res) => {
+    try {
+      const { region, type, search, province } = req.query;
+      const { ALL_INSTITUTIONS } = await import("./mairiesPrefecturesData");
+
+      let institutions = [...ALL_INSTITUTIONS];
+
+      if (search) {
+        const query = (search as string).toLowerCase();
+        institutions = institutions.filter(i =>
+          i.nom.toLowerCase().includes(query) ||
+          i.ville.toLowerCase().includes(query) ||
+          i.province.toLowerCase().includes(query) ||
+          i.adresse.toLowerCase().includes(query) ||
+          i.services.some(s => s.toLowerCase().includes(query))
+        );
+      }
+      if (type && type !== "all") {
+        institutions = institutions.filter(i => i.type === type);
+      }
+      if (region && region !== "all") {
+        institutions = institutions.filter(i => i.region === region);
+      }
+      if (province && province !== "all") {
+        institutions = institutions.filter(i => i.province === province);
+      }
+
+      institutions.sort((a, b) => {
+        const typeOrder: Record<string, number> = { "Gouvernorat": 0, "Haut-Commissariat": 1, "Prefecture": 2, "Mairie": 3 };
+        const diff = (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99);
+        if (diff !== 0) return diff;
+        return a.nom.localeCompare(b.nom);
+      });
+
+      const mairieCount = institutions.filter(i => i.type === "Mairie").length;
+      const prefectureCount = institutions.filter(i => i.type === "Prefecture").length;
+      const hautCommCount = institutions.filter(i => i.type === "Haut-Commissariat").length;
+      const gouvernoratCount = institutions.filter(i => i.type === "Gouvernorat").length;
+      const villes = new Set(institutions.map(i => i.ville));
+
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json({
+        institutions,
+        total: institutions.length,
+        mairieCount,
+        prefectureCount,
+        hautCommCount,
+        gouvernoratCount,
+        villesCount: villes.size,
+      });
+    } catch (error) {
+      console.error("Erreur recuperation mairies/prefectures:", error);
+      res.status(500).json({ error: "Erreur lors de la recuperation des institutions" });
+    }
+  });
+
+  // ----------------------------------------
   // ROUTES SONABEL & ONEA
   // ----------------------------------------
   app.get("/api/sonabel-onea", async (req, res) => {

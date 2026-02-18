@@ -61,6 +61,7 @@ const Landing = lazy(() => import("@/pages/Landing"));
 const Guide = lazy(() => import("@/pages/Guide"));
 const Cimetieres = lazy(() => import("@/pages/Cimetieres"));
 const SonabelOnea = lazy(() => import("@/pages/SonabelOnea"));
+const MairiesPrefectures = lazy(() => import("@/pages/MairiesPrefectures"));
 
 function PageLoader() {
   return (
@@ -113,6 +114,7 @@ function Router() {
         <Route path="/hotels" component={Hotels} />
         <Route path="/cimetieres" component={Cimetieres} />
         <Route path="/sonabel-onea" component={SonabelOnea} />
+        <Route path="/mairies-prefectures" component={MairiesPrefectures} />
         <Route path="/a-propos" component={APropos} />
         <Route path="/fiabilite" component={Fiabilite} />
         <Route path="/conditions" component={Conditions} />

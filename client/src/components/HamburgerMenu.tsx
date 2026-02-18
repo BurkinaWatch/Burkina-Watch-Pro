@@ -64,6 +64,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     { href: "/gares", icon: Bus, label: "Gares Routieres", color: "text-blue-600 dark:text-blue-500" },
     { href: "/cimetieres", icon: Cross, label: "Cimetieres", color: "text-slate-600 dark:text-slate-500" },
     { href: "/sonabel-onea", icon: Zap, label: "SONABEL & ONEA", color: "text-amber-500 dark:text-amber-400" },
+    { href: "/mairies-prefectures", icon: Landmark, label: "Mairies & Prefectures", color: "text-blue-600 dark:text-blue-500" },
   ];
 
   // Informations & Engagement

@@ -20,6 +20,17 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
 - **Data Sources**: OpenStreetMap (OSM) via Overpass API.
 
 ## Recent Changes (Feb 18, 2026)
+- **Mairies & Prefectures Page**: Complete directory of government institutions
+  - 136 institutions: 57 Mairies + 17 Prefectures + 45 Hauts-Commissariats + 17 Gouvernorats across 51 cities
+  - Types: Gouvernorat, Haut-Commissariat, Prefecture, Mairie (color-coded: red, purple, blue, green)
+  - All 17 regional Gouvernorats, all 45 provincial Hauts-Commissariats
+  - Major city Mairies including Ouagadougou arrondissements (1-6), Bobo-Dioulasso, all province capitals
+  - Services: Etat civil, Urbanisme, Affaires foncieres, Mariages, Securite, Autorisations
+  - Data file: server/mairiesPrefecturesData.ts (comprehensive static data)
+  - Endpoint: GET /api/mairies-prefectures
+  - Page: client/src/pages/MairiesPrefectures.tsx
+  - Route: /mairies-prefectures
+  - Added to HamburgerMenu under "Vie Quotidienne"
 - **SONABEL & ONEA Page**: Complete directory of utility company agencies
   - 59 agencies: 34 SONABEL (electricity) + 25 ONEA (water/sanitation) across 29 cities
   - Types: Siege, Direction Regionale, Agence Commerciale, Centre, Antenne
