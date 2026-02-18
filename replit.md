@@ -31,6 +31,17 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
   - Page: client/src/pages/MairiesPrefectures.tsx
   - Route: /mairies-prefectures
   - Added to HamburgerMenu under "Vie Quotidienne"
+- **Agences Telephonie Mobile Page**: Complete directory of mobile phone operator agencies
+  - 61 agencies: 23 Orange Burkina + 22 Moov Africa + 16 Telecel Faso across 19 cities
+  - Types: Direction, Agence Principale, Centre de Service, Boutique, Point de Vente
+  - Operators color-coded: Orange=orange, Moov=sky blue, Telecel=emerald green
+  - Map with colored markers, search, filters (operateur, region, type), geolocation
+  - Services: Abonnements, SIM, Recharges, Mobile Money (Orange Money/Moov Money/Telecel Cash), Internet, Smartphones, SAV
+  - Data file: server/telephonieData.ts
+  - Endpoint: GET /api/telephonie
+  - Page: client/src/pages/Telephonie.tsx
+  - Route: /telephonie
+  - Added to HamburgerMenu under "Vie Quotidienne"
 - **SONABEL & ONEA Page**: Complete directory of utility company agencies
   - 59 agencies: 34 SONABEL (electricity) + 25 ONEA (water/sanitation) across 29 cities
   - Types: Siege, Direction Regionale, Agence Commerciale, Centre, Antenne

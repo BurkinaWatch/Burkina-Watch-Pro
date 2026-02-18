@@ -2819,6 +2819,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/telephonie", async (req, res) => {
+    try {
+      const { region, operateur, type, search } = req.query;
+      const { ALL_AGENCES_TELEPHONIE } = await import("./telephonieData");
+
+      let agences = [...ALL_AGENCES_TELEPHONIE];
+
+      if (search) {
+        const query = (search as string).toLowerCase();
+        agences = agences.filter(a =>
+          a.nom.toLowerCase().includes(query) ||
+          a.ville.toLowerCase().includes(query) ||
+          a.quartier.toLowerCase().includes(query) ||
+          a.adresse.toLowerCase().includes(query) ||
+          a.operateur.toLowerCase().includes(query) ||
+          a.services.some(s => s.toLowerCase().includes(query))
+        );
+      }
+      if (operateur && operateur !== "all") {
+        agences = agences.filter(a => a.operateur === operateur);
+      }
+      if (type && type !== "all") {
+        agences = agences.filter(a => a.type === type);
+      }
+      if (region && region !== "all") {
+        agences = agences.filter(a => a.region === region);
+      }
+
+      agences.sort((a, b) => {
+        const typeOrder: Record<string, number> = { "Direction": 0, "Agence Principale": 1, "Centre de Service": 2, "Boutique": 3, "Point de Vente": 4 };
+        const diff = (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99);
+        if (diff !== 0) return diff;
+        return a.nom.localeCompare(b.nom);
+      });
+
+      const orangeCount = agences.filter(a => a.operateur === "Orange Burkina").length;
+      const moovCount = agences.filter(a => a.operateur === "Moov Africa").length;
+      const telecelCount = agences.filter(a => a.operateur === "Telecel Faso").length;
+      const villes = new Set(agences.map(a => a.ville));
+
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json({
+        agences,
+        total: agences.length,
+        orangeCount,
+        moovCount,
+        telecelCount,
+        villesCount: villes.size,
+      });
+    } catch (error) {
+      console.error("Erreur recuperation agences telephonie:", error);
+      res.status(500).json({ error: "Erreur lors de la recuperation des agences de telephonie" });
+    }
+  });
+
   // ----------------------------------------
   // ROUTES CIMETIERES
   // ----------------------------------------
