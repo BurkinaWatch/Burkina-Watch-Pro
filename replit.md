@@ -31,6 +31,18 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
   - Page: client/src/pages/MairiesPrefectures.tsx
   - Route: /mairies-prefectures
   - Added to HamburgerMenu under "Vie Quotidienne"
+- **Eglises & Mosquees Page**: Complete directory of religious places from OpenStreetMap
+  - 5,000+ places of worship across Burkina Faso (auto-synced from OSM)
+  - Types: Mosquee, Grande Mosquee, Medersa, Eglise, Cathedrale, Basilique, Paroisse, Chapelle, Temple, Lieu sacre
+  - Religions: Islam, Catholique, Protestant/Evangelique, Chretien, Traditionnel
+  - Smart type detection from OSM tags (religion, denomination, building, name patterns)
+  - Map view with color-coded markers (green=Islam, blue=Catholic, purple=Protestant, amber=Traditional)
+  - Filters: religion, type, region, search, geolocation "Les plus proches"
+  - LocationValidator integration for community location verification
+  - Endpoint: GET /api/lieux-de-culte
+  - Page: client/src/pages/LieuxDeCulte.tsx
+  - Route: /lieux-de-culte
+  - Added to HamburgerMenu under "Vie Quotidienne"
 - **Ministeres Page**: Complete directory of all government ministries
   - 24 ministries: 3 Ministres d'Etat + 18 Ministres + 3 Ministres Delegues
   - Current government: PM Rimtalba Jean Emmanuel OUEDRAOGO (Jan 2026 reshuffle)

@@ -525,6 +525,103 @@ function transformOsmToCimetiere(place: Place) {
   };
 }
 
+function transformOsmToLieuDeCulte(place: Place) {
+  const tags = place.tags as Record<string, string> || {};
+  const name = place.name || tags.name || tags["name:fr"] || tags["name:en"] || tags.operator || "Lieu de culte";
+  const nameLower = name.toLowerCase();
+  const religion = (tags.religion || "").toLowerCase();
+  const denomination = (tags.denomination || "").toLowerCase();
+  const building = (tags.building || "").toLowerCase();
+
+  let type = "Autre";
+  let religionLabel = "Autre";
+
+  if (religion === "muslim" || religion === "islam" || nameLower.includes("mosquee") || nameLower.includes("mosquée") || nameLower.includes("mosque") || nameLower.includes("masjid") || nameLower.includes("jama") || nameLower.includes("مسجد")) {
+    religionLabel = "Islam";
+    if (nameLower.includes("grande mosquee") || nameLower.includes("grande mosquée") || nameLower.includes("jama") || nameLower.includes("friday") || tags["mosque:type"] === "jami") {
+      type = "Grande Mosquee";
+    } else if (nameLower.includes("medersa") || nameLower.includes("madrasa") || nameLower.includes("ecole coranique") || nameLower.includes("école coranique")) {
+      type = "Medersa";
+    } else {
+      type = "Mosquee";
+    }
+  } else if (religion === "christian" || religion === "christianity" || nameLower.includes("eglise") || nameLower.includes("église") || nameLower.includes("church") || nameLower.includes("paroisse") || nameLower.includes("cathedrale") || nameLower.includes("cathédrale") || nameLower.includes("temple") || nameLower.includes("chapelle") || nameLower.includes("basilique")) {
+    if (denomination.includes("catholic") || denomination.includes("catholique") || nameLower.includes("catholique") || nameLower.includes("paroisse") || nameLower.includes("cathedrale") || nameLower.includes("cathédrale") || nameLower.includes("basilique")) {
+      religionLabel = "Catholique";
+    } else if (denomination.includes("protestant") || denomination.includes("evangel") || denomination.includes("baptist") || denomination.includes("methodist") || denomination.includes("pentecost") || denomination.includes("assembl") || nameLower.includes("protestant") || nameLower.includes("evangel") || nameLower.includes("pentecot") || nameLower.includes("assemblee")) {
+      religionLabel = "Protestant / Evangelique";
+    } else {
+      religionLabel = "Chretien";
+    }
+
+    if (nameLower.includes("cathedrale") || nameLower.includes("cathédrale") || building === "cathedral") {
+      type = "Cathedrale";
+    } else if (nameLower.includes("basilique")) {
+      type = "Basilique";
+    } else if (nameLower.includes("paroisse")) {
+      type = "Paroisse";
+    } else if (nameLower.includes("chapelle")) {
+      type = "Chapelle";
+    } else if (nameLower.includes("temple")) {
+      type = "Temple";
+    } else {
+      type = "Eglise";
+    }
+  } else if (religion === "animist" || nameLower.includes("animiste") || nameLower.includes("fetiche") || nameLower.includes("fétiche") || nameLower.includes("sacre") || nameLower.includes("sacré")) {
+    religionLabel = "Traditionnel";
+    type = "Lieu sacre";
+  } else {
+    if (nameLower.includes("mosquee") || nameLower.includes("mosquée")) {
+      religionLabel = "Islam";
+      type = "Mosquee";
+    } else if (nameLower.includes("eglise") || nameLower.includes("église")) {
+      religionLabel = "Chretien";
+      type = "Eglise";
+    } else if (nameLower.includes("temple")) {
+      religionLabel = "Chretien";
+      type = "Temple";
+    }
+  }
+
+  const services: string[] = [];
+  if (tags.service_times) services.push("Offices reguliers");
+  if (tags.community_centre) services.push("Centre communautaire");
+  if (nameLower.includes("paroisse") || denomination.includes("catholic")) services.push("Sacrements");
+  if (type === "Medersa") services.push("Enseignement coranique");
+  if (type === "Grande Mosquee") services.push("Priere du vendredi");
+  if (type === "Cathedrale" || type === "Basilique") services.push("Siege episcopal");
+
+  return {
+    id: `osm-culte-${place.id}`,
+    nom: name,
+    type,
+    religion: religionLabel,
+    denomination: tags.denomination || undefined,
+    adresse: place.address || tags["addr:full"] || tags["addr:street"] || "Burkina Faso",
+    quartier: place.quartier || tags["addr:suburb"] || "Quartier non specifie",
+    ville: place.ville || tags["addr:city"] || "Ville non specifiee",
+    region: place.region || "Region non specifiee",
+    latitude: parseFloat(place.latitude),
+    longitude: parseFloat(place.longitude),
+    telephone: place.telephone || tags.phone || tags["contact:phone"] || undefined,
+    email: tags.email || tags["contact:email"] || undefined,
+    website: place.website || tags.website || tags["contact:website"] || undefined,
+    horaires: place.horaires || tags.opening_hours || tags.service_times || undefined,
+    operateur: tags.operator || undefined,
+    capacite: tags.capacity ? parseInt(tags.capacity) : undefined,
+    anneeConstruction: tags.start_date || tags["building:year"] || undefined,
+    description: tags.description || tags["description:fr"] || undefined,
+    wikidata: tags.wikidata || undefined,
+    wikipedia: tags.wikipedia || undefined,
+    image: tags.image || tags.wikimedia_commons || undefined,
+    services,
+    source: "OSM" as const,
+    placeId: place.id,
+    confirmations: place.confirmations || 0,
+    reports: place.reports || 0,
+  };
+}
+
 function mapOsmBrandToMarque(brand: string): string {
   const brandLower = brand.toLowerCase();
   if (brandLower.includes("total")) return "TotalEnergies";
@@ -2816,6 +2913,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erreur recuperation agences SONABEL/ONEA:", error);
       res.status(500).json({ error: "Erreur lors de la recuperation des agences" });
+    }
+  });
+
+  app.get("/api/lieux-de-culte", async (req, res) => {
+    try {
+      const { region, type, religion, search } = req.query;
+
+      let response = await overpassService.getPlaces({ placeType: "place_of_worship" });
+      let allPlaces = response.places || [];
+
+      if (allPlaces.length < 10) {
+        console.log("[API] Peu de lieux de culte trouves, lancement de la synchronisation OSM...");
+        try {
+          await overpassService.syncPlaceType("place_of_worship");
+          response = await overpassService.getPlaces({ placeType: "place_of_worship" });
+          allPlaces = response.places || [];
+        } catch (syncError) {
+          console.error("Erreur sync lieux de culte:", syncError);
+        }
+      }
+
+      const uniqueIds = new Set<string>();
+      const uniquePlaces = allPlaces.filter(p => {
+        const key = `${p.latitude}-${p.longitude}`;
+        if (uniqueIds.has(key)) return false;
+        uniqueIds.add(key);
+        return true;
+      });
+
+      let lieux = uniquePlaces.map(p => transformOsmToLieuDeCulte(p));
+
+      if (search) {
+        const query = (search as string).toLowerCase();
+        lieux = lieux.filter(l =>
+          l.nom.toLowerCase().includes(query) ||
+          l.ville.toLowerCase().includes(query) ||
+          l.quartier.toLowerCase().includes(query) ||
+          l.type.toLowerCase().includes(query) ||
+          l.religion.toLowerCase().includes(query)
+        );
+      }
+      if (region && region !== "all") {
+        lieux = lieux.filter(l => l.region === region);
+      }
+      if (type && type !== "all") {
+        lieux = lieux.filter(l => l.type === type);
+      }
+      if (religion && religion !== "all") {
+        lieux = lieux.filter(l => l.religion === religion);
+      }
+
+      lieux.sort((a, b) => a.nom.localeCompare(b.nom));
+
+      const stats = {
+        total: lieux.length,
+        mosquees: lieux.filter(l => l.religion === "Islam").length,
+        eglises: lieux.filter(l => ["Catholique", "Protestant / Evangelique", "Chretien"].includes(l.religion)).length,
+        traditionnels: lieux.filter(l => l.religion === "Traditionnel").length,
+        autres: lieux.filter(l => l.religion === "Autre").length,
+      };
+
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json({ lieux, ...stats });
+    } catch (error) {
+      console.error("Erreur recuperation lieux de culte:", error);
+      res.status(500).json({ error: "Erreur lors de la recuperation des lieux de culte" });
     }
   });
 

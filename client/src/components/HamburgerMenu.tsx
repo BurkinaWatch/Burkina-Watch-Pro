@@ -67,6 +67,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     { href: "/mairies-prefectures", icon: Landmark, label: "Mairies & Prefectures", color: "text-blue-600 dark:text-blue-500" },
     { href: "/telephonie", icon: Smartphone, label: "Agences Telephonie", color: "text-orange-500 dark:text-orange-400" },
     { href: "/ministeres", icon: Building2, label: "Ministeres", color: "text-red-600 dark:text-red-500" },
+    { href: "/lieux-de-culte", icon: Heart, label: "Eglises & Mosquees", color: "text-emerald-600 dark:text-emerald-500" },
   ];
 
   // Informations & Engagement
