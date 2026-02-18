@@ -63,6 +63,7 @@ const Cimetieres = lazy(() => import("@/pages/Cimetieres"));
 const SonabelOnea = lazy(() => import("@/pages/SonabelOnea"));
 const MairiesPrefectures = lazy(() => import("@/pages/MairiesPrefectures"));
 const Telephonie = lazy(() => import("@/pages/Telephonie"));
+const Ministeres = lazy(() => import("@/pages/Ministeres"));
 
 function PageLoader() {
   return (
@@ -117,6 +118,7 @@ function Router() {
         <Route path="/sonabel-onea" component={SonabelOnea} />
         <Route path="/mairies-prefectures" component={MairiesPrefectures} />
         <Route path="/telephonie" component={Telephonie} />
+        <Route path="/ministeres" component={Ministeres} />
         <Route path="/a-propos" component={APropos} />
         <Route path="/fiabilite" component={Fiabilite} />
         <Route path="/conditions" component={Conditions} />

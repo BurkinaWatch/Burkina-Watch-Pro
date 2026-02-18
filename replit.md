@@ -31,6 +31,18 @@ A comprehensive security and emergency assistance platform for Burkina Faso.
   - Page: client/src/pages/MairiesPrefectures.tsx
   - Route: /mairies-prefectures
   - Added to HamburgerMenu under "Vie Quotidienne"
+- **Ministeres Page**: Complete directory of all government ministries
+  - 24 ministries: 3 Ministres d'Etat + 18 Ministres + 3 Ministres Delegues
+  - Current government: PM Rimtalba Jean Emmanuel OUEDRAOGO (Jan 2026 reshuffle)
+  - Each ministry: minister name, rank, domains, address, phone, email, website, attributions
+  - Expandable cards with full contact details and action buttons (call, email, navigate)
+  - Stat cards as filters by rank, search by name/minister/domain/attribution
+  - Special badges: Porte-parole, Garde des Sceaux
+  - Data file: server/ministeresData.ts
+  - Endpoint: GET /api/ministeres
+  - Page: client/src/pages/Ministeres.tsx
+  - Route: /ministeres
+  - Added to HamburgerMenu under "Vie Quotidienne"
 - **Agences Telephonie Mobile Page**: Complete directory of mobile phone operator agencies
   - 61 agencies: 23 Orange Burkina + 22 Moov Africa + 16 Telecel Faso across 19 cities
   - Types: Direction, Agence Principale, Centre de Service, Boutique, Point de Vente

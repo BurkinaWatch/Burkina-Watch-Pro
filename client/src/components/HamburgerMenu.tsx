@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Link, useLocation } from "wouter";
-import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Cross, Newspaper, Calendar, Navigation, Sparkles, Bell, Shield, Camera, Utensils, ShoppingBag, Fuel, Store, Landmark, Bus, Film, Hospital, GraduationCap, Trophy, Hotel, BookOpen, Zap, Smartphone } from "lucide-react";
+import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Cross, Newspaper, Calendar, Navigation, Sparkles, Bell, Shield, Camera, Utensils, ShoppingBag, Fuel, Store, Landmark, Bus, Film, Hospital, GraduationCap, Trophy, Hotel, BookOpen, Zap, Smartphone, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -66,6 +66,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     { href: "/sonabel-onea", icon: Zap, label: "SONABEL & ONEA", color: "text-amber-500 dark:text-amber-400" },
     { href: "/mairies-prefectures", icon: Landmark, label: "Mairies & Prefectures", color: "text-blue-600 dark:text-blue-500" },
     { href: "/telephonie", icon: Smartphone, label: "Agences Telephonie", color: "text-orange-500 dark:text-orange-400" },
+    { href: "/ministeres", icon: Building2, label: "Ministeres", color: "text-red-600 dark:text-red-500" },
   ];
 
   // Informations & Engagement

@@ -2819,6 +2819,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/ministeres", async (req, res) => {
+    try {
+      const { rang, search } = req.query;
+      const { MINISTERES } = await import("./ministeresData");
+
+      let ministeres = [...MINISTERES];
+
+      if (search) {
+        const query = (search as string).toLowerCase();
+        ministeres = ministeres.filter(m =>
+          m.nom.toLowerCase().includes(query) ||
+          m.nomCourt.toLowerCase().includes(query) ||
+          m.ministre.toLowerCase().includes(query) ||
+          m.domaines.some(d => d.toLowerCase().includes(query)) ||
+          m.attributions.some(a => a.toLowerCase().includes(query))
+        );
+      }
+      if (rang && rang !== "all") {
+        ministeres = ministeres.filter(m => m.rang === rang);
+      }
+
+      const rangOrder: Record<string, number> = { "Ministre d'Etat": 0, "Ministre": 1, "Ministre Delegue": 2 };
+      ministeres.sort((a, b) => {
+        const diff = (rangOrder[a.rang] ?? 99) - (rangOrder[b.rang] ?? 99);
+        if (diff !== 0) return diff;
+        return a.nom.localeCompare(b.nom);
+      });
+
+      const ministresEtat = ministeres.filter(m => m.rang === "Ministre d'Etat").length;
+      const ministresCount = ministeres.filter(m => m.rang === "Ministre").length;
+      const deleguesCount = ministeres.filter(m => m.rang === "Ministre Delegue").length;
+
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.json({
+        ministeres,
+        total: ministeres.length,
+        ministresEtat,
+        ministresCount,
+        deleguesCount,
+      });
+    } catch (error) {
+      console.error("Erreur recuperation ministeres:", error);
+      res.status(500).json({ error: "Erreur lors de la recuperation des ministeres" });
+    }
+  });
+
   app.get("/api/telephonie", async (req, res) => {
     try {
       const { region, operateur, type, search } = req.query;
