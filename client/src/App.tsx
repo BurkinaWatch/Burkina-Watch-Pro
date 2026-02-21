@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { StealthModeProvider } from "@/components/StealthModeProvider";
 import { HelmetProvider } from "react-helmet-async";
 import { useAuth } from "@/hooks/useAuth";
+import AuthGuard from "@/components/AuthGuard";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { InteractiveTutorial } from "@/components/InteractiveTutorial";
 import { WifiOff, Loader2 } from "lucide-react";
@@ -95,32 +96,32 @@ function Router() {
         <Route path="/classement" component={Leaderboard} />
         <Route path="/tracking-live" component={TrackingLive} />
         <Route path="/contribuer" component={Contribuer} />
-        <Route path="/pharmacies" component={PharmaciesDuFaso} />
-        <Route path="/pharmacies-ii" component={PharmaciesDuFaso} />
-        <Route path="/pharmacies-garde" component={PharmaciesDuFaso} />
-        <Route path="/urgences" component={Urgences} />
+        <Route path="/pharmacies">{() => <AuthGuard><PharmaciesDuFaso /></AuthGuard>}</Route>
+        <Route path="/pharmacies-ii">{() => <AuthGuard><PharmaciesDuFaso /></AuthGuard>}</Route>
+        <Route path="/pharmacies-garde">{() => <AuthGuard><PharmaciesDuFaso /></AuthGuard>}</Route>
+        <Route path="/urgences">{() => <AuthGuard><Urgences /></AuthGuard>}</Route>
         <Route path="/bulletin" component={Bulletin} />
         <Route path="/events" component={Events} />
         <Route path="/streetview" component={StreetView} />
         <Route path="/ouaga3d" component={Ouaga3D} />
-        <Route path="/restaurants" component={Restaurants} />
-        <Route path="/boutiques-marches" component={BoutiquesMarchés} />
-        <Route path="/marches" component={Marches} />
-        <Route path="/boutiques" component={Boutiques} />
-        <Route path="/banques" component={Banques} />
-        <Route path="/stations" component={Stations} />
-        <Route path="/hopitaux" component={Hopitaux} />
-        <Route path="/universites" component={Universites} />
-        <Route path="/gares" component={Gares} />
-        <Route path="/cine" component={Cine} />
-        <Route path="/meteo" component={Weather} />
-        <Route path="/hotels" component={Hotels} />
-        <Route path="/cimetieres" component={Cimetieres} />
-        <Route path="/sonabel-onea" component={SonabelOnea} />
-        <Route path="/mairies-prefectures" component={MairiesPrefectures} />
-        <Route path="/telephonie" component={Telephonie} />
-        <Route path="/ministeres" component={Ministeres} />
-        <Route path="/lieux-de-culte" component={LieuxDeCulte} />
+        <Route path="/restaurants">{() => <AuthGuard><Restaurants /></AuthGuard>}</Route>
+        <Route path="/boutiques-marches">{() => <AuthGuard><BoutiquesMarchés /></AuthGuard>}</Route>
+        <Route path="/marches">{() => <AuthGuard><Marches /></AuthGuard>}</Route>
+        <Route path="/boutiques">{() => <AuthGuard><Boutiques /></AuthGuard>}</Route>
+        <Route path="/banques">{() => <AuthGuard><Banques /></AuthGuard>}</Route>
+        <Route path="/stations">{() => <AuthGuard><Stations /></AuthGuard>}</Route>
+        <Route path="/hopitaux">{() => <AuthGuard><Hopitaux /></AuthGuard>}</Route>
+        <Route path="/universites">{() => <AuthGuard><Universites /></AuthGuard>}</Route>
+        <Route path="/gares">{() => <AuthGuard><Gares /></AuthGuard>}</Route>
+        <Route path="/cine">{() => <AuthGuard><Cine /></AuthGuard>}</Route>
+        <Route path="/meteo">{() => <AuthGuard><Weather /></AuthGuard>}</Route>
+        <Route path="/hotels">{() => <AuthGuard><Hotels /></AuthGuard>}</Route>
+        <Route path="/cimetieres">{() => <AuthGuard><Cimetieres /></AuthGuard>}</Route>
+        <Route path="/sonabel-onea">{() => <AuthGuard><SonabelOnea /></AuthGuard>}</Route>
+        <Route path="/mairies-prefectures">{() => <AuthGuard><MairiesPrefectures /></AuthGuard>}</Route>
+        <Route path="/telephonie">{() => <AuthGuard><Telephonie /></AuthGuard>}</Route>
+        <Route path="/ministeres">{() => <AuthGuard><Ministeres /></AuthGuard>}</Route>
+        <Route path="/lieux-de-culte">{() => <AuthGuard><LieuxDeCulte /></AuthGuard>}</Route>
         <Route path="/a-propos" component={APropos} />
         <Route path="/fiabilite" component={Fiabilite} />
         <Route path="/conditions" component={Conditions} />
