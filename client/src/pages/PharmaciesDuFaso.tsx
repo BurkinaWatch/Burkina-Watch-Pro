@@ -32,11 +32,21 @@ import { Helmet } from "react-helmet-async";
 import { REGION_NAMES } from "@/lib/regions";
 import { LocationValidator } from "@/components/LocationValidator";
 
+type VilleGarde = "Ouagadougou" | "Bobo-Dioulasso" | "Koudougou" | "Ouahigouya" | "Fada N'Gourma";
+
+const VILLES_GARDE: { value: VilleGarde; label: string; short: string }[] = [
+  { value: "Ouagadougou", label: "Ouagadougou", short: "Ouaga" },
+  { value: "Bobo-Dioulasso", label: "Bobo-Dioulasso", short: "Bobo" },
+  { value: "Koudougou", label: "Koudougou", short: "Koudou" },
+  { value: "Ouahigouya", label: "Ouahigouya", short: "Ouahi" },
+  { value: "Fada N'Gourma", label: "Fada N'Gourma", short: "Fada" },
+];
+
 interface PharmacieDeGardeAPI {
   nom: string;
   telephone: string;
-  groupe: 1 | 2 | 3 | 4;
-  ville: "Ouagadougou" | "Bobo-Dioulasso";
+  groupe: number;
+  ville: VilleGarde;
   adresse?: string;
   latitude?: number;
   longitude?: number;
@@ -46,6 +56,7 @@ interface GardeResponse {
   date: string;
   groupeOuagadougou: number;
   groupeBobo: number;
+  groupesParVille: Record<string, { groupe: number; totalGroupes: number }>;
   periodeDebut: string;
   periodeFin: string;
   pharmacies: PharmacieDeGardeAPI[];
@@ -60,7 +71,7 @@ export default function PharmaciesDuFaso() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [sortByDistance, setSortByDistance] = useState(false);
   const [showGardeSection, setShowGardeSection] = useState(true);
-  const [gardeVille, setGardeVille] = useState<"Ouagadougou" | "Bobo-Dioulasso">("Ouagadougou");
+  const [gardeVille, setGardeVille] = useState<VilleGarde>("Ouagadougou");
   const [gardeSearchTerm, setGardeSearchTerm] = useState("");
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -312,7 +323,7 @@ export default function PharmaciesDuFaso() {
                       <CardTitle className="text-lg font-bold flex items-center gap-2">
                         Pharmacies de Garde
                         <Badge className="bg-green-600 text-white border-none text-xs">
-                          Groupe {gardeVille === "Ouagadougou" ? gardeData.groupeOuagadougou : gardeData.groupeBobo}
+                          Groupe {gardeData.groupesParVille?.[gardeVille]?.groupe ?? gardeData.groupeOuagadougou}
                         </Badge>
                       </CardTitle>
                       <CardDescription className="flex items-center gap-1.5 mt-0.5">
@@ -332,26 +343,23 @@ export default function PharmaciesDuFaso() {
               
               {showGardeSection && (
                 <CardContent className="p-4 pt-2 space-y-3">
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <div className="flex gap-2">
-                      <Button
-                        variant={gardeVille === "Ouagadougou" ? "default" : "outline"}
-                        size="sm"
-                        className={gardeVille === "Ouagadougou" ? "bg-green-600" : ""}
-                        onClick={() => setGardeVille("Ouagadougou")}
-                        data-testid="button-garde-ouaga"
-                      >
-                        Ouagadougou (Gr. {gardeData.groupeOuagadougou})
-                      </Button>
-                      <Button
-                        variant={gardeVille === "Bobo-Dioulasso" ? "default" : "outline"}
-                        size="sm"
-                        className={gardeVille === "Bobo-Dioulasso" ? "bg-green-600" : ""}
-                        onClick={() => setGardeVille("Bobo-Dioulasso")}
-                        data-testid="button-garde-bobo"
-                      >
-                        Bobo-Dioulasso (Gr. {gardeData.groupeBobo})
-                      </Button>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex flex-wrap gap-1.5">
+                      {VILLES_GARDE.map((v) => {
+                        const grp = gardeData.groupesParVille?.[v.value];
+                        return (
+                          <Button
+                            key={v.value}
+                            variant={gardeVille === v.value ? "default" : "outline"}
+                            size="sm"
+                            className={gardeVille === v.value ? "bg-green-600" : ""}
+                            onClick={() => setGardeVille(v.value)}
+                            data-testid={`button-garde-${v.short.toLowerCase()}`}
+                          >
+                            {v.short} (Gr. {grp?.groupe ?? "?"})
+                          </Button>
+                        );
+                      })}
                     </div>
                     <div className="flex-1">
                       <Input

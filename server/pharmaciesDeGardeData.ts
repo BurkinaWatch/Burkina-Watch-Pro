@@ -3,15 +3,30 @@
 // Mise à jour: Décembre 2024
 // Les pharmacies sont organisées en 4 groupes qui assurent la garde à tour de rôle chaque semaine
 
+export type VilleGarde = "Ouagadougou" | "Bobo-Dioulasso" | "Koudougou" | "Ouahigouya" | "Fada N'Gourma";
+
 export interface PharmacieDeGarde {
   nom: string;
   telephone: string;
-  groupe: 1 | 2 | 3 | 4;
-  ville: "Ouagadougou" | "Bobo-Dioulasso";
+  groupe: number;
+  ville: VilleGarde;
   adresse?: string;
   latitude?: number;
   longitude?: number;
 }
+
+interface VilleConfig {
+  totalGroupes: number;
+  referenceGroup: number;
+}
+
+const VILLE_CONFIGS: Record<VilleGarde, VilleConfig> = {
+  "Ouagadougou": { totalGroupes: 4, referenceGroup: 1 },
+  "Bobo-Dioulasso": { totalGroupes: 4, referenceGroup: 3 },
+  "Koudougou": { totalGroupes: 3, referenceGroup: 1 },
+  "Ouahigouya": { totalGroupes: 3, referenceGroup: 1 },
+  "Fada N'Gourma": { totalGroupes: 3, referenceGroup: 1 },
+};
 
 // Pharmacies de Ouagadougou - Groupe 1
 const OUAGA_GROUPE_1: PharmacieDeGarde[] = [
@@ -291,6 +306,60 @@ const BOBO_GROUPE_4: PharmacieDeGarde[] = [
   { nom: "Pharmacie Solidarite", telephone: "+226 20 97 17 26", groupe: 4, ville: "Bobo-Dioulasso" },
 ];
 
+// Pharmacies de Koudougou - 3 groupes
+// Source: infossante.net, UbiPharm, MAADO
+// Reference: 22 fev 2026 = Groupe 3 (Faag-Yonre + Kuilig-Noore en garde)
+const KOUDOUGOU_GROUPE_1: PharmacieDeGarde[] = [
+  { nom: "Pharmacie Zoodo", telephone: "+226 70 23 75 32", groupe: 1, ville: "Koudougou", latitude: 12.2536, longitude: -2.3631 },
+  { nom: "Pharmacie Laafia", telephone: "+226 78 01 51 54", groupe: 1, ville: "Koudougou", latitude: 12.2488, longitude: -2.3598 },
+];
+
+const KOUDOUGOU_GROUPE_2: PharmacieDeGarde[] = [
+  { nom: "Pharmacie Galys", telephone: "+226 58 17 55 54", groupe: 2, ville: "Koudougou", latitude: 12.2518, longitude: -2.3665 },
+  { nom: "Pharmacie du Boulkiemde", telephone: "+226 25 44 09 08", groupe: 2, ville: "Koudougou", latitude: 12.2545, longitude: -2.3615 },
+];
+
+const KOUDOUGOU_GROUPE_3: PharmacieDeGarde[] = [
+  { nom: "Pharmacie Faag-Yonre", telephone: "+226 25 44 02 30", groupe: 3, ville: "Koudougou", adresse: "Secteur 1", latitude: 12.2502, longitude: -2.36264 },
+  { nom: "Pharmacie Kuilig-Noore", telephone: "+226 25 44 11 88", groupe: 3, ville: "Koudougou", adresse: "Route de Dédougou", latitude: 12.251, longitude: -2.37433 },
+];
+
+// Pharmacies de Ouahigouya - 3 groupes
+// Source: infossante.net, UbiPharm, MAADO
+// Reference: 22 fev 2026 = Groupe 3 (Nayolsba, Wend-Zoodo, Wend-Pegre en garde)
+const OUAHIGOUYA_GROUPE_1: PharmacieDeGarde[] = [
+  { nom: "Pharmacie du Nord", telephone: "+226 24 55 44 41", groupe: 1, ville: "Ouahigouya", latitude: 13.5752, longitude: -2.4198 },
+  { nom: "Pharmacie Wend-Raabo", telephone: "+226 24 55 00 06", groupe: 1, ville: "Ouahigouya", adresse: "Secteur 1", latitude: 13.5725, longitude: -2.4212 },
+  { nom: "Pharmacie Naaba Kango", telephone: "+226 24 55 03 30", groupe: 1, ville: "Ouahigouya", latitude: 13.5685, longitude: -2.4255 },
+];
+
+const OUAHIGOUYA_GROUPE_2: PharmacieDeGarde[] = [
+  { nom: "Pharmacie Yiiri", telephone: "+226 24 55 32 40", groupe: 2, ville: "Ouahigouya", adresse: "Avenue de Mopti", latitude: 13.5738, longitude: -2.4185 },
+  { nom: "Pharmacie Kibsa", telephone: "+226 71 97 75 62", groupe: 2, ville: "Ouahigouya", latitude: 13.5762, longitude: -2.4230 },
+  { nom: "Pharmacie Yalgre", telephone: "+226 24 55 21 10", groupe: 2, ville: "Ouahigouya", latitude: 13.5710, longitude: -2.4165 },
+];
+
+const OUAHIGOUYA_GROUPE_3: PharmacieDeGarde[] = [
+  { nom: "Pharmacie Nayolsba", telephone: "+226 40 55 00 05", groupe: 3, ville: "Ouahigouya", latitude: 13.5798, longitude: -2.42286 },
+  { nom: "Pharmacie Wend-Zoodo", telephone: "+226 24 55 37 91", groupe: 3, ville: "Ouahigouya", adresse: "Secteur 2", latitude: 13.5694, longitude: -2.42442 },
+  { nom: "Pharmacie Wend-Pegre", telephone: "+226 24 55 14 22", groupe: 3, ville: "Ouahigouya", latitude: 13.5568, longitude: -2.41089 },
+];
+
+// Pharmacies de Fada N'Gourma - 3 groupes
+// Source: infossante.net, UbiPharm, MAADO, FasoSante
+// Reference: 22 fev 2026 = Groupe 3 (Yendabili en garde)
+const FADA_GROUPE_1: PharmacieDeGarde[] = [
+  { nom: "Pharmacie Gourma", telephone: "+226 54 30 20 20", groupe: 1, ville: "Fada N'Gourma", latitude: 12.0608, longitude: 0.3508 },
+];
+
+const FADA_GROUPE_2: PharmacieDeGarde[] = [
+  { nom: "Pharmacie Theresa", telephone: "+226 24 77 68 02", groupe: 2, ville: "Fada N'Gourma", latitude: 12.0650, longitude: 0.3545 },
+];
+
+const FADA_GROUPE_3: PharmacieDeGarde[] = [
+  { nom: "Pharmacie Yendabili", telephone: "+226 24 77 10 32", groupe: 3, ville: "Fada N'Gourma", latitude: 12.0724, longitude: 0.36041 },
+];
+
 // Export de toutes les pharmacies
 export const ALL_PHARMACIES_DE_GARDE: PharmacieDeGarde[] = [
   ...OUAGA_GROUPE_1,
@@ -301,57 +370,63 @@ export const ALL_PHARMACIES_DE_GARDE: PharmacieDeGarde[] = [
   ...BOBO_GROUPE_2,
   ...BOBO_GROUPE_3,
   ...BOBO_GROUPE_4,
+  ...KOUDOUGOU_GROUPE_1,
+  ...KOUDOUGOU_GROUPE_2,
+  ...KOUDOUGOU_GROUPE_3,
+  ...OUAHIGOUYA_GROUPE_1,
+  ...OUAHIGOUYA_GROUPE_2,
+  ...OUAHIGOUYA_GROUPE_3,
+  ...FADA_GROUPE_1,
+  ...FADA_GROUPE_2,
+  ...FADA_GROUPE_3,
 ];
 
-// Date de reference pour le calcul des groupes de garde (semaine 1 = groupe 1)
-// Semaine du 30 decembre 2024: Groupe 1 a Ouagadougou, Groupe 3 a Bobo-Dioulasso (selon Orange BF)
+// Date de reference pour le calcul des groupes de garde
+// Semaine du 30 decembre 2024: calibration initiale (selon Orange BF, infossante.net)
 const REFERENCE_DATE = new Date("2024-12-30");
-const OUAGA_REFERENCE_GROUP = 1;
-const BOBO_REFERENCE_GROUP = 3;
 
-// Calcule le numero de semaine depuis la date de reference
 function getWeeksSinceReference(date: Date): number {
   const diffTime = date.getTime() - REFERENCE_DATE.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   return Math.floor(diffDays / 7);
 }
 
-// Determine le groupe actuellement de garde pour une ville donnee
-export function getCurrentGardeGroup(ville: "Ouagadougou" | "Bobo-Dioulasso", date: Date = new Date()): 1 | 2 | 3 | 4 {
+export function getCurrentGardeGroup(ville: VilleGarde, date: Date = new Date()): number {
+  const config = VILLE_CONFIGS[ville];
   const weeksSince = getWeeksSinceReference(date);
-  const referenceGroup = ville === "Ouagadougou" ? OUAGA_REFERENCE_GROUP : BOBO_REFERENCE_GROUP;
-  const currentGroup = ((referenceGroup - 1 + weeksSince) % 4) + 1;
-  return currentGroup as 1 | 2 | 3 | 4;
+  const currentGroup = ((config.referenceGroup - 1 + weeksSince) % config.totalGroupes) + 1;
+  return currentGroup;
 }
 
-// Retourne les pharmacies actuellement de garde
-export function getPharmaciesDeGarde(ville?: "Ouagadougou" | "Bobo-Dioulasso", date: Date = new Date()): PharmacieDeGarde[] {
+export function getTotalGroupes(ville: VilleGarde): number {
+  return VILLE_CONFIGS[ville].totalGroupes;
+}
+
+export function getAllVilles(): VilleGarde[] {
+  return Object.keys(VILLE_CONFIGS) as VilleGarde[];
+}
+
+export function getPharmaciesDeGarde(ville?: VilleGarde, date: Date = new Date()): PharmacieDeGarde[] {
   if (ville) {
     const currentGroup = getCurrentGardeGroup(ville, date);
     return ALL_PHARMACIES_DE_GARDE.filter(p => p.ville === ville && p.groupe === currentGroup);
   }
   
-  // Retourne les pharmacies de garde des deux villes
-  const ouagaGroup = getCurrentGardeGroup("Ouagadougou", date);
-  const boboGroup = getCurrentGardeGroup("Bobo-Dioulasso", date);
-  
-  return ALL_PHARMACIES_DE_GARDE.filter(
-    p => (p.ville === "Ouagadougou" && p.groupe === ouagaGroup) ||
-         (p.ville === "Bobo-Dioulasso" && p.groupe === boboGroup)
-  );
+  return ALL_PHARMACIES_DE_GARDE.filter(p => {
+    const currentGroup = getCurrentGardeGroup(p.ville, date);
+    return p.groupe === currentGroup;
+  });
 }
 
-// Retourne toutes les pharmacies d'un groupe specifique
-export function getPharmaciesByGroup(ville: "Ouagadougou" | "Bobo-Dioulasso", groupe: 1 | 2 | 3 | 4): PharmacieDeGarde[] {
+export function getPharmaciesByGroup(ville: VilleGarde, groupe: number): PharmacieDeGarde[] {
   return ALL_PHARMACIES_DE_GARDE.filter(p => p.ville === ville && p.groupe === groupe);
 }
 
-// Retourne les dates de garde pour un groupe donne (4 prochaines semaines)
-export function getGardeDatesForGroup(ville: "Ouagadougou" | "Bobo-Dioulasso", groupe: 1 | 2 | 3 | 4): Date[] {
+export function getGardeDatesForGroup(ville: VilleGarde, groupe: number): Date[] {
   const dates: Date[] = [];
   const today = new Date();
   
-  for (let i = 0; i < 16; i++) { // Cherche dans les 16 prochaines semaines
+  for (let i = 0; i < 16; i++) {
     const checkDate = new Date(today);
     checkDate.setDate(today.getDate() + (i * 7));
     
@@ -364,13 +439,10 @@ export function getGardeDatesForGroup(ville: "Ouagadougou" | "Bobo-Dioulasso", g
   return dates;
 }
 
-// Source et informations sur le systeme de garde
 export const GARDE_INFO = {
-  source: "Orange Burkina Faso (https://www.orange.bf)",
-  lastUpdate: "Decembre 2024",
-  description: "Les pharmacies sont organisees en 4 groupes qui assurent la garde a tour de role chaque semaine (du samedi 12h au samedi suivant 12h).",
-  cities: ["Ouagadougou", "Bobo-Dioulasso"],
+  source: "Orange Burkina Faso, infossante.net, UbiPharm, MAADO",
+  lastUpdate: "Fevrier 2026",
+  description: "Les pharmacies sont organisees en groupes qui assurent la garde a tour de role chaque semaine (du samedi 12h au samedi suivant 12h).",
+  cities: getAllVilles(),
   totalPharmacies: ALL_PHARMACIES_DE_GARDE.length,
-  ouagadougouCount: ALL_PHARMACIES_DE_GARDE.filter(p => p.ville === "Ouagadougou").length,
-  boboDioulassoCount: ALL_PHARMACIES_DE_GARDE.filter(p => p.ville === "Bobo-Dioulasso").length,
 };

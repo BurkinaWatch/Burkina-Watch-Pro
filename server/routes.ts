@@ -4342,21 +4342,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { 
         getPharmaciesDeGarde, 
-        getCurrentGardeGroup, 
+        getCurrentGardeGroup,
+        getTotalGroupes,
+        getAllVilles,
         GARDE_INFO,
         ALL_PHARMACIES_DE_GARDE
       } = await import("./pharmaciesDeGardeData");
       
-      const ville = req.query.ville as "Ouagadougou" | "Bobo-Dioulasso" | undefined;
+      const ville = req.query.ville as string | undefined;
       const showAll = req.query.all === "true";
       
       const today = new Date();
-      const ouagaGroup = getCurrentGardeGroup("Ouagadougou", today);
-      const boboGroup = getCurrentGardeGroup("Bobo-Dioulasso", today);
+      const villes = getAllVilles();
+      
+      const groupesParVille: Record<string, { groupe: number; totalGroupes: number }> = {};
+      for (const v of villes) {
+        groupesParVille[v] = {
+          groupe: getCurrentGardeGroup(v, today),
+          totalGroupes: getTotalGroupes(v),
+        };
+      }
       
       const pharmacies = showAll 
         ? ALL_PHARMACIES_DE_GARDE 
-        : getPharmaciesDeGarde(ville, today);
+        : getPharmaciesDeGarde(ville as any, today);
       
       const dayOfWeek = today.getDay();
       const hour = today.getHours();
@@ -4379,8 +4388,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({
         date: today.toISOString().split('T')[0],
-        groupeOuagadougou: ouagaGroup,
-        groupeBobo: boboGroup,
+        groupeOuagadougou: groupesParVille["Ouagadougou"]?.groupe,
+        groupeBobo: groupesParVille["Bobo-Dioulasso"]?.groupe,
+        groupesParVille,
         periodeDebut: periodeDebut.toISOString().split('T')[0],
         periodeFin: periodeFin.toISOString().split('T')[0],
         pharmacies,
@@ -4397,24 +4407,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { 
         getPharmaciesByGroup, 
-        getGardeDatesForGroup 
+        getGardeDatesForGroup,
+        getTotalGroupes
       } = await import("./pharmaciesDeGardeData");
       
-      const ville = req.query.ville as "Ouagadougou" | "Bobo-Dioulasso";
-      const groupe = parseInt(req.query.groupe as string) as 1 | 2 | 3 | 4;
+      const ville = req.query.ville as string;
+      const groupe = parseInt(req.query.groupe as string);
       
-      if (!ville || !groupe || groupe < 1 || groupe > 4) {
+      if (!ville || !groupe || groupe < 1) {
         return res.status(400).json({ 
-          error: "Paramètres invalides. Ville et groupe (1-4) requis." 
+          error: "Paramètres invalides. Ville et groupe requis." 
         });
       }
       
-      const pharmacies = getPharmaciesByGroup(ville, groupe);
-      const prochaineDates = getGardeDatesForGroup(ville, groupe);
+      const pharmacies = getPharmaciesByGroup(ville as any, groupe);
+      const prochaineDates = getGardeDatesForGroup(ville as any, groupe);
       
       res.json({
         ville,
         groupe,
+        totalGroupes: getTotalGroupes(ville as any),
         pharmacies,
         total: pharmacies.length,
         prochaineDatesDeGarde: prochaineDates.map(d => d.toISOString().split('T')[0])
