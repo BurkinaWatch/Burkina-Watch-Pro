@@ -12,6 +12,7 @@ The project aims to empower citizens of Burkina Faso with a robust, mobile-first
 - **AI Integration**: Utilizes AI for intelligent features, such as generating cinema schedules.
 - **Comprehensive Directories**: Extensive databases of Mairies & Prefectures, Ministeres, Agences Telephonie Mobile, SONABEL & ONEA agencies, Lieux de Culte (churches & mosques), Cimetieres, and educational institutions.
 - **Transport Information**: Detailed schedules and company information for inter-city and international transport routes.
+- **Pharmacy Guard System**: Weekly rotation system covering 5 cities (Ouagadougou, Bobo-Dioulasso, Koudougou, Ouahigouya, Fada N'Gourma) with variable group counts per city (4 groups for Ouaga/Bobo, 3 groups for smaller cities). Rotation runs Saturday noon to Saturday noon. Data sourced from Orange BF, infossante.net, UbiPharm, and MAADO.
 
 ## User Preferences
 - **Language**: French (UI default).
