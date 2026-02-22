@@ -617,6 +617,25 @@ export class OverpassService {
     return true;
   }
 
+  async getStats(): Promise<Record<string, number>> {
+    const result = await db.select({ placeType: places.placeType }).from(places);
+    const stats: Record<string, number> = {};
+    for (const row of result) {
+      stats[row.placeType] = (stats[row.placeType] || 0) + 1;
+    }
+    stats.total = result.length;
+    return stats;
+  }
+
+  async getPlaceById(id: string): Promise<Place | null> {
+    const result = await db.select().from(places).where(eq(places.id, id)).limit(1);
+    return result[0] || null;
+  }
+
+  getFallbackPlaces(_placeType: string): InsertPlace[] {
+    return [];
+  }
+
   async getUserVerifications(placeId: string, userId: string | null): Promise<{ confirmed: boolean; reported: boolean }> {
     if (!userId) return { confirmed: false, reported: false };
 

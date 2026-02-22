@@ -337,7 +337,7 @@ function transformOsmToBanque(place: Place) {
 
   const isAtm = place.placeType === "atm";
   const nom = matchedBank?.nom || rawName || (isAtm ? "GAB" : "Banque");
-  const sigle = matchedBank?.sigle || (rawName ? rawName.split(/\s+/).map(w => w[0]).join("").toUpperCase().slice(0, 5) : (isAtm ? "GAB" : "BQ"));
+  const sigle = matchedBank?.sigle || (rawName ? rawName.split(/\s+/).map((w: string) => w[0]).join("").toUpperCase().slice(0, 5) : (isAtm ? "GAB" : "BQ"));
 
   const displayNom = matchedBank ? matchedBank.nom : (rawName || (isAtm ? "Guichet Automatique" : "Etablissement bancaire"));
 
@@ -2694,7 +2694,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (dbPlaces.length === 0) {
         console.log("[API] Aucun marché trouvé dans la DB, utilisation des données de secours...");
-        const fallbackData = overpassService["getFallbackPlaces"]("marketplace");
+        const fallbackData = overpassService.getFallbackPlaces("marketplace");
         // Injecter les données de secours dans la DB pour les prochaines requêtes
         for (const p of fallbackData) {
           try {
@@ -3578,9 +3578,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Non autorisé" });
       }
 
-      const force = req.query.force === 'true';
-      // Lancer la synchronisation en arrière-plan
-      overpassService.syncAllPlaces(force).catch(err => console.error("Sync error:", err));
+      overpassService.syncAllPlaces().catch(err => console.error("Sync error:", err));
       
       res.json({ message: "Synchronisation démarrée en arrière-plan" });
     } catch (error) {
@@ -3807,7 +3805,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/places/sync", isAuthenticated, async (req: any, res) => {
+  app.post("/api/stations/sync-extended", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       const user = await storage.getUser(userId);
@@ -3816,21 +3814,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Accès non autorisé" });
       }
 
-      overpassService.syncAllPlaces().catch(console.error);
-      res.json({ message: "Synchronisation OpenStreetMap lancée en arrière-plan" });
-    } catch (error) {
-      console.error("Erreur sync places:", error);
-      res.status(500).json({ error: "Erreur lors de la synchronisation" });
-    }
-  });
-
-  // Extended fuel station sync - more thorough with region-based queries
-  app.post("/api/stations/sync-extended", async (req: any, res) => {
-    try {
       res.json({ message: "Synchronisation étendue des stations-service lancée en arrière-plan" });
       
-      // Run in background
-      overpassService.syncFuelStationsExtended().then(result => {
+      overpassService.syncPlaceType("fuel").then(result => {
         console.log("Extended fuel sync result:", result);
       }).catch(console.error);
     } catch (error) {

@@ -15,7 +15,7 @@ interface EmailConfig {
 
 function logEmailConfig() {
   console.log('📧 Email service check:');
-  console.log('  - RESEND_API_KEY:', process.env.RESEND_API_KEY ? `✅ (${process.env.RESEND_API_KEY.substring(0, 8)}...)` : '❌ not set');
+  console.log('  - RESEND_API_KEY:', process.env.RESEND_API_KEY ? '✅ configured' : '❌ not set');
   console.log('  - GMAIL_USER:', process.env.GMAIL_USER ? '✅ configured' : '❌ not set');
   console.log('  - GMAIL_APP_PASSWORD:', process.env.GMAIL_APP_PASSWORD ? '✅ configured' : '❌ not set');
 }

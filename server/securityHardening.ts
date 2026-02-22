@@ -1,10 +1,9 @@
-declare module 'hpp';
-declare module 'xss-clean';
-
 import { Express, Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+// @ts-ignore - no type declarations available
 import hpp from "hpp";
+// @ts-ignore - no type declarations available
 import xss from "xss-clean";
 
 // Rate limiting global
