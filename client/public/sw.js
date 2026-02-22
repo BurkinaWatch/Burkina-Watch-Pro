@@ -103,9 +103,9 @@ self.addEventListener('push', function(event) {
   
   const options = {
     body: data.body || 'Nouvelle alerte',
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
-    vibrate: [100, 50, 100],
+    icon: '/logo-burkinawatch.png',
+    badge: '/logo-burkinawatch.png',
+    vibrate: [200, 100, 200, 100, 300],
     data: {
       url: data.url || '/',
       signalementId: data.signalementId,
@@ -116,10 +116,17 @@ self.addEventListener('push', function(event) {
     ],
     tag: data.tag || 'burkina-watch-notification',
     renotify: true,
+    silent: false,
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Burkina Watch', options)
+    self.registration.showNotification(data.title || 'Burkina Watch', options).then(function() {
+      return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+        clientList.forEach(function(client) {
+          client.postMessage({ type: 'PUSH_RECEIVED', payload: data });
+        });
+      });
+    })
   );
 });
 

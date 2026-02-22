@@ -170,6 +170,23 @@ function AppContent() {
   useOnlineStatus(isAuthenticated);
   useOfflineCache();
 
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+
+    const handleSwMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'PUSH_RECEIVED') {
+        import('@/lib/notificationSound').then(({ playAlertSound }) => {
+          playAlertSound();
+        });
+      }
+    };
+
+    navigator.serviceWorker.addEventListener('message', handleSwMessage);
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', handleSwMessage);
+    };
+  }, []);
+
   return (
     <>
       <Toaster />
