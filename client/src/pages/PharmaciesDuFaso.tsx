@@ -7,7 +7,7 @@ import {
   Search, MapPin, Phone, Clock, ExternalLink, Navigation, 
   Building2, Globe, RefreshCcw, ArrowLeft, Crosshair, 
   PlusSquare, ShieldCheck, Info, Accessibility, Pill, Activity,
-  ChevronLeft
+  ChevronLeft, ChevronDown, ChevronUp, Calendar, AlertCircle
 } from "lucide-react";
 import { VoiceSearchInput } from "@/components/VoiceSearchInput";
 import PageStatCard from "@/components/PageStatCard";
@@ -32,12 +32,36 @@ import { Helmet } from "react-helmet-async";
 import { REGION_NAMES } from "@/lib/regions";
 import { LocationValidator } from "@/components/LocationValidator";
 
+interface PharmacieDeGardeAPI {
+  nom: string;
+  telephone: string;
+  groupe: 1 | 2 | 3 | 4;
+  ville: "Ouagadougou" | "Bobo-Dioulasso";
+  adresse?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+interface GardeResponse {
+  date: string;
+  groupeOuagadougou: number;
+  groupeBobo: number;
+  periodeDebut: string;
+  periodeFin: string;
+  pharmacies: PharmacieDeGardeAPI[];
+  total: number;
+  info: { source: string; lastUpdate: string; description: string };
+}
+
 export default function PharmaciesDuFaso() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [gardeFilter, setGardeFilter] = useState<"all" | "garde" | "24h" | "jour" | "nuit">("all");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [sortByDistance, setSortByDistance] = useState(false);
+  const [showGardeSection, setShowGardeSection] = useState(true);
+  const [gardeVille, setGardeVille] = useState<"Ouagadougou" | "Bobo-Dioulasso">("Ouagadougou");
+  const [gardeSearchTerm, setGardeSearchTerm] = useState("");
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
 
@@ -83,6 +107,23 @@ export default function PharmaciesDuFaso() {
   const { data: pharmacies = [], isLoading, isFetching } = useQuery<any[]>({
     queryKey: ["/api/places/pharmacy?limit=5000"],
   });
+
+  const { data: gardeData, isLoading: gardeLoading } = useQuery<GardeResponse>({
+    queryKey: ["/api/pharmacies-de-garde"],
+  });
+
+  const filteredGardePharmacies = useMemo(() => {
+    if (!gardeData) return [];
+    let result = gardeData.pharmacies.filter(p => p.ville === gardeVille);
+    if (gardeSearchTerm) {
+      const q = gardeSearchTerm.toLowerCase();
+      result = result.filter(p => 
+        p.nom.toLowerCase().includes(q) ||
+        (p.adresse || "").toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [gardeData, gardeVille, gardeSearchTerm]);
 
   const regions = useMemo(() => {
     return REGION_NAMES;
@@ -241,6 +282,143 @@ export default function PharmaciesDuFaso() {
               clickable
             />
           </div>
+
+          {gardeLoading ? (
+            <Card className="border-green-500/30 bg-green-500/5">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : gardeData && (
+            <Card className="border-green-500/40 bg-gradient-to-r from-green-500/10 to-emerald-500/5 dark:from-green-900/20 dark:to-emerald-900/10 overflow-hidden" data-testid="card-pharmacies-garde">
+              <CardHeader className="p-4 pb-2">
+                <button
+                  type="button"
+                  className="flex items-center justify-between w-full text-left cursor-pointer"
+                  onClick={() => setShowGardeSection(!showGardeSection)}
+                  data-testid="button-toggle-garde-section"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-green-500 rounded-full shadow-lg shadow-green-500/30">
+                      <ShieldCheck className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg font-bold flex items-center gap-2">
+                        Pharmacies de Garde
+                        <Badge className="bg-green-600 text-white border-none text-xs">
+                          Groupe {gardeVille === "Ouagadougou" ? gardeData.groupeOuagadougou : gardeData.groupeBobo}
+                        </Badge>
+                      </CardTitle>
+                      <CardDescription className="flex items-center gap-1.5 mt-0.5">
+                        <Calendar className="h-3 w-3" />
+                        Du {new Date(gardeData.periodeDebut).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} 12h au {new Date(gardeData.periodeFin).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} 12h
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="border-green-500/40 text-green-700 dark:text-green-400">
+                      {filteredGardePharmacies.length} pharmacies
+                    </Badge>
+                    {showGardeSection ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
+                  </div>
+                </button>
+              </CardHeader>
+              
+              {showGardeSection && (
+                <CardContent className="p-4 pt-2 space-y-3">
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="flex gap-2">
+                      <Button
+                        variant={gardeVille === "Ouagadougou" ? "default" : "outline"}
+                        size="sm"
+                        className={gardeVille === "Ouagadougou" ? "bg-green-600" : ""}
+                        onClick={() => setGardeVille("Ouagadougou")}
+                        data-testid="button-garde-ouaga"
+                      >
+                        Ouagadougou (Gr. {gardeData.groupeOuagadougou})
+                      </Button>
+                      <Button
+                        variant={gardeVille === "Bobo-Dioulasso" ? "default" : "outline"}
+                        size="sm"
+                        className={gardeVille === "Bobo-Dioulasso" ? "bg-green-600" : ""}
+                        onClick={() => setGardeVille("Bobo-Dioulasso")}
+                        data-testid="button-garde-bobo"
+                      >
+                        Bobo-Dioulasso (Gr. {gardeData.groupeBobo})
+                      </Button>
+                    </div>
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Rechercher une pharmacie de garde..."
+                        value={gardeSearchTerm}
+                        onChange={(e) => setGardeSearchTerm(e.target.value)}
+                        className="text-sm"
+                        data-testid="input-garde-search"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 max-h-[400px] overflow-y-auto pr-1">
+                    {filteredGardePharmacies.map((ph, idx) => (
+                      <div 
+                        key={`garde-${idx}`}
+                        className="flex items-start gap-3 p-3 rounded-lg bg-background/60 border border-green-500/20 hover:border-green-500/40 transition-colors group"
+                        data-testid={`card-garde-pharmacy-${idx}`}
+                      >
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500/15 flex items-center justify-center text-green-700 dark:text-green-400 font-bold text-xs">
+                          {idx + 1}
+                        </div>
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <p className="font-semibold text-sm truncate">{ph.nom}</p>
+                          {ph.adresse && (
+                            <p className="text-xs text-muted-foreground line-clamp-2 flex items-start gap-1">
+                              <MapPin className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                              {ph.adresse}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <a 
+                              href={`tel:${ph.telephone}`}
+                              className="text-xs text-green-700 dark:text-green-400 hover:underline flex items-center gap-1 font-medium"
+                              data-testid={`link-garde-phone-${idx}`}
+                            >
+                              <Phone className="h-3 w-3" />
+                              {ph.telephone}
+                            </a>
+                            {ph.latitude && ph.longitude && (
+                              <a
+                                href={`https://www.google.com/maps/dir/?api=1&destination=${ph.latitude},${ph.longitude}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                                data-testid={`link-garde-itineraire-${idx}`}
+                              >
+                                <Navigation className="h-3 w-3" />
+                                Itinéraire
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-2 border-t border-green-500/20">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Info className="h-3 w-3" />
+                      Source: {gardeData.info.source.replace('https://www.orange.bf', 'Orange BF')} &bull; Rotation: {gardeData.info.description}
+                    </p>
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          )}
 
           <div className="flex flex-col md:flex-row gap-4">
             <VoiceSearchInput

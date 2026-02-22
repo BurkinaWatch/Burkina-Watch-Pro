@@ -4358,10 +4358,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? ALL_PHARMACIES_DE_GARDE 
         : getPharmaciesDeGarde(ville, today);
       
+      const dayOfWeek = today.getDay();
+      const hour = today.getHours();
+      const isSaturdayAfterNoon = dayOfWeek === 6 && hour >= 12;
+      const isSaturdayBeforeNoon = dayOfWeek === 6 && hour < 12;
+      let daysBack: number;
+      if (isSaturdayAfterNoon) {
+        daysBack = 0;
+      } else if (isSaturdayBeforeNoon) {
+        daysBack = 7;
+      } else {
+        daysBack = (dayOfWeek + 1) % 7;
+        if (daysBack === 0) daysBack = 7;
+      }
+      const periodeDebut = new Date(today);
+      periodeDebut.setDate(today.getDate() - daysBack);
+      periodeDebut.setHours(12, 0, 0, 0);
+      const periodeFin = new Date(periodeDebut);
+      periodeFin.setDate(periodeDebut.getDate() + 7);
+      
       res.json({
         date: today.toISOString().split('T')[0],
         groupeOuagadougou: ouagaGroup,
         groupeBobo: boboGroup,
+        periodeDebut: periodeDebut.toISOString().split('T')[0],
+        periodeFin: periodeFin.toISOString().split('T')[0],
         pharmacies,
         total: pharmacies.length,
         info: GARDE_INFO
