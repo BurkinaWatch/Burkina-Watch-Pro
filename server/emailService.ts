@@ -65,7 +65,7 @@ function getResendClient(): Resend | null {
     console.log('❌ RESEND_API_KEY not found in environment');
     return null;
   }
-  console.log(`✅ Creating Resend client with key: ${apiKey.substring(0, 8)}...`);
+  console.log('✅ Resend client initialisé');
   return new Resend(apiKey);
 }
 
