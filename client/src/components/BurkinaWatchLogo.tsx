@@ -14,12 +14,12 @@ export default function BurkinaWatchLogo({ size = 48, showText = false, classNam
       <img
         src={logoImage}
         alt="Burkina Watch Logo"
-        width={size * 1.6}
-        height={size * 1.15}
+        width={size * 1.5}
+        height={size}
         className="object-contain drop-shadow-lg"
         style={{ 
-          width: size * 1.6, 
-          height: size * 1.15,
+          width: size * 1.5, 
+          height: size,
           objectFit: 'contain'
         }}
       />
