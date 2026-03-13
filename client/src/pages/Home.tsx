@@ -20,6 +20,7 @@ import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { Signalement } from "@shared/schema";
 import heroImage from "@assets/generated_images/Citizens_collaborating_with_smartphones_in_Burkina_68dc35a5.png";
+import logoImage from "@assets/logo-burkinawatch.png";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 
@@ -187,6 +188,28 @@ function SecurityNotesDialog() {
   const exportToPDF = async () => {
     // Import dynamique de jsPDF
     const { default: jsPDF } = await import('jspdf');
+
+    // Charger le logo en base64 via canvas
+    const getLogoBase64 = (): Promise<string> => new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        } else {
+          resolve('');
+        }
+      };
+      img.onerror = () => resolve('');
+      img.src = logoImage;
+    });
+
+    const logoBase64 = await getLogoBase64();
     
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -232,17 +255,25 @@ function SecurityNotesDialog() {
       yPosition += 4;
     };
 
-    // En-tête
+    // En-tête avec logo
     doc.setFillColor(220, 38, 38);
-    doc.rect(0, 0, pageWidth, 25, 'F');
+    doc.rect(0, 0, pageWidth, 30, 'F');
+
+    // Logo dans l'en-tête (gauche) — ratio 3:2
+    if (logoBase64) {
+      doc.addImage(logoBase64, 'PNG', 4, 3, 36, 24);
+    }
+
+    // Texte de l'en-tête centré (décalé pour laisser la place au logo)
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(16);
+    doc.setFontSize(15);
     doc.setFont('helvetica', 'bold');
-    doc.text('NOTES IMPORTANTES', pageWidth / 2, 12, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text('Conseils de sécurité pour utiliser BurkinaWatch', pageWidth / 2, 19, { align: 'center' });
-    
-    yPosition = 35;
+    doc.text('NOTES IMPORTANTES', pageWidth / 2 + 10, 13, { align: 'center' });
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Conseils de sécurité pour utiliser BurkinaWatch', pageWidth / 2 + 10, 21, { align: 'center' });
+
+    yPosition = 40;
     doc.setTextColor(0, 0, 0);
 
     // Contenu
@@ -295,9 +326,18 @@ function SecurityNotesDialog() {
       }
     });
 
-    // Footer avec contact
+    // Dernière page — contact + logo centré
     doc.addPage();
     yPosition = margin;
+
+    // Logo centré en haut de la page finale
+    if (logoBase64) {
+      const logoW = 60;
+      const logoH = 40;
+      doc.addImage(logoBase64, 'PNG', (pageWidth - logoW) / 2, yPosition, logoW, logoH);
+      yPosition += logoH + 8;
+    }
+
     doc.setFillColor(240, 240, 240);
     doc.rect(margin, yPosition, maxWidth, 25, 'F');
     yPosition += 5;
