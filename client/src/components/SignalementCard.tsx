@@ -188,37 +188,37 @@ export default function SignalementCard({
     <Link href={`/signalement/${id}`} className="block">
       <Card className={`overflow-hidden ${isSOS ? "border-2 border-category-urgence" : ""} hover:shadow-lg transition-shadow cursor-pointer`}>
         {displayMedias.length > 0 && (
-          <div className="relative w-full h-48">
+          <div className="relative w-full h-48 bg-black">
             {displayMedias.length === 1 ? (
               displayMedias[0].startsWith('data:video/') ? (
                 <video
                   src={displayMedias[0]}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                   controls
                 />
               ) : (
                 <img
                   src={displayMedias[0]}
                   alt={titre}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                   loading="lazy"
                 />
               )
             ) : (
               <div className="relative w-full h-full overflow-x-auto flex gap-1 snap-x snap-mandatory">
                 {displayMedias.map((media, index) => (
-                  <div key={index} className="flex-shrink-0 w-full h-full snap-center">
+                  <div key={index} className="flex-shrink-0 w-full h-full snap-center bg-black">
                     {media.startsWith('data:video/') ? (
                       <video
                         src={media}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                         controls
                       />
                     ) : (
                       <img
                         src={media}
                         alt={`${titre} - ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                         loading="lazy"
                       />
                     )}

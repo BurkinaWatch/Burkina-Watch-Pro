@@ -97,37 +97,37 @@ export default function SignalementDetail() {
             
             if (displayMedias.length > 0) {
               return (
-                <div className="relative w-full h-96">
+                <div className="relative w-full h-96 bg-black">
                   {displayMedias.length === 1 ? (
                     displayMedias[0].startsWith('data:video/') ? (
                       <video
                         src={displayMedias[0]}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                         controls
                       />
                     ) : (
                       <img
                         src={displayMedias[0]}
                         alt={signalement.titre}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                         loading="lazy"
                       />
                     )
                   ) : (
                     <div className="relative w-full h-full overflow-x-auto flex gap-1 snap-x snap-mandatory">
                       {displayMedias.map((media, index) => (
-                        <div key={index} className="flex-shrink-0 w-full h-full snap-center">
+                        <div key={index} className="flex-shrink-0 w-full h-full snap-center bg-black">
                           {media.startsWith('data:video/') ? (
                             <video
                               src={media}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                               controls
                             />
                           ) : (
                             <img
                               src={media}
                               alt={`${signalement.titre} - ${index + 1}`}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                               loading="lazy"
                             />
                           )}
