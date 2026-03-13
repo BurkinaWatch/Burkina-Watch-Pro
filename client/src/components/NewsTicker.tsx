@@ -45,21 +45,6 @@ export function NewsTicker() {
     );
   }
 
-  const tickerContent = news.map((item, index) => (
-    <a
-      key={`${item.id}-${index}`}
-      href={item.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center gap-2 mx-8 hover:text-yellow-200 transition-colors"
-      data-testid={`news-item-${item.id}`}
-    >
-      <span className="font-medium">{item.source}:</span>
-      <span>{item.title}</span>
-      <ExternalLink className="w-3 h-3 opacity-70" />
-    </a>
-  ));
-
   const renderNewsItem = (item: NewsItem, keyPrefix: string, index: number) => {
     const dateLabel = formatNewsDate(item.date);
     return (
@@ -80,10 +65,10 @@ export function NewsTicker() {
     );
   };
 
-  const duplicatedContent = news.flatMap((item, index) => [
-    renderNewsItem(item, "first", index),
-    renderNewsItem(item, "second", index),
-  ]);
+  const duplicatedContent = [
+    ...news.map((item, index) => renderNewsItem(item, "first", index)),
+    ...news.map((item, index) => renderNewsItem(item, "second", index)),
+  ];
 
   return (
     <div className="bg-gradient-to-r from-red-700 via-yellow-600 to-green-800 py-2.5 overflow-hidden relative">
