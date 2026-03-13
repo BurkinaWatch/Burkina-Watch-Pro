@@ -65,7 +65,7 @@ export function NewsTicker() {
     );
   };
 
-  const speed = Math.max(30, news.length * 8);
+  const speed = Math.max(20, news.length * 3);
 
   return (
     <div className="bg-gradient-to-r from-red-700 via-yellow-600 to-green-800 py-2.5 overflow-hidden relative">
