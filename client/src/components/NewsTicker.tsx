@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
 import { Newspaper, ExternalLink } from "lucide-react";
 import { format, isToday, isYesterday, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -45,21 +44,6 @@ export function NewsTicker() {
     );
   }
 
-  const tickerContent = news.map((item, index) => (
-    <a
-      key={`${item.id}-${index}`}
-      href={item.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center gap-2 mx-8 hover:text-yellow-200 transition-colors"
-      data-testid={`news-item-${item.id}`}
-    >
-      <span className="font-medium">{item.source}:</span>
-      <span>{item.title}</span>
-      <ExternalLink className="w-3 h-3 opacity-70" />
-    </a>
-  ));
-
   const renderNewsItem = (item: NewsItem, keyPrefix: string, index: number) => {
     const dateLabel = formatNewsDate(item.date);
     return (
@@ -69,6 +53,7 @@ export function NewsTicker() {
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex items-center gap-2 mx-8 hover:text-yellow-200 transition-colors"
+        data-testid={`news-item-${keyPrefix}-${item.id}`}
       >
         {dateLabel && (
           <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">{dateLabel}</span>
@@ -80,38 +65,39 @@ export function NewsTicker() {
     );
   };
 
-  const duplicatedContent = news.flatMap((item, index) => [
-    renderNewsItem(item, "first", index),
-    renderNewsItem(item, "second", index),
-  ]);
+  const speed = Math.max(30, news.length * 8);
 
   return (
     <div className="bg-gradient-to-r from-red-700 via-yellow-600 to-green-800 py-2.5 overflow-hidden relative">
-      <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-red-700 to-transparent z-10" />
-      <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-green-800 to-transparent z-10" />
-      
+      <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-red-700 to-transparent z-10 pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-green-800 to-transparent z-10 pointer-events-none" />
+
       <div className="flex items-center">
         <div className="flex-shrink-0 px-4 flex items-center gap-2 text-white font-bold border-r border-white/30 mr-4 z-20 bg-red-700">
           <Newspaper className="w-4 h-4" />
           <span className="hidden sm:inline">INFOS</span>
         </div>
-        
-        <motion.div
-          className="flex items-center text-white text-sm whitespace-nowrap"
-          animate={{
-            x: [0, -50 * news.length * 20],
-          }}
-          transition={{
-            x: {
-              duration: news.length * 15,
-              repeat: Infinity,
-              ease: "linear",
-            },
-          }}
-        >
-          {duplicatedContent}
-        </motion.div>
+
+        <div className="overflow-hidden flex-1">
+          <div
+            className="flex items-center text-white text-sm whitespace-nowrap"
+            style={{
+              animation: `ticker-scroll ${speed}s linear infinite`,
+              willChange: "transform",
+            }}
+          >
+            {news.map((item, index) => renderNewsItem(item, "a", index))}
+            {news.map((item, index) => renderNewsItem(item, "b", index))}
+          </div>
+        </div>
       </div>
+
+      <style>{`
+        @keyframes ticker-scroll {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
     </div>
   );
 }
