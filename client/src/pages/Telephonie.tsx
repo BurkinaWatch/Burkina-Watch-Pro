@@ -611,8 +611,6 @@ export default function Telephonie() {
                 ))}
               </div>
 
-              <div className="border-t my-4" />
-              <p className="text-xs text-muted-foreground text-center">Sources : orange.bf, moov-africa.bf, telecelfaso.bf</p>
             </CardContent>
           )}
         </Card>
