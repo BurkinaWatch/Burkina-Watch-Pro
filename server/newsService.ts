@@ -37,6 +37,16 @@ const NEWS_SOURCES = [
     url: "https://burkina24.com/feed/",
     fallbackUrl: null,
   },
+  {
+    name: "AIB",
+    url: "https://www.aib.media/feed/",
+    fallbackUrl: null,
+  },
+  {
+    name: "FasoZine",
+    url: "https://www.fasozine.com/feed/",
+    fallbackUrl: null,
+  },
 ];
 
 let cachedNews: NewsItem[] = [];
@@ -84,7 +94,7 @@ const FALLBACK_NEWS: NewsItem[] = [
 async function fetchFromSource(source: { name: string; url: string }): Promise<NewsItem[]> {
   try {
     const feed = await parser.parseURL(source.url);
-    return (feed.items || []).slice(0, 5).map((item, index) => ({
+    return (feed.items || []).slice(0, 4).map((item, index) => ({
       id: `${source.name.toLowerCase().replace(/\s+/g, "-")}-${index}`,
       title: item.title || "Sans titre",
       source: source.name,
@@ -118,7 +128,7 @@ export async function getOfficialNews(): Promise<NewsItem[]> {
   if (allNews.length > 0) {
     cachedNews = allNews.sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    ).slice(0, 10);
+    ).slice(0, 20);
     lastFetch = new Date();
     console.log(`[NewsService] Fetched ${cachedNews.length} news items`);
   } else {
