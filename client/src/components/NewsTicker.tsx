@@ -77,10 +77,9 @@ export function NewsTicker() {
   };
 
   return (
-    <div className="bg-gradient-to-r from-red-700 via-yellow-600 to-green-800 py-2.5 overflow-hidden relative">
+    <div className="bg-gradient-to-r from-red-700 via-yellow-600 to-green-800 py-2.5 overflow-hidden relative mt-[50px] mb-[50px]">
       <div className="absolute left-16 top-0 bottom-0 w-10 bg-gradient-to-r from-red-700 to-transparent z-10 pointer-events-none" />
       <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-green-800 to-transparent z-10 pointer-events-none" />
-
       <div className="flex items-center">
         <div className="flex-shrink-0 px-4 flex items-center gap-2 text-white font-bold border-r border-white/30 mr-0 z-20 bg-red-700 self-stretch py-0.5">
           <Newspaper className="w-4 h-4" />
@@ -102,7 +101,6 @@ export function NewsTicker() {
           </div>
         </div>
       </div>
-
       <style>{`
         @keyframes news-ticker {
           0%   { transform: translateX(0); }
