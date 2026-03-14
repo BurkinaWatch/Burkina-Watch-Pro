@@ -1,7 +1,7 @@
 import webpush from 'web-push';
 import { db } from './db';
 import { pushSubscriptions, signalements, notificationPreferences } from '@shared/schema';
-import { eq, and, sql, isNotNull } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
@@ -132,28 +132,28 @@ export async function sendPushToNearbySubscriptions(
 
   const subscriptions = await db.select()
     .from(pushSubscriptions)
-    .where(and(
-      eq(pushSubscriptions.isActive, true),
-      isNotNull(pushSubscriptions.latitude),
-      isNotNull(pushSubscriptions.longitude)
-    ));
+    .where(eq(pushSubscriptions.isActive, true));
 
   let totalSent = 0;
   
   for (const sub of subscriptions) {
     if (excludeUserId && sub.userId === excludeUserId) continue;
-    if (!sub.latitude || !sub.longitude) continue;
-    
-    const distance = calculateDistance(
-      latitude,
-      longitude,
-      parseFloat(sub.latitude),
-      parseFloat(sub.longitude)
-    );
-    
-    const radiusKm = sub.radiusKm || 5;
-    
-    if (distance <= radiusKm) {
+
+    // If no location saved, send to everyone (they want all alerts)
+    // If location saved, only send if within their radius
+    let shouldSend = true;
+    if (sub.latitude && sub.longitude) {
+      const distance = calculateDistance(
+        latitude,
+        longitude,
+        parseFloat(sub.latitude),
+        parseFloat(sub.longitude)
+      );
+      const radiusKm = sub.radiusKm || 5;
+      shouldSend = distance <= radiusKm;
+    }
+
+    if (shouldSend) {
       try {
         await webpush.sendNotification(
           {
