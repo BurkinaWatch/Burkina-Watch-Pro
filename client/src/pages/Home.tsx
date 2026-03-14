@@ -806,16 +806,12 @@ export default function Home() {
   const { data: stats, isLoading: statsLoading, error: statsError } = useQuery<Stats>({
     queryKey: ["/api/stats"],
     queryFn: async () => {
-      console.log("Fetching stats...");
       const response = await fetch("/api/stats");
       if (!response.ok) {
         const errText = await response.text();
-        console.error("Stats fetch failed:", response.status, errText);
         throw new Error("Erreur lors du chargement des statistiques");
       }
-      const data = await response.json();
-      console.log("Stats received in frontend:", data);
-      return data;
+      return response.json();
     },
     refetchInterval: 30000,
     staleTime: 25000,

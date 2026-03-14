@@ -874,9 +874,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   app.get("/api/stats", async (_req, res) => {
     try {
-      console.log("[STATS] Route called");
       const stats = await storage.getStats();
-      console.log("[STATS] Storage stats:", stats);
       
       const fuelResponse = await overpassService.getPlaces({ placeType: "fuel" });
       const pharmacyResponse = await overpassService.getPlaces({ placeType: "pharmacy" });
@@ -901,7 +899,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         nombreVilles: cities.size || 12
       };
 
-      console.log("[STATS] API Sending finalStats:", JSON.stringify(finalStats));
       res.header("Cache-Control", "no-cache, no-store, must-revalidate");
       res.json(finalStats);
     } catch (error) {

@@ -27,7 +27,8 @@ export default function Notifications() {
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ["/api/notifications"],
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 30000,
+    staleTime: 25000,
   });
 
   // Play sound when new notifications arrive

@@ -174,8 +174,8 @@ export default function Boutiques() {
 
   const { data: boutiquesData, isLoading, refetch } = useQuery<{ boutiques: Boutique[], lastUpdated: string }>({
     queryKey: ["/api/boutiques"],
-    staleTime: 0,
-    gcTime: 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const boutiques = boutiquesData?.boutiques || [];

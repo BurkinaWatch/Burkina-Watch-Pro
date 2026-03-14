@@ -690,13 +690,6 @@ export class DbStorage implements IStorage {
       this.countOnlineUsers(),
     ]);
 
-    console.log("Stats debug:", {
-      totalSignalements: signalementsStats?.total,
-      sosCount: signalementsStats?.sosCount,
-      totalUsers: usersResult?.count,
-      onlineUsers,
-    });
-
     return {
       totalSignalements: signalementsStats?.total || 0,
       sosCount: signalementsStats?.sosCount || 0,
