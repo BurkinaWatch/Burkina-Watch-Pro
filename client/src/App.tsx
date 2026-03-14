@@ -37,7 +37,7 @@ const PharmaciesDuFaso = lazy(() => import("@/pages/PharmaciesDuFaso"));
 const Urgences = lazy(() => import("@/pages/Urgences"));
 const Bulletin = lazy(() => import("@/pages/Bulletin"));
 const Events = lazy(() => import("@/pages/Events"));
-const StreetView = lazy(() => import("@/pages/StreetView"));
+// const StreetView = lazy(() => import("@/pages/StreetView")); // DÉSACTIVÉ temporairement
 const Ouaga3D = lazy(() => import("@/pages/Ouaga3D"));
 const Restaurants = lazy(() => import("@/pages/Restaurants"));
 const BoutiquesMarchés = lazy(() => import("@/pages/BoutiquesMarchés"));
@@ -102,7 +102,7 @@ function Router() {
         <Route path="/urgences">{() => <AuthGuard><Urgences /></AuthGuard>}</Route>
         <Route path="/bulletin" component={Bulletin} />
         <Route path="/events" component={Events} />
-        <Route path="/streetview" component={StreetView} />
+        {/* <Route path="/streetview" component={StreetView} /> */}{/* DÉSACTIVÉ temporairement */}
         <Route path="/ouaga3d" component={Ouaga3D} />
         <Route path="/restaurants">{() => <AuthGuard><Restaurants /></AuthGuard>}</Route>
         <Route path="/boutiques-marches">{() => <AuthGuard><BoutiquesMarchés /></AuthGuard>}</Route>

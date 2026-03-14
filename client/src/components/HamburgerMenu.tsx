@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Link, useLocation } from "wouter";
-import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Cross, Newspaper, Calendar, Navigation, Sparkles, Bell, Shield, Camera, Utensils, ShoppingBag, Fuel, Store, Landmark, Bus, Film, Hospital, GraduationCap, Trophy, Hotel, BookOpen, Zap, Smartphone, Building2 } from "lucide-react";
+import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Cross, Newspaper, Calendar, Navigation, Sparkles, Bell, Shield, Utensils, ShoppingBag, Fuel, Store, Landmark, Bus, Film, Hospital, GraduationCap, Trophy, Hotel, BookOpen, Zap, Smartphone, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +41,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     { href: "/bulletin", icon: Newspaper, label: "Actualités", color: "text-yellow-700 dark:text-yellow-500" },
     { href: "/events", icon: Calendar, label: t("nav.events"), color: "text-purple-600 dark:text-purple-500" },
     { href: "/tracking-live", icon: Navigation, label: t("nav.tracking"), color: "text-cyan-600 dark:text-cyan-500" },
-    { href: "/streetview", icon: Camera, label: t("nav.streetview"), color: "text-green-700 dark:text-green-500" },
+    // { href: "/streetview", icon: Camera, label: t("nav.streetview"), color: "text-green-700 dark:text-green-500" }, // DÉSACTIVÉ temporairement
   ];
 
   // Services d'urgence - Groupés logiquement
