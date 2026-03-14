@@ -88,7 +88,11 @@ export const signalements = pgTable("signalements", {
   commentairesCount: integer("commentaires_count").default(0),
   sharesCount: integer("shares_count").default(0),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("signalements_user_id_idx").on(table.userId),
+  index("signalements_created_at_idx").on(table.createdAt),
+  index("signalements_statut_idx").on(table.statut),
+]);
 
 export const commentaires = pgTable("commentaires", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -96,7 +100,10 @@ export const commentaires = pgTable("commentaires", {
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   contenu: text("contenu").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("commentaires_signalement_id_idx").on(table.signalementId),
+  index("commentaires_user_id_idx").on(table.userId),
+]);
 
 export const trackingSessions = pgTable("tracking_sessions", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -106,14 +113,18 @@ export const trackingSessions = pgTable("tracking_sessions", {
   isActive: boolean("is_active").notNull().default(true),
   isPanicMode: boolean("is_panic_mode").default(false),
   shareToken: text("share_token"),
-});
+}, (table) => [
+  index("tracking_sessions_user_id_active_idx").on(table.userId, table.isActive),
+]);
 
 export const onlineSessions = pgTable("online_sessions", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   connectedAt: timestamp("connected_at").notNull().defaultNow(),
   disconnectedAt: timestamp("disconnected_at"),
-});
+}, (table) => [
+  index("online_sessions_user_id_idx").on(table.userId),
+]);
 
 export const locationPoints = pgTable("location_points", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -134,7 +145,10 @@ export const notifications = pgTable("notifications", {
   signalementId: text("signalement_id").references(() => signalements.id, { onDelete: "cascade" }),
   read: boolean("read").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("notifications_user_id_read_idx").on(table.userId, table.read),
+  index("notifications_user_id_created_at_idx").on(table.userId, table.createdAt),
+]);
 
 export const emergencyContacts = pgTable("emergency_contacts", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),

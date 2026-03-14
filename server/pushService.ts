@@ -1,7 +1,7 @@
 import webpush from 'web-push';
 import { db } from './db';
 import { pushSubscriptions, signalements, notificationPreferences } from '@shared/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
