@@ -68,7 +68,7 @@ export default function Connexion() {
           title: "Connexion réussie",
           description: "Bienvenue sur Burkina Secure",
         });
-        setTimeout(() => navigate("/guide"), 100);
+        setTimeout(() => navigate("/"), 100);
       } else {
         toast({
           title: "Code incorrect",
