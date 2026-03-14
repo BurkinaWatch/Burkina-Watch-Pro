@@ -64,7 +64,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     { href: "/marches", icon: Store, label: "Marchés", color: "text-amber-700 dark:text-amber-400" },
     { href: "/ministeres", icon: Building2, label: "Ministères", color: "text-red-600 dark:text-red-500" },
     { href: "/cine", icon: Film, label: "Programme Ciné", color: "text-pink-600 dark:text-pink-500" },
-    { href: "/restaurants", icon: Utensils, label: "Restaurants", color: "text-amber-600 dark:text-amber-500" },
+    { href: "/restaurants", icon: Utensils, label: "Marquis/Restau/Cafés", color: "text-amber-600 dark:text-amber-500" },
     { href: "/sonabel-onea", icon: Zap, label: "SONABEL & ONEA", color: "text-amber-500 dark:text-amber-400" },
     { href: "/stations", icon: Fuel, label: "Stations-Service", color: "text-red-600 dark:text-red-500" },
     { href: "/universites", icon: GraduationCap, label: "Universités", color: "text-indigo-600 dark:text-indigo-500" },
