@@ -67,7 +67,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     { href: "/restaurants", icon: Utensils, label: "Marquis - Restau - Bars - Cafés", color: "text-amber-600 dark:text-amber-500" },
     { href: "/sonabel-onea", icon: Zap, label: "SONABEL & ONEA", color: "text-amber-500 dark:text-amber-400" },
     { href: "/stations", icon: Fuel, label: "Stations-Service", color: "text-red-600 dark:text-red-500" },
-    { href: "/universites", icon: GraduationCap, label: "Universités", color: "text-indigo-600 dark:text-indigo-500" },
+    { href: "/universites", icon: GraduationCap, label: "Universités & Instituts", color: "text-indigo-600 dark:text-indigo-500" },
   ];
 
   // Informations & Engagement
