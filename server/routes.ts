@@ -1440,10 +1440,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/notifications/:id/read", isAuthenticated, async (req: any, res) => {
     try {
-      const notification = await storage.markNotificationAsRead(req.params.id);
-      if (!notification) {
+      const userId = req.user.claims.sub;
+      const existing = await storage.getNotificationById(req.params.id);
+      if (!existing) {
         return res.status(404).json({ error: "Notification non trouvée" });
       }
+      if (existing.userId !== userId) {
+        return res.status(403).json({ error: "Accès non autorisé" });
+      }
+      const notification = await storage.markNotificationAsRead(req.params.id);
       res.json(notification);
     } catch (error) {
       console.error("Error marking notification as read:", error);
@@ -2012,9 +2017,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/emergency-contacts/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const success = await storage.deleteEmergencyContact(req.params.id);
+      const userId = req.user.claims.sub;
+      const success = await storage.deleteEmergencyContact(req.params.id, userId);
       if (!success) {
-        return res.status(404).json({ error: "Contact non trouvé" });
+        return res.status(404).json({ error: "Contact non trouvé ou accès non autorisé" });
       }
       res.json({ message: "Contact supprimé avec succès" });
     } catch (error) {

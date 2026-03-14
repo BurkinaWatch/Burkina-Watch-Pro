@@ -121,7 +121,7 @@ export interface IStorage {
   // Méthodes pour les contacts d'urgence et les alertes panique
   getEmergencyContacts(userId: string): Promise<EmergencyContact[]>;
   createEmergencyContact(contact: InsertEmergencyContact): Promise<EmergencyContact>;
-  deleteEmergencyContact(contactId: string): Promise<boolean>;
+  deleteEmergencyContact(contactId: string, userId?: string): Promise<boolean>;
   updateEmergencyContact(contactId: string, updates: Partial<InsertEmergencyContact>): Promise<EmergencyContact | undefined>;
   createPanicAlert(alert: InsertPanicAlert): Promise<PanicAlert>;
   getUserPanicAlerts(userId: string): Promise<PanicAlert[]>;
@@ -670,40 +670,39 @@ export class DbStorage implements IStorage {
     onlineUsers: number;
     totalGares: number;
   }> {
-    const [totalSignalementsResult] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(signalements);
-
-    const [sosCountResult] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(signalements)
-      .where(eq(signalements.isSOS, true));
-
-    const [totalUsersResult] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(users);
-
-    const [totalGaresResult] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(places)
-      .where(eq(places.placeType, "bus_station"));
-
-    // Compter les utilisateurs en ligne
-    const onlineUsers = await this.countOnlineUsers();
+    const [signalementsStats, usersResult, garesResult, onlineUsers] = await Promise.all([
+      db
+        .select({
+          total: sql<number>`count(*)::int`,
+          sosCount: sql<number>`count(*) filter (where ${signalements.isSOS} = true)::int`,
+        })
+        .from(signalements)
+        .then((r) => r[0]),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(users)
+        .then((r) => r[0]),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(places)
+        .where(eq(places.placeType, "bus_station"))
+        .then((r) => r[0]),
+      this.countOnlineUsers(),
+    ]);
 
     console.log("Stats debug:", {
-      totalSignalements: totalSignalementsResult?.count,
-      sosCount: sosCountResult?.count,
-      totalUsers: totalUsersResult?.count,
-      onlineUsers
+      totalSignalements: signalementsStats?.total,
+      sosCount: signalementsStats?.sosCount,
+      totalUsers: usersResult?.count,
+      onlineUsers,
     });
 
     return {
-      totalSignalements: totalSignalementsResult?.count || 0,
-      sosCount: sosCountResult?.count || 0,
-      totalUsers: totalUsersResult?.count || 0,
+      totalSignalements: signalementsStats?.total || 0,
+      sosCount: signalementsStats?.sosCount || 0,
+      totalUsers: usersResult?.count || 0,
       onlineUsers,
-      totalGares: totalGaresResult?.count || 0,
+      totalGares: garesResult?.count || 0,
     };
   }
 
@@ -1038,8 +1037,11 @@ L'équipe Burkina Watch
     return newContact;
   }
 
-  async deleteEmergencyContact(contactId: string): Promise<boolean> {
-    const result = await db.delete(emergencyContacts).where(eq(emergencyContacts.id, contactId));
+  async deleteEmergencyContact(contactId: string, userId?: string): Promise<boolean> {
+    const condition = userId
+      ? and(eq(emergencyContacts.id, contactId), eq(emergencyContacts.userId, userId))
+      : eq(emergencyContacts.id, contactId);
+    const result = await db.delete(emergencyContacts).where(condition);
     return result.rowCount !== null && result.rowCount > 0;
   }
 
