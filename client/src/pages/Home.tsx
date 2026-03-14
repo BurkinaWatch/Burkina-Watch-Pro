@@ -649,6 +649,7 @@ export default function Home() {
       if (!response.ok) throw new Error("Erreur lors du chargement");
       return response.json();
     },
+    staleTime: 60000, // 1 minute
   });
 
   // Changer l'image toutes les 30 secondes
@@ -817,7 +818,7 @@ export default function Home() {
       return data;
     },
     refetchInterval: 30000,
-    staleTime: 5000,
+    staleTime: 25000,
   });
 
   const recentReports = signalements.slice(0, 3);

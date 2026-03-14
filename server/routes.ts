@@ -2172,10 +2172,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   // ROUTES ANALYSE DES RISQUES ET RECOMMANDATIONS
   // ----------------------------------------
+  let riskZonesCache: { data: any; expiresAt: number } | null = null;
+  const RISK_ZONES_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
   app.get("/api/risk-zones", async (req, res) => {
     try {
+      const now = Date.now();
+      if (riskZonesCache && now < riskZonesCache.expiresAt) {
+        res.set('Cache-Control', 'public, max-age=300');
+        return res.json(riskZonesCache.data);
+      }
       const { analyzeRiskZones } = await import("./riskAnalysisService");
       const zones = await analyzeRiskZones();
+      riskZonesCache = { data: zones, expiresAt: now + RISK_ZONES_TTL_MS };
+      res.set('Cache-Control', 'public, max-age=300');
       res.json(zones);
     } catch (error) {
       console.error("Error analyzing risk zones:", error);
