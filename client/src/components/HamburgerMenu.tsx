@@ -1,12 +1,13 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Link, useLocation } from "wouter";
-import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Cross, Newspaper, Calendar, Navigation, Sparkles, Bell, Shield, Utensils, ShoppingBag, Fuel, Store, Landmark, Bus, Film, Hospital, GraduationCap, Trophy, Hotel, BookOpen, Zap, Smartphone, Building2 } from "lucide-react";
+import { Home, MapPin, FileText, AlertCircle, Heart, Info, Scale, User, LogOut, Cross, Newspaper, Calendar, Navigation, Sparkles, Bell, Shield, Utensils, ShoppingBag, Fuel, Store, Landmark, Bus, Film, Hospital, GraduationCap, Trophy, Hotel, BookOpen, Zap, Smartphone, Building2, Camera, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import BurkinaWatchLogo from "./BurkinaWatchLogo";
+import { useToast } from "@/hooks/use-toast";
 
 interface HamburgerMenuProps {
   open: boolean;
@@ -17,6 +18,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
   const [location, setLocation] = useLocation();
   const { isAuthenticated, user } = useAuth();
   const { t } = useTranslation();
+  const { toast } = useToast();
 
   const handleLogout = async () => {
     try {
@@ -41,7 +43,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     { href: "/bulletin", icon: Newspaper, label: "Actualités", color: "text-yellow-700 dark:text-yellow-500" },
     { href: "/events", icon: Calendar, label: t("nav.events"), color: "text-purple-600 dark:text-purple-500" },
     { href: "/tracking-live", icon: Navigation, label: t("nav.tracking"), color: "text-cyan-600 dark:text-cyan-500" },
-    // { href: "/streetview", icon: Camera, label: t("nav.streetview"), color: "text-green-700 dark:text-green-500" }, // DÉSACTIVÉ temporairement
+    { href: "/streetview", icon: Camera, label: t("nav.streetview"), color: "text-gray-400 dark:text-gray-600", disabled: true },
   ];
 
   // Services d'urgence - Groupés logiquement
@@ -140,20 +142,40 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
                 </p>
               </div>
               <nav className="space-y-1.5">
-                {servicesItems.map((item) => (
-                  <Link key={item.href} href={item.href}>
+                {servicesItems.map((item) =>
+                  item.disabled ? (
                     <Button
+                      key={item.href}
                       variant="ghost"
-                      className="w-full justify-start gap-3 h-11 rounded-xl hover:bg-accent/80 hover:scale-[1.02] transition-all duration-200 group relative overflow-hidden"
-                      onClick={() => onOpenChange(false)}
+                      className="w-full justify-start gap-3 h-11 rounded-xl opacity-50 cursor-not-allowed select-none"
+                      onClick={() => {
+                        toast({
+                          title: "Fonctionnalité à venir",
+                          description: "Street View sera disponible très prochainement. Restez connectés !",
+                          duration: 3000,
+                        });
+                      }}
                       data-testid={`menu-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <item.icon className={`w-5 h-5 ${item.color} group-hover:scale-110 transition-transform`} />
-                      <span className="font-medium">{item.label}</span>
+                      <item.icon className={`w-5 h-5 ${item.color}`} />
+                      <span className="font-medium text-muted-foreground">{item.label}</span>
+                      <Clock className="w-3.5 h-3.5 ml-auto text-muted-foreground/60" />
                     </Button>
-                  </Link>
-                ))}
+                  ) : (
+                    <Link key={item.href} href={item.href}>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start gap-3 h-11 rounded-xl hover:bg-accent/80 hover:scale-[1.02] transition-all duration-200 group relative overflow-hidden"
+                        onClick={() => onOpenChange(false)}
+                        data-testid={`menu-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <item.icon className={`w-5 h-5 ${item.color} group-hover:scale-110 transition-transform`} />
+                        <span className="font-medium">{item.label}</span>
+                      </Button>
+                    </Link>
+                  )
+                )}
               </nav>
             </div>
 
