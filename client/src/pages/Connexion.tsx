@@ -234,6 +234,7 @@ export default function Connexion() {
                     maxLength={6}
                     value={otpCode}
                     onChange={setOtpCode}
+                    autoComplete="one-time-code"
                     data-testid="input-otp"
                   >
                     <InputOTPGroup>
