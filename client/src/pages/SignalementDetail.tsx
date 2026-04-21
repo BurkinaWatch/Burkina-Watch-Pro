@@ -13,12 +13,10 @@ import CommentDialog from "@/components/CommentDialog";
 import type { Signalement, Categorie, Statut } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useAuth } from "@/hooks/useAuth";
 
 export default function SignalementDetail() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
-  const { user } = useAuth();
 
   const { data: signalement, isLoading } = useQuery<Signalement>({
     queryKey: [`/api/signalements/${id}`],
@@ -59,7 +57,6 @@ export default function SignalementDetail() {
   const pageUrl = `https://${window.location.host}/signalement/${id}`;
   const pageTitle = `${signalement.titre} | Burkina Watch`;
   const pageDescription = signalement.description.substring(0, 160);
-  const canEdit = signalement.userId === "demo-user" || (user && signalement.userId === user.id) || user?.role === "admin";
 
   return (
     <>
@@ -151,16 +148,14 @@ export default function SignalementDetail() {
               <StatutBadge statut={(signalement.statut || "en_attente") as Statut} categorie={signalement.categorie as Categorie} />
             </div>
 
-            {canEdit && (
-              <div className="mb-6 max-w-sm">
-                <p className="text-sm font-medium mb-2">Changer le statut</p>
-                <SignalementStatusControl
-                  signalementId={signalement.id}
-                  statut={(signalement.statut || "en_attente") as Statut}
-                  categorie={signalement.categorie as Categorie}
-                />
-              </div>
-            )}
+            <div className="mb-6 max-w-sm">
+              <p className="text-sm font-medium mb-2">Changer le statut</p>
+              <SignalementStatusControl
+                signalementId={signalement.id}
+                statut={(signalement.statut || "en_attente") as Statut}
+                categorie={signalement.categorie as Categorie}
+              />
+            </div>
 
             <h1 className="text-3xl font-bold mb-4">{signalement.titre}</h1>
 

@@ -307,14 +307,14 @@ export default function SignalementCard({
           </span>
         </div>
 
-        {canEdit && (
-          <div className="mb-3 space-y-2" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-            <SignalementStatusControl
-              signalementId={id}
-              statut={(statut || "en_attente") as Statut}
-              categorie={categorie as Categorie}
-              compact
-            />
+        <div className="mb-3 space-y-2" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+          <SignalementStatusControl
+            signalementId={id}
+            statut={(statut || "en_attente") as Statut}
+            categorie={categorie as Categorie}
+            compact
+          />
+          {canEdit && (
             <EditSignalementDialog 
               signalement={{
                 id,
@@ -335,8 +335,8 @@ export default function SignalementCard({
                 createdAt,
               } as Signalement}
             />
-          </div>
-        )}
+          )}
+        </div>
 
         <div className="flex items-center gap-1 pt-3 border-t" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
           <Button

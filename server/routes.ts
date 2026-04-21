@@ -1253,20 +1253,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Signalement non trouvé" });
       }
 
-      const userId = req.user?.claims?.sub || "demo-user";
-      const user = req.user ? await storage.getUser(userId) : undefined;
-      const isDemoSignalement = existingSignalement.userId === "demo-user";
-      const isOwner = existingSignalement.userId === userId;
-      const isAdmin = user?.role === "admin";
-
-      if (!isDemoSignalement && !req.user) {
-        return res.status(401).json({ error: "Authentification requise" });
-      }
-
-      if (!isDemoSignalement && !isOwner && !isAdmin) {
-        return res.status(403).json({ error: "Vous n'avez pas les droits pour modifier ce signalement" });
-      }
-
       const signalement = await storage.updateSignalementStatut(req.params.id, statut);
 
       if (!signalement) {
