@@ -5,6 +5,7 @@ import CategoryBadge from "./CategoryBadge";
 import StatutBadge from "./StatutBadge";
 import EditSignalementDialog from "./EditSignalementDialog";
 import CommentDialog from "./CommentDialog";
+import SignalementStatusControl from "./SignalementStatusControl";
 import type { Categorie, Statut, Signalement } from "@shared/schema";
 import { Heart, Share2, MapPin, AlertCircle, ShieldCheck, ShieldAlert, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -299,7 +300,7 @@ export default function SignalementCard({
 
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
-            <StatutBadge statut={(statut || "en_attente") as Statut} />
+            <StatutBadge statut={(statut || "en_attente") as Statut} categorie={categorie as Categorie} />
           </div>
           <span className="text-xs text-muted-foreground">
             {formatDistanceToNow(createdAt, { addSuffix: true, locale: fr })}
@@ -307,7 +308,13 @@ export default function SignalementCard({
         </div>
 
         {canEdit && (
-          <div className="mb-3" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+          <div className="mb-3 space-y-2" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+            <SignalementStatusControl
+              signalementId={id}
+              statut={(statut || "en_attente") as Statut}
+              categorie={categorie as Categorie}
+              compact
+            />
             <EditSignalementDialog 
               signalement={{
                 id,

@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import type { Statut } from "@shared/schema";
+import type { Categorie, Statut } from "@shared/schema";
 import { Clock, CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 
 const statutConfig: Record<Statut, { label: string; icon: typeof Clock; className: string }> = {
@@ -11,18 +11,20 @@ const statutConfig: Record<Statut, { label: string; icon: typeof Clock; classNam
 
 interface StatutBadgeProps {
   statut: Statut;
+  categorie?: Categorie;
   showIcon?: boolean;
   className?: string;
 }
 
-export default function StatutBadge({ statut, showIcon = true, className = "" }: StatutBadgeProps) {
+export default function StatutBadge({ statut, categorie, showIcon = true, className = "" }: StatutBadgeProps) {
   const config = statutConfig[statut];
   const Icon = config.icon;
+  const label = statut === "resolu" && categorie === "personne_recherchee" ? "Retrouvée" : config.label;
   
   return (
-    <Badge className={`${config.className} ${className} no-default-hover-elevate no-default-active-elevate`}>
+    <Badge className={`${config.className} ${className} no-default-hover-elevate no-default-active-elevate`} data-testid={`badge-statut-${statut}`}>
       {showIcon && <Icon className="w-3 h-3 mr-1" />}
-      {config.label}
+      {label}
     </Badge>
   );
 }

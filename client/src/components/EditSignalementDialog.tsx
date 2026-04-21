@@ -150,7 +150,7 @@ export default function EditSignalementDialog({ signalement }: EditSignalementDi
       case "en_cours":
         return "En cours";
       case "resolu":
-        return "Résolu";
+        return signalement.categorie === "personne_recherchee" ? "Retrouvée" : "Résolu";
       case "rejete":
         return "Rejeté";
       default:
@@ -232,6 +232,7 @@ export default function EditSignalementDialog({ signalement }: EditSignalementDi
                       <SelectItem value="environnement">🌳 Environnement</SelectItem>
                       <SelectItem value="corruption">⚖️ Corruption</SelectItem>
                       <SelectItem value="infrastructure">🏗️ Infrastructure</SelectItem>
+                      <SelectItem value="personne_recherchee">🔎 Personne recherchée</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

@@ -1240,23 +1240,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/signalements/:id/statut", isAuthenticated, async (req: any, res) => {
+  app.patch("/api/signalements/:id/statut", signalementMutationLimiter, async (req: any, res) => {
     try {
       const { statut } = req.body;
-      const userId = req.user.claims.sub;
 
       if (!statut || !["en_attente", "en_cours", "resolu", "rejete"].includes(statut)) {
         return res.status(400).json({ error: "Statut invalide" });
       }
 
-      // Vérifier que l'utilisateur a les droits (admin ou auteur du signalement)
       const existingSignalement = await storage.getSignalement(req.params.id);
       if (!existingSignalement) {
         return res.status(404).json({ error: "Signalement non trouvé" });
       }
 
-      const user = await storage.getUser(userId);
-      if (existingSignalement.userId !== userId && user?.role !== "admin") {
+      const userId = req.user?.claims?.sub || "demo-user";
+      const user = req.user ? await storage.getUser(userId) : undefined;
+      const isDemoSignalement = existingSignalement.userId === "demo-user";
+      const isOwner = existingSignalement.userId === userId;
+      const isAdmin = user?.role === "admin";
+
+      if (!isDemoSignalement && !req.user) {
+        return res.status(401).json({ error: "Authentification requise" });
+      }
+
+      if (!isDemoSignalement && !isOwner && !isAdmin) {
         return res.status(403).json({ error: "Vous n'avez pas les droits pour modifier ce signalement" });
       }
 
@@ -1273,7 +1280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const statusMessages: Record<string, string> = {
         en_attente: "Votre signalement est en attente de traitement",
         en_cours: "Votre signalement est en cours de traitement",
-        resolu: "Votre signalement a été résolu",
+        resolu: signalement.categorie === "personne_recherchee" ? "La personne recherchée a été retrouvée" : "Votre signalement a été résolu",
         rejete: "Votre signalement a été rejeté"
       };
 

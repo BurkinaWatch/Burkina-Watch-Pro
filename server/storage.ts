@@ -458,7 +458,7 @@ export class DbStorage implements IStorage {
         .returning();
 
       // Award points if status changed from non-resolu to resolu
-      if (oldSignalement.statut !== 'resolu' && statut === 'resolu' && oldSignalement.userId) {
+      if (oldSignalement.statut !== 'resolu' && statut === 'resolu' && oldSignalement.userId && oldSignalement.userId !== "demo-user") {
         const { POINTS_CONFIG, calculateLevel } = await import("@shared/pointsSystem");
 
         const [author] = await tx
@@ -468,8 +468,8 @@ export class DbStorage implements IStorage {
           .limit(1);
 
         if (!author) {
-          // If author doesn't exist, we cannot award points -> rollback transaction
-          throw new Error(`Impossible de résoudre le signalement : auteur ${oldSignalement.userId} introuvable`);
+          console.warn(`Auteur ${oldSignalement.userId} introuvable, points non attribués`);
+          return result;
         }
 
         const newPoints = author.userPoints + POINTS_CONFIG.VERIFIED_SIGNALEMENT;
