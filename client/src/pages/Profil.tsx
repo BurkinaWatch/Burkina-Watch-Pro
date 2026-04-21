@@ -1398,16 +1398,6 @@ export default function Profil() {
 
             <Separator />
 
-            <div>
-              <Label className="text-sm font-medium">Email</Label>
-              <p className="text-sm text-muted-foreground mt-1">{user.email || "Pas d'email"}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                L'email ne peut pas être modifié
-              </p>
-            </div>
-
-            <Separator />
-
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-sm font-medium">Conseils d'utilisation</Label>
