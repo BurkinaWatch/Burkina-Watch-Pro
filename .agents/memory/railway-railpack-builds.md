@@ -7,4 +7,4 @@ Railway can select Railpack automatically even when a nixpacks.toml file is pres
 
 **Why:** The automatic Railpack path selected Node 22 and ran npm install, which failed inside npm before the application build. The repository's existing Nixpacks install step was not applied.
 
-**How to apply:** When diagnosing Railway build failures, keep `nodejs_22` and npm 10.8.2, force dev installs, and use `npm ci --include=dev --ignore-scripts` when Railway's npm hangs on native postinstall hooks.
+**How to apply:** When diagnosing Railway build failures, keep `nodejs_22` and npm 10.8.2, force dev installs, and use `npm ci --include=dev --legacy-peer-deps --ignore-scripts --no-audit --no-fund` when Railway's npm fails during dependency resolution or native postinstall hooks.
