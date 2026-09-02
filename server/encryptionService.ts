@@ -1,5 +1,4 @@
 import * as crypto from "crypto";
-import { KeyManagementServiceClient } from "@google-cloud/kms";
 
 // Configuration
 const ALGORITHM = "aes-256-gcm";
@@ -23,10 +22,28 @@ interface KMSConfig {
   cryptoKeyId?: string;
 }
 
+interface KMSClient {
+  cryptoKeyPath(
+    projectId: string,
+    locationId: string,
+    keyRingId: string,
+    cryptoKeyId: string
+  ): string;
+  encrypt(request: {
+    name: string;
+    plaintext: Buffer;
+  }): Promise<[{ ciphertext?: Uint8Array }]>;
+  decrypt(request: {
+    name: string;
+    ciphertext: Buffer;
+  }): Promise<[{ plaintext?: Uint8Array }]>;
+}
+
 class EncryptionService {
   private masterKey: Buffer | null = null;
-  private kmsClient: KeyManagementServiceClient | null = null;
+  private kmsClient: KMSClient | null = null;
   private kmsConfig: KMSConfig;
+  private kmsReady: Promise<void> | null = null;
 
   constructor() {
     this.kmsConfig = {
@@ -42,16 +59,19 @@ class EncryptionService {
 
   private initialize() {
     if (this.kmsConfig.enabled) {
-      try {
-        this.kmsClient = new KeyManagementServiceClient();
-        console.log("✅ KMS client initialisé");
-      } catch (error) {
-        console.warn(
-          "⚠️  KMS non disponible, utilisation du fallback local:",
-          error
-        );
-        this.initializeFallback();
-      }
+      const kmsModuleName = "@google-cloud/kms";
+      this.kmsReady = import(kmsModuleName)
+        .then(({ KeyManagementServiceClient }: any) => {
+          this.kmsClient = new KeyManagementServiceClient();
+          console.log("✅ KMS client initialisé");
+        })
+        .catch((error) => {
+          console.warn(
+            "⚠️  KMS non disponible, utilisation du fallback local:",
+            error
+          );
+          this.initializeFallback();
+        });
     } else {
       this.initializeFallback();
     }
@@ -84,6 +104,10 @@ class EncryptionService {
   }
 
   async encryptDataKey(dataKey: Buffer): Promise<string> {
+    if (this.kmsReady) {
+      await this.kmsReady;
+    }
+
     if (this.kmsClient && this.kmsConfig.enabled) {
       return await this.encryptWithKMS(dataKey);
     } else {
@@ -139,6 +163,10 @@ class EncryptionService {
   }
 
   async decryptDataKey(encryptedKey: string): Promise<Buffer> {
+    if (this.kmsReady) {
+      await this.kmsReady;
+    }
+
     if (this.kmsClient && this.kmsConfig.enabled) {
       return await this.decryptWithKMS(encryptedKey);
     } else {
