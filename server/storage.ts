@@ -110,12 +110,12 @@ export interface IStorage {
   createNotification(data: typeof insertNotificationSchema._type): Promise<any | undefined>;
   getUserNotifications(userId: string): Promise<any[]>;
   getUnreadNotificationsCount(userId: string): Promise<number>;
-  markNotificationAsRead(notificationId: string): Promise<any | undefined>;
+  markNotificationAsRead(notificationId: string, userId: string): Promise<any | undefined>;
   markAllNotificationsAsRead(userId: string): Promise<void>;
   notifySignalementOwner(signalementId: string, type: string, title: string, description: string): Promise<void>;
   broadcastNotification(type: string, title: string, description: string, signalementId: string | null, excludeUserId?: string): Promise<void>;
   getNotificationById(notificationId: string): Promise<Notification | undefined>; // Added method
-  deleteNotification(notificationId: string): Promise<boolean>; // Added method
+  deleteNotification(notificationId: string, userId: string): Promise<boolean>; // Added method
   deleteAllUserNotifications(userId: string): Promise<void>; // Added method
 
   // Méthodes pour les contacts d'urgence et les alertes panique
@@ -861,11 +861,17 @@ export class DbStorage implements IStorage {
     return result[0]?.count || 0;
   }
 
-  async markNotificationAsRead(notificationId: string): Promise<Notification | undefined> {
+  async markNotificationAsRead(
+    notificationId: string,
+    userId: string,
+  ): Promise<Notification | undefined> {
     const [notification] = await db
       .update(notifications)
       .set({ read: true })
-      .where(eq(notifications.id, notificationId))
+      .where(and(
+        eq(notifications.id, notificationId),
+        eq(notifications.userId, userId),
+      ))
       .returning();
     return notification;
   }
@@ -884,10 +890,13 @@ export class DbStorage implements IStorage {
     return result[0];
   }
 
-  async deleteNotification(notificationId: string): Promise<boolean> {
+  async deleteNotification(notificationId: string, userId: string): Promise<boolean> {
     try {
       const result = await db.delete(notifications)
-        .where(eq(notifications.id, notificationId))
+        .where(and(
+          eq(notifications.id, notificationId),
+          eq(notifications.userId, userId),
+        ))
         .returning();
       return result.length > 0;
     } catch (error) {

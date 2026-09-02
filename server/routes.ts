@@ -34,6 +34,7 @@ import { overpassService } from "./overpassService";
 import { dataMigrationService } from "./dataMigrationService";
 import { BOUTIQUES_DATA } from "./boutiquesData";
 import { PHARMACIES_DATA } from "./pharmaciesData";
+import { registerNotificationRoutes } from "./notificationRoutes";
 import type { Place } from "@shared/schema";
 
 // Create a Map for quick pharmacy lookups by name
@@ -1406,95 +1407,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   // ROUTES NOTIFICATIONS
   // ----------------------------------------
-  app.get("/api/notifications", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const notifications = await storage.getUserNotifications(userId);
-      res.json(notifications);
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-      res.status(500).json({ error: "Erreur lors de la récupération des notifications" });
-    }
-  });
-
-  app.get("/api/notifications/unread-count", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const count = await storage.getUnreadNotificationsCount(userId);
-      res.json({ count });
-    } catch (error) {
-      console.error("Error fetching unread count:", error);
-      res.status(500).json({ error: "Erreur lors de la récupération du nombre de notifications non lues" });
-    }
-  });
-
-  app.patch("/api/notifications/:id/read", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const existing = await storage.getNotificationById(req.params.id);
-      if (!existing) {
-        return res.status(404).json({ error: "Notification non trouvée" });
-      }
-      if (existing.userId !== userId) {
-        return res.status(403).json({ error: "Accès non autorisé" });
-      }
-      const notification = await storage.markNotificationAsRead(req.params.id);
-      res.json(notification);
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
-      res.status(500).json({ error: "Erreur lors de la mise à jour de la notification" });
-    }
-  });
-
-  app.post("/api/notifications/mark-all-read", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      await storage.markAllNotificationsAsRead(userId);
-      res.json({ message: "Toutes les notifications ont été marquées comme lues" });
-    } catch (error) {
-      console.error("Error marking all notifications as read:", error);
-      res.status(500).json({ error: "Erreur lors de la mise à jour des notifications" });
-    }
-  });
-
-  app.delete("/api/notifications/:id", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const notificationId = req.params.id;
-
-      const notification = await storage.getNotificationById(notificationId);
-
-      if (!notification) {
-        return res.status(404).json({ error: "Notification non trouvée" });
-      }
-
-      if (notification.userId !== userId) {
-        return res.status(403).json({ error: "Non autorisé" });
-      }
-
-      const success = await storage.deleteNotification(notificationId);
-
-      if (!success) {
-        return res.status(500).json({ error: "Erreur lors de la suppression" });
-      }
-
-      res.json({ message: "Notification supprimée avec succès" });
-    } catch (error) {
-      console.error("Error deleting notification:", error);
-      res.status(500).json({ error: "Erreur lors de la suppression de la notification" });
-    }
-  });
-
-  app.delete("/api/notifications", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      await storage.deleteAllUserNotifications(userId);
-      res.json({ message: "Toutes les notifications ont été supprimées" });
-    } catch (error) {
-      console.error("Error deleting all notifications:", error);
-      res.status(500).json({ error: "Erreur lors de la suppression des notifications" });
-    }
-  });
+  registerNotificationRoutes(app, storage, isAuthenticated);
 
   // ----------------------------------------
   // ROUTES PUSH NOTIFICATIONS
