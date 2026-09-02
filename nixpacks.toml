@@ -1,10 +1,10 @@
 # Nixpacks configuration for Railway deployment
 [phases.setup]
 nixPkgs = ["nodejs_22"]
-cmds = ["npm install --global npm@10.8.2"]
+cmds = ["npm config set registry https://registry.npmjs.org/", "npm install --global npm@10.8.2"]
 
 [phases.install]
-cmds = ["npm ci --include=dev"]
+cmds = ["npm install --no-audit"]
 
 [phases.build]
 cmds = ["npm run build"]
@@ -14,3 +14,4 @@ cmd = "npm run start"
 
 [variables]
 NPM_CONFIG_PRODUCTION = "false"
+
