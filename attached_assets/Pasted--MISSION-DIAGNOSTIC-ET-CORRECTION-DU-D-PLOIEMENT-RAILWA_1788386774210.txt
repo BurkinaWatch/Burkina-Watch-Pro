@@ -1,0 +1,376 @@
+## MISSION — DIAGNOSTIC ET CORRECTION DU DÉPLOIEMENT RAILWAY
+
+Tu dois diagnostiquer et corriger le problème de déploiement Railway de ce projet **sans modifier les fonctionnalités métier de l'application BurkinaWatch**.
+
+### CONTEXTE
+
+Le déploiement Railway échoue pendant le build.
+
+Le log Railway montre notamment :
+
+```text
+Node.js 22
+npm 10.8.2
+
+npm ci --include=dev --legacy-peer-deps --ignore-scripts --no-audit --no-fund
+
+npm error Exit handler never called!
+
+...
+
+npm run build
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+sh: 1: vite: not found
+
+Build Failed
+exit code: 127
+```
+
+Railway génère également des warnings BuildKit concernant l'utilisation de secrets dans `ARG` et `ENV`, notamment :
+
+```text
+CLIENT_SECRET
+GMAIL_APP_PASSWORD
+GROQ_API_KEY
+RESEND_API_KEY
+SESSION_SECRET
+VAPID_PRIVATE_KEY
+VITE_GOOGLE_MAPS_API_KEY
+```
+
+### OBJECTIF PRINCIPAL
+
+Faire en sorte que le projet puisse être installé, compilé et déployé proprement sur Railway.
+
+Le problème doit être traité à la racine.
+
+Ne te contente surtout pas de masquer l'erreur `vite: not found`.
+
+---
+
+# ÉTAPE 1 — AUDIT AVANT MODIFICATION
+
+Inspecte d'abord sans modifier :
+
+* `package.json`
+* `package-lock.json`
+* `Dockerfile`
+* `nixpacks.toml`
+* `.nvmrc`
+* `.node-version`
+* `railway.toml`
+* les fichiers de configuration du build
+* les scripts npm
+* les `devDependencies`
+* toute configuration liée à Node.js/npm/Nixpacks/Railway
+
+Détermine précisément :
+
+1. pourquoi Railway utilise Node.js 22 ;
+2. pourquoi npm 10.8.2 est installé explicitement ;
+3. si cette version de npm est nécessaire ;
+4. si `vite` est réellement présent dans `devDependencies` ;
+5. si `package-lock.json` est cohérent avec `package.json` ;
+6. si le `npm ci` incomplet explique directement l'absence de `vite` ;
+7. si un Dockerfile ou une configuration Nixpacks personnalisée force inutilement ce comportement ;
+8. pourquoi les secrets sont injectés dans `ARG`/`ENV` pendant la construction.
+
+Ne modifie rien avant d'avoir identifié les causes.
+
+---
+
+# ÉTAPE 2 — CORRIGER LA CHAÎNE NODE/NPM
+
+Le log indique :
+
+```text
+Node.js 22
+npm 10.8.2
+npm ci
+npm error Exit handler never called!
+```
+
+Il existe des problèmes connus liés à certaines combinaisons Node/npm autour de `npm 10.8.2`.
+
+Détermine la combinaison Node.js/npm la plus stable et compatible avec ce projet.
+
+Priorité :
+
+* privilégier une version LTS stable ;
+* éviter de dépendre inutilement de npm 10.8.2 ;
+* ne pas installer globalement une version de npm si ce n'est pas nécessaire ;
+* conserver une configuration reproductible entre Replit et Railway.
+
+Si le projet fonctionne correctement avec Node 20 LTS, privilégie cette solution plutôt que de forcer Node 22.
+
+Mais ne change pas arbitrairement la version Node : vérifie d'abord les contraintes des dépendances du projet.
+
+---
+
+# ÉTAPE 3 — CORRIGER LES DÉPENDANCES
+
+Vérifie particulièrement :
+
+```text
+vite
+esbuild
+typescript
+tsx
+@vitejs/*
+```
+
+Vérifie que `vite` est bien disponible dans les dépendances nécessaires au build.
+
+Le build actuel contient :
+
+```text
+vite build
+```
+
+Donc `vite` doit être installé avant l'exécution de `npm run build`.
+
+Vérifie également que `npm ci` peut installer correctement les `devDependencies` dans l'environnement Railway.
+
+Ne déplace pas des packages entre `dependencies` et `devDependencies` sans raison technique.
+
+---
+
+# ÉTAPE 4 — VÉRIFIER LE LOCKFILE
+
+Vérifie que :
+
+```text
+package.json
+package-lock.json
+```
+
+sont parfaitement cohérents.
+
+Si nécessaire, régénère proprement le lockfile avec une version de Node/npm compatible et stable.
+
+Ensuite teste :
+
+```bash
+npm ci
+```
+
+puis :
+
+```bash
+npm run build
+```
+
+Le résultat attendu est que :
+
+```text
+vite build
+```
+
+fonctionne réellement.
+
+---
+
+# ÉTAPE 5 — SÉCURITÉ DES SECRETS
+
+Le Dockerfile généré par Railway contient actuellement des constructions du type :
+
+```dockerfile
+ARG CLIENT_SECRET
+ARG GROQ_API_KEY
+ARG SESSION_SECRET
+...
+```
+
+puis :
+
+```dockerfile
+ENV CLIENT_SECRET=$CLIENT_SECRET
+ENV GROQ_API_KEY=$GROQ_API_KEY
+ENV SESSION_SECRET=$SESSION_SECRET
+...
+```
+
+Corrige cette architecture.
+
+Les secrets privés doivent être fournis par les variables d'environnement Railway et consommés par l'application au runtime.
+
+Ne mets jamais de valeur secrète directement dans :
+
+* le code source ;
+* `Dockerfile` ;
+* `ARG` ;
+* des fichiers committés ;
+* des logs ;
+* le frontend.
+
+Attention également à :
+
+```text
+VITE_GOOGLE_MAPS_API_KEY
+```
+
+Une variable préfixée `VITE_` est destinée au bundle frontend et ne doit donc jamais être considérée comme un secret backend. Vérifie son usage et distingue clairement :
+
+* variables publiques nécessaires au frontend ;
+* secrets strictement backend.
+
+Ne casse aucune fonctionnalité existante liée à Google Maps.
+
+---
+
+# ÉTAPE 6 — NE PAS CASSER NIXPACKS/RAILWAY
+
+Détermine si le Dockerfile personnalisé est réellement nécessaire.
+
+Le log montre que Railway génère actuellement un Dockerfile Nixpacks avec :
+
+```text
+nixpacks-v1.41.0
+```
+
+et plusieurs étapes `COPY`, `npm ci`, `npm run build`, etc.
+
+Si le Dockerfile ou la configuration Nixpacks a été généré automatiquement, ne le remplace pas aveuglément.
+
+Choisis la solution la plus simple et robuste entre :
+
+* configuration Railway/Railpack propre ;
+* `nixpacks.toml` minimal ;
+* Dockerfile explicite uniquement si nécessaire.
+
+Évite les configurations complexes qui ne servent à rien.
+
+---
+
+# ÉTAPE 7 — BUILD REPRODUCTIBLE
+
+Le résultat final doit permettre cette séquence :
+
+```bash
+npm ci
+npm run build
+npm run start
+```
+
+sans erreur.
+
+Le build doit produire le dossier `dist` attendu par l'application.
+
+Le serveur doit démarrer correctement avec le port fourni par Railway :
+
+```text
+process.env.PORT
+```
+
+Ne hardcode pas un port Railway.
+
+---
+
+# ÉTAPE 8 — NE PAS MODIFIER LE MÉTIER DE BURKINAWATCH
+
+C'est extrêmement important.
+
+Tu n'as pas pour mission de refaire l'application.
+
+Ne modifie pas :
+
+* les pages ;
+* les fonctionnalités ;
+* les routes métier ;
+* la base de données ;
+* les modèles ;
+* l'authentification ;
+* les signalements ;
+* le SOS ;
+* la carte ;
+* les paiements ;
+* les notifications ;
+* les intégrations externes ;
+
+sauf si une modification est strictement nécessaire au fonctionnement du BUILD/DEPLOYMENT.
+
+---
+
+# ÉTAPE 9 — TESTS
+
+Après les corrections, exécute réellement :
+
+```bash
+npm ci
+```
+
+puis :
+
+```bash
+npm run build
+```
+
+puis, si possible :
+
+```bash
+npm run start
+```
+
+Vérifie également :
+
+```bash
+npm list vite
+```
+
+et confirme que Vite est réellement installé.
+
+Si `npm ci` échoue encore, NE PAS simplement continuer vers `npm run build`.
+
+Il faut résoudre l'échec de `npm ci` avant de considérer le problème terminé.
+
+---
+
+# ÉTAPE 10 — RAPPORT FINAL
+
+À la fin, donne-moi un rapport très clair avec exactement :
+
+### CAUSE RACINE
+
+Explique pourquoi Railway échouait.
+
+### CORRECTIONS EFFECTUÉES
+
+Liste chaque fichier modifié et pourquoi.
+
+### NODE / NPM
+
+Indique les versions finalement retenues.
+
+### BUILD
+
+Indique si :
+
+```bash
+npm ci
+npm run build
+```
+
+fonctionnent.
+
+### RAILWAY
+
+Indique les éventuelles modifications à effectuer dans les variables ou paramètres Railway.
+
+### SÉCURITÉ
+
+Indique comment les secrets sont maintenant gérés.
+
+### RISQUES
+
+Signale tout problème restant qui pourrait encore empêcher le déploiement.
+
+IMPORTANT :
+
+Ne me dis pas simplement que le problème est corrigé parce que le code semble correct.
+
+Je veux que tu vérifies réellement le processus d'installation et de build.
+
+Si tu rencontres une erreur pendant la correction, arrête-toi sur cette erreur, analyse-la et corrige-la avant de passer à l'étape suivante.
