@@ -1,0 +1,183 @@
+2026-09-02T18:24:48.228171126Z [inf]  unpacking archive
+2026-09-02T18:24:48.317142348Z [inf]  using build driver nixpacks-v1.41.0
+2026-09-02T18:24:48.468592543Z [inf]  
+2026-09-02T18:24:48.468604431Z [inf]  ╔══════════════════════════════ Nixpacks v1.41.0 ══════════════════════════════╗
+2026-09-02T18:24:48.468607245Z [inf]  ║ setup      │ pkgs: nodejs_22                                                 ║
+2026-09-02T18:24:48.468608517Z [inf]  ║            │ cmds: npm install --global npm@10.8.2                           ║
+2026-09-02T18:24:48.468628427Z [inf]  ║──────────────────────────────────────────────────────────────────────────────║
+2026-09-02T18:24:48.468629628Z [inf]  ║ caddy      │ pkgs: caddy                                                     ║
+2026-09-02T18:24:48.468631892Z [inf]  ║            │ cmds: caddy fmt --overwrite /assets/Caddyfile                   ║
+2026-09-02T18:24:48.468635657Z [inf]  ║──────────────────────────────────────────────────────────────────────────────║
+2026-09-02T18:24:48.468637340Z [inf]  ║ install    │ NODE_ENV=development NPM_CONFIG_PRODUCTION=false npm ci         ║
+2026-09-02T18:24:48.468638151Z [inf]  ║            │ --include=dev                                                   ║
+2026-09-02T18:24:48.468639643Z [inf]  ║──────────────────────────────────────────────────────────────────────────────║
+2026-09-02T18:24:48.468640585Z [inf]  ║ build      │ NODE_ENV=development NPM_CONFIG_PRODUCTION=false npm run build  ║
+2026-09-02T18:24:48.468642528Z [inf]  ║──────────────────────────────────────────────────────────────────────────────║
+2026-09-02T18:24:48.468643339Z [inf]  ║ start      │ npm run start                                                   ║
+2026-09-02T18:24:48.468646804Z [inf]  ╚══════════════════════════════════════════════════════════════════════════════╝
+2026-09-02T18:24:48.468647566Z [inf]  
+2026-09-02T18:24:48.469449769Z [inf]  
+2026-09-02T18:24:48.469451532Z [inf]  Saved output to:
+2026-09-02T18:24:48.469455407Z [inf]    snapshot-target-unpack
+2026-09-02T18:24:48.553276502Z [inf]  [internal] load build definition from Dockerfile
+2026-09-02T18:24:48.553665075Z [inf]  [internal] load build definition from Dockerfile
+2026-09-02T18:24:48.553703473Z [inf]  [internal] load build definition from Dockerfile
+2026-09-02T18:24:48.623473135Z [inf]  [internal] load build definition from Dockerfile
+2026-09-02T18:24:48.638785920Z [inf]  [internal] load metadata for ghcr.io/railwayapp/nixpacks:ubuntu-1745885067
+2026-09-02T18:24:48.864887591Z [inf]  [internal] load metadata for ghcr.io/railwayapp/nixpacks:ubuntu-1745885067
+2026-09-02T18:24:48.865974081Z [inf]  [internal] load .dockerignore
+2026-09-02T18:24:48.866001573Z [inf]  [internal] load .dockerignore
+2026-09-02T18:24:48.866348053Z [inf]  [internal] load .dockerignore
+2026-09-02T18:24:48.953663180Z [inf]  [internal] load .dockerignore
+2026-09-02T18:24:48.976179032Z [wrn]  SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "CLIENT_SECRET") (line 13)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+
+2026-09-02T18:24:48.976183038Z [wrn]  SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "GMAIL_APP_PASSWORD") (line 13)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+
+2026-09-02T18:24:48.976188897Z [wrn]  SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "GROQ_API_KEY") (line 13)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+
+2026-09-02T18:24:48.976417721Z [wrn]  SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "RESEND_API_KEY") (line 13)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+
+2026-09-02T18:24:48.976419934Z [wrn]  SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "SESSION_SECRET") (line 13)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+
+2026-09-02T18:24:48.976421206Z [wrn]  SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "VAPID_PRIVATE_KEY") (line 13)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+
+2026-09-02T18:24:48.976422277Z [wrn]  SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "VITE_GOOGLE_MAPS_API_KEY") (line 13)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+
+2026-09-02T18:24:48.977183129Z [wrn]  SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "CLIENT_SECRET") (line 14)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+
+2026-09-02T18:24:48.977185763Z [wrn]  SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "GMAIL_APP_PASSWORD") (line 14)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+
+2026-09-02T18:24:48.977187816Z [wrn]  SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "GROQ_API_KEY") (line 14)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+
+2026-09-02T18:24:48.977682578Z [wrn]  SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "RESEND_API_KEY") (line 14)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+
+2026-09-02T18:24:48.977684351Z [wrn]  SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "SESSION_SECRET") (line 14)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+
+2026-09-02T18:24:48.977688487Z [wrn]  SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "VAPID_PRIVATE_KEY") (line 14)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+
+2026-09-02T18:24:48.977689779Z [wrn]  SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "VITE_GOOGLE_MAPS_API_KEY") (line 14)(https://docs.docker.com/go/dockerfile/rule/secrets-used-in-arg-or-env/)
+ details: Sensitive data should not be used in the ARG or ENV commands
+
+2026-09-02T18:24:48.978334416Z [wrn]  UndefinedVar: Usage of undefined variable '$NIXPACKS_PATH' (line 25)(https://docs.docker.com/go/dockerfile/rule/undefined-var/)
+ details: Variables should be defined before their use
+
+2026-09-02T18:24:48.985995591Z [inf]  [stage-0 11/17] RUN  caddy fmt --overwrite /assets/Caddyfile
+2026-09-02T18:24:48.985998335Z [inf]  [stage-0 10/17] COPY . /app/.
+2026-09-02T18:24:48.985999907Z [inf]  [stage-0  9/17] RUN  npm install --global npm@10.8.2
+2026-09-02T18:24:48.986001209Z [inf]  [stage-0  8/17] COPY . /app/.
+2026-09-02T18:24:48.986003122Z [inf]  [stage-0  7/17] COPY .nixpacks/assets /assets/
+2026-09-02T18:24:48.986003904Z [inf]  [stage-0  1/17] FROM ghcr.io/railwayapp/nixpacks:ubuntu-1745885067@sha256:d45c89d80e13d7ad0fd555b5130f22a866d9dd10e861f589932303ef2314c7de
+2026-09-02T18:24:48.986004625Z [inf]  [stage-0  5/17] COPY .nixpacks/nixpkgs-e6f23dc08d3624daab7094b701aa3954923c6bbb.nix .nixpacks/nixpkgs-e6f23dc08d3624daab7094b701aa3954923c6bbb.nix
+2026-09-02T18:24:48.986005366Z [inf]  [stage-0  4/17] RUN nix-env -if .nixpacks/nixpkgs-ba913eda2df8eb72147259189d55932012df6301.nix && nix-collect-garbage -d
+2026-09-02T18:24:48.986005977Z [inf]  [stage-0  3/17] COPY .nixpacks/nixpkgs-ba913eda2df8eb72147259189d55932012df6301.nix .nixpacks/nixpkgs-ba913eda2df8eb72147259189d55932012df6301.nix
+2026-09-02T18:24:48.986006648Z [inf]  [internal] load build context
+2026-09-02T18:24:48.986007709Z [inf]  [stage-0  2/17] WORKDIR /app/
+2026-09-02T18:24:48.986008310Z [inf]  [stage-0 12/17] COPY . /app/.
+2026-09-02T18:24:48.986009011Z [inf]  [stage-0  6/17] RUN nix-env -if .nixpacks/nixpkgs-e6f23dc08d3624daab7094b701aa3954923c6bbb.nix && nix-collect-garbage -d
+2026-09-02T18:24:48.986032076Z [inf]  [stage-0 17/17] COPY . /app
+2026-09-02T18:24:48.986032787Z [inf]  [stage-0 16/17] RUN printf '\nPATH=/app/node_modules/.bin:$PATH' >> /root/.profile
+2026-09-02T18:24:48.986033388Z [inf]  [stage-0 15/17] RUN --mount=type=cache,id=s/e4b15780-624b-4745-a0ff-941d15af64ef-node_modules/cache,target=/app/node_modules/.cache NODE_ENV=development NPM_CONFIG_PRODUCTION=false npm run build
+2026-09-02T18:24:48.986035311Z [inf]  [stage-0 14/17] COPY . /app/.
+2026-09-02T18:24:48.986036513Z [inf]  [stage-0 13/17] RUN --mount=type=cache,id=s/e4b15780-624b-4745-a0ff-941d15af64ef-/root/npm,target=/root/.npm NODE_ENV=development NPM_CONFIG_PRODUCTION=false npm ci --include=dev
+2026-09-02T18:24:48.986547179Z [inf]  [internal] load build context
+2026-09-02T18:24:48.986548180Z [inf]  [stage-0  1/17] FROM ghcr.io/railwayapp/nixpacks:ubuntu-1745885067@sha256:d45c89d80e13d7ad0fd555b5130f22a866d9dd10e861f589932303ef2314c7de
+2026-09-02T18:24:48.986887730Z [inf]  [internal] load build context
+2026-09-02T18:24:48.999549027Z [inf]  [stage-0  1/17] FROM ghcr.io/railwayapp/nixpacks:ubuntu-1745885067@sha256:d45c89d80e13d7ad0fd555b5130f22a866d9dd10e861f589932303ef2314c7de
+2026-09-02T18:24:49.251585771Z [inf]  uploading snapshot
+2026-09-02T18:24:49.299032710Z [inf]  [internal] load build context
+2026-09-02T18:24:49.349177066Z [inf]  [stage-0  2/17] WORKDIR /app/
+2026-09-02T18:24:49.349179770Z [inf]  [stage-0  3/17] COPY .nixpacks/nixpkgs-ba913eda2df8eb72147259189d55932012df6301.nix .nixpacks/nixpkgs-ba913eda2df8eb72147259189d55932012df6301.nix
+2026-09-02T18:24:49.349181182Z [inf]  [stage-0  4/17] RUN nix-env -if .nixpacks/nixpkgs-ba913eda2df8eb72147259189d55932012df6301.nix && nix-collect-garbage -d
+2026-09-02T18:24:49.349182655Z [inf]  [stage-0  5/17] COPY .nixpacks/nixpkgs-e6f23dc08d3624daab7094b701aa3954923c6bbb.nix .nixpacks/nixpkgs-e6f23dc08d3624daab7094b701aa3954923c6bbb.nix
+2026-09-02T18:24:49.349183846Z [inf]  [stage-0  6/17] RUN nix-env -if .nixpacks/nixpkgs-e6f23dc08d3624daab7094b701aa3954923c6bbb.nix && nix-collect-garbage -d
+2026-09-02T18:24:49.349185499Z [inf]  [stage-0  7/17] COPY .nixpacks/assets /assets/
+2026-09-02T18:24:49.349207071Z [inf]  [stage-0  8/17] COPY . /app/.
+2026-09-02T18:24:49.787079933Z [inf]  [stage-0  8/17] COPY . /app/.
+2026-09-02T18:24:49.804283635Z [inf]  [stage-0  9/17] RUN  npm install --global npm@10.8.2
+2026-09-02T18:24:50.295346493Z [inf]  npm warn config production Use `--omit=dev` instead.
+
+2026-09-02T18:24:53.161215608Z [inf]  scheduling build on Metal builder "builder-rdptcy"
+2026-09-02T18:24:58.160593237Z [inf]  
+removed 23 packages, and changed 87 packages in 8s
+
+22 packages are looking for funding
+  run `npm fund` for details
+
+2026-09-02T18:24:58.534538923Z [inf]  [stage-0  9/17] RUN  npm install --global npm@10.8.2
+2026-09-02T18:24:58.553686291Z [inf]  [stage-0 10/17] COPY . /app/.
+2026-09-02T18:24:58.918430601Z [inf]  [stage-0 10/17] COPY . /app/.
+2026-09-02T18:24:58.936733843Z [inf]  [stage-0 11/17] RUN  caddy fmt --overwrite /assets/Caddyfile
+2026-09-02T18:24:59.404377052Z [inf]  [stage-0 11/17] RUN  caddy fmt --overwrite /assets/Caddyfile
+2026-09-02T18:24:59.423882448Z [inf]  [stage-0 12/17] COPY . /app/.
+2026-09-02T18:24:59.768224546Z [inf]  [stage-0 12/17] COPY . /app/.
+2026-09-02T18:24:59.788287509Z [inf]  [stage-0 13/17] RUN --mount=type=cache,id=s/e4b15780-624b-4745-a0ff-941d15af64ef-/root/npm,target=/root/.npm NODE_ENV=development NPM_CONFIG_PRODUCTION=false npm ci --include=dev
+2026-09-02T18:25:00.161965973Z [inf]  npm warn config production Use `--omit=dev` instead.
+
+2026-09-02T18:25:01.111682933Z [inf]  npm warn ERESOLVE overriding peer dependency
+
+2026-09-02T18:25:01.112122222Z [inf]  npm warn While resolving: vite@8.2.2
+npm warn Found: @types/node@20.16.11
+npm warn node_modules/@types/node
+npm warn   dev @types/node@"20.16.11" from the root project
+npm warn   13 more (@types/pg, @types/body-parser, @types/compression, ...)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peerOptional @types/node@"^20.19.0 || >=22.12.0" from vite@8.2.2
+npm warn node_modules/vitest/node_modules/vite
+npm warn   vite@"^6.0.0 || ^7.0.0 || ^8.0.0" from vitest@4.1.11
+npm warn   node_modules/vitest
+npm warn   1 more (@vitest/mocker)
+npm warn
+npm warn Conflicting peer dependency: @types/node@26.4.1
+npm warn node_modules/@types/node
+npm warn   peerOptional @types/node@"^20.19.0 || >=22.12.0" from vite@8.2.2
+npm warn   node_modules/vitest/node_modules/vite
+npm warn     vite@"^6.0.0 || ^7.0.0 || ^8.0.0" from vitest@4.1.11
+npm warn     node_modules/vitest
+npm warn     1 more (@vitest/mocker)
+
+2026-09-02T18:25:04.888288187Z [inf]  npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+
+2026-09-02T18:25:04.913619263Z [inf]  npm warn deprecated xss-clean@0.1.4: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+
+2026-09-02T18:25:05.019063761Z [inf]  npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+
+2026-09-02T18:25:05.064508997Z [inf]  npm warn deprecated scmp@2.1.0: Just use Node.js's crypto.timingSafeEqual()
+
+2026-09-02T18:25:05.554484954Z [inf]  npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+
+2026-09-02T18:26:14.554679983Z [inf]  npm error Exit handler never called!
+npm error This is an error with npm itself. Please report this error at:
+
+2026-09-02T18:26:14.554696929Z [inf]  npm error   <https://github.com/npm/cli/issues>
+
+2026-09-02T18:26:14.555034896Z [inf]  npm error A complete log of this run can be found in: /root/.npm/_logs/2026-09-02T18_25_00_122Z-debug-0.log
+
+2026-09-02T18:26:16.322876403Z [inf]  [stage-0 13/17] RUN --mount=type=cache,id=s/e4b15780-624b-4745-a0ff-941d15af64ef-/root/npm,target=/root/.npm NODE_ENV=development NPM_CONFIG_PRODUCTION=false npm ci --include=dev
+2026-09-02T18:26:16.342598514Z [inf]  [stage-0 14/17] COPY . /app/.
+2026-09-02T18:26:17.045497289Z [inf]  [stage-0 14/17] COPY . /app/.
+2026-09-02T18:26:17.067572431Z [inf]  [stage-0 15/17] RUN --mount=type=cache,id=s/e4b15780-624b-4745-a0ff-941d15af64ef-node_modules/cache,target=/app/node_modules/.cache NODE_ENV=development NPM_CONFIG_PRODUCTION=false npm run build
+2026-09-02T18:26:17.444888774Z [inf]  npm warn config production Use `--omit=dev` instead.
+
+2026-09-02T18:26:17.589380438Z [inf]  
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+
+2026-09-02T18:26:17.595018507Z [inf]  sh: 1: vite: not found
+
+2026-09-02T18:26:17.690162080Z [err]  [stage-0 15/17] RUN --mount=type=cache,id=s/e4b15780-624b-4745-a0ff-941d15af64ef-node_modules/cache,target=/app/node_modules/.cache NODE_ENV=development NPM_CONFIG_PRODUCTION=false npm run build
+2026-09-02T18:26:17.723462524Z [err]  Build Failed: build daemon returned an error < failed to solve: process "/bin/bash -ol pipefail -c NODE_ENV=development NPM_CONFIG_PRODUCTION=false npm run build" did not complete successfully: exit code: 127 >
