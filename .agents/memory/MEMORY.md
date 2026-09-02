@@ -1,0 +1,1 @@
+- [Railway session storage](railway-session-storage.md) — the external database uses `express_sessions` for connect-pg-simple; `sessions` is a different application table.

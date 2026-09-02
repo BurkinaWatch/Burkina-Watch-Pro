@@ -15,7 +15,9 @@ export function getSession() {
     conString: process.env.RAILWAY_DATABASE_URL || process.env.DATABASE_URL,
     createTableIfMissing: false,
     ttl: sessionTtl,
-    tableName: "sessions",
+     // The Railway database also has a separate application table named
+     // "sessions"; express-session uses the compatible express_sessions table.
+     tableName: "express_sessions",
   });
   return session({
     secret: process.env.SESSION_SECRET || "default_secret_for_dev_only",
