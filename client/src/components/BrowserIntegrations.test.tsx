@@ -205,6 +205,31 @@ describe("browser integrations", () => {
     );
   });
 
+  it("notifies ChatBot users when speech recognition cannot start", async () => {
+    installSpeechRecognition();
+    renderChatBot();
+
+    await userEvent.click(screen.getByTestId("button-open-chatbot"));
+    const voiceButton = await screen.findByTestId("button-voice-input");
+    await waitFor(() => expect(voiceButton).toBeEnabled());
+    speechRecognitions[0].start.mockImplementationOnce(() => {
+      throw new Error("recognition is already running");
+    });
+
+    await userEvent.click(voiceButton);
+
+    expect(testMocks.toast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Impossible de démarrer la reconnaissance vocale",
+        variant: "destructive",
+      }),
+    );
+    expect(screen.getByTestId("input-chat-message")).toHaveAttribute(
+      "placeholder",
+      "Tapez ou parlez...",
+    );
+  });
+
   it("does not render the voice button when speech recognition is unsupported", async () => {
     removeSpeechRecognition();
 

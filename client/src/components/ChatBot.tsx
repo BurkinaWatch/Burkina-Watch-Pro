@@ -91,6 +91,11 @@ export default function ChatBot() {
       } catch (error) {
         console.error('Failed to start speech recognition:', error);
         setIsListening(false);
+        toast({
+          title: "Impossible de démarrer la reconnaissance vocale",
+          description: "Vérifiez les autorisations du microphone, puis réessayez.",
+          variant: "destructive",
+        });
       }
     }
   };
