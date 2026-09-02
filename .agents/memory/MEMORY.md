@@ -1,1 +1,2 @@
 - [Railway session storage](railway-session-storage.md) — the external database uses `express_sessions` for connect-pg-simple; `sessions` is a different application table.
+- [Vitest/Vite compatibility](vitest-vite-compatibility.md) — latest Vitest may need an isolated TSX transform alongside this app’s Vite 5 build.

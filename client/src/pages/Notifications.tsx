@@ -26,8 +26,28 @@ import type { Notification as AppNotification } from "@shared/schema";
 export default function Notifications() {
   const queryClient = useQueryClient();
 
-  const { data: notifications = [], isLoading } = useQuery<AppNotification[]>({
+  const {
+    data: notifications = [],
+    isLoading,
+    isError,
+  } = useQuery<AppNotification[]>({
     queryKey: ["/api/notifications"],
+    queryFn: async () => {
+      const response = await fetch("/api/notifications", {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to load notifications");
+      }
+
+      const data: unknown = await response.json();
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid notifications response");
+      }
+
+      return data as AppNotification[];
+    },
     refetchInterval: 30000,
     staleTime: 25000,
   });
@@ -203,6 +223,15 @@ export default function Notifications() {
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
+        ) : isError ? (
+          <Card role="alert">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <AlertTriangle className="w-12 h-12 text-destructive mb-4" />
+              <p className="text-destructive text-center">
+                Impossible de charger les notifications. Veuillez réessayer.
+              </p>
+            </CardContent>
+          </Card>
         ) : (
           <div className="space-y-4">
             {notifications.map((notification: any) => (
@@ -253,6 +282,7 @@ export default function Notifications() {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8"
+                          aria-label="Supprimer la notification"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Trash2 className="w-4 h-4 text-destructive" />
