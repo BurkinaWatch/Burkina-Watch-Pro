@@ -57,6 +57,22 @@ import {
 import { db } from "./db";
 import { eq, desc, and, sql, isNull, gt } from "drizzle-orm";
 
+function isMissingNotificationsReadColumnError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const databaseError = error as {
+    code?: string;
+    column?: string;
+    message?: string;
+  };
+  if (databaseError.code !== "42703") return false;
+
+  return databaseError.column === "read" ||
+    /column\s+(?:"?notifications"?\.)?"?read"?\s+does not exist/i.test(
+      databaseError.message ?? "",
+    );
+}
+
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -852,13 +868,26 @@ export class DbStorage implements IStorage {
   }
 
   async getUnreadNotificationsCount(userId: string) {
-    const result = await db.select({ count: sql<number>`count(*)::int` })
-      .from(notifications)
-      .where(and(
-        eq(notifications.userId, userId),
-        eq(notifications.read, false)
-      ));
-    return result[0]?.count || 0;
+    try {
+      const result = await db.select({ count: sql<number>`count(*)::int` })
+        .from(notifications)
+        .where(and(
+          eq(notifications.userId, userId),
+          eq(notifications.read, false)
+        ));
+      return result[0]?.count || 0;
+    } catch (error) {
+      // Older deployments may not have the read column yet. In that schema,
+      // every stored notification is unread because there is no read state.
+      if (!isMissingNotificationsReadColumnError(error)) {
+        throw error;
+      }
+
+      const result = await db.select({ count: sql<number>`count(*)::int` })
+        .from(notifications)
+        .where(eq(notifications.userId, userId));
+      return result[0]?.count || 0;
+    }
   }
 
   async markNotificationAsRead(

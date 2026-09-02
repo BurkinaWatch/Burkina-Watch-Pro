@@ -89,6 +89,35 @@ describe("notification routes", () => {
     registerNotificationRoutes(routeApp.app, notificationStorage, (_req, _res, next) => next());
   });
 
+  it("returns the unread count for the authenticated user", async () => {
+    notificationStorage.getUnreadNotificationsCount.mockResolvedValue(3);
+    const response = createResponse();
+
+    await routeApp.handler("GET", "/api/notifications/unread-count")(
+      createRequest("user-1"),
+      response,
+    );
+
+    expect(notificationStorage.getUnreadNotificationsCount).toHaveBeenCalledWith("user-1");
+    expect(response.status).not.toHaveBeenCalled();
+    expect(response.json).toHaveBeenCalledWith({ count: 3 });
+  });
+
+  it("returns a server error when the unread count cannot be read", async () => {
+    notificationStorage.getUnreadNotificationsCount.mockRejectedValue(new Error("storage down"));
+    const response = createResponse();
+
+    await routeApp.handler("GET", "/api/notifications/unread-count")(
+      createRequest("user-1"),
+      response,
+    );
+
+    expect(response.status).toHaveBeenCalledWith(500);
+    expect(response.json).toHaveBeenCalledWith({
+      error: "Erreur lors de la récupération du nombre de notifications non lues",
+    });
+  });
+
   it("marks only the authenticated user's notification as read", async () => {
     notificationStorage.getNotificationById.mockResolvedValue(ownNotification);
     notificationStorage.markNotificationAsRead.mockResolvedValue({

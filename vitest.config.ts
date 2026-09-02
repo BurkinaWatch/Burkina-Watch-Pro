@@ -41,6 +41,7 @@ export default defineConfig({
     include: [
       "client/src/**/*.test.{ts,tsx}",
       "server/notificationRoutes.test.{ts,tsx}",
+      "server/storage.test.{ts,tsx}",
     ],
     restoreMocks: true,
     clearMocks: true,
