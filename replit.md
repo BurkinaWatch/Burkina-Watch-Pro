@@ -55,4 +55,5 @@ The platform follows a modern full-stack architecture designed for scalability, 
 - Install dependencies with `npm install` (the committed `package-lock.json` keeps versions reproducible).
 - Start the development server with `npm run dev`; the Replit workflow serves the app on port 5000.
 - Build for production with `npm run build`, then start with `npm start`.
+- Run the full validation suite with `npm test`. This runs the browser-oriented client/notification Vitest suite and the separate Node backend encryption checks (`npm run test:backend`).
 - Optional features use environment secrets when configured: Groq AI, Google Maps geocoding, email OTP delivery, web push notifications, and weather alerts.
