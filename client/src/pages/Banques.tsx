@@ -689,7 +689,7 @@ export default function Banques() {
                             {etab.sigle && etab.nom && etab.sigle !== etab.nom && (
                               <Badge variant="outline" className="text-xs shrink-0">{etab.sigle}</Badge>
                             )}
-                            <span className="text-xs truncate">- {etab.quartier || etab.adresse}</span>
+                            <span className="text-xs truncate">- {etab.adresse}</span>
                           </div>
                           <Navigation className="h-3 w-3 text-primary shrink-0" />
                         </div>
@@ -746,7 +746,7 @@ export default function Banques() {
                             {etab.sigle && etab.nom && etab.sigle !== etab.nom && (
                               <Badge variant="outline" className="text-xs shrink-0">{etab.sigle}</Badge>
                             )}
-                            <span className="text-xs truncate">- {etab.quartier || etab.adresse}</span>
+                            <span className="text-xs truncate">- {etab.adresse}</span>
                           </div>
                           <Navigation className="h-3 w-3 text-primary shrink-0" />
                         </div>

@@ -54,6 +54,7 @@ async function fetchOgImageForEvent(url: string): Promise<string | undefined> {
     if (!response.ok) { eventImageCache.set(url, null); return undefined; }
     const html = await response.text();
     let match = html.match(/<meta\s+(?:property|name)=["']og:image["']\s+content=["']([^"']+)["']/i);
+    let fallbackImageUrl: string | undefined;
     if (!match) match = html.match(/<meta\s+content=["']([^"']+)["']\s+(?:property|name)=["']og:image["']/i);
     if (!match) match = html.match(/<meta\s+(?:property|name)=["']twitter:image["']\s+content=["']([^"']+)["']/i);
     if (!match) match = html.match(/<meta\s+content=["']([^"']+)["']\s+(?:property|name)=["']twitter:image["']/i);
@@ -68,15 +69,16 @@ async function fetchOgImageForEvent(url: string): Promise<string | undefined> {
           if (srcMatch && srcMatch[1]) {
             const src = srcMatch[1];
             if (!src.includes('logo') && !src.includes('icon') && !src.includes('avatar') && !src.includes('favicon') && !src.includes('sprite')) {
-              match = [null, src];
+              fallbackImageUrl = src;
               break;
             }
           }
         }
       }
     }
-    if (match && match[1]) {
-      let imageUrl = match[1];
+    const extractedImageUrl = match?.[1] || fallbackImageUrl;
+    if (extractedImageUrl) {
+      let imageUrl = extractedImageUrl;
       if (imageUrl.startsWith('/')) {
         const urlObj = new URL(url);
         imageUrl = `${urlObj.protocol}//${urlObj.host}${imageUrl}`;

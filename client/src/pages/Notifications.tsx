@@ -21,11 +21,12 @@ import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Link } from "wouter";
 import { useEffect } from "react";
+import type { Notification as AppNotification } from "@shared/schema";
 
 export default function Notifications() {
   const queryClient = useQueryClient();
 
-  const { data: notifications = [], isLoading } = useQuery({
+  const { data: notifications = [], isLoading } = useQuery<AppNotification[]>({
     queryKey: ["/api/notifications"],
     refetchInterval: 30000,
     staleTime: 25000,
@@ -134,7 +135,7 @@ export default function Notifications() {
     }
   };
 
-  const handleNotificationClick = (notification: any) => {
+  const handleNotificationClick = (notification: AppNotification) => {
     if (!notification.read) {
       markAsReadMutation.mutate(notification.id);
     }
@@ -239,7 +240,7 @@ export default function Notifications() {
                         </p>
                         {notification.signalementId && (
                           <Link href={`/signalement/${notification.signalementId}`}>
-                            <Button variant="link" size="sm" className="mt-2 p-0 h-auto">
+                            <Button variant="ghost" size="sm" className="mt-2 h-auto p-0 text-primary hover:underline">
                               Voir le signalement
                             </Button>
                           </Link>
