@@ -50,3 +50,9 @@ The platform follows a modern full-stack architecture designed for scalability, 
 -   **Tailwind CSS**: Utility-first CSS framework for styling.
 -   **Shadcn UI**: React UI component library.
 -   **Présidence du Faso, SIG (Service d'Information du Gouvernement), AIB (Agence d'Information du Burkina)**: Official sources for the news ticker.
+
+## Running on Replit
+- Install dependencies with `npm install` (the committed `package-lock.json` keeps versions reproducible).
+- Start the development server with `npm run dev`; the Replit workflow serves the app on port 5000.
+- Build for production with `npm run build`, then start with `npm start`.
+- Optional features use environment secrets when configured: Groq AI, Google Maps geocoding, email OTP delivery, web push notifications, and weather alerts.
