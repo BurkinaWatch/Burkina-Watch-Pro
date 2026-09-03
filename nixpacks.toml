@@ -4,7 +4,7 @@ nixPkgs = ["nodejs_22"]
 cmds = ["npm install --global npm@10.8.2"]
 
 [phases.install]
-cmds = ["npm ci --include=dev --legacy-peer-deps --ignore-scripts --no-audit --no-fund"]
+cmds = ["npm ci --omit=dev --ignore-scripts --no-audit --no-fund"]
 
 [phases.build]
 cmds = ["NODE_ENV=production npm run build"]
