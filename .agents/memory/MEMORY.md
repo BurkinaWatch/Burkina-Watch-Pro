@@ -1,0 +1,1 @@
+- [Database and KMS readiness](phase15-database-kms.md) — runtime and development databases can diverge; migration provenance and KMS installation need explicit validation before sensitive features.
