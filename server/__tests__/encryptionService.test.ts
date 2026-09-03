@@ -4,6 +4,7 @@ process.env.MASTER_ENCRYPTION_KEY =
   "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 process.env.REFRESH_TOKEN_SALT =
   "test_salt_0123456789abcdef0123456789abcdef0123456789abcdef";
+process.env.KMS_ENABLED = "false";
 
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
@@ -140,6 +141,32 @@ describe("EncryptionService", () => {
 
       await assert.rejects(async () =>
         await decryptSensitiveData(corruptedEncrypted)
+      );
+    });
+
+    test("should throw error when ciphertext is modified", async () => {
+      const encrypted = await encryptSensitiveData("Ciphertext integrity");
+      const modifiedCiphertext = Buffer.from(encrypted.cipherText, "base64");
+      modifiedCiphertext[0] ^= 1;
+
+      await assert.rejects(async () =>
+        await decryptSensitiveData({
+          ...encrypted,
+          cipherText: modifiedCiphertext.toString("base64"),
+        }),
+      );
+    });
+
+    test("should throw error when authentication tag is modified", async () => {
+      const encrypted = await encryptSensitiveData("Authentication tag integrity");
+      const modifiedTag = Buffer.from(encrypted.tag, "base64");
+      modifiedTag[0] ^= 1;
+
+      await assert.rejects(async () =>
+        await decryptSensitiveData({
+          ...encrypted,
+          tag: modifiedTag.toString("base64"),
+        }),
       );
     });
   });

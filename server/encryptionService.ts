@@ -1,5 +1,5 @@
 import * as crypto from "crypto";
-import { KeyManagementServiceClient } from "@google-cloud/kms";
+import { createRequire } from "node:module";
 
 // Configuration
 const ALGORITHM = "aes-256-gcm";
@@ -23,16 +23,59 @@ interface KMSConfig {
   cryptoKeyId?: string;
 }
 
+interface KMSResponse {
+  ciphertext?: Uint8Array;
+  plaintext?: Uint8Array;
+}
+
+interface KMSClient {
+  cryptoKeyPath(
+    projectId: string,
+    locationId: string,
+    keyRingId: string,
+    cryptoKeyId: string,
+  ): string;
+  encrypt(request: {
+    name: string;
+    plaintext: Buffer;
+  }): Promise<[KMSResponse]>;
+  decrypt(request: {
+    name: string;
+    ciphertext: Buffer;
+  }): Promise<[KMSResponse]>;
+}
+
+type KMSClientConstructor = new () => KMSClient;
+
+function loadKMSClient(): KMSClient {
+  try {
+    const require = createRequire(import.meta.url);
+    const kmsModule = require("@google-cloud/kms") as {
+      KeyManagementServiceClient?: KMSClientConstructor;
+    };
+
+    if (!kmsModule.KeyManagementServiceClient) {
+      throw new Error("Client KMS absent du module");
+    }
+
+    return new kmsModule.KeyManagementServiceClient();
+  } catch {
+    throw new Error(
+      "KMS activé mais la dépendance @google-cloud/kms est indisponible.",
+    );
+  }
+}
+
 class EncryptionService {
   private masterKey: Buffer | null = null;
-  private kmsClient: KeyManagementServiceClient | null = null;
+  private kmsClient: KMSClient | null = null;
   private kmsConfig: KMSConfig;
 
   constructor() {
     this.kmsConfig = {
       enabled: process.env.KMS_ENABLED === "true",
       projectId: process.env.KMS_PROJECT_ID,
-      locationId: process.env.KMS_LOCATION_ID || "global",
+      locationId: process.env.KMS_LOCATION_ID,
       keyRingId: process.env.KMS_KEY_RING_ID,
       cryptoKeyId: process.env.KMS_CRYPTO_KEY_ID,
     };
@@ -42,16 +85,19 @@ class EncryptionService {
 
   private initialize() {
     if (this.kmsConfig.enabled) {
-      try {
-        this.kmsClient = new KeyManagementServiceClient();
-        console.log("✅ KMS client initialisé");
-      } catch (error) {
-        console.warn(
-          "⚠️  KMS non disponible, utilisation du fallback local:",
-          error
-        );
-        this.initializeFallback();
+      const missingKmsConfig = [
+        this.kmsConfig.projectId,
+        this.kmsConfig.locationId,
+        this.kmsConfig.keyRingId,
+        this.kmsConfig.cryptoKeyId,
+      ].some((value) => !value?.trim());
+
+      if (missingKmsConfig) {
+        throw new Error("KMS activé mais sa configuration est incomplète.");
       }
+
+      this.kmsClient = loadKMSClient();
+      console.log("✅ KMS client initialisé");
     } else {
       this.initializeFallback();
     }
