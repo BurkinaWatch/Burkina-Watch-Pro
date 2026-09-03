@@ -22,10 +22,20 @@ import { fr } from "date-fns/locale";
 import { Link } from "wouter";
 import { useEffect } from "react";
 
+interface NotificationItem {
+  id: string;
+  read: boolean;
+  type: string;
+  title: string;
+  description: string;
+  createdAt: string | Date;
+  signalementId?: string | null;
+}
+
 export default function Notifications() {
   const queryClient = useQueryClient();
 
-  const { data: notifications = [], isLoading } = useQuery({
+  const { data: notifications = [], isLoading } = useQuery<NotificationItem[]>({
     queryKey: ["/api/notifications"],
     refetchInterval: 30000,
     staleTime: 25000,
@@ -52,7 +62,7 @@ export default function Notifications() {
   // Marquer automatiquement toutes les notifications comme lues à l'ouverture
   useEffect(() => {
     if (notifications.length > 0) {
-      const unreadCount = notifications.filter((n: any) => !n.read).length;
+      const unreadCount = notifications.filter((n) => !n.read).length;
       if (unreadCount > 0) {
         markAllAsReadMutation.mutate();
       }
@@ -134,13 +144,13 @@ export default function Notifications() {
     }
   };
 
-  const handleNotificationClick = (notification: any) => {
+  const handleNotificationClick = (notification: NotificationItem) => {
     if (!notification.read) {
       markAsReadMutation.mutate(notification.id);
     }
   };
 
-  const unreadCount = notifications?.filter((n: any) => !n.read).length || 0;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -204,7 +214,7 @@ export default function Notifications() {
           </div>
         ) : (
           <div className="space-y-4">
-            {notifications.map((notification: any) => (
+            {notifications.map((notification) => (
               <Card
                 key={notification.id}
                 className={`transition-colors hover:bg-accent ${
@@ -239,7 +249,7 @@ export default function Notifications() {
                         </p>
                         {notification.signalementId && (
                           <Link href={`/signalement/${notification.signalementId}`}>
-                            <Button variant="link" size="sm" className="mt-2 p-0 h-auto">
+                            <Button variant="ghost" size="sm" className="mt-2 p-0 h-auto text-primary underline-offset-4 hover:underline">
                               Voir le signalement
                             </Button>
                           </Link>

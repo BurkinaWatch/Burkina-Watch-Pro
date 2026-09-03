@@ -53,6 +53,7 @@ async function checkForDuplicates(
     const sigLat = parseFloat(sig.latitude);
     const sigLon = parseFloat(sig.longitude);
     const distance = calculateDistance(currentLat, currentLon, sigLat, sigLon);
+    if (!sig.createdAt) continue;
     const timeDiff =
       Math.abs(currentTime.getTime() - new Date(sig.createdAt).getTime()) /
       (1000 * 60 * 60); // en heures

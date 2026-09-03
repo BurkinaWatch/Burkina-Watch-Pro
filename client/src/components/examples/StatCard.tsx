@@ -9,7 +9,7 @@ export default function StatCardExample() {
         value="1,247"
         icon={AlertCircle}
         description="+12 aujourd'hui"
-        trend={{ value: 8, isPositive: true }}
+        trend="up"
       />
       <StatCard
         title="En attente"
@@ -21,7 +21,7 @@ export default function StatCardExample() {
         title="Résolus"
         value="892"
         icon={CheckCircle2}
-        trend={{ value: 15, isPositive: true }}
+        trend="up"
       />
       <StatCard
         title="Utilisateurs actifs"

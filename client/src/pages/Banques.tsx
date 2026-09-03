@@ -309,7 +309,7 @@ export default function Banques() {
   }, [banques]);
 
   const banquesParVille = useMemo(() => {
-    const villeMap: Record<string, { ville: string; region: string; count: number; etablissements: { nom: string; sigle: string; adresse: string; latitude: number; longitude: number }[] }> = {};
+    const villeMap: Record<string, { ville: string; region: string; count: number; etablissements: { nom: string; sigle: string; adresse: string; quartier?: string; latitude: number; longitude: number }[] }> = {};
     
     banques.filter(b => b.type === "Banque").forEach(b => {
       if (!villeMap[b.ville]) {
@@ -320,6 +320,7 @@ export default function Banques() {
         nom: b.nom,
         sigle: b.sigle,
         adresse: b.adresse,
+        quartier: b.quartier,
         latitude: b.latitude,
         longitude: b.longitude
       });
@@ -329,7 +330,7 @@ export default function Banques() {
   }, [banques]);
 
   const caissesParVille = useMemo(() => {
-    const villeMap: Record<string, { ville: string; region: string; count: number; etablissements: { nom: string; sigle: string; adresse: string; latitude: number; longitude: number }[] }> = {};
+    const villeMap: Record<string, { ville: string; region: string; count: number; etablissements: { nom: string; sigle: string; adresse: string; quartier?: string; latitude: number; longitude: number }[] }> = {};
     
     banques.filter(b => b.type === "Caisse Populaire").forEach(b => {
       if (!villeMap[b.ville]) {
@@ -340,6 +341,7 @@ export default function Banques() {
         nom: b.nom,
         sigle: b.sigle,
         adresse: b.adresse,
+        quartier: b.quartier,
         latitude: b.latitude,
         longitude: b.longitude
       });
