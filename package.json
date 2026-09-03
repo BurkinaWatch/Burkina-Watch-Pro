@@ -9,6 +9,7 @@
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc",
     "db:generate": "drizzle-kit generate",
+    "db:railway:preflight": "node scripts/railway-migration-preflight.mjs",
     "db:push": "node scripts/db-push-blocked.mjs"
   },
   "dependencies": {
