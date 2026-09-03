@@ -1,0 +1,95 @@
+BURKINA WATCH — AUDIT PRÉALABLE DU MODULE SURVEILLANCE
+
+Tu travailles sur mon projet existant Burkina Watch.
+
+Je souhaite ajouter ultérieurement un nouveau module appelé :
+
+🛡️ Surveillance
+
+Ce module permettra aux utilisateurs de Burkina Watch qui possèdent des caméras de surveillance IP à leur domicile, bureau, commerce, studio ou entreprise de connecter leurs propres caméras et de consulter leurs flux vidéo en direct depuis leur compte Burkina Watch.
+
+TA MISSION POUR CETTE ÉTAPE
+
+NE MODIFIE PAS LE CODE.
+
+NE CRÉE AUCUN NOUVEAU FICHIER.
+
+NE SUPPRIME RIEN.
+
+NE REFACTORISE RIEN.
+
+Tu dois uniquement effectuer un audit technique approfondi du projet existant.
+
+Analyse notamment :
+
+architecture générale ;
+frontend ;
+backend ;
+framework utilisé ;
+système de routing ;
+système d'authentification ;
+gestion des utilisateurs ;
+système de permissions ;
+base de données ;
+ORM éventuel ;
+API existantes ;
+système de stockage ;
+variables d'environnement ;
+système de déploiement ;
+configuration Railway ;
+configuration GitHub ;
+configuration Replit ;
+application mobile éventuelle ;
+design system ;
+navigation existante.
+
+Cherche également les éventuels problèmes existants qui pourraient entrer en conflit avec l'ajout d'un système vidéo.
+
+POUR LE FUTUR MODULE SURVEILLANCE
+
+Détermine précisément :
+
+où ajouter la page Surveillance ;
+où ajouter les routes backend ;
+où ajouter les modèles/tables ;
+comment isoler les données de chaque utilisateur ;
+comment intégrer un service vidéo sans surcharger le backend principal ;
+comment une passerelle vidéo pourrait communiquer avec Burkina Watch ;
+comment gérer RTSP ;
+comment utiliser WebRTC ou une autre technologie adaptée au navigateur ;
+comment gérer les caméras situées derrière un NAT/routeur ;
+comment éviter d'exposer directement les caméras sur Internet ;
+comment gérer les credentials des caméras ;
+comment prévoir une architecture évolutive.
+
+Étudie notamment la possibilité d'utiliser MediaMTX comme passerelle vidéo, mais ne l'installe pas encore.
+
+IMPORTANT
+
+Ne suppose pas que l'architecture actuelle est celle que je t'ai décrite.
+
+Inspecte réellement le code et base ton analyse sur ce qui existe actuellement.
+
+RAPPORT À FOURNIR
+
+À la fin, donne-moi :
+
+1. Architecture actuelle
+2. Stack technique réellement utilisée
+3. Base de données actuelle
+4. Authentification actuelle
+5. Structure des dossiers importante
+6. Fichiers qui devront probablement être créés
+7. Fichiers existants qui devront probablement être modifiés
+8. Architecture Surveillance recommandée
+9. Architecture vidéo recommandée
+10. Risques techniques
+11. Risques de sécurité
+12. Impact potentiel sur Railway
+13. Impact potentiel sur l'application mobile
+14. Plan d'implémentation en plusieurs étapes
+15. Estimation de complexité de chaque étape
+
+Ne fais aucune modification du projet à cette étape.
+
+Attends ensuite ma validation.
