@@ -64,6 +64,7 @@ async function fetchOgImage(url: string): Promise<string | undefined> {
       match = html.match(/<meta\s+content=["']([^"']+)["']\s+(?:property|name)=["']twitter:image["']/i);
     }
     
+    let fallbackImageUrl: string | undefined;
     // Chercher la première grande image dans l'article
     if (!match) {
       const imgMatches = html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi);
@@ -79,7 +80,7 @@ async function fetchOgImage(url: string): Promise<string | undefined> {
                 !src.includes('favicon') &&
                 !src.includes('sprite') &&
                 (src.endsWith('.jpg') || src.endsWith('.jpeg') || src.endsWith('.png') || src.endsWith('.webp'))) {
-              match = [null, src];
+              fallbackImageUrl = src;
               break;
             }
           }
@@ -87,8 +88,8 @@ async function fetchOgImage(url: string): Promise<string | undefined> {
       }
     }
 
-    if (match && match[1]) {
-      let imageUrl = match[1];
+    if (match?.[1] || fallbackImageUrl) {
+      let imageUrl = match?.[1] || fallbackImageUrl!;
       // Convertir URL relative en absolue
       if (imageUrl.startsWith('/')) {
         const urlObj = new URL(url);

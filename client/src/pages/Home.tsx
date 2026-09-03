@@ -1095,14 +1095,12 @@ export default function Home() {
             />
             <div className="absolute right-1 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
               <VoiceSearchInput
-                onResult={(transcript) => {
+                onQueryChange={(transcript: string) => {
                   setSearchQuery(transcript);
                   if (transcript.trim() && !searchHistory.includes(transcript.trim())) {
                     setSearchHistory([transcript.trim(), ...searchHistory].slice(0, 5));
                   }
                 }}
-                size="icon"
-                variant="ghost"
                 className="h-7 w-7"
               />
               {searchQuery && (
