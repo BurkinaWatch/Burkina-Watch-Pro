@@ -37,19 +37,30 @@ Application nationale de veille citoyenne et d'alerte sociale pour le Burkina Fa
 
 ## 🗄️ Base de Données
 
-Le projet utilise PostgreSQL (Neon) avec Drizzle ORM.
+Le projet utilise PostgreSQL Railway comme base de production avec Drizzle ORM.
+`RAILWAY_DATABASE_URL` est prioritaire ; `DATABASE_URL` reste un fallback réservé au
+développement local.
 
 ### Migrations
 
 Pour créer une nouvelle migration :
 ```bash
-npx drizzle-kit generate
+npm run db:generate
 ```
 
-Pour appliquer les migrations :
+Avant toute revue de migration Railway, exécuter le précontrôle en lecture seule :
 ```bash
-npx tsx server/migrate.ts
+npm run db:railway:preflight
 ```
+
+Il vérifie les 29 tables attendues, les cinq compteurs concernés, les index de
+`0004`, le défaut UUID, la fonction PostgreSQL et l’existence du journal Drizzle.
+Il ne modifie jamais la base.
+
+`npm run db:push` est volontairement bloqué. Les migrations historiques ne doivent
+pas être rejouées sur Railway. La migration
+`migrations/0004_runtime_alignment_draft.sql` reste en attente tant qu’un snapshot
+restaurable et une baseline Drizzle validée n’existent pas.
 
 ## 📱 Fonctionnalités
 
