@@ -78,7 +78,7 @@
     "input-otp": "^1.4.2",
     "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
-    "jspdf": "^3.0.4",
+    "jspdf": "^4.2.1",
     "leaflet": "^1.9.4",
     "leaflet.heat": "^0.2.0",
     "leaflet.markercluster": "^1.5.3",
@@ -116,6 +116,10 @@
     "xss-clean": "^0.1.4",
     "zod": "^3.24.2",
     "zod-validation-error": "^3.4.0"
+  },
+  "overrides": {
+    "fast-xml-parser": "5.11.1",
+    "protobufjs": "7.6.6"
   },
   "devDependencies": {
     "@replit/vite-plugin-cartographer": "^0.4.1",
