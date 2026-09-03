@@ -13,7 +13,7 @@ async function getVapidPublicKey(): Promise<string> {
     const res = await fetch('/api/push/vapid-key');
     const data = await res.json();
     cachedVapidKey = data.vapidPublicKey || '';
-    return cachedVapidKey ?? '';
+    return cachedVapidKey;
   } catch {
     return '';
   }

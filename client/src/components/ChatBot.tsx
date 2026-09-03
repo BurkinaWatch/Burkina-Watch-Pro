@@ -10,6 +10,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { nanoid } from "nanoid";
 
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -91,11 +98,6 @@ export default function ChatBot() {
       } catch (error) {
         console.error('Failed to start speech recognition:', error);
         setIsListening(false);
-        toast({
-          title: "Impossible de démarrer la reconnaissance vocale",
-          description: "Vérifiez les autorisations du microphone, puis réessayez.",
-          variant: "destructive",
-        });
       }
     }
   };

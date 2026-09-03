@@ -363,7 +363,7 @@ export default function BoutiquesMarchés() {
                     </div>
                   </div>
 
-                  <LocationValidator placeId={boutique.id} compact />
+                  <LocationValidator placeId={boutique.placeId || boutique.id} initialConfirmations={boutique.confirmations || 0} initialReports={boutique.reports || 0} compact />
                   <div className="flex gap-2">
                     <Button
                       onClick={() => openInMaps(boutique)}

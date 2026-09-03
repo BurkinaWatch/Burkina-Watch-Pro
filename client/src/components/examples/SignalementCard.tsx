@@ -9,16 +9,13 @@ export default function SignalementCardExample() {
         description="Un accident impliquant deux véhicules vient de se produire. Les blessés ont besoin d'assistance médicale urgente."
         categorie="urgence"
         localisation="Avenue Kwame Nkrumah, Ouagadougou"
-        latitude="12.3714"
-        longitude="-1.5197"
         photo="https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400&h=300&fit=crop"
         isSOS={true}
         statut="en_cours"
         likes={24}
-        commentairesCount={8}
+        commentCount={8}
         createdAt={new Date(Date.now() - 1000 * 60 * 15)}
-        auteurFirstName="Jean"
-        auteurLastName="Ouédraogo"
+        auteur="Jean Ouédraogo"
       />
       <SignalementCard
         id="2"
@@ -26,11 +23,9 @@ export default function SignalementCardExample() {
         description="Les ordures s'accumulent dans notre quartier et représentent un risque sanitaire pour les habitants."
         categorie="environnement"
         localisation="Secteur 15, Ouagadougou"
-        latitude="12.3714"
-        longitude="-1.5197"
         statut="en_attente"
         likes={12}
-        commentairesCount={3}
+        commentCount={3}
         createdAt={new Date(Date.now() - 1000 * 60 * 60 * 2)}
       />
       <SignalementCard
@@ -39,12 +34,10 @@ export default function SignalementCardExample() {
         description="Plusieurs lampadaires sont hors service dans notre rue, créant une zone d'insécurité la nuit."
         categorie="infrastructure"
         localisation="Rue 13.25, Secteur 13"
-        latitude="12.3714"
-        longitude="-1.5197"
         photo="https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=400&h=300&fit=crop"
         statut="resolu"
         likes={45}
-        commentairesCount={15}
+        commentCount={15}
         createdAt={new Date(Date.now() - 1000 * 60 * 60 * 24)}
       />
     </div>

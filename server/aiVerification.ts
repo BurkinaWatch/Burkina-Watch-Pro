@@ -49,7 +49,6 @@ async function checkForDuplicates(
 
   for (const sig of recentSignalements) {
     if (sig.id === signalement.id) continue;
-    if (!sig.createdAt) continue;
 
     const sigLat = parseFloat(sig.latitude);
     const sigLon = parseFloat(sig.longitude);

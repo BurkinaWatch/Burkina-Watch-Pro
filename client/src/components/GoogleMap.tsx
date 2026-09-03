@@ -594,7 +594,7 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
         {selectedMarker && (
           <Popup
             position={[selectedMarker.lat, selectedMarker.lng]}
-            eventHandlers={{ remove: () => setSelectedMarker(null) }}
+            onClose={() => setSelectedMarker(null)}
           >
             <div className="p-3 min-w-[240px]" data-testid={`popup-marker-${selectedMarker.id}`}>
               <h3 className="font-semibold text-sm mb-2">{selectedMarker.titre}</h3>

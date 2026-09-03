@@ -277,7 +277,7 @@ export async function generateChatResponse(
     }
 
     if (appContext.banques && appContext.banques.length > 0) {
-      const uniqueNames = Array.from(new Set(appContext.banques.map((b: any) => b.nom?.split(' - ')[0] || b.nom))).slice(0, 15);
+      const uniqueNames = [...new Set(appContext.banques.map((b: any) => b.nom?.split(' - ')[0] || b.nom))].slice(0, 15);
       contextParts.push(`\n**Banques (${appContext.banques.length} agences):** ${uniqueNames.join(', ')}. Page /banques pour details.`);
     }
 

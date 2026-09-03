@@ -52,7 +52,6 @@ async function fetchOgImage(url: string): Promise<string | undefined> {
     
     // Chercher og:image (priorité)
     let match = html.match(/<meta\s+(?:property|name)=["']og:image["']\s+content=["']([^"']+)["']/i);
-    let fallbackImageUrl: string | undefined;
     if (!match) {
       match = html.match(/<meta\s+content=["']([^"']+)["']\s+(?:property|name)=["']og:image["']/i);
     }
@@ -80,7 +79,7 @@ async function fetchOgImage(url: string): Promise<string | undefined> {
                 !src.includes('favicon') &&
                 !src.includes('sprite') &&
                 (src.endsWith('.jpg') || src.endsWith('.jpeg') || src.endsWith('.png') || src.endsWith('.webp'))) {
-              fallbackImageUrl = src;
+              match = [null, src];
               break;
             }
           }
@@ -88,9 +87,8 @@ async function fetchOgImage(url: string): Promise<string | undefined> {
       }
     }
 
-    const extractedImageUrl = match?.[1] || fallbackImageUrl;
-    if (extractedImageUrl) {
-      let imageUrl = extractedImageUrl;
+    if (match && match[1]) {
+      let imageUrl = match[1];
       // Convertir URL relative en absolue
       if (imageUrl.startsWith('/')) {
         const urlObj = new URL(url);

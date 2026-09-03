@@ -57,22 +57,6 @@ import {
 import { db } from "./db";
 import { eq, desc, and, sql, isNull, gt } from "drizzle-orm";
 
-function isMissingNotificationsReadColumnError(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-
-  const databaseError = error as {
-    code?: string;
-    column?: string;
-    message?: string;
-  };
-  if (databaseError.code !== "42703") return false;
-
-  return databaseError.column === "read" ||
-    /column\s+(?:"?notifications"?\.)?"?read"?\s+does not exist/i.test(
-      databaseError.message ?? "",
-    );
-}
-
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -126,12 +110,12 @@ export interface IStorage {
   createNotification(data: typeof insertNotificationSchema._type): Promise<any | undefined>;
   getUserNotifications(userId: string): Promise<any[]>;
   getUnreadNotificationsCount(userId: string): Promise<number>;
-  markNotificationAsRead(notificationId: string, userId: string): Promise<any | undefined>;
+  markNotificationAsRead(notificationId: string): Promise<any | undefined>;
   markAllNotificationsAsRead(userId: string): Promise<void>;
   notifySignalementOwner(signalementId: string, type: string, title: string, description: string): Promise<void>;
   broadcastNotification(type: string, title: string, description: string, signalementId: string | null, excludeUserId?: string): Promise<void>;
   getNotificationById(notificationId: string): Promise<Notification | undefined>; // Added method
-  deleteNotification(notificationId: string, userId: string): Promise<boolean>; // Added method
+  deleteNotification(notificationId: string): Promise<boolean>; // Added method
   deleteAllUserNotifications(userId: string): Promise<void>; // Added method
 
   // Méthodes pour les contacts d'urgence et les alertes panique
@@ -868,39 +852,20 @@ export class DbStorage implements IStorage {
   }
 
   async getUnreadNotificationsCount(userId: string) {
-    try {
-      const result = await db.select({ count: sql<number>`count(*)::int` })
-        .from(notifications)
-        .where(and(
-          eq(notifications.userId, userId),
-          eq(notifications.read, false)
-        ));
-      return result[0]?.count || 0;
-    } catch (error) {
-      // Older deployments may not have the read column yet. In that schema,
-      // every stored notification is unread because there is no read state.
-      if (!isMissingNotificationsReadColumnError(error)) {
-        throw error;
-      }
-
-      const result = await db.select({ count: sql<number>`count(*)::int` })
-        .from(notifications)
-        .where(eq(notifications.userId, userId));
-      return result[0]?.count || 0;
-    }
+    const result = await db.select({ count: sql<number>`count(*)::int` })
+      .from(notifications)
+      .where(and(
+        eq(notifications.userId, userId),
+        eq(notifications.read, false)
+      ));
+    return result[0]?.count || 0;
   }
 
-  async markNotificationAsRead(
-    notificationId: string,
-    userId: string,
-  ): Promise<Notification | undefined> {
+  async markNotificationAsRead(notificationId: string): Promise<Notification | undefined> {
     const [notification] = await db
       .update(notifications)
       .set({ read: true })
-      .where(and(
-        eq(notifications.id, notificationId),
-        eq(notifications.userId, userId),
-      ))
+      .where(eq(notifications.id, notificationId))
       .returning();
     return notification;
   }
@@ -919,13 +884,10 @@ export class DbStorage implements IStorage {
     return result[0];
   }
 
-  async deleteNotification(notificationId: string, userId: string): Promise<boolean> {
+  async deleteNotification(notificationId: string): Promise<boolean> {
     try {
       const result = await db.delete(notifications)
-        .where(and(
-          eq(notifications.id, notificationId),
-          eq(notifications.userId, userId),
-        ))
+        .where(eq(notifications.id, notificationId))
         .returning();
       return result.length > 0;
     } catch (error) {

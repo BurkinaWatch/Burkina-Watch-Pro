@@ -7,14 +7,14 @@ process.env.REFRESH_TOKEN_SALT =
 
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-const {
+import {
   encryptionService,
   encryptSensitiveData,
   decryptSensitiveData,
   hashRefreshToken,
   generateRefreshToken,
   verifyRefreshTokenHash,
-} = await import("../encryptionService");
+} from "../encryptionService";
 
 describe("EncryptionService", () => {
   describe("Field Encryption/Decryption (Round-trip)", () => {
