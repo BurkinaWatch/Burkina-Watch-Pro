@@ -3,9 +3,9 @@ name: Database and KMS readiness
 description: Durable constraints found while stabilizing Burkina Watch before adding sensitive features.
 ---
 
-The application runtime and the Replit development database are not automatically the same target. Runtime code prefers the Railway connection variable, while Drizzle configuration uses the development connection variable. Treat schema observations as environment-specific until both targets are explicitly identified.
+The application runtime and the Replit development database are not automatically the same target. Runtime code prefers the Railway connection variable, while Drizzle configuration uses the development connection variable. The runtime target currently has 29 tables matching the declared table and column names, but it lacks a trustworthy migration ledger and has physical drift in secondary indexes and one default.
 
-**Why:** The development database was reachable but empty, while the runtime-selected database had an existing schema with no trustworthy complete Drizzle migration history. Blind schema synchronization could target the wrong database or cause destructive drift.
+**Why:** The development database was reachable but empty, while the runtime-selected database had an existing schema with no `__drizzle_migrations` table. Blind schema synchronization could target the wrong database or cause destructive drift.
 
 **How to apply:** Before any schema change, inventory both targets read-only, choose one source of truth, back up the schema outside the repository, and use a reviewed forward-only migration path. Never use `db:push` blindly against a production URL.
 
