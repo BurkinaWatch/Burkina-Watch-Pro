@@ -43,11 +43,13 @@ describe("Phase 1 security foundations", () => {
     const originalRefreshTokenSalt = process.env.REFRESH_TOKEN_SALT;
     const originalMasterEncryptionKey = process.env.MASTER_ENCRYPTION_KEY;
     const originalKmsEnabled = process.env.KMS_ENABLED;
+    const originalRailwayDatabaseUrl = process.env.RAILWAY_DATABASE_URL;
     process.env.NODE_ENV = "production";
     process.env.SESSION_SECRET = "a".repeat(32);
     process.env.REFRESH_TOKEN_SALT = "stable-test-refresh-salt";
     process.env.KMS_ENABLED = "false";
     process.env.MASTER_ENCRYPTION_KEY = "a".repeat(64);
+    process.env.RAILWAY_DATABASE_URL = "postgresql://test";
     assert.doesNotThrow(assertProductionSecurityConfiguration);
     assert.equal(getSessionSecret(), "a".repeat(32));
 
@@ -75,6 +77,11 @@ describe("Phase 1 security foundations", () => {
       delete process.env.KMS_ENABLED;
     } else {
       process.env.KMS_ENABLED = originalKmsEnabled;
+    }
+    if (originalRailwayDatabaseUrl === undefined) {
+      delete process.env.RAILWAY_DATABASE_URL;
+    } else {
+      process.env.RAILWAY_DATABASE_URL = originalRailwayDatabaseUrl;
     }
   });
 

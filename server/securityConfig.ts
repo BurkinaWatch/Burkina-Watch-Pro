@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { hasRailwayDatabaseUrl } from "./databaseConfig";
 
 const MIN_SESSION_SECRET_LENGTH = 32;
 const developmentSessionSecret = crypto.randomBytes(32).toString("hex");
@@ -22,6 +23,12 @@ export function assertProductionSecurityConfiguration(): void {
   if (!sessionSecret || sessionSecret.length < MIN_SESSION_SECRET_LENGTH) {
     throw new Error(
       "SESSION_SECRET doit être défini en production et contenir au moins 32 caractères.",
+    );
+  }
+
+  if (!hasRailwayDatabaseUrl()) {
+    throw new Error(
+      "RAILWAY_DATABASE_URL doit être configuré en production.",
     );
   }
 

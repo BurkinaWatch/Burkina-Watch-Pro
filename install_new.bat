@@ -122,30 +122,9 @@ REM ============================================
 echo [INFO] Configuration de la base de donnees PostgreSQL...
 echo.
 
-where psql >nul 2>nul
-if %errorlevel% equ 0 (
-    set /p CREATE_DB="Voulez-vous creer automatiquement la base de donnees? (o/n) "
-    if /i "!CREATE_DB!"=="o" (
-        set /p DB_NAME="Nom de la base de donnees (defaut: burkina_watch): "
-        if "!DB_NAME!"=="" set DB_NAME=burkina_watch
-        
-        set /p DB_USER="Utilisateur PostgreSQL (defaut: postgres): "
-        if "!DB_USER!"=="" set DB_USER=postgres
-        
-        echo [INFO] Creation de la base de donnees !DB_NAME!...
-        createdb -U !DB_USER! !DB_NAME! 2>nul
-        if %errorlevel% equ 0 (
-            echo [OK] Base de donnees creee
-        ) else (
-            echo [ATTENTION] La base existe deja ou erreur de creation
-        )
-    )
-) else (
-    echo [ATTENTION] PostgreSQL non detecte. Creez manuellement la base de donnees:
-    echo   1. Installez PostgreSQL depuis https://www.postgresql.org/download/windows/
-    echo   2. Creez la base avec pgAdmin ou: createdb burkina_watch
-    echo   3. Configurez DATABASE_URL dans .env
-)
+echo [ATTENTION] Creation automatique de base desactivee.
+echo [INFO] Ce projet utilise une base PostgreSQL Railway existante comme source de verite.
+echo [INFO] Configurez la connexion dans le gestionnaire de secrets sans lancer createdb.
 
 echo.
 

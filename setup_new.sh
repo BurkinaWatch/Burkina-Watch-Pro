@@ -149,26 +149,9 @@ echo ""
 # ============================================
 
 info "Configuration de la base de données PostgreSQL..."
-
-if command_exists psql; then
-    read -p "Voulez-vous créer automatiquement la base de données? (o/n) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[OoYy]$ ]]; then
-        read -p "Nom de la base de données (défaut: burkina_watch): " DB_NAME
-        DB_NAME=${DB_NAME:-burkina_watch}
-        
-        read -p "Utilisateur PostgreSQL (défaut: postgres): " DB_USER
-        DB_USER=${DB_USER:-postgres}
-        
-        info "Création de la base de données $DB_NAME..."
-        createdb -U $DB_USER $DB_NAME 2>/dev/null && success "Base de données créée" || warning "La base existe déjà ou erreur de création"
-    fi
-else
-    warning "PostgreSQL non détecté. Créez manuellement la base de données:"
-    echo "  1. Installez PostgreSQL"
-    echo "  2. Créez la base: createdb burkina_watch"
-    echo "  3. Configurez DATABASE_URL dans .env"
-fi
+warning "Création automatique de base désactivée."
+info "Ce projet utilise une base PostgreSQL Railway existante comme source de vérité."
+info "Configurez la connexion dans le gestionnaire de secrets sans lancer createdb."
 
 echo ""
 
