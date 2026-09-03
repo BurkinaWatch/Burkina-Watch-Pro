@@ -62,6 +62,10 @@ pas être rejouées sur Railway. La migration
 `migrations/0004_runtime_alignment_draft.sql` reste en attente tant qu’un snapshot
 restaurable et une baseline Drizzle validée n’existent pas.
 
+Le runbook de baseline, les preuves de restauration et les conditions de revue
+humaine sont documentés dans
+[`docs/RAILWAY_DRIZZLE_BASELINE.md`](docs/RAILWAY_DRIZZLE_BASELINE.md).
+
 ## 📱 Fonctionnalités
 
 - **Signalements** : Création et gestion de signalements citoyens

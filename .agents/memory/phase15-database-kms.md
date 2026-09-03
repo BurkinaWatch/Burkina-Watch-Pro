@@ -20,3 +20,25 @@ Drizzle's available CLI commands do not by themselves provide evidence of a safe
 **Why:** Replaying the historical migrations could recreate or drop objects, while fabricating `__drizzle_migrations` metadata could make future migration state appear valid without proving provenance.
 
 **How to apply:** Keep the historical migrations untouched, document the Railway snapshot, and require a reviewed baseline method plus a restore point before applying any versioned schema change.
+
+Logical PostgreSQL backups require a `pg_dump` client from the same major version
+as the server; an older client must be rejected rather than used. A successful
+`pg_restore` into an ephemeral same-major cluster validates the archive's
+restorability, but does not prove that a provider-managed snapshot exists.
+
+**Why:** Railway exposed PostgreSQL 17 while the first available client was
+PostgreSQL 16, and the server correctly refused the incompatible dump.
+
+**How to apply:** Check server/client major versions before backup, keep the
+logical dump outside the repository, and separately validate the Railway-managed
+restore point.
+
+Preflight row counts are point-in-time observations and must be recaptured
+immediately before any production migration.
+
+**Why:** A second read during the same review observed an externally added
+`online_sessions` row while all checks remained read-only.
+
+**How to apply:** Treat differing repeated counts as concurrent activity, update
+the reference baseline, and stop for human review instead of assuming the data
+is unchanged.
