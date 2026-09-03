@@ -42,3 +42,14 @@ immediately before any production migration.
 **How to apply:** Treat differing repeated counts as concurrent activity, update
 the reference baseline, and stop for human review instead of assuming the data
 is unchanged.
+
+Post-merge dependency setup must use the committed lockfile and never run schema
+migrations implicitly; the package firewall can reject stale transitive versions
+even when the application code itself is unchanged.
+
+**Why:** A clean post-merge install was blocked by vulnerable protobuf, XML parser,
+and PDF package versions until the dependency resolutions were refreshed.
+
+**How to apply:** Keep post-merge setup non-interactive and forward-only for code
+dependencies, refresh blocked transitive resolutions to compatible safe versions,
+and leave Railway schema changes to a separately reviewed workflow.
