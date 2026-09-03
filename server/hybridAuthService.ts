@@ -1,10 +1,13 @@
 import crypto from "node:crypto";
 import { storage } from "./storage";
 import { sendOtpEmail, isEmailServiceAvailable } from "./emailService";
-
-function generateOtp(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
+import {
+  generateOtp,
+  hashOtpCode,
+  OTP_MAX_ATTEMPTS,
+  OTP_TTL_MS,
+  verifyOtpRecord,
+} from "./otpSecurity";
 
 function normalizePhoneNumber(phone: string): string {
   let cleaned = phone.replace(/\D/g, '');
@@ -38,13 +41,13 @@ export async function sendEmailOtp(email: string): Promise<{ success: boolean; m
     }
 
     const code = generateOtp();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + OTP_TTL_MS);
 
     await storage.deleteExpiredOtpCodes(email.toLowerCase(), 'email');
     await storage.createOtpCode({
       identifier: email.toLowerCase(),
       type: 'email',
-      code,
+      code: hashOtpCode(code, email.toLowerCase(), "email"),
       expiresAt,
     });
 
@@ -79,16 +82,36 @@ export async function verifyOtp(
       return { success: false, message: 'Code invalide ou expiré' };
     }
 
-    if (otpRecord.attempts >= 5) {
+    const verification = verifyOtpRecord(
+      otpRecord,
+      code.trim(),
+      normalizedIdentifier,
+      type,
+    );
+
+    if (verification === "locked") {
       await storage.deleteOtpCode(otpRecord.id);
       return { success: false, message: 'Trop de tentatives. Demandez un nouveau code.' };
     }
 
-    if (otpRecord.code !== code) {
+    if (verification === "expired") {
+      await storage.deleteOtpCode(otpRecord.id);
+      return { success: false, message: 'Code invalide ou expiré' };
+    }
+
+    if (verification !== "valid") {
       await storage.incrementOtpAttempts(otpRecord.id);
+      if (otpRecord.attempts + 1 >= OTP_MAX_ATTEMPTS) {
+        await storage.deleteOtpCode(otpRecord.id);
+        return { success: false, message: 'Trop de tentatives. Demandez un nouveau code.' };
+      }
       return { success: false, message: 'Code incorrect' };
     }
 
+    const consumed = await storage.consumeOtpCode(otpRecord.id);
+    if (!consumed) {
+      return { success: false, message: 'Code invalide ou déjà utilisé' };
+    }
     await storage.deleteOtpCode(otpRecord.id);
 
     let user;

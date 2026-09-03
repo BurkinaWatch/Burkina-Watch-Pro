@@ -65,6 +65,7 @@ export interface IStorage {
   
   createOtpCode(data: InsertOtpCode): Promise<OtpCode>;
   getValidOtpCode(identifier: string, type: string): Promise<OtpCode | undefined>;
+  consumeOtpCode(id: string): Promise<boolean>;
   deleteOtpCode(id: string): Promise<void>;
   deleteExpiredOtpCodes(identifier: string, type: string): Promise<void>;
   incrementOtpAttempts(id: string): Promise<void>;
@@ -220,6 +221,15 @@ export class DbStorage implements IStorage {
       .orderBy(desc(otpCodes.createdAt))
       .limit(1);
     return otp;
+  }
+
+  async consumeOtpCode(id: string): Promise<boolean> {
+    const [otp] = await db
+      .update(otpCodes)
+      .set({ verified: true })
+      .where(and(eq(otpCodes.id, id), eq(otpCodes.verified, false)))
+      .returning({ id: otpCodes.id });
+    return Boolean(otp);
   }
 
   async deleteOtpCode(id: string): Promise<void> {

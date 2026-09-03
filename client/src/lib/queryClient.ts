@@ -75,6 +75,22 @@ if (typeof window !== "undefined") {
     queryClient,
     persister: localStoragePersister,
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-    buster: "v2-guest-mode", // Cache buster - invalidate old anonymous user cache
+    buster: "v3-private-data-exclusions",
+    dehydrateOptions: {
+      shouldDehydrateQuery: (query) => {
+        const key = query.queryKey.map(String).join("/");
+        return ![
+          "/api/auth",
+          "/api/notifications",
+          "/api/tracking",
+          "/api/panic",
+          "/api/emergency-contacts",
+          "/api/push",
+          "/api/surveillance",
+          "/api/video",
+          "/api/media",
+        ].some((prefix) => key === prefix || key.startsWith(`${prefix}/`));
+      },
+    },
   });
 }

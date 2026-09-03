@@ -4,11 +4,17 @@ import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import {
+  getSessionSecret,
+  assertProductionSecurityConfiguration,
+} from "./securityConfig";
+import { requireAuthenticatedUser } from "./authorization";
 
 // Désactivé en production Railway pour éviter le crash OIDC
 const isProduction = process.env.NODE_ENV === "production" && !process.env.REPL_ID;
 
 export function getSession() {
+  assertProductionSecurityConfiguration();
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
@@ -18,7 +24,7 @@ export function getSession() {
     tableName: "sessions",
   });
   return session({
-    secret: process.env.SESSION_SECRET || "default_secret_for_dev_only",
+    secret: getSessionSecret(),
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
@@ -65,9 +71,4 @@ export async function setupAuth(app: Express) {
   // Ils doivent se connecter via /connexion pour accéder aux fonctionnalités protégées
 }
 
-export const isAuthenticated: RequestHandler = (req, res, next) => {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  res.status(401).json({ message: "Unauthorized" });
-};
+export const isAuthenticated: RequestHandler = requireAuthenticatedUser;

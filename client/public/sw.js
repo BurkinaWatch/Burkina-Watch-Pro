@@ -1,6 +1,17 @@
 const CACHE_NAME = 'burkina-watch-v1';
 const STATIC_CACHE = 'burkina-watch-static-v1';
 const DATA_CACHE = 'burkina-watch-data-v1';
+const NEVER_CACHE_API_PREFIXES = [
+  '/api/auth',
+  '/api/notifications',
+  '/api/tracking',
+  '/api/panic',
+  '/api/emergency-contacts',
+  '/api/push',
+  '/api/surveillance',
+  '/api/video',
+  '/api/media'
+];
 
 const STATIC_ASSETS = [
   '/',
@@ -54,6 +65,27 @@ async function cacheFirstStrategy(request) {
   }
 }
 
+async function networkOnlyStrategy(request) {
+  try {
+    return await fetch(request, { cache: 'no-store' });
+  } catch (error) {
+    return new Response(JSON.stringify({
+      error: 'Hors ligne',
+      message: 'Cette donnée privée nécessite une connexion réseau.',
+      offline: true
+    }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+    });
+  }
+}
+
+function shouldNeverCacheApi(pathname) {
+  return NEVER_CACHE_API_PREFIXES.some((prefix) =>
+    pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+}
+
 self.addEventListener('fetch', function(event) {
   const { request } = event;
   const url = new URL(request.url);
@@ -67,7 +99,11 @@ self.addEventListener('fetch', function(event) {
   }
 
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(networkFirstStrategy(request));
+    event.respondWith(
+      shouldNeverCacheApi(url.pathname)
+        ? networkOnlyStrategy(request)
+        : networkFirstStrategy(request)
+    );
   }
 });
 

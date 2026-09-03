@@ -4,7 +4,10 @@ import { setupVite, serveStatic, log } from "./vite";
 import compression from "compression";
 import { pharmaciesService } from "./pharmaciesService";
 import { applySecurityMiddlewares } from "./securityHardening";
+import { assertProductionSecurityConfiguration } from "./securityConfig";
+import { redactSensitiveData, redactSensitiveText } from "./securityRedaction";
 
+assertProductionSecurityConfiguration();
 const app = express();
 
 // Appliquer les middlewares de sécurité EN PREMIER
@@ -40,27 +43,11 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       // Nettoyage des données sensibles avant le log
-      let logBody = capturedJsonResponse;
-      
-      if (logBody && typeof logBody === 'object') {
-        logBody = { ...logBody };
-        const sensitiveFields = ['password', 'token', 'sessionId', 'otp', 'code', 'secret'];
-        
-        const maskSensitive = (obj: any) => {
-          for (const key in obj) {
-            if (sensitiveFields.some(f => key.toLowerCase().includes(f))) {
-              obj[key] = '[MASKED]';
-            } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-              maskSensitive(obj[key]);
-            }
-          }
-        };
-        maskSensitive(logBody);
-      }
+       const logBody = redactSensitiveData(capturedJsonResponse);
 
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (logBody) {
-        logLine += ` :: ${JSON.stringify(logBody)}`;
+         logLine += ` :: ${redactSensitiveText(JSON.stringify(logBody))}`;
       }
 
       // Ne jamais logger les cookies ou les headers sensibles
@@ -80,9 +67,14 @@ app.use((req, res, next) => {
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+   const message = redactSensitiveText(err.message || "Internal Server Error");
 
-    res.status(status).json({ message });
+   res.status(status).json({
+     message:
+       process.env.NODE_ENV === "production"
+         ? "Internal Server Error"
+         : message,
+   });
     throw err;
   });
 

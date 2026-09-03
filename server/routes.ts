@@ -765,7 +765,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const domain = req.get("host");
       const magicLink = `${req.protocol}://${domain}/api/auth/verify?token=${token}`;
       
-      console.log(`[MagicLink] Pour ${email}: ${magicLink}`);
+       console.log("[MagicLink] Lien généré; le jeton n'est pas journalisé.");
       
       // En production, on utiliserait Resend ici
       // await sendMagicLinkEmail(email, magicLink);

@@ -33,7 +33,28 @@ export const signalementMutationLimiter = rateLimit({
   message: { message: "Limite de publication atteinte. Veuillez patienter avant de publier à nouveau." }
 });
 
+function getConfiguredMediaGatewayOrigins(): string[] {
+  return (process.env.MEDIA_GATEWAY_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+    .flatMap((origin) => {
+      try {
+        const parsed = new URL(origin);
+        if (!["https:", "wss:"].includes(parsed.protocol) || parsed.pathname !== "/" || parsed.search || parsed.hash) {
+          return [];
+        }
+        return [parsed.origin];
+      } catch {
+        return [];
+      }
+    });
+}
+
 export function applySecurityMiddlewares(app: Express) {
+  const mediaGatewayOrigins = getConfiguredMediaGatewayOrigins();
+  const mediaOrigins = mediaGatewayOrigins.filter((origin) => origin.startsWith("https://"));
+
   // 1. Protection des headers HTTP avec Helmet
   app.use(helmet({
     contentSecurityPolicy: {
@@ -42,10 +63,15 @@ export function applySecurityMiddlewares(app: Express) {
         scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.openstreetmap.org", "https://unpkg.com"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://unpkg.com"],
         imgSrc: ["'self'", "data:", "https:", "blob:"],
-        connectSrc: ["'self'", "https://*.openstreetmap.org", "https://nominatim.openstreetmap.org"],
+        connectSrc: [
+          "'self'",
+          "https://*.openstreetmap.org",
+          "https://nominatim.openstreetmap.org",
+          ...mediaGatewayOrigins,
+        ],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         objectSrc: ["'none'"],
-        mediaSrc: ["'self'"],
+        mediaSrc: ["'self'", ...mediaOrigins],
         frameSrc: ["'self'"],
       },
     },
