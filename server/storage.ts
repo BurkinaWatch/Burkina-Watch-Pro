@@ -740,7 +740,7 @@ export class DbStorage implements IStorage {
       })
       .returning();
     
-    console.log(`🚨 Session de tracking d'urgence demarree pour l'utilisateur ${userId} avec token ${shareToken}`);
+    console.log(`🚨 Session de tracking d'urgence démarrée pour l'utilisateur ${userId}`);
     return session;
   }
 

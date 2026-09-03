@@ -207,8 +207,11 @@ describe("Phase 1 security foundations", () => {
 
     const tokenRequest = {
       ...missingOriginRequest,
+    } as any;
+    const token = createCsrfToken(tokenRequest);
+    const validTokenRequest = {
+      ...tokenRequest,
       get(name: string) {
-        const token = createCsrfToken(tokenRequest);
         const headers: Record<string, string> = {
           host: "burkina-watch.example",
           cookie: `csrf_token=${encodeURIComponent(token)}`,
@@ -217,10 +220,16 @@ describe("Phase 1 security foundations", () => {
         return headers[name.toLowerCase()];
       },
     } as any;
+    let validTokenNextCalled = false;
+    await csrfProtection(validTokenRequest, mockResponse() as any, () => {
+      validTokenNextCalled = true;
+    });
+    assert.equal(validTokenNextCalled, true);
+
     const invalidTokenResponse = mockResponse();
     await csrfProtection(
       {
-        ...tokenRequest,
+        ...validTokenRequest,
         get(name: string) {
           const headers: Record<string, string> = {
             host: "burkina-watch.example",
@@ -234,5 +243,20 @@ describe("Phase 1 security foundations", () => {
       () => assert.fail("invalid CSRF token should be rejected"),
     );
     assert.equal(invalidTokenResponse.statusCode, 403);
+  });
+
+  test("isolates private resources between users for read, update, and delete", async () => {
+    for (const operation of ["read", "update", "delete"]) {
+      const response = mockResponse();
+      await requireResourceOwnership(async () => ({ ownerUserId: "user-b" }))(
+        {
+          user: { claims: { sub: "user-a" }, role: "user" },
+          isAuthenticated: () => true,
+        } as any,
+        response as any,
+        () => assert.fail(`${operation} should be rejected for another user's resource`),
+      );
+      assert.equal(response.statusCode, 403, operation);
+    }
   });
 });

@@ -2081,7 +2081,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const cleanPhone = contact.phone.replace(/[^\d+]/g, '');
         const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 
-        console.log(`WhatsApp URL pour ${contact.name}: ${whatsappUrl}`);
+        console.log(`Lien WhatsApp préparé pour le contact ${contact.name}`);
         return whatsappUrl;
       });
 
