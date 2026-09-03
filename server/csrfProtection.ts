@@ -29,6 +29,7 @@ export function isValidCsrfToken(req: Request, token: string | undefined): boole
   const [nonce, signature] = token.split(".");
   if (
     !nonce ||
+    !signature ||
     signature.length !== 64 ||
     nonce.length !== 64 ||
     !/^[0-9a-f]+$/i.test(nonce) ||
