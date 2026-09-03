@@ -219,8 +219,8 @@ async function main() {
       sqlHasOnlyAllowedOperations &&
       (missingIndexes.length === 0 || missingIndexes.length === EXPECTED_INDEXES.length) &&
       unexpectedTargetIndexes.length === 0 &&
-      (onlineRows.length === 1) &&
-      (!defaultAlreadyCorrect || onlineRows.length === 1);
+      onlineRows.length === 1 &&
+      journalRows.length === 0;
 
     status(
       "Précontrôle lecture seule",
