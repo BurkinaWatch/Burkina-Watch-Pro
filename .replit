@@ -51,3 +51,7 @@ expertMode = true
 [userenv.shared]
 VAPID_PUBLIC_KEY = "BGMoONqqPEIay8u8dijZ1acMbwjhX6aAuEEENV68IwiLTlNi4uuNxxmPVl9FvfsRWs_ZsUlHtV5wLjYcXJe-Uys"
 VITE_VAPID_PUBLIC_KEY = "BBLC_BuOwi11V31-I-6Zw5U04I7ejkko9wgnc25hFI3udWEht1mN0fk8ruPYM882D6YSHLCZ00E8wyr8VZwFGOaE"
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 180000
