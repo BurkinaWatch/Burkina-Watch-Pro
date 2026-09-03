@@ -165,35 +165,9 @@ setup_database() {
 
 # Fonction pour initialiser le schéma
 initialize_schema() {
-    print_message "Initialisation du schéma de base de données..."
-    
-    if [ ! -f ".env" ]; then
-        print_error "Fichier .env introuvable. Configurez d'abord l'environnement."
-        return 1
-    fi
-    
-    # Vérifier que DATABASE_URL est défini
-    export $(cat .env | grep DATABASE_URL | xargs)
-    if [ -z "$DATABASE_URL" ]; then
-        print_error "DATABASE_URL non défini dans .env"
-        return 1
-    fi
-    
-    read -p "Pousser le schéma vers la base de données ? (y/N) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        print_warning "Schéma non initialisé"
-        return
-    fi
-    
-    print_message "Exécution de npm run db:push..."
-    npm run db:push || {
-        print_error "Échec de db:push"
-        print_warning "Essayez : npm run db:push --force"
-        return 1
-    }
-    
-    print_success "Schéma initialisé"
+    print_warning "Initialisation automatique du schéma désactivée."
+    print_message "Aucune commande db:push ne sera exécutée par ce script."
+    print_message "Préparez et validez une migration forward-only séparément."
 }
 
 # Fonction pour compiler le projet

@@ -329,9 +329,11 @@ export function hashSensitiveData(data: string): string {
 
 // Hash refresh tokens avec salt pour stockage sécurisé
 export function hashRefreshToken(token: string): string {
-  const salt = process.env.REFRESH_TOKEN_SALT || crypto.randomBytes(16).toString("hex");
-  if (!process.env.REFRESH_TOKEN_SALT) {
-    console.warn("⚠️ REFRESH_TOKEN_SALT non configuré, utilisation d'un salt aléatoire (non persistant)");
+  const salt = process.env.REFRESH_TOKEN_SALT?.trim();
+  if (!salt) {
+    throw new Error(
+      "REFRESH_TOKEN_SALT doit être configuré pour hacher les refresh tokens.",
+    );
   }
   return crypto
     .createHash("sha256")

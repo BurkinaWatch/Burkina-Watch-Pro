@@ -153,23 +153,9 @@ REM ============================================
 REM 5. MIGRATION DU SCHEMA
 REM ============================================
 
-echo [INFO] Migration du schema de base de donnees...
-echo.
-
-call npm run db:push
-if %errorlevel% equ 0 (
-    echo [OK] Schema migre avec succes
-) else (
-    echo [ATTENTION] Erreur lors de la migration. Tentative avec --force...
-    call npm run db:push -- --force
-    if %errorlevel% equ 0 (
-        echo [OK] Schema migre avec --force
-    ) else (
-        echo [ERREUR] Impossible de migrer le schema. Verifiez DATABASE_URL dans .env
-        pause
-        exit /b 1
-    )
-)
+echo [ATTENTION] Migration automatique du schema desactivee.
+echo [INFO] Aucune commande db:push, y compris --force, ne sera executee.
+echo [INFO] Preparez et validez une migration forward-only separement.
 
 echo.
 

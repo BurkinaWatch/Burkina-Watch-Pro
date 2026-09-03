@@ -176,19 +176,9 @@ echo ""
 # 5. MIGRATION DU SCHÉMA
 # ============================================
 
-info "Migration du schéma de base de données..."
-
-if npm run db:push; then
-    success "Schéma migré avec succès"
-else
-    warning "Erreur lors de la migration. Tentative avec --force..."
-    if npm run db:push -- --force; then
-        success "Schéma migré avec --force"
-    else
-        error "Impossible de migrer le schéma. Vérifiez DATABASE_URL dans .env"
-        exit 1
-    fi
-fi
+warning "Migration automatique du schéma désactivée."
+info "Aucune commande db:push, y compris --force, ne sera exécutée."
+info "Préparez et validez une migration forward-only séparément."
 
 echo ""
 

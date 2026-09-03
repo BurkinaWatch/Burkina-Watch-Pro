@@ -40,8 +40,14 @@ function mockResponse() {
 describe("Phase 1 security foundations", () => {
   test("accepts a strong production session secret and rejects a missing one", () => {
     const originalEnvironment = process.env.NODE_ENV;
+    const originalRefreshTokenSalt = process.env.REFRESH_TOKEN_SALT;
+    const originalMasterEncryptionKey = process.env.MASTER_ENCRYPTION_KEY;
+    const originalKmsEnabled = process.env.KMS_ENABLED;
     process.env.NODE_ENV = "production";
     process.env.SESSION_SECRET = "a".repeat(32);
+    process.env.REFRESH_TOKEN_SALT = "stable-test-refresh-salt";
+    process.env.KMS_ENABLED = "false";
+    process.env.MASTER_ENCRYPTION_KEY = "a".repeat(64);
     assert.doesNotThrow(assertProductionSecurityConfiguration);
     assert.equal(getSessionSecret(), "a".repeat(32));
 
@@ -55,6 +61,21 @@ describe("Phase 1 security foundations", () => {
     }
     process.env.SESSION_SECRET =
       "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+    if (originalRefreshTokenSalt === undefined) {
+      delete process.env.REFRESH_TOKEN_SALT;
+    } else {
+      process.env.REFRESH_TOKEN_SALT = originalRefreshTokenSalt;
+    }
+    if (originalMasterEncryptionKey === undefined) {
+      delete process.env.MASTER_ENCRYPTION_KEY;
+    } else {
+      process.env.MASTER_ENCRYPTION_KEY = originalMasterEncryptionKey;
+    }
+    if (originalKmsEnabled === undefined) {
+      delete process.env.KMS_ENABLED;
+    } else {
+      process.env.KMS_ENABLED = originalKmsEnabled;
+    }
   });
 
   test("generates six-digit OTPs and verifies only the matching hash", () => {

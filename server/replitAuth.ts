@@ -9,6 +9,7 @@ import {
   assertProductionSecurityConfiguration,
 } from "./securityConfig";
 import { requireAuthenticatedUser } from "./authorization";
+import { getDatabaseUrl } from "./databaseConfig";
 
 // Désactivé en production Railway pour éviter le crash OIDC
 const isProduction = process.env.NODE_ENV === "production" && !process.env.REPL_ID;
@@ -18,7 +19,7 @@ export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
-    conString: process.env.RAILWAY_DATABASE_URL || process.env.DATABASE_URL,
+    conString: getDatabaseUrl(),
     createTableIfMissing: false,
     ttl: sessionTtl,
     tableName: "sessions",
