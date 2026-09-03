@@ -8,14 +8,15 @@ process.env.KMS_ENABLED = "false";
 
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import {
+
+const {
   encryptionService,
   encryptSensitiveData,
   decryptSensitiveData,
   hashRefreshToken,
   generateRefreshToken,
   verifyRefreshTokenHash,
-} from "../encryptionService";
+} = await import("../encryptionService");
 
 describe("EncryptionService", () => {
   describe("Field Encryption/Decryption (Round-trip)", () => {
