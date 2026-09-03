@@ -133,7 +133,7 @@ export interface IStorage {
 
   // Méthodes pour le chatbot
   saveChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
-  getChatHistory(sessionId: string): Promise<ChatMessage[]>;
+  getChatHistory(sessionId: string, userId?: string | null): Promise<ChatMessage[]>;
 
   // Méthodes pour les points et le leaderboard
   awardPointsToUser(userId: string, points: number): Promise<{ user: User; levelChanged: boolean; newLevel: string }>;
@@ -1088,11 +1088,21 @@ L'équipe Burkina Watch
     return newMessage;
   }
 
-  async getChatHistory(sessionId: string): Promise<ChatMessage[]> {
+  async getChatHistory(sessionId: string, userId?: string | null): Promise<ChatMessage[]> {
+    const sessionFilter = userId === null
+      ? isNull(chatMessages.userId)
+      : userId
+        ? eq(chatMessages.userId, userId)
+        : undefined;
+
     return db
       .select()
       .from(chatMessages)
-      .where(eq(chatMessages.sessionId, sessionId))
+      .where(
+        sessionFilter
+          ? and(eq(chatMessages.sessionId, sessionId), sessionFilter)
+          : eq(chatMessages.sessionId, sessionId),
+      )
       .orderBy(chatMessages.createdAt);
   }
 

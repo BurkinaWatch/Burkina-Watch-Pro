@@ -19,6 +19,8 @@ import {
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { csrfProtection, issueCsrfToken } from "./csrfProtection";
+import { getAuthenticatedUserId } from "./authorization";
 import { OverpassService } from "./overpassService";
 import { reverseGeocode } from "./geocoding";
 import { sendLocationEmail, sendEmergencyTrackingStartEmail } from "./emailService";
@@ -638,6 +640,8 @@ function mapOsmBrandToMarque(brand: string): string {
 // ============================================
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
+  app.get("/api/auth/csrf", issueCsrfToken);
+  app.use(csrfProtection);
 
   // ----------------------------------------
   // ROUTES D'AUTHENTIFICATION HYBRIDE (OTP Email + SMS)
@@ -645,6 +649,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   const { sendEmailOtp, sendSmsOtp, verifyOtp, checkTwilioAvailability } = await import("./hybridAuthService");
   const { authLimiter } = await import("./securityHardening");
+
+  const toAuthenticatedUser = (user: any) => ({
+    id: user.id,
+    email: user.email,
+    isAnonymous: user.isAnonymous,
+    authProvider: user.authProvider,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    profileImageUrl: user.profileImageUrl,
+    telephone: user.telephone,
+    bio: user.bio,
+    ville: user.ville,
+    metier: user.metier,
+    role: user.role,
+    emailTrackingEnabled: user.emailTrackingEnabled,
+    userPoints: user.userPoints,
+    userLevel: user.userLevel,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    claims: { sub: user.id },
+  });
 
   app.post("/api/auth/send-otp", authLimiter, async (req: any, res) => {
     const { identifier, type } = req.body;
@@ -704,7 +729,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 return res.status(500).json({ success: false, message: "Erreur de sauvegarde de session" });
               }
               console.log("✅ User logged in and session saved:", user.id);
-              res.json({ success: true, user: wrappedUser, message: "Connexion réussie" });
+              res.json({ success: true, user: toAuthenticatedUser(user), message: "Connexion réussie" });
             });
           });
         } else {
@@ -745,7 +770,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/auth/user", (req: any, res) => {
     if (req.isAuthenticated()) {
-      return res.json(req.user);
+      return res.json(toAuthenticatedUser(req.user));
     }
     res.status(401).json({ message: "Unauthorized" });
   });
@@ -856,13 +881,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = req.params;
       const { points, reason } = req.body;
 
-      // Only allow awarding points to self or if admin
       const user = await storage.getUser(req.user.claims.sub);
-      if (userId !== req.user.claims.sub && user?.role !== "admin") {
+      if (user?.role !== "admin") {
         return res.status(403).json({ error: "Non autorisé" });
       }
 
-      const updatedUser = await storage.awardPointsToUser(userId, points);
+      const numericPoints = Number(points);
+      if (!Number.isInteger(numericPoints) || numericPoints < 0 || numericPoints > 1000) {
+        return res.status(400).json({ error: "Le nombre de points doit être un entier entre 0 et 1000" });
+      }
+
+      void reason;
+      const updatedUser = await storage.awardPointsToUser(userId, numericPoints);
       res.json(updatedUser);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -1103,7 +1133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/signalements/:id", signalementMutationLimiter, async (req: any, res) => {
+  app.patch("/api/signalements/:id", isAuthenticated, signalementMutationLimiter, async (req: any, res) => {
     try {
       console.log("📝 PATCH /api/signalements/:id - Données reçues:", req.body);
       
@@ -1114,25 +1144,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Signalement non trouvé" });
       }
 
-      // Demo mode: Allow editing signalements created by demo-user
-      // Authenticated mode: Only the owner can edit their own signalements
-      const userId = req.user?.claims?.sub || "demo-user";
-
-      // Security check: Only allow editing if:
-      // 1. Signalement belongs to demo-user (demo mode), OR
-      // 2. User is authenticated AND owns this signalement
-      const isDemoSignalement = signalement.userId === "demo-user";
+      const userId = req.user.claims.sub;
+      const userRole = req.user.role;
+      const isModerator = ["admin", "moderateur", "moderator"].includes(userRole);
       const isOwner = signalement.userId === userId;
 
-      if (!isDemoSignalement && !isOwner) {
-        console.log("❌ Non autorisé - userId:", userId, "signalement.userId:", signalement.userId);
+      if (!isOwner && !isModerator) {
         return res.status(403).json({ error: "Vous n'êtes pas autorisé à modifier ce signalement" });
-      }
-
-      // If signalement is not a demo signalement, require authentication
-      if (!isDemoSignalement && !req.user) {
-        console.log("❌ Authentification requise");
-        return res.status(401).json({ error: "Authentification requise" });
       }
 
       const validationResult = updateSignalementSchema.safeParse(req.body);
@@ -1144,9 +1162,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: errorMessage });
       }
 
-      console.log("✅ Données validées:", validationResult.data);
+      if (validationResult.data.statut && !isModerator) {
+        return res.status(403).json({ error: "Seuls les modérateurs peuvent modifier le statut" });
+      }
 
-      const updatedSignalement = await storage.updateSignalement(req.params.id, validationResult.data);
+      const updateData = isModerator
+        ? validationResult.data
+        : (() => {
+            const { statut: _statut, ...ownerUpdates } = validationResult.data;
+            return ownerUpdates;
+          })();
+
+      const updatedSignalement = await storage.updateSignalement(req.params.id, updateData);
 
       console.log("✅ Signalement mis à jour:", updatedSignalement);
 
@@ -1158,7 +1185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           resourceType: "signalement",
           resourceId: updatedSignalement.id,
           details: {
-            modifications: validationResult.data,
+            modifications: updateData,
           },
           ipAddress: req.ip,
           userAgent: req.get('user-agent'),
@@ -1184,7 +1211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/signalements/:id", signalementMutationLimiter, async (req: any, res) => {
+  app.delete("/api/signalements/:id", isAuthenticated, signalementMutationLimiter, async (req: any, res) => {
     try {
       const signalement = await storage.getSignalement(req.params.id);
 
@@ -1192,23 +1219,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Signalement non trouvé" });
       }
 
-      // Demo mode: Allow deleting signalements created by demo-user
-      // Authenticated mode: Only the owner can delete their own signalements
-      const userId = req.user?.claims?.sub || "demo-user";
-
-      // Security check: Only allow deleting if:
-      // 1. Signalement belongs to demo-user (demo mode), OR
-      // 2. User is authenticated AND owns this signalement
-      const isDemoSignalement = signalement.userId === "demo-user";
+      const userId = req.user.claims.sub;
+      const isModerator = ["admin", "moderateur", "moderator"].includes(req.user.role);
       const isOwner = signalement.userId === userId;
 
-      if (!isDemoSignalement && !isOwner) {
+      if (!isOwner && !isModerator) {
         return res.status(403).json({ error: "Vous n'êtes pas autorisé à supprimer ce signalement" });
-      }
-
-      // If signalement is not a demo signalement, require authentication
-      if (!isDemoSignalement && !req.user) {
-        return res.status(401).json({ error: "Authentification requise" });
       }
 
       const success = await storage.deleteSignalement(req.params.id);
@@ -1240,8 +1256,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/signalements/:id/statut", signalementMutationLimiter, async (req: any, res) => {
+  app.patch("/api/signalements/:id/statut", isAuthenticated, signalementMutationLimiter, async (req: any, res) => {
     try {
+      const currentUser = await storage.getUser(req.user.claims.sub);
+      if (!currentUser || !["admin", "moderateur", "moderator"].includes(currentUser.role || "")) {
+        return res.status(403).json({ error: "Seuls les modérateurs peuvent modifier le statut" });
+      }
+
       const { statut } = req.body;
 
       if (!statut || !["en_attente", "en_cours", "resolu", "rejete"].includes(statut)) {
@@ -2210,7 +2231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ROUTES CHATBOT
   // ----------------------------------------
   let chatStaticDataCache: any = null;
-  const chatRequestSchema = insertChatMessageSchema.omit({ role: true });
+  const chatRequestSchema = insertChatMessageSchema.omit({ role: true, userId: true });
 
   app.post("/api/chat", async (req: any, res) => {
     try {
@@ -2228,18 +2249,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: errorMessage });
       }
 
-      const { sessionId, userId, content } = validationResult.data;
+      const { sessionId, content } = validationResult.data;
+      const authenticatedUserId = getAuthenticatedUserId(req);
+      const session = req.session as { chatSessionId?: string };
+
+      if (!authenticatedUserId) {
+        if (session.chatSessionId && session.chatSessionId !== sessionId) {
+          return res.status(403).json({ error: "Session de chat non autorisée" });
+        }
+        session.chatSessionId = sessionId;
+      }
+      const chatUserId = authenticatedUserId || null;
 
       // Sauvegarder le message de l'utilisateur
       await storage.saveChatMessage({
         sessionId,
-        userId: userId || null,
+        userId: chatUserId,
         role: "user",
         content,
       });
 
       // Récupérer l'historique de la conversation
-      const history = await storage.getChatHistory(sessionId);
+      const history = await storage.getChatHistory(sessionId, chatUserId);
 
       // Mapper l'historique au format attendu par le service IA
       const chatMessages = history.map(msg => ({
@@ -2307,7 +2338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Sauvegarder la réponse de l'assistant
       await storage.saveChatMessage({
         sessionId,
-        userId: userId || null,
+        userId: chatUserId,
         role: "assistant",
         content: assistantMessage,
       });
@@ -2335,7 +2366,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/chat/history/:sessionId", async (req, res) => {
     try {
       const { sessionId } = req.params;
-      const history = await storage.getChatHistory(sessionId);
+      const authenticatedUserId = getAuthenticatedUserId(req);
+      const session = req.session as { chatSessionId?: string };
+      if (!authenticatedUserId && session.chatSessionId !== sessionId) {
+        return res.status(403).json({ error: "Session de chat non autorisée" });
+      }
+      const history = await storage.getChatHistory(sessionId, authenticatedUserId || null);
       res.json(history);
     } catch (error) {
       console.error("Error fetching chat history:", error);

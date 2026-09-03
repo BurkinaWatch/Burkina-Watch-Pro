@@ -16,6 +16,10 @@ import {
 } from "../securityConfig";
 import { redactSensitiveData, redactSensitiveText } from "../securityRedaction";
 import { isBlockedIp } from "../ssrfProtection";
+import {
+  createCsrfToken,
+  csrfProtection,
+} from "../csrfProtection";
 
 function mockResponse() {
   const response = {
@@ -160,5 +164,75 @@ describe("Phase 1 security foundations", () => {
       () => assert.fail("next should not run"),
     );
     assert.equal(forbiddenResponse.statusCode, 403);
+  });
+
+  test("accepts same-origin CSRF requests and rejects missing or invalid protection", async () => {
+    const baseRequest = {
+      method: "POST",
+      protocol: "https",
+      sessionID: "session-a",
+      user: { id: "user-a" },
+      isAuthenticated: () => true,
+      get(name: string) {
+        const headers: Record<string, string> = {
+          host: "burkina-watch.example",
+          origin: "https://burkina-watch.example",
+        };
+        return headers[name.toLowerCase()];
+      },
+    } as any;
+
+    let nextCalled = false;
+    await csrfProtection(baseRequest, mockResponse() as any, () => {
+      nextCalled = true;
+    });
+    assert.equal(nextCalled, true);
+
+    const missingOriginRequest = {
+      ...baseRequest,
+      get(name: string) {
+        const headers: Record<string, string> = {
+          host: "burkina-watch.example",
+        };
+        return headers[name.toLowerCase()];
+      },
+    } as any;
+    const missingOriginResponse = mockResponse();
+    await csrfProtection(
+      missingOriginRequest,
+      missingOriginResponse as any,
+      () => assert.fail("request without CSRF protection should be rejected"),
+    );
+    assert.equal(missingOriginResponse.statusCode, 403);
+
+    const tokenRequest = {
+      ...missingOriginRequest,
+      get(name: string) {
+        const token = createCsrfToken(tokenRequest);
+        const headers: Record<string, string> = {
+          host: "burkina-watch.example",
+          cookie: `csrf_token=${encodeURIComponent(token)}`,
+          "x-csrf-token": token,
+        };
+        return headers[name.toLowerCase()];
+      },
+    } as any;
+    const invalidTokenResponse = mockResponse();
+    await csrfProtection(
+      {
+        ...tokenRequest,
+        get(name: string) {
+          const headers: Record<string, string> = {
+            host: "burkina-watch.example",
+            cookie: "csrf_token=invalid",
+            "x-csrf-token": "invalid",
+          };
+          return headers[name.toLowerCase()];
+        },
+      } as any,
+      invalidTokenResponse as any,
+      () => assert.fail("invalid CSRF token should be rejected"),
+    );
+    assert.equal(invalidTokenResponse.statusCode, 403);
   });
 });
