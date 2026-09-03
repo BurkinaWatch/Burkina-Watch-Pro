@@ -127,40 +127,9 @@ setup_environment() {
 
 # Fonction pour créer la base de données
 setup_database() {
-    print_message "Configuration de la base de données..."
-    
-    # Charger les variables d'environnement
-    if [ -f ".env" ]; then
-        export $(cat .env | grep -v '^#' | xargs)
-    fi
-    
-    # Vérifier si PostgreSQL est disponible
-    if ! command -v psql &> /dev/null; then
-        print_warning "PostgreSQL CLI non disponible, configuration manuelle requise"
-        return
-    fi
-    
-    # Demander si on doit créer la base de données
-    read -p "Créer la base de données PostgreSQL ? (y/N) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        print_warning "Base de données non créée"
-        return
-    fi
-    
-    # Extraire le nom de la base de données depuis DATABASE_URL ou PGDATABASE
-    DB_NAME=${PGDATABASE:-burkina_watch}
-    
-    print_message "Création de la base de données '$DB_NAME'..."
-    
-    # Essayer de créer la base de données
-    if psql -U ${PGUSER:-postgres} -lqt | cut -d \| -f 1 | grep -qw $DB_NAME; then
-        print_warning "La base de données '$DB_NAME' existe déjà"
-    else
-        createdb -U ${PGUSER:-postgres} $DB_NAME 2>/dev/null && \
-            print_success "Base de données '$DB_NAME' créée" || \
-            print_error "Impossible de créer la base de données (vérifiez vos permissions)"
-    fi
+    print_warning "Création automatique de base désactivée."
+    print_message "Ce projet utilise une base PostgreSQL Railway existante comme source de vérité."
+    print_message "Configurez la connexion dans le gestionnaire de secrets sans lancer createdb."
 }
 
 # Fonction pour initialiser le schéma
