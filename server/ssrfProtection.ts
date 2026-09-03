@@ -35,7 +35,7 @@ function isBlockedIpv4(ip: string): boolean {
   );
 }
 
-function parseIpv6(ip: string): bigint[] | undefined {
+function parseIpv6(ip: string): number[] | undefined {
   let value = ip.toLowerCase();
   const zoneIndex = value.indexOf("%");
   if (zoneIndex >= 0) {
@@ -71,11 +71,7 @@ function parseIpv6(ip: string): bigint[] | undefined {
     return undefined;
   }
 
-  return parts.map((part) => BigInt(`0x${part}`));
-}
-
-function ipv6ToBigInt(parts: bigint[]): bigint {
-  return parts.reduce((result, part) => (result << 16n) | part, 0n);
+  return parts.map((part) => Number.parseInt(part, 16));
 }
 
 export function isBlockedIp(ip: string): boolean {
@@ -95,24 +91,27 @@ export function isBlockedIp(ip: string): boolean {
     return true;
   }
 
-  const value = ipv6ToBigInt(parts);
-  const isIpv4Mapped = parts.slice(0, 5).every((part) => part === 0n) && parts[5] === 0xffffn;
+  const isIpv4Mapped =
+    parts.slice(0, 5).every((part) => part === 0) && parts[5] === 0xffff;
   if (isIpv4Mapped) {
     const ipv4 = [
-      Number(parts[6] >> 8n),
-      Number(parts[6] & 0xffn),
-      Number(parts[7] >> 8n),
-      Number(parts[7] & 0xffn),
+      parts[6] >> 8,
+      parts[6] & 0xff,
+      parts[7] >> 8,
+      parts[7] & 0xff,
     ].join(".");
     return isBlockedIpv4(ipv4);
   }
 
+  const isUnspecified = parts.every((part) => part === 0);
+  const isLoopback = parts.slice(0, 7).every((part) => part === 0) && parts[7] === 1;
+
   return (
-    value === 0n ||
-    value === 1n ||
-    (value >> 121n) === 0x7en || // fc00::/7
-    (value >> 118n) === 0x3fan || // fe80::/10
-    (value >> 120n) === 0xffn // multicast
+    isUnspecified ||
+    isLoopback ||
+    (parts[0] & 0xfe00) === 0xfc00 || // fc00::/7
+    (parts[0] & 0xffc0) === 0xfe80 || // fe80::/10
+    (parts[0] & 0xff00) === 0xff00 // multicast
   );
 }
 
@@ -162,22 +161,24 @@ export async function validateOutboundUrl(
     return url;
   }
 
-  let resolvedAddresses: dns.LookupAddress[];
   try {
-    resolvedAddresses = await dns.lookup(hostname, {
+    const resolvedAddresses = await dns.lookup(hostname, {
       all: true,
       verbatim: true,
     });
-  } catch {
+
+    if (
+      resolvedAddresses.length === 0 ||
+      resolvedAddresses.some((address) => isBlockedIp(address.address))
+    ) {
+      throw new OutboundUrlValidationError();
+    }
+
+    return url;
+  } catch (error) {
+    if (error instanceof OutboundUrlValidationError) {
+      throw error;
+    }
     throw new OutboundUrlValidationError("Hôte sortant introuvable");
   }
-
-  if (
-    resolvedAddresses.length === 0 ||
-    resolvedAddresses.some((address) => isBlockedIp(address.address))
-  ) {
-    throw new OutboundUrlValidationError();
-  }
-
-  return url;
 }
