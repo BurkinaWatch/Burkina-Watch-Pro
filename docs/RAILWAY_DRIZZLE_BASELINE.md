@@ -1,11 +1,26 @@
 # Baseline Drizzle de Railway
 
-**Statut au 3 septembre 2026 : READY WITH CONDITIONS**
+**Statut au 4 septembre 2026 : SCHÉMA APPLIQUÉ — BASELINE DRIZZLE DISTINCTE NON CRÉÉE**
 
-Ce document décrit la baseline sûre de la base PostgreSQL Railway existante.
-Il ne constitue pas une autorisation d'exécuter une migration de production.
+Ce document conserve l'analyse de baseline de la base PostgreSQL Railway
+existante. L'application opérationnelle de `0004` à `0007` est documentée dans
+[`RAILWAY_SURVEILLANCE_MIGRATION.md`](RAILWAY_SURVEILLANCE_MIGRATION.md).
 
-## État vérifié avant toute modification
+## État post-migration vérifié le 4 septembre 2026
+
+- 33/33 tables publiques attendues ; structure exacte : `PASS`.
+- `0004` à `0007` ont été appliquées par le runner transactionnel contrôlé.
+- Les neuf index de `0004`, les quatre tables surveillance et leurs dix index
+  sont présents.
+- Les quatre tables surveillance sont vides ; aucun enregistrement métier
+  existant n'a été supprimé par ces migrations DDL.
+- Un dump logique PostgreSQL 17.5 a été créé avant l'écriture et vérifié avec
+  `pg_restore --list`, hors dépôt.
+- `__drizzle_migrations` est toujours absent. Il n'a pas été créé
+  artificiellement et les migrations historiques `0000` à `0003` n'ont pas été
+  rejouées.
+
+## État historique vérifié avant l'application
 
 Le précontrôle lecture seule a été exécuté avec :
 
@@ -38,32 +53,21 @@ La différence sur `online_sessions` entre les deux lectures montre qu'une
 en lecture seule; le compteur final à `1` doit donc être repris comme nouvelle
 référence par la revue humaine, et non remplacé par l'ancienne valeur.
 
-## Point de restauration et test de restauration
+## Point de restauration
 
-Un dump logique custom a été produit avec un client PostgreSQL 17.6, compatible
-avec le serveur Railway PostgreSQL 17.11. Il a été vérifié avec `pg_restore
---list` et restauré avec `pg_restore --exit-on-error` dans une instance
-PostgreSQL 17 éphémère locale, sans écriture sur Railway.
-
-La restauration de test a confirmé :
-
-- 29 tables publiques ;
-- 63 index publics ;
-- aucun journal Drizzle ;
-- le même default absent sur `online_sessions.id`.
-
-Ce test prouve que le dump logique est restaurable. Il **ne prouve pas**
-l'existence d'un snapshot géré par Railway, ni la restauration d'un snapshot
-Railway dans son interface. Le fichier de backup de test est resté hors du
-dépôt et n'est pas une sauvegarde de production à conserver. Avant toute
-écriture sur Railway, une personne habilitée doit donc encore :
+Un dump logique custom a été produit avec un client PostgreSQL 17.5, compatible
+avec le serveur Railway PostgreSQL 17.11, puis vérifié avec `pg_restore --list`.
+Le fichier est resté hors du dépôt. Cette vérification confirme l'intégrité de
+l'archive, mais ne prouve pas l'existence d'un snapshot géré par Railway ni un
+test de restauration dans l'interface Railway. Pour une prochaine opération,
+une personne habilitée doit :
 
 1. créer ou sélectionner un snapshot/backup Railway ;
 2. confirmer son identifiant, son horodatage et sa disponibilité dans Railway ;
 3. effectuer ou valider un test de restauration selon la procédure Railway ;
 4. conserver le point de restauration pendant toute l'opération.
 
-Sans cette validation, `0004` ne doit pas être appliquée.
+Cette exigence reste applicable à toute prochaine migration de production.
 
 ## Méthode de baseline retenue pour revue humaine
 
@@ -98,32 +102,28 @@ production et n'a pas modifié la configuration active du projet.
 - Ne pas modifier les données métier, les clés existantes ou les migrations
   historiques.
 
-## Conditions d'application de `0004`
+## Conditions pour une prochaine migration
 
-L'application exige une validation humaine explicite de la méthode ci-dessus et
-du point de restauration. Une fois ces deux validations acquises, la procédure
-doit être :
+La procédure doit être :
 
 1. Rejouer `npm run db:railway:preflight` et conserver sa sortie.
 2. Vérifier que la cible est `RAILWAY_DATABASE_URL`, sans afficher sa valeur.
 3. Vérifier le snapshot/backup restaurable et les compteurs de référence.
-4. Exécuter `0004_runtime_alignment_draft.sql` avec un mécanisme migrateur
-   contrôlé approuvé lors de la revue, jamais avec `db:push`.
+4. Ajouter une migration forward-only et l'exécuter avec un runner contrôlé,
+   jamais avec `db:push`.
 5. Vérifier immédiatement, en lecture seule :
-   - les 29 tables ;
+   - les 33 tables actuelles ;
    - les compteurs des cinq tables ciblées ;
    - les 9 index attendus ;
    - `online_sessions.id` avec `DEFAULT gen_random_uuid()` ;
    - les 29 primary keys, 22 foreign keys et 6 contraintes uniques ;
-   - le journal Drizzle créé par le migrateur, avec l'entrée de baseline
-     attendue et sans entrée historique inventée.
+   - l'absence ou la présence du journal Drizzle selon la stratégie de migration
+     explicitement approuvée, sans entrée historique inventée.
 6. En cas d'anomalie, arrêter l'opération et restaurer le point validé plutôt
    que tenter une réparation improvisée.
 
 ## Verdict
 
-La structure Railway est stable et le dump logique de test est restaurable.
-La baseline Drizzle a une méthode candidate démontrée sur une copie, mais elle
-n'est pas appliquée. Le snapshot Railway restaurable et la revue humaine
-restent des prérequis; le verdict est donc **READY WITH CONDITIONS**, et non
-`READY`.
+La structure Railway est stable, les migrations surveillance sont appliquées et
+le preflight post-migration est `PASS`. La baseline Drizzle historique n'a pas
+été fabriquée et reste une décision séparée pour les futures migrations.
