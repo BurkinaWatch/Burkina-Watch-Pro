@@ -34,6 +34,8 @@ import {
   type SurveillanceCameraSummary,
   type InsertSurveillanceCamera,
   type UpdateSurveillanceCamera,
+  type CameraAgent,
+  type AgentCameraBinding,
   magicLinks,
   users,
   signalements,
@@ -58,6 +60,8 @@ import {
   insertNotificationSchema,
   onlineSessions,
   surveillanceCameras,
+  cameraAgents,
+  agentCameraBindings,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, isNull, gt } from "drizzle-orm";
@@ -123,6 +127,34 @@ export interface IStorage {
     updates: UpdateSurveillanceCamera,
   ): Promise<SurveillanceCamera | undefined>;
   deleteSurveillanceCamera(ownerId: string, cameraId: string): Promise<boolean>;
+
+  // --- Secure Camera Agents ---
+  createCameraAgent(agent: typeof cameraAgents.$inferInsert): Promise<CameraAgent>;
+  getCameraAgents(ownerId: string): Promise<CameraAgent[]>;
+  getCameraAgent(ownerId: string, agentId: string): Promise<CameraAgent | undefined>;
+  getCameraAgentById(agentId: string): Promise<CameraAgent | undefined>;
+  claimCameraAgent(
+    agentId: string,
+    enrollmentHash: string,
+    credentialHash: string,
+    version?: string,
+  ): Promise<CameraAgent | undefined>;
+  authenticateCameraAgent(
+    agentId: string,
+    credentialHash: string,
+    now: Date,
+  ): Promise<CameraAgent | undefined>;
+  revokeCameraAgent(ownerId: string, agentId: string): Promise<CameraAgent | undefined>;
+  createAgentCameraBinding(
+    ownerId: string,
+    agentId: string,
+    cameraId: string,
+  ): Promise<AgentCameraBinding>;
+  deleteAgentCameraBinding(
+    ownerId: string,
+    agentId: string,
+    cameraId: string,
+  ): Promise<boolean>;
 
   // Méthodes pour les notifications
   createNotification(data: typeof insertNotificationSchema._type): Promise<any | undefined>;
@@ -977,6 +1009,145 @@ export class DbStorage implements IStorage {
         ),
       )
       .returning({ id: surveillanceCameras.id });
+    return deleted.length > 0;
+  }
+
+  // ============================================
+  // SECURE CAMERA AGENTS
+  // ============================================
+
+  async createCameraAgent(
+    agent: typeof cameraAgents.$inferInsert,
+  ): Promise<CameraAgent> {
+    const [created] = await db.insert(cameraAgents).values(agent).returning();
+    return created;
+  }
+
+  async getCameraAgents(ownerId: string): Promise<CameraAgent[]> {
+    return db
+      .select()
+      .from(cameraAgents)
+      .where(eq(cameraAgents.ownerId, ownerId))
+      .orderBy(desc(cameraAgents.createdAt));
+  }
+
+  async getCameraAgent(
+    ownerId: string,
+    agentId: string,
+  ): Promise<CameraAgent | undefined> {
+    const [agent] = await db
+      .select()
+      .from(cameraAgents)
+      .where(and(eq(cameraAgents.ownerId, ownerId), eq(cameraAgents.id, agentId)))
+      .limit(1);
+    return agent;
+  }
+
+  async getCameraAgentById(agentId: string): Promise<CameraAgent | undefined> {
+    const [agent] = await db
+      .select()
+      .from(cameraAgents)
+      .where(eq(cameraAgents.id, agentId))
+      .limit(1);
+    return agent;
+  }
+
+  async claimCameraAgent(
+    agentId: string,
+    enrollmentHash: string,
+    credentialHash: string,
+    version?: string,
+  ): Promise<CameraAgent | undefined> {
+    const [claimed] = await db
+      .update(cameraAgents)
+      .set({
+        status: "enrolled",
+        credentialHash,
+        version: version ?? null,
+        enrollmentUsedAt: new Date(),
+        enrolledAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(cameraAgents.id, agentId),
+          eq(cameraAgents.enrollmentHash, enrollmentHash),
+          eq(cameraAgents.status, "pending"),
+          isNull(cameraAgents.enrollmentUsedAt),
+          gt(cameraAgents.enrollmentExpiresAt, new Date()),
+        ),
+      )
+      .returning();
+    return claimed;
+  }
+
+  async authenticateCameraAgent(
+    agentId: string,
+    credentialHash: string,
+    now: Date,
+  ): Promise<CameraAgent | undefined> {
+    const [authenticated] = await db
+      .update(cameraAgents)
+      .set({
+        status: "online",
+        lastSeenAt: now,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(cameraAgents.id, agentId),
+          eq(cameraAgents.credentialHash, credentialHash),
+          isNull(cameraAgents.revokedAt),
+        ),
+      )
+      .returning();
+    return authenticated;
+  }
+
+  async revokeCameraAgent(
+    ownerId: string,
+    agentId: string,
+  ): Promise<CameraAgent | undefined> {
+    const now = new Date();
+    const [revoked] = await db
+      .update(cameraAgents)
+      .set({
+        status: "revoked",
+        revokedAt: now,
+        updatedAt: now,
+      })
+      .where(and(eq(cameraAgents.ownerId, ownerId), eq(cameraAgents.id, agentId)))
+      .returning();
+    return revoked;
+  }
+
+  async createAgentCameraBinding(
+    ownerId: string,
+    agentId: string,
+    cameraId: string,
+  ): Promise<AgentCameraBinding> {
+    const [binding] = await db
+      .insert(agentCameraBindings)
+      .values({ ownerId, agentId, cameraId, status: "active" })
+      .returning();
+    return binding;
+  }
+
+  async deleteAgentCameraBinding(
+    ownerId: string,
+    agentId: string,
+    cameraId: string,
+  ): Promise<boolean> {
+    const deleted = await db
+      .delete(agentCameraBindings)
+      .where(
+        and(
+          eq(agentCameraBindings.ownerId, ownerId),
+          eq(agentCameraBindings.agentId, agentId),
+          eq(agentCameraBindings.cameraId, cameraId),
+        ),
+      )
+      .returning({ id: agentCameraBindings.id });
     return deleted.length > 0;
   }
 

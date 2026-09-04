@@ -56,6 +56,39 @@ export const surveillanceCameras = pgTable("surveillance_cameras", {
   index("surveillance_cameras_owner_status_idx").on(table.ownerId, table.status),
 ]);
 
+export const cameraAgents = pgTable("camera_agents", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  ownerId: text("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  status: text("status").notNull().default("pending"),
+  version: text("version"),
+  enrollmentHash: text("enrollment_hash").notNull(),
+  enrollmentExpiresAt: timestamp("enrollment_expires_at").notNull(),
+  enrollmentUsedAt: timestamp("enrollment_used_at"),
+  credentialHash: text("credential_hash"),
+  enrolledAt: timestamp("enrolled_at"),
+  lastSeenAt: timestamp("last_seen_at"),
+  revokedAt: timestamp("revoked_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("camera_agents_owner_status_idx").on(table.ownerId, table.status),
+  index("camera_agents_owner_last_seen_idx").on(table.ownerId, table.lastSeenAt),
+]);
+
+export const agentCameraBindings = pgTable("agent_camera_bindings", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  ownerId: text("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  agentId: text("agent_id").notNull().references(() => cameraAgents.id, { onDelete: "cascade" }),
+  cameraId: text("camera_id").notNull().references(() => surveillanceCameras.id, { onDelete: "cascade" }),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("agent_camera_bindings_agent_camera_idx").on(table.agentId, table.cameraId),
+  index("agent_camera_bindings_owner_idx").on(table.ownerId),
+  index("agent_camera_bindings_camera_idx").on(table.cameraId),
+]);
+
 export const magicLinks = pgTable("magic_links", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -418,6 +451,8 @@ export type SurveillanceCameraSummary = Omit<
   SurveillanceCamera,
   "username" | "encryptedPassword"
 >;
+export type CameraAgent = typeof cameraAgents.$inferSelect;
+export type AgentCameraBinding = typeof agentCameraBindings.$inferSelect;
 export type InsertSignalement = z.infer<typeof insertSignalementSchema>;
 export type UpdateSignalement = z.infer<typeof updateSignalementSchema>;
 export type Signalement = typeof signalements.$inferSelect;
