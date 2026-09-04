@@ -863,6 +863,124 @@ export class DbStorage implements IStorage {
   }
 
   // ============================================
+  // SURVEILLANCE CAMERAS
+  // ============================================
+
+  async getSurveillanceCameras(
+    ownerId: string,
+  ): Promise<SurveillanceCameraSummary[]> {
+    return db
+      .select({
+        id: surveillanceCameras.id,
+        ownerId: surveillanceCameras.ownerId,
+        name: surveillanceCameras.name,
+        description: surveillanceCameras.description,
+        connectionType: surveillanceCameras.connectionType,
+        host: surveillanceCameras.host,
+        port: surveillanceCameras.port,
+        streamPath: surveillanceCameras.streamPath,
+        status: surveillanceCameras.status,
+        lastSeenAt: surveillanceCameras.lastSeenAt,
+        createdAt: surveillanceCameras.createdAt,
+        updatedAt: surveillanceCameras.updatedAt,
+      })
+      .from(surveillanceCameras)
+      .where(eq(surveillanceCameras.ownerId, ownerId))
+      .orderBy(desc(surveillanceCameras.createdAt));
+  }
+
+  async getSurveillanceCamera(
+    ownerId: string,
+    cameraId: string,
+  ): Promise<SurveillanceCameraSummary | undefined> {
+    const [camera] = await db
+      .select({
+        id: surveillanceCameras.id,
+        ownerId: surveillanceCameras.ownerId,
+        name: surveillanceCameras.name,
+        description: surveillanceCameras.description,
+        connectionType: surveillanceCameras.connectionType,
+        host: surveillanceCameras.host,
+        port: surveillanceCameras.port,
+        streamPath: surveillanceCameras.streamPath,
+        status: surveillanceCameras.status,
+        lastSeenAt: surveillanceCameras.lastSeenAt,
+        createdAt: surveillanceCameras.createdAt,
+        updatedAt: surveillanceCameras.updatedAt,
+      })
+      .from(surveillanceCameras)
+      .where(
+        and(
+          eq(surveillanceCameras.id, cameraId),
+          eq(surveillanceCameras.ownerId, ownerId),
+        ),
+      )
+      .limit(1);
+    return camera;
+  }
+
+  async getSurveillanceCameraForUpdate(
+    ownerId: string,
+    cameraId: string,
+  ): Promise<SurveillanceCamera | undefined> {
+    const [camera] = await db
+      .select()
+      .from(surveillanceCameras)
+      .where(
+        and(
+          eq(surveillanceCameras.id, cameraId),
+          eq(surveillanceCameras.ownerId, ownerId),
+        ),
+      )
+      .limit(1);
+    return camera;
+  }
+
+  async createSurveillanceCamera(
+    camera: InsertSurveillanceCamera,
+  ): Promise<SurveillanceCamera> {
+    const [createdCamera] = await db
+      .insert(surveillanceCameras)
+      .values(camera)
+      .returning();
+    return createdCamera;
+  }
+
+  async updateSurveillanceCamera(
+    ownerId: string,
+    cameraId: string,
+    updates: UpdateSurveillanceCamera,
+  ): Promise<SurveillanceCamera | undefined> {
+    const [updatedCamera] = await db
+      .update(surveillanceCameras)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(
+        and(
+          eq(surveillanceCameras.id, cameraId),
+          eq(surveillanceCameras.ownerId, ownerId),
+        ),
+      )
+      .returning();
+    return updatedCamera;
+  }
+
+  async deleteSurveillanceCamera(
+    ownerId: string,
+    cameraId: string,
+  ): Promise<boolean> {
+    const deleted = await db
+      .delete(surveillanceCameras)
+      .where(
+        and(
+          eq(surveillanceCameras.id, cameraId),
+          eq(surveillanceCameras.ownerId, ownerId),
+        ),
+      )
+      .returning({ id: surveillanceCameras.id });
+    return deleted.length > 0;
+  }
+
+  // ============================================
   // NOTIFICATIONS
   // ============================================
 
