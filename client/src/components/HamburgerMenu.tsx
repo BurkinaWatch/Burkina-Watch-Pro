@@ -44,7 +44,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     { href: "/events", icon: Calendar, label: t("nav.events"), color: "text-purple-600 dark:text-purple-500" },
     { href: "/tracking-live", icon: Navigation, label: t("nav.tracking"), color: "text-cyan-600 dark:text-cyan-500" },
     { href: "/surveillance", icon: Camera, label: "Surveillance", color: "text-green-600 dark:text-green-500" },
-    { href: "/streetview", icon: Camera, label: t("nav.streetview"), color: "text-green-600 dark:text-green-500" },
+    { href: "/streetview", icon: Camera, label: t("nav.streetview"), color: "text-green-600 dark:text-green-500", disabled: false },
   ];
 
   // Services d'urgence - Groupés logiquement
