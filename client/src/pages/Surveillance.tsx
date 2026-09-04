@@ -66,7 +66,9 @@ type LiveState =
   | "live"
   | "offline"
   | "error"
-  | "disconnected";
+  | "reconnecting";
+
+type StreamStatus = "unknown" | "connecting" | "online" | "offline" | "error";
 
 interface TestCameraResponse {
   enabled: boolean;
@@ -85,7 +87,9 @@ interface TestCameraResponse {
 
 interface LiveAccessResponse {
   cameraId: string;
-  status: "unknown" | "connecting" | "online" | "offline" | "error";
+  status: StreamStatus;
+  cameraStatus: CameraStatus;
+  streamStatus: StreamStatus;
   whepUrl: string;
   viewerToken: string;
   expiresAt: number;
@@ -142,8 +146,18 @@ function liveStateLabel(state: LiveState): string {
     live: "En direct",
     offline: "Caméra hors ligne",
     error: "Erreur de connexion",
-    disconnected: "Connexion interrompue",
+    reconnecting: "Reconnexion en cours",
   }[state];
+}
+
+function streamStatusLabel(status: StreamStatus): string {
+  return {
+    unknown: "Inconnu",
+    connecting: "Connexion",
+    online: "En ligne",
+    offline: "Hors ligne",
+    error: "Erreur",
+  }[status];
 }
 
 function waitForIceGatheringComplete(
