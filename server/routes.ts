@@ -5237,11 +5237,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        const deleted = await storage.deleteSurveillanceCamera(userId, req.params.id);
-        if (!deleted) {
+        const camera = await storage.getSurveillanceCameraForUpdate(
+          userId,
+          req.params.id,
+        );
+        if (!camera) {
+          storage.logAudit({
+            userId,
+            action: "unauthorized_camera_access",
+            resourceType: "surveillance_camera",
+            resourceId: String(req.params.id),
+            details: { operation: "camera_delete" },
+            ipAddress: req.ip,
+            userAgent: req.get("user-agent"),
+            severity: "warning",
+          }).catch(() => undefined);
           return res.status(404).json({ error: "Caméra non trouvée" });
         }
-        revokeViewerAccessForCamera(req.params.id);
+
+        revokeViewerAccessForCamera(camera.id);
         if (
           videoGatewayConfig.enabled &&
           videoGatewayConfig.realCameraEnabled
@@ -5253,7 +5267,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
               "[SURVEILLANCE] Nettoyage gateway après suppression échoué:",
               error instanceof Error ? error.message : "erreur inconnue",
             );
+            return res.status(503).json({
+              error: "Impossible de supprimer la caméra tant que son flux est actif",
+            });
           }
+        }
+        const deleted = await storage.deleteSurveillanceCamera(userId, camera.id);
+        if (!deleted) {
+          return res.status(404).json({ error: "Caméra non trouvée" });
         }
 
         storage.logAudit({
