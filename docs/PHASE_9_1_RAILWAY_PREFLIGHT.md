@@ -27,6 +27,20 @@ npm run db:railway:preflight
 - La commande a conclu : `Précontrôle lecture seule: PASS — aucune
   modification exécutée`.
 
+## Présence des variables observée
+
+Contrôle effectué sans afficher de valeur :
+
+| Variable ou groupe | Résultat |
+|---|---|
+| `RAILWAY_DATABASE_URL` | `PRESENT` |
+| `DATABASE_URL` | `PRESENT` |
+| `SESSION_SECRET` | `PRESENT` |
+| `MASTER_ENCRYPTION_KEY` | `PRESENT` |
+| `REFRESH_TOKEN_SALT` | `ABSENT` |
+| Variables Media Gateway | `ABSENT` — gateway inactive dans l’environnement |
+| Variables STUN/TURN | `ABSENT` — aucun transport relay activé |
+
 ## NOT VERIFIED / BLOCKED
 
 - Le journal `__drizzle_migrations` est absent.
