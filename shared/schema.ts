@@ -579,6 +579,113 @@ export type VirtualTourWithPhotos = VirtualTour & {
 };
 
 // ============================================
+// STREETVIEW CONTRIBUTIONS - Phase 3
+// ============================================
+
+export const streetviewContributionStatuses = [
+  "DRAFT",
+  "UPLOADING",
+  "UPLOADED",
+  "VALIDATING",
+  "QUEUED",
+  "WAITING_FOR_3D",
+  "UPLOAD_FAILED",
+  "VALIDATION_FAILED",
+  "PROCESSING_FAILED",
+] as const;
+export type StreetviewContributionStatus = typeof streetviewContributionStatuses[number];
+
+export const streetviewJobStatuses = ["QUEUED", "PROCESSING", "COMPLETED", "FAILED"] as const;
+export type StreetviewJobStatus = typeof streetviewJobStatuses[number];
+
+export const streetviewContributionMediaTypes = ["video/mp4", "video/webm", "video/quicktime"] as const;
+export type StreetviewContributionMediaType = typeof streetviewContributionMediaTypes[number];
+
+// Video metadata is kept out of the binary database payload. The actual video
+// lives in the configured StreetView storage adapter.
+export const streetviewContributions = pgTable("streetview_contributions", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  city: text("city").notNull(),
+  quartier: text("quartier"),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
+  status: text("status").notNull().default("DRAFT"),
+  progress: integer("progress").notNull().default(0),
+  statusMessage: text("status_message"),
+  errorCode: text("error_code"),
+  originalFileName: text("original_file_name"),
+  mediaType: text("media_type"),
+  storageKey: text("storage_key"),
+  thumbnailKey: text("thumbnail_key"),
+  fileSizeBytes: integer("file_size_bytes"),
+  durationMs: integer("duration_ms"),
+  width: integer("width"),
+  height: integer("height"),
+  orientation: text("orientation"),
+  clientMetadata: jsonb("client_metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  uploadedAt: timestamp("uploaded_at"),
+  processedAt: timestamp("processed_at"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("streetview_contributions_user_created_idx").on(table.userId, table.createdAt),
+  index("streetview_contributions_status_idx").on(table.status),
+  index("streetview_contributions_location_idx").on(table.latitude, table.longitude),
+]);
+
+export const streetviewProcessingJobs = pgTable("streetview_processing_jobs", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  contributionId: text("contribution_id").notNull().references(() => streetviewContributions.id, { onDelete: "cascade" }),
+  type: text("type").notNull().default("PREPARE_CONTRIBUTION"),
+  status: text("status").notNull().default("QUEUED"),
+  progress: integer("progress").notNull().default(0),
+  attempts: integer("attempts").notNull().default(0),
+  errorCode: text("error_code"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+}, (table) => [
+  index("streetview_jobs_contribution_idx").on(table.contributionId, table.createdAt),
+  index("streetview_jobs_status_idx").on(table.status),
+]);
+
+export const insertStreetviewContributionSchema = createInsertSchema(streetviewContributions).omit({
+  id: true,
+  status: true,
+  progress: true,
+  statusMessage: true,
+  errorCode: true,
+  storageKey: true,
+  thumbnailKey: true,
+  fileSizeBytes: true,
+  uploadedAt: true,
+  processedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertStreetviewProcessingJobSchema = createInsertSchema(streetviewProcessingJobs).omit({
+  id: true,
+  status: true,
+  progress: true,
+  attempts: true,
+  errorCode: true,
+  errorMessage: true,
+  createdAt: true,
+  startedAt: true,
+  completedAt: true,
+});
+
+export type InsertStreetviewContribution = z.infer<typeof insertStreetviewContributionSchema>;
+export type StreetviewContribution = typeof streetviewContributions.$inferSelect;
+export type InsertStreetviewProcessingJob = z.infer<typeof insertStreetviewProcessingJobSchema>;
+export type StreetviewProcessingJob = typeof streetviewProcessingJobs.$inferSelect;
+
+// ============================================
 // OUAGA EN 3D - Modèles de données
 // ============================================
 
