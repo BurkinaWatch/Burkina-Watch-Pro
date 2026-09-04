@@ -38,6 +38,7 @@ describe("Phase 4 video gateway contract", () => {
     assert.deepEqual(config, {
       enabled: false,
       provider: "disabled",
+      agentEnabled: false,
       apiUrl: null,
       publicOrigin: null,
       apiToken: null,
