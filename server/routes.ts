@@ -5333,7 +5333,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     if (
       body.action === "read" &&
-      pathName === SURVEILLANCE_AGENT_TEST_SOURCE_PATH_NAME &&
+      (pathName === SURVEILLANCE_AGENT_TEST_SOURCE_PATH_NAME ||
+        pathName === SURVEILLANCE_TEST_PATH_NAME) &&
       hasDedicatedPublisherCredential
     ) {
       return res.status(204).send();

@@ -61,6 +61,15 @@ RELAY_PID=$!
 for _ in $(seq 1 30); do
   if curl -fsS "http://127.0.0.1:9997/v3/paths/get/${SURVEILLANCE_TEST_PATH_NAME}" | rg -q '"ready":true'; then
     echo "PASS: agent published a ready RTSP path through MediaMTX"
+    OUTPUT_URL="rtsp://${VIDEO_GATEWAY_PUBLISHER_USERNAME}:${VIDEO_GATEWAY_PUBLISHER_PASSWORD}@127.0.0.1:8554/${SURVEILLANCE_TEST_PATH_NAME}"
+    if ! FFPROBE_OUTPUT="$(ffprobe -v error -rtsp_transport tcp \
+      -show_entries stream=codec_name,width,height,r_frame_rate \
+      -of json "$OUTPUT_URL" 2>/dev/null)"; then
+      echo "FAIL: MediaMTX path was ready but contained no readable media"
+      exit 1
+    fi
+    echo "PASS: FFprobe read media from the agent output"
+    printf '%s\n' "$FFPROBE_OUTPUT"
     echo "PASS: inspect http://127.0.0.1:5001/surveillance in a local browser for WHEP/WebRTC"
     exit 0
   fi
