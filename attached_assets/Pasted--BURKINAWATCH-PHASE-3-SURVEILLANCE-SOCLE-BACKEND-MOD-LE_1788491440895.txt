@@ -1,0 +1,1038 @@
+# BURKINAWATCH — PHASE 3
+
+## SURVEILLANCE — SOCLE BACKEND, MODÈLE CAMÉRA ET GESTION SÉCURISÉE
+
+Tu travailles sur **BurkinaWatch**, une plateforme existante en production.
+
+Cette phase fait suite à la Phase 2 d'audit et d'architecture.
+
+L'objectif est maintenant de construire le **socle applicatif de Surveillance** permettant à un utilisateur de gérer ses caméras IP depuis BurkinaWatch.
+
+⚠️ IMPORTANT :
+
+Cette phase ne doit PAS encore implémenter le transport vidéo réel.
+
+Nous préparons le système pour la Phase 4 qui intégrera la passerelle vidéo et WebRTC.
+
+---
+
+# 1. OBJECTIF
+
+À la fin de cette phase, BurkinaWatch doit disposer d'un socle permettant conceptuellement :
+
+```text
+Utilisateur connecté
+        │
+        ▼
+   Surveillance
+        │
+        ├── Ajouter une caméra
+        ├── Voir ses caméras
+        ├── Modifier une caméra
+        ├── Tester la configuration
+        ├── Désactiver une caméra
+        └── Supprimer une caméra
+```
+
+Mais :
+
+```text
+CAMÉRA → RTSP → VIDEO GATEWAY → WEBRTC
+```
+
+n'est PAS encore activé.
+
+Aucun flux vidéo réel ne doit être traité dans cette phase.
+
+---
+
+# 2. RÈGLES ABSOLUES
+
+Avant toute modification :
+
+1. Inspecte le code actuel.
+2. Vérifie les résultats de la Phase 2.
+3. Réutilise les systèmes de sécurité existants.
+4. Ne réécris pas l'architecture générale.
+5. Ne refactorise pas massivement `server/routes.ts`.
+6. Ne casse aucune fonctionnalité existante.
+7. Ne supprime aucune table.
+8. Ne supprime aucune donnée.
+9. Ne fais jamais :
+
+   * `db:push`
+   * `db:push --force`
+   * `drizzle-kit push`
+   * reset database
+   * DROP TABLE
+   * TRUNCATE
+   * suppression/recréation de tables.
+10. N'utilise aucune vraie caméra.
+11. Ne demande aucun port RTSP public.
+12. Ne déploie pas MediaMTX.
+13. Ne déploie pas de serveur vidéo.
+14. Ne configure pas de TURN public.
+15. Ne crée aucun tunnel réseau public vers une caméra.
+16. Ne stocke aucun mot de passe caméra en clair.
+17. Ne mets aucun credential réel dans les tests.
+18. Ne retourne jamais les credentials caméra au frontend.
+19. Ne log jamais les credentials caméra.
+20. Ne commence pas l'enregistrement vidéo.
+21. Ne commence pas l'analyse IA.
+22. Ne commence pas les alertes vidéo.
+
+---
+
+# 3. VÉRIFICATION PRÉALABLE
+
+Avant de coder, vérifie :
+
+* état actuel du schéma PostgreSQL
+* état actuel de Drizzle
+* migrations disponibles
+* stratégie Railway/PostgreSQL
+* helpers d'authentification
+* helpers d'autorisation
+* système AES-256-GCM
+* système de redaction des logs
+* protection SSRF
+* structure des routes Express
+* structure frontend
+* structure mobile.
+
+Si quelque chose découvert en Phase 2 contredit les hypothèses ci-dessus, adapte l'implémentation et explique pourquoi.
+
+---
+
+# 4. MODÈLE DE DONNÉES
+
+Créer une nouvelle entité logique de caméra.
+
+Nom recommandé :
+
+`surveillance_cameras`
+
+Mais utilise la convention de nommage déjà présente dans le projet si elle diffère.
+
+Le modèle doit permettre au minimum de représenter :
+
+```text
+id
+ownerId
+name
+description
+connectionType
+host
+port
+username
+encryptedPassword
+streamPath
+status
+lastSeenAt
+createdAt
+updatedAt
+```
+
+Adapte les noms aux conventions réelles du projet.
+
+---
+
+# 5. IMPORTANT : PAS DE MOT DE PASSE EN CLAIR
+
+Le mot de passe de la caméra doit être chiffré avec le système AES-256-GCM existant.
+
+Architecture :
+
+```text
+Mot de passe caméra
+        │
+        ▼
+AES-256-GCM
+        │
+        ▼
+encryptedPassword
+        │
+        ▼
+PostgreSQL
+```
+
+Le frontend ne doit jamais recevoir :
+
+```text
+password
+encryptedPassword
+decryption key
+master key
+KMS credentials
+RTSP credential URL
+```
+
+Même un administrateur ne doit pas recevoir le mot de passe en clair via une API standard.
+
+---
+
+# 6. SYSTÈME DE CHIFFREMENT
+
+Réutilise `server/encryptionService.ts` ou le service réel identifié pendant l'audit.
+
+Ne crée pas un second système cryptographique.
+
+Ne fais jamais :
+
+```text
+password = base64(...)
+```
+
+ou :
+
+```text
+password = encryptWithSecret("...")
+```
+
+avec une clé codée en dur.
+
+Le système doit utiliser la configuration sécurisée existante.
+
+Si les prérequis de chiffrement de production ne sont pas disponibles :
+
+**ARRÊTE l'implémentation du stockage des credentials et signale le blocage.**
+
+Ne crée pas de fallback dangereux.
+
+---
+
+# 7. TYPES DE CONNEXION
+
+Prépare le modèle pour plusieurs types, sans forcément tous les implémenter.
+
+Exemple :
+
+```text
+rtsp
+onvif
+gateway
+```
+
+Pour le MVP actuel :
+
+`rtsp`
+
+peut être le type principal.
+
+Mais garde l'architecture extensible.
+
+Ne code pas une logique qui suppose que toutes les caméras fonctionneront éternellement avec RTSP.
+
+---
+
+# 8. STATUTS
+
+Prévoir un système de statut clair.
+
+Par exemple :
+
+```text
+offline
+online
+unknown
+disabled
+error
+```
+
+Mais adapte aux besoins réels.
+
+IMPORTANT :
+
+À ce stade, le statut ne doit PAS prétendre qu'une caméra est réellement `online` si aucun test de connexion réel n'est effectué.
+
+Ne simule pas un statut live.
+
+Une caméra nouvellement créée peut être :
+
+`unknown`
+
+ou un équivalent approprié.
+
+---
+
+# 9. API BACKEND
+
+Créer des endpoints protégés pour la gestion des caméras.
+
+Architecture indicative :
+
+```text
+GET    /api/surveillance/cameras
+POST   /api/surveillance/cameras
+GET    /api/surveillance/cameras/:id
+PATCH  /api/surveillance/cameras/:id
+DELETE /api/surveillance/cameras/:id
+```
+
+Adapte les routes aux conventions existantes.
+
+---
+
+# 10. AUTHENTIFICATION
+
+Toutes les routes doivent nécessiter un utilisateur authentifié.
+
+Utilise les mécanismes existants.
+
+Par exemple :
+
+```text
+requireAuthenticatedUser
+```
+
+ou le mécanisme réellement utilisé dans le projet.
+
+Aucune route caméra ne doit fonctionner pour un utilisateur anonyme.
+
+---
+
+# 11. OWNERSHIP / IDOR
+
+C'est une priorité critique.
+
+Pour chaque caméra :
+
+```text
+camera.ownerId === authenticatedUser.id
+```
+
+doit être vérifié côté serveur.
+
+Ne fais jamais confiance à un `userId` envoyé par le frontend.
+
+Exemple dangereux :
+
+```json
+{
+  "userId": "..."
+}
+```
+
+Le serveur ne doit pas utiliser cette valeur pour déterminer le propriétaire.
+
+Le propriétaire doit être déterminé à partir de la session/authentification.
+
+---
+
+# 12. EXEMPLE DE SCÉNARIO IDOR À TESTER
+
+Créer les tests suivants :
+
+### Utilisateur A
+
+possède :
+
+```text
+camera-A
+```
+
+### Utilisateur B
+
+possède :
+
+```text
+camera-B
+```
+
+Tester :
+
+```text
+A → GET camera-A       PASS
+A → PATCH camera-A     PASS
+A → DELETE camera-A    PASS
+
+A → GET camera-B       REFUS
+A → PATCH camera-B     REFUS
+A → DELETE camera-B    REFUS
+```
+
+Et inversement.
+
+Tester également les IDs inconnus.
+
+La réponse ne doit pas révéler inutilement l'existence d'une ressource privée.
+
+---
+
+# 13. CRÉATION D'UNE CAMÉRA
+
+Lorsqu'un utilisateur ajoute une caméra :
+
+```text
+POST /api/surveillance/cameras
+```
+
+le backend doit :
+
+1. authentifier l'utilisateur
+2. valider les données
+3. valider l'adresse/host
+4. valider le port
+5. valider le type de connexion
+6. valider le nom
+7. chiffrer le mot de passe
+8. stocker la caméra
+9. retourner uniquement les données non sensibles.
+
+---
+
+# 14. VALIDATION DES HOSTS
+
+Réutilise la protection SSRF existante.
+
+Ne la contourne pas simplement parce qu'il s'agit d'une caméra.
+
+Attention cependant :
+
+une caméra personnelle peut légitimement avoir une IP privée.
+
+Ne désactive donc pas globalement le SSRF validator.
+
+Si la protection actuelle bloque les adresses privées nécessaires au futur modèle caméra, crée une stratégie dédiée et explicitement limitée au contexte Surveillance.
+
+Exemple conceptuel :
+
+```text
+Internet → infrastructure interne
+```
+
+doit rester interdit.
+
+Mais :
+
+```text
+Gateway caméra autorisé → caméra appartenant à l'utilisateur
+```
+
+pourra être traité dans la Phase 4 avec une architecture appropriée.
+
+Ne crée pas maintenant une exception globale.
+
+---
+
+# 15. PORT
+
+Le port doit être strictement validé.
+
+Exemples :
+
+```text
+1–65535
+```
+
+Mais impose également des limites raisonnables selon `connectionType`.
+
+Ne permets pas de fournir des ports absurdes ou des formats non numériques.
+
+Ne fais aucune connexion réseau réelle dans cette phase.
+
+---
+
+# 16. URL RTSP
+
+Ne stocke pas nécessairement une URL RTSP complète si cela entraîne la présence de credentials dans celle-ci.
+
+Éviter :
+
+```text
+rtsp://user:password@192.168.x.x:554/stream
+```
+
+Préférer des composants séparés :
+
+```text
+host
+port
+username
+encryptedPassword
+streamPath
+```
+
+Le système de Phase 4 pourra reconstruire le flux côté serveur/gateway de manière contrôlée.
+
+---
+
+# 17. ATTENTION AU LOGGING
+
+Tester que les logs ne contiennent jamais :
+
+```text
+password
+encryptedPassword
+username + password
+rtsp://...@...
+credentials
+authorization token
+video token
+```
+
+Utiliser la redaction existante.
+
+Ajouter des tests si nécessaire.
+
+---
+
+# 18. RÉPONSES API
+
+Une réponse de :
+
+```text
+GET /api/surveillance/cameras
+```
+
+doit pouvoir ressembler conceptuellement à :
+
+```json
+{
+  "id": "...",
+  "name": "Caméra boutique",
+  "description": "Entrée principale",
+  "connectionType": "rtsp",
+  "host": "192.168.x.x",
+  "port": 554,
+  "streamPath": "/stream1",
+  "status": "unknown",
+  "lastSeenAt": null,
+  "createdAt": "...",
+  "updatedAt": "..."
+}
+```
+
+Elle ne doit PAS contenir :
+
+```text
+password
+encryptedPassword
+master key
+RTSP URL complète contenant un credential
+```
+
+---
+
+# 19. SUPPRESSION
+
+Lorsqu'un utilisateur supprime une caméra :
+
+1. vérifier authentification
+2. vérifier ownership
+3. supprimer uniquement cette ressource
+4. ne pas toucher aux autres utilisateurs
+5. ne pas supprimer de fichier ou infrastructure globale
+6. ne pas supprimer le compte utilisateur.
+
+Si la future Phase 4 utilise une gateway vidéo, prévoir que la suppression devra également entraîner la révocation du flux correspondant.
+
+Mais ne développe pas cette partie maintenant.
+
+---
+
+# 20. DÉSACTIVATION
+
+Prévoir si nécessaire un mécanisme :
+
+```text
+enabled
+```
+
+ou :
+
+```text
+disabled
+```
+
+Une caméra désactivée ne devra pas pouvoir être utilisée pour obtenir un futur flux vidéo.
+
+Cela sera important en Phase 4.
+
+---
+
+# 21. RATE LIMITING
+
+Évalue les endpoints :
+
+```text
+POST camera
+PATCH camera
+DELETE camera
+```
+
+et protège-les contre les abus si le système de rate limiting existant le permet.
+
+Ne crée pas un système complètement séparé si un rate limiter existe déjà.
+
+---
+
+# 22. AUDIT LOG
+
+Vérifie si le projet possède déjà un système d'audit.
+
+Si oui, détermine si les opérations suivantes doivent y apparaître :
+
+```text
+camera_created
+camera_updated
+camera_deleted
+camera_enabled
+camera_disabled
+```
+
+Les événements d'audit ne doivent jamais contenir le mot de passe.
+
+Ne crée pas un système complexe si aucun audit log adapté n'existe.
+
+---
+
+# 23. FRONTEND
+
+Créer uniquement le **socle UI minimal** permettant :
+
+```text
+Surveillance
+    ↓
+Mes caméras
+    ↓
+Ajouter une caméra
+```
+
+Prévoir :
+
+* liste
+* état vide
+* formulaire
+* édition
+* suppression
+* activation/désactivation.
+
+Mais ne crée PAS encore le lecteur vidéo.
+
+À la place, prévoir un état :
+
+```text
+Flux vidéo disponible dans une prochaine version
+```
+
+ou un placeholder cohérent.
+
+---
+
+# 24. DESIGN
+
+Le frontend doit respecter le design existant de BurkinaWatch.
+
+Ne change pas :
+
+* palette globale
+* typographie globale
+* navigation globale
+* design system existant.
+
+Évite absolument :
+
+* cartes génériques générées par IA
+* interfaces SaaS génériques
+* énormes boutons
+* gradients inutiles
+* icônes génériques excessives
+* redesign global.
+
+La fonctionnalité doit avoir l'impression d'avoir été développée par l'équipe existante.
+
+---
+
+# 25. FORMULAIRE D'AJOUT
+
+Le formulaire doit prévoir :
+
+```text
+Nom de la caméra
+Description
+Type de connexion
+Adresse / Host
+Port
+Nom utilisateur caméra
+Mot de passe caméra
+Chemin du flux
+```
+
+Le champ mot de passe doit :
+
+* être masqué
+* ne pas être prérempli lors d'une édition
+* ne jamais être affiché dans les réponses API.
+
+Lors d'une modification :
+
+si l'utilisateur ne change pas le mot de passe :
+
+```text
+ne pas remplacer le credential existant par null ou vide.
+```
+
+---
+
+# 26. NE PAS TESTER UNE VRAIE CAMÉRA
+
+Pour les tests :
+
+utiliser uniquement des données fictives telles que :
+
+```text
+camera-test.local
+192.168.50.20
+```
+
+et des credentials factices.
+
+Aucune caméra réelle.
+
+Aucune adresse publique réelle.
+
+Aucun mot de passe réel.
+
+---
+
+# 27. DATABASE / MIGRATION
+
+Si une nouvelle table est nécessaire :
+
+**NE PAS utiliser `db:push`.**
+
+Créer une migration versionnée, non destructive.
+
+Avant de créer la migration :
+
+1. vérifier l'état actuel de la base
+2. vérifier l'état de Drizzle
+3. vérifier les migrations précédentes
+4. vérifier qu'aucune table ne sera recréée
+5. vérifier qu'aucune donnée existante ne sera modifiée.
+
+La migration doit uniquement ajouter ce qui est nécessaire à Surveillance.
+
+Ne modifie aucune table existante sauf nécessité absolue et justification claire.
+
+---
+
+# 28. CONTRAINTES DATABASE
+
+Prévoir autant que possible :
+
+* clé primaire
+* foreign key vers l'utilisateur
+* index sur ownerId
+* index utiles pour les recherches
+* timestamps
+* statut contrôlé.
+
+Ne crée pas de contraintes redondantes avec celles déjà présentes.
+
+---
+
+# 29. TESTS BACKEND
+
+Créer des tests pour :
+
+### Authentication
+
+Utilisateur non connecté → 401/équivalent.
+
+### Ownership
+
+A → A → OK.
+
+A → B → REFUS.
+
+### Creation
+
+Données valides → création.
+
+### Validation
+
+Port invalide → refus.
+
+Type invalide → refus.
+
+Nom vide → refus.
+
+Host invalide → refus.
+
+### Credentials
+
+Password jamais retourné.
+
+### Encryption
+
+Password stocké sous forme chiffrée.
+
+### Update
+
+Modification d'une caméra appartenant à l'utilisateur → OK.
+
+Modification d'une caméra d'un autre utilisateur → REFUS.
+
+### Delete
+
+Même logique.
+
+### Disabled
+
+Une caméra désactivée ne doit pas être considérée comme utilisable.
+
+---
+
+# 30. TESTS DE SÉCURITÉ
+
+Ajouter au minimum :
+
+```text
+IDOR GET
+IDOR PATCH
+IDOR DELETE
+credential leakage
+log leakage
+unauthenticated access
+invalid host
+invalid port
+invalid connection type
+```
+
+Tester également les tentatives de manipulation de :
+
+```text
+ownerId
+userId
+cameraId
+```
+
+---
+
+# 31. PERFORMANCE
+
+La liste des caméras doit être paginable ou au moins conçue de manière à pouvoir l'être.
+
+Ne charge jamais les credentials chiffrés inutilement dans une liste.
+
+Si possible :
+
+```text
+SELECT uniquement les champs nécessaires
+```
+
+pour les opérations qui ne nécessitent pas le credential.
+
+Le déchiffrement doit être effectué uniquement lorsqu'il sera réellement nécessaire par la logique backend autorisée.
+
+---
+
+# 32. OBSERVABILITÉ
+
+Préparer les états :
+
+```text
+unknown
+online
+offline
+error
+disabled
+```
+
+Mais ne simuler aucune connexion.
+
+Ajouter des logs techniques non sensibles si nécessaire :
+
+```text
+camera_created
+camera_deleted
+camera_status_changed
+```
+
+sans credentials.
+
+---
+
+# 33. CE QUI NE DOIT PAS ÊTRE FAIT
+
+Ne pas implémenter maintenant :
+
+❌ RTSP live
+❌ WebRTC
+❌ MediaMTX
+❌ TURN
+❌ STUN spécifique
+❌ FFmpeg
+❌ enregistrement
+❌ replay
+❌ snapshots automatiques
+❌ reconnaissance faciale
+❌ IA vidéo
+❌ détection de mouvement
+❌ notifications vidéo
+❌ stockage cloud vidéo
+❌ partage public de caméra
+❌ caméra accessible par URL publique.
+
+Tout cela sera traité séparément.
+
+---
+
+# 34. VÉRIFICATIONS
+
+À la fin :
+
+```bash
+npm run check
+npm run build
+git diff --check
+```
+
+Puis exécute :
+
+* tests existants
+* tests sécurité
+* tests caméra.
+
+Si un test existant échoue, détermine s'il s'agit :
+
+1. d'une régression introduite par cette phase
+2. d'un problème préexistant
+3. d'un problème d'environnement.
+
+Ne masque pas les erreurs.
+
+---
+
+# 35. VÉRIFICATION DATABASE APRÈS MIGRATION
+
+Si une migration a été créée/appliquée dans un environnement de développement ou préproduction :
+
+vérifie :
+
+* table créée
+* foreign key
+* index
+* contraintes
+* aucun changement de données existantes
+* aucune table supprimée
+* aucune table recréée.
+
+Pour la production Railway :
+
+**ne l'applique pas automatiquement si les conditions de migration contrôlée ne sont pas réunies.**
+
+---
+
+# 36. RAPPORT FINAL OBLIGATOIRE
+
+À la fin, fournis un rapport détaillé.
+
+## A. Architecture avant
+
+Décrire ce qui existait avant.
+
+## B. Architecture après
+
+Décrire uniquement ce qui a réellement été ajouté.
+
+## C. Database
+
+Indiquer :
+
+* table créée ou non
+* migration créée
+* migration appliquée ou non
+* index
+* foreign keys
+* contraintes.
+
+## D. API
+
+Lister précisément les endpoints créés.
+
+## E. Authentification
+
+Décrire les protections.
+
+## F. Ownership
+
+Décrire les protections IDOR.
+
+## G. Encryption
+
+Indiquer exactement comment les credentials sont protégés.
+
+## H. SSRF
+
+Décrire la protection.
+
+## I. Frontend
+
+Lister les écrans ajoutés.
+
+## J. Tests
+
+Afficher les résultats :
+
+```text
+npm run check       PASS/FAIL
+npm run build       PASS/FAIL
+git diff --check    PASS/FAIL
+security tests      PASS/FAIL
+camera tests        PASS/FAIL
+```
+
+## K. Fichiers modifiés
+
+Liste exacte des fichiers.
+
+## L. Database production
+
+Indiquer explicitement :
+
+```text
+PRODUCTION DB MODIFIED: YES/NO
+```
+
+## M. Risques restants
+
+Liste claire.
+
+## N. Ce qui est volontairement absent
+
+RTSP/WebRTC/Media Gateway/etc.
+
+## O. Verdict
+
+Choisir :
+
+**READY FOR PHASE 4**
+
+ou
+
+**READY WITH CONDITIONS**
+
+ou
+
+**NOT READY**
+
+---
+
+# 37. RÈGLE FINALE
+
+Une fois ce travail terminé :
+
+**ARRÊTE-TOI.**
+
+Ne commence pas la Phase 4 automatiquement.
+
+Ne connecte aucune vraie caméra.
+
+Ne déploie aucun Media Gateway.
+
+Ne mets aucun flux vidéo en production.
+
+Nous analyserons ton rapport avant de passer à l'intégration réelle du transport vidéo.
