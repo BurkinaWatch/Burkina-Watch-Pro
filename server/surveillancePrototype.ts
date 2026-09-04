@@ -2,9 +2,10 @@ import crypto from "node:crypto";
 
 export const SURVEILLANCE_TEST_CAMERA_ID_PREFIX = "phase5-local-test-camera";
 export const SURVEILLANCE_TEST_PATH_PREFIX = "phase5-";
+export const SURVEILLANCE_TEST_PATH_NAME = "phase5-test";
 export const SURVEILLANCE_TEST_CAMERA_NAME = "TEST — CAMÉRA DE DÉVELOPPEMENT";
 export const SURVEILLANCE_TEST_SOURCE_URL =
-  "rtsp://host.docker.internal:8555/phase5-test";
+  "rtsp://127.0.0.1:8554/phase5-test";
 
 export interface SurveillanceTestCamera {
   id: string;
@@ -12,7 +13,7 @@ export interface SurveillanceTestCamera {
   description: string;
   connectionType: "rtsp";
   host: "local-test-source";
-  port: 8555;
+  port: 8554;
   streamPath: "/phase5-test";
   status: "unknown";
   isTest: true;

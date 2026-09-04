@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 
 import { MediaMtxVideoGateway } from "../mediaMtxGateway";
-import { issueViewerAccess } from "../videoGateway";
+import { SURVEILLANCE_TEST_SOURCE_URL } from "../surveillancePrototype";
 
 const config = {
   enabled: true as const,
@@ -48,7 +48,7 @@ describe("MediaMTX video gateway adapter", () => {
 
     const registered = await gateway.registerStream({
       cameraId: "camera-a",
-      sourceUrl: "rtsp://127.0.0.1:8555/phase5-test",
+      sourceUrl: "rtsp://127.0.0.1:8554/custom-camera-path",
     });
     assert.match(registered.pathName, /^phase5-/);
     assert.equal(registered.status, "connecting");
@@ -64,7 +64,7 @@ describe("MediaMTX video gateway adapter", () => {
     });
     const registered = await gateway.registerStream({
       cameraId: "camera-a",
-      sourceUrl: "rtsp://127.0.0.1:8555/phase5-test",
+      sourceUrl: SURVEILLANCE_TEST_SOURCE_URL,
     });
     const access = await gateway.createViewerAccess(authorizedRequest());
     assert.equal(access.pathName, registered.pathName);
@@ -84,7 +84,7 @@ describe("MediaMTX video gateway adapter", () => {
       () =>
         gateway.registerStream({
           cameraId: "camera-a",
-          sourceUrl: "rtsp://user:password@127.0.0.1:8555/phase5-test",
+          sourceUrl: "rtsp://user:password@127.0.0.1:8554/phase5-test",
         }),
       /sans credential/,
     );
@@ -92,7 +92,7 @@ describe("MediaMTX video gateway adapter", () => {
       () =>
         gateway.registerStream({
           cameraId: "camera-b",
-          sourceUrl: "rtsp://10.0.0.20:8555/phase5-test",
+          sourceUrl: "rtsp://10.0.0.20:8554/phase5-test",
         }),
       /locale/,
     );
@@ -105,7 +105,7 @@ describe("MediaMTX video gateway adapter", () => {
     });
     await gateway.registerStream({
       cameraId: "camera-a",
-      sourceUrl: "rtsp://127.0.0.1:8555/phase5-test",
+      sourceUrl: SURVEILLANCE_TEST_SOURCE_URL,
     });
     const first = await gateway.createViewerAccess(authorizedRequest());
     const second = await gateway.createViewerAccess({

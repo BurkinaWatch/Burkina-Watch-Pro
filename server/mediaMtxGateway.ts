@@ -12,6 +12,10 @@ import {
   type VideoGatewayStreamStatus,
 } from "./videoGateway";
 import { VideoGatewayUnavailableError } from "./videoGateway";
+import {
+  SURVEILLANCE_TEST_PATH_NAME,
+  SURVEILLANCE_TEST_SOURCE_URL,
+} from "./surveillancePrototype";
 
 interface MediaMtxPathResponse {
   ready?: boolean;
@@ -32,6 +36,7 @@ export interface MediaMtxGatewayOptions {
 interface RegisteredPath {
   cameraId: string;
   pathName: string;
+  sourceUrl: string;
 }
 
 function assertControlledSourceUrl(sourceUrl: string, testMode: boolean) {
@@ -74,6 +79,7 @@ export class MediaMtxVideoGateway implements VideoGateway {
   private async request<T>(
     path: string,
     init: RequestInit = {},
+    options: { allowNotFound?: boolean } = {},
   ): Promise<T | null> {
     const headers = new Headers(init.headers);
     headers.set("Accept", "application/json");
@@ -103,6 +109,9 @@ export class MediaMtxVideoGateway implements VideoGateway {
     }
 
     if (!response.ok) {
+      if (response.status === 404 && options.allowNotFound) {
+        return null;
+      }
       throw new VideoGatewayUnavailableError(
         `La passerelle vidéo a refusé la requête (${response.status})`,
       );
@@ -133,21 +142,29 @@ export class MediaMtxVideoGateway implements VideoGateway {
       };
     }
 
-    const pathName = `phase5-${crypto.randomBytes(12).toString("base64url")}`;
-    await this.request(
-      `/v3/config/paths/add/${encodeURIComponent(pathName)}`,
-      {
-        method: "POST",
-        body: JSON.stringify({
-          source: request.sourceUrl,
-          rtspTransport: "tcp",
-        }),
-      },
-    );
+    const isControlledTestSource =
+      this.options.config.testMode &&
+      request.sourceUrl === SURVEILLANCE_TEST_SOURCE_URL;
+    const pathName = isControlledTestSource
+      ? SURVEILLANCE_TEST_PATH_NAME
+      : `phase5-${crypto.randomBytes(12).toString("base64url")}`;
+    if (!isControlledTestSource) {
+      await this.request(
+        `/v3/config/paths/add/${encodeURIComponent(pathName)}`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            source: request.sourceUrl,
+            rtspTransport: "tcp",
+          }),
+        },
+      );
+    }
 
     this.registeredPaths.set(request.cameraId, {
       cameraId: request.cameraId,
       pathName,
+      sourceUrl: request.sourceUrl,
     });
     return {
       cameraId: request.cameraId,
@@ -160,10 +177,12 @@ export class MediaMtxVideoGateway implements VideoGateway {
     const registered = this.registeredPaths.get(cameraId);
     if (!registered) return;
 
-    await this.request(
-      `/v3/config/paths/delete/${encodeURIComponent(registered.pathName)}`,
-      { method: "DELETE" },
-    );
+    if (registered.sourceUrl !== SURVEILLANCE_TEST_SOURCE_URL) {
+      await this.request(
+        `/v3/config/paths/delete/${encodeURIComponent(registered.pathName)}`,
+        { method: "DELETE" },
+      );
+    }
     this.registeredPaths.delete(cameraId);
   }
 
@@ -173,7 +192,10 @@ export class MediaMtxVideoGateway implements VideoGateway {
 
     const response = await this.request<MediaMtxPathResponse>(
       `/v3/paths/get/${encodeURIComponent(registered.pathName)}`,
+      {},
+      { allowNotFound: true },
     );
+    if (!response) return "offline";
     if (response?.ready) return "online";
     if (response?.state === "ready") return "online";
     if (response?.state === "notReady") return "offline";

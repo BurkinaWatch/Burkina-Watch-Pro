@@ -17,5 +17,7 @@ authMethod: http
 authHTTPAddress: http://host.docker.internal:5000/api/surveillance/media-auth
 
 paths:
+  phase5-test:
+    source: publisher
   all_others:
     source: publisher

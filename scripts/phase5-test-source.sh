@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Controlled local-only source for Phase 5. It listens on localhost and emits
-# a synthetic H.264/AAC test pattern; it never uses a camera credential.
+# Controlled local-only source for Phase 5. MediaMTX provides the RTSP
+# listener; FFmpeg publishes an H.264/AAC test pattern to it.
 exec ffmpeg \
   -hide_banner \
   -loglevel warning \
@@ -20,5 +20,4 @@ exec ffmpeg \
   -ar 48000 \
   -f rtsp \
   -rtsp_transport tcp \
-  -rtsp_flags listen \
-  rtsp://127.0.0.1:8555/phase5-test
+  rtsp://127.0.0.1:8554/phase5-test
