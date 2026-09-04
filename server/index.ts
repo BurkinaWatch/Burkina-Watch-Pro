@@ -6,8 +6,10 @@ import { pharmaciesService } from "./pharmaciesService";
 import { applySecurityMiddlewares } from "./securityHardening";
 import { assertProductionSecurityConfiguration } from "./securityConfig";
 import { redactSensitiveData, redactSensitiveText } from "./securityRedaction";
+import { assertStreetviewStorageConfigured } from "./streetviewStorage";
 
 assertProductionSecurityConfiguration();
+assertStreetviewStorageConfigured();
 const app = express();
 
 // Appliquer les middlewares de sécurité EN PREMIER
