@@ -18,6 +18,7 @@ import {
   insertChatMessageSchema 
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
+import { z } from "zod";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { csrfProtection, issueCsrfToken } from "./csrfProtection";
 import { getAuthenticatedUserId } from "./authorization";
@@ -29,8 +30,16 @@ import { moderateContent, logModerationAction } from "./contentModeration";
 import {
   signalementMutationLimiter,
   surveillanceConnectionTestLimiter,
+  surveillanceAgentEnrollmentLimiter,
+  surveillanceAgentHeartbeatLimiter,
   surveillanceMutationLimiter,
 } from "./securityHardening";
+import {
+  CAMERA_AGENT_ENROLLMENT_TTL_SECONDS,
+  getAgentStatus,
+  generateAgentSecret,
+  hashAgentSecret,
+} from "./agentProtocol";
 import { generateChatResponse, isAIAvailable } from "./aiService";
 import { fetchBulletins, clearCache } from "./rssService";
 import { getOfficialNews } from "./newsService";
@@ -4599,6 +4608,259 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   // SURVEILLANCE — CONTROL PLANE + CONTROLLED LIVE
   // ============================================
+  const agentEnrollmentSchema = z.object({
+    name: z.string().trim().min(1).max(120),
+    version: z.string().trim().min(1).max(64).optional(),
+  }).strict();
+  const agentClaimSchema = z.object({
+    agentId: z.string().uuid(),
+    enrollmentCode: z.string().min(32).max(128),
+    version: z.string().trim().min(1).max(64).optional(),
+  }).strict();
+  const agentHeartbeatSchema = z.object({
+    agentId: z.string().uuid(),
+    version: z.string().trim().min(1).max(64).optional(),
+  }).strict();
+
+  const agentDto = (agent: Awaited<ReturnType<typeof storage.getCameraAgent>>) =>
+    agent
+      ? {
+          id: agent.id,
+          name: agent.name,
+          status:
+            agent.status === "revoked" || agent.status === "pending"
+              ? agent.status
+              : getAgentStatus(agent.lastSeenAt),
+          version: agent.version,
+          lastSeenAt: agent.lastSeenAt?.toISOString() ?? null,
+          enrolledAt: agent.enrolledAt?.toISOString() ?? null,
+          revokedAt: agent.revokedAt?.toISOString() ?? null,
+          createdAt: agent.createdAt.toISOString(),
+        }
+      : null;
+
+  const getAgentBearerToken = (req: Request): string | null => {
+    const authorization = req.get("authorization") || "";
+    return authorization.startsWith("Bearer ")
+      ? authorization.slice("Bearer ".length).trim() || null
+      : null;
+  };
+
+  app.post(
+    "/api/surveillance/agents/enrollments",
+    isAuthenticated,
+    surveillanceAgentEnrollmentLimiter,
+    async (req: any, res) => {
+      const ownerId = getAuthenticatedUserId(req);
+      if (!ownerId) return res.status(401).json({ error: "Authentification requise" });
+
+      const parsed = agentEnrollmentSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Configuration d'agent invalide" });
+      }
+
+      const enrollmentCode = generateAgentSecret();
+      const agentId = crypto.randomUUID();
+      const expiresAt = new Date(
+        Date.now() + CAMERA_AGENT_ENROLLMENT_TTL_SECONDS * 1000,
+      );
+      const agent = await storage.createCameraAgent({
+        id: agentId,
+        ownerId,
+        name: parsed.data.name,
+        version: parsed.data.version ?? null,
+        status: "pending",
+        enrollmentHash: hashAgentSecret(enrollmentCode),
+        enrollmentExpiresAt: expiresAt,
+      });
+
+      storage.logAudit({
+        userId: ownerId,
+        action: "agent.created",
+        resourceType: "camera_agent",
+        resourceId: agent.id,
+        details: { status: "pending", expiresAt: expiresAt.toISOString() },
+        ipAddress: req.ip,
+        userAgent: req.get("user-agent"),
+        severity: "info",
+      }).catch(() => undefined);
+
+      res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
+      return res.status(201).json({
+        agentId: agent.id,
+        enrollmentCode,
+        expiresAt: expiresAt.toISOString(),
+      });
+    },
+  );
+
+  app.post(
+    "/api/surveillance/agents/enroll",
+    surveillanceAgentEnrollmentLimiter,
+    async (req: any, res) => {
+      const parsed = agentClaimSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Données d'enrôlement invalides" });
+      }
+
+      const credential = generateAgentSecret();
+      const claimed = await storage.claimCameraAgent(
+        parsed.data.agentId,
+        hashAgentSecret(parsed.data.enrollmentCode),
+        hashAgentSecret(credential),
+        parsed.data.version,
+      );
+      if (!claimed) {
+        return res.status(401).json({ error: "Enrôlement invalide ou expiré" });
+      }
+
+      storage.logAudit({
+        userId: claimed.ownerId,
+        action: "agent.enrolled",
+        resourceType: "camera_agent",
+        resourceId: claimed.id,
+        details: { version: parsed.data.version ?? null },
+        ipAddress: req.ip,
+        userAgent: req.get("user-agent"),
+        severity: "info",
+      }).catch(() => undefined);
+
+      res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
+      return res.status(201).json({
+        agentId: claimed.id,
+        credential,
+        heartbeatIntervalSeconds: 30,
+      });
+    },
+  );
+
+  app.post(
+    "/api/surveillance/agents/heartbeat",
+    surveillanceAgentHeartbeatLimiter,
+    async (req: any, res) => {
+      const parsed = agentHeartbeatSchema.safeParse(req.body);
+      const credential = getAgentBearerToken(req);
+      if (!parsed.success || !credential) {
+        return res.status(401).json({ error: "Authentification agent requise" });
+      }
+
+      const now = new Date();
+      const agent = await storage.authenticateCameraAgent(
+        parsed.data.agentId,
+        hashAgentSecret(credential),
+        now,
+      );
+      if (!agent) {
+        return res.status(401).json({ error: "Agent invalide ou révoqué" });
+      }
+
+      if (parsed.data.version && parsed.data.version !== agent.version) {
+        await storage.updateCameraAgentVersion(agent.id, parsed.data.version);
+      }
+      return res.json({
+        agentId: agent.id,
+        status: "online",
+        serverTime: now.toISOString(),
+      });
+    },
+  );
+
+  app.get(
+    "/api/surveillance/agents",
+    isAuthenticated,
+    async (req: any, res) => {
+      const ownerId = getAuthenticatedUserId(req);
+      if (!ownerId) return res.status(401).json({ error: "Authentification requise" });
+      const agents = await storage.getCameraAgents(ownerId);
+      res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
+      return res.json(agents.map((agent) => agentDto(agent)));
+    },
+  );
+
+  app.post(
+    "/api/surveillance/agents/:id/revoke",
+    isAuthenticated,
+    surveillanceMutationLimiter,
+    async (req: any, res) => {
+      const ownerId = getAuthenticatedUserId(req);
+      if (!ownerId) return res.status(401).json({ error: "Authentification requise" });
+      const revoked = await storage.revokeCameraAgent(ownerId, req.params.id);
+      if (!revoked) return res.status(404).json({ error: "Agent non trouvé" });
+
+      storage.logAudit({
+        userId: ownerId,
+        action: "agent.revoked",
+        resourceType: "camera_agent",
+        resourceId: revoked.id,
+        details: {},
+        ipAddress: req.ip,
+        userAgent: req.get("user-agent"),
+        severity: "warning",
+      }).catch(() => undefined);
+      return res.json(agentDto(revoked));
+    },
+  );
+
+  app.post(
+    "/api/surveillance/agents/:id/bind-camera/:cameraId",
+    isAuthenticated,
+    surveillanceMutationLimiter,
+    async (req: any, res) => {
+      const ownerId = getAuthenticatedUserId(req);
+      if (!ownerId) return res.status(401).json({ error: "Authentification requise" });
+      const agent = await storage.getCameraAgent(ownerId, req.params.id);
+      const camera = await storage.getSurveillanceCameraForUpdate(
+        ownerId,
+        req.params.cameraId,
+      );
+      if (!agent || !camera || agent.status === "revoked" || agent.status === "pending") {
+        return res.status(404).json({ error: "Agent ou caméra non trouvé" });
+      }
+      try {
+        const binding = await storage.createAgentCameraBinding(
+          ownerId,
+          agent.id,
+          camera.id,
+        );
+        storage.logAudit({
+          userId: ownerId,
+          action: "agent.camera_bound",
+          resourceType: "camera_agent",
+          resourceId: agent.id,
+          details: { cameraId: camera.id },
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent"),
+          severity: "info",
+        }).catch(() => undefined);
+        return res.status(201).json({
+          id: binding.id,
+          agentId: binding.agentId,
+          cameraId: binding.cameraId,
+          status: binding.status,
+        });
+      } catch {
+        return res.status(409).json({ error: "Cette caméra est déjà liée à cet agent" });
+      }
+    },
+  );
+
+  app.delete(
+    "/api/surveillance/agents/:id/bind-camera/:cameraId",
+    isAuthenticated,
+    surveillanceMutationLimiter,
+    async (req: any, res) => {
+      const ownerId = getAuthenticatedUserId(req);
+      if (!ownerId) return res.status(401).json({ error: "Authentification requise" });
+      const deleted = await storage.deleteAgentCameraBinding(
+        ownerId,
+        req.params.id,
+        req.params.cameraId,
+      );
+      if (!deleted) return res.status(404).json({ error: "Binding non trouvé" });
+      return res.status(204).send();
+    },
+  );
+
   app.get(
     "/api/surveillance/test-camera",
     isAuthenticated,
