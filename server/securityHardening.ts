@@ -52,6 +52,22 @@ export const surveillanceConnectionTestLimiter = rateLimit({
   message: { message: "Trop de tests de connexion. Veuillez réessayer plus tard." },
 });
 
+export const surveillanceAgentEnrollmentLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Trop de demandes d'enrôlement d'agent. Veuillez réessayer plus tard." },
+});
+
+export const surveillanceAgentHeartbeatLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Trop de heartbeats d'agent. Veuillez réessayer plus tard." },
+});
+
 function getConfiguredMediaGatewayOrigins(): string[] {
   return (process.env.MEDIA_GATEWAY_ORIGINS || "")
     .split(",")
