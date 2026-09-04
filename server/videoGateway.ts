@@ -307,12 +307,12 @@ export function readVideoGatewayConfig(
     apiUrl: parseServiceUrl(
       configuredApiUrl,
       "VIDEO_GATEWAY_API_URL",
-      testMode,
+      testMode || realCameraEnabled,
     ),
     publicOrigin: parseServiceUrl(
       configuredPublicOrigin,
       "VIDEO_GATEWAY_PUBLIC_ORIGIN",
-      testMode,
+      testMode || realCameraEnabled,
     ),
     apiToken: env.VIDEO_GATEWAY_API_TOKEN?.trim() || null,
     testMode,
