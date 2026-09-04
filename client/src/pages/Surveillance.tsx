@@ -280,7 +280,7 @@ function LiveCameraPlayer({
           peerConnection.connectionState === "failed" ||
           peerConnection.connectionState === "disconnected"
         ) {
-          setState("disconnected");
+          setState("reconnecting");
         }
       };
       peerConnection.oniceconnectionstatechange = () => {
