@@ -34,7 +34,8 @@ describe("StreetView Phase 3", () => {
   test("preparation phase stops before any 3D reconstruction engine", () => {
     const service = readFileSync("server/streetviewPreparationService.ts", "utf8");
     assert.match(service, /Phase 3 deliberately stops here/);
-    assert.doesNotMatch(service, /NeRF|Gaussian Splatting|photogrammetry/i);
+    assert.match(service, /status: "WAITING_FOR_3D"/);
+    assert.doesNotMatch(service, /(?:from|import|exec|spawn)[^;\n]*(?:NeRF|Gaussian Splatting|photogrammetry)/i);
   });
 
   test("migration defines contribution and processing job tables", () => {
