@@ -5309,6 +5309,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     const body = req.body && typeof req.body === "object" ? req.body : {};
     const pathName = typeof body.path === "string" ? body.path : "";
+    const publisherUsername = process.env.VIDEO_GATEWAY_PUBLISHER_USERNAME;
+    const publisherPassword = process.env.VIDEO_GATEWAY_PUBLISHER_PASSWORD;
+    if (
+      body.action === "publish" &&
+      pathName === SURVEILLANCE_TEST_PATH_NAME &&
+      publisherUsername &&
+      publisherPassword &&
+      body.user === publisherUsername &&
+      typeof body.password === "string" &&
+      crypto.timingSafeEqual(
+        Buffer.from(body.password),
+        Buffer.from(publisherPassword),
+      )
+    ) {
+      return res.status(204).send();
+    }
     if (
       body.action === "publish" &&
       pathName === SURVEILLANCE_TEST_PATH_NAME

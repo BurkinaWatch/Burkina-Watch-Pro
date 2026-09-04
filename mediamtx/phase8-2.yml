@@ -1,0 +1,26 @@
+logLevel: info
+
+api: yes
+apiAddress: 0.0.0.0:9997
+
+rtsp: yes
+rtspAddress: :8554
+rtspTransports: [tcp]
+
+webrtc: yes
+webrtcAddress: :8889
+webrtcAllowOrigin: http://localhost:5001
+apiAllowOrigin: http://localhost:5001
+
+# The local test application is the only authentication callback.
+# The compose file exposes all media/control ports on loopback only.
+authMethod: http
+authHTTPAddress: http://host.docker.internal:5001/api/surveillance/media-auth
+
+paths:
+  phase8-2-source:
+    source: publisher
+  phase8-2-agent-test:
+    source: publisher
+  all_others:
+    source: publisher
