@@ -30,6 +30,10 @@ const EXPECTED_TABLES = [
   "sessions",
   "signalement_likes",
   "signalements",
+  "surveillance_cameras",
+  "camera_agents",
+  "agent_camera_bindings",
+  "agent_media_sessions",
   "streetview_points",
   "tracking_sessions",
   "users",
@@ -54,6 +58,26 @@ const EXPECTED_INDEXES = [
   ["signalements", "signalements_created_at_idx"],
   ["signalements", "signalements_statut_idx"],
   ["tracking_sessions", "tracking_sessions_user_id_active_idx"],
+];
+
+const SURVEILLANCE_TABLES = [
+  "surveillance_cameras",
+  "camera_agents",
+  "agent_camera_bindings",
+  "agent_media_sessions",
+];
+
+const SURVEILLANCE_INDEXES = [
+  ["surveillance_cameras", "surveillance_cameras_owner_created_idx"],
+  ["surveillance_cameras", "surveillance_cameras_owner_status_idx"],
+  ["camera_agents", "camera_agents_owner_status_idx"],
+  ["camera_agents", "camera_agents_owner_last_seen_idx"],
+  ["agent_camera_bindings", "agent_camera_bindings_agent_camera_idx"],
+  ["agent_camera_bindings", "agent_camera_bindings_owner_idx"],
+  ["agent_camera_bindings", "agent_camera_bindings_camera_idx"],
+  ["agent_media_sessions", "agent_media_sessions_path_idx"],
+  ["agent_media_sessions", "agent_media_sessions_agent_camera_idx"],
+  ["agent_media_sessions", "agent_media_sessions_expires_idx"],
 ];
 
 const migrationPath = path.join(
@@ -116,7 +140,7 @@ async function main() {
       WHERE schemaname = 'public'
         AND tablename = ANY($1::text[])
       ORDER BY tablename, indexname
-    `, [TARGET_TABLES]);
+    `, [Array.from(new Set([...TARGET_TABLES, ...SURVEILLANCE_TABLES]))]);
 
     const { rows: onlineRows } = await client.query(`
       SELECT data_type, column_default
@@ -142,7 +166,7 @@ async function main() {
     `);
 
     const countRows = [];
-    for (const tableName of TARGET_TABLES) {
+    for (const tableName of [...TARGET_TABLES, ...SURVEILLANCE_TABLES]) {
       const { rows } = await client.query(
         `SELECT count(*)::text AS row_count FROM public."${tableName}"`,
       );
@@ -155,6 +179,10 @@ async function main() {
       indexRows.map((row) => [`${row.tablename}.${row.indexname}`, row]),
     );
     const missingIndexes = EXPECTED_INDEXES.filter(
+      ([tableName, indexName]) =>
+        !indexesByName.has(`${tableName}.${indexName}`),
+    );
+    const missingSurveillanceIndexes = SURVEILLANCE_INDEXES.filter(
       ([tableName, indexName]) =>
         !indexesByName.has(`${tableName}.${indexName}`),
     );
@@ -183,7 +211,7 @@ async function main() {
     status(
       "Journal __drizzle_migrations",
       journalRows.length === 0
-        ? "ABSENT — baseline à valider"
+        ? "ABSENT — runner forward-only contrôlé"
         : `PRÉSENT — ${journalRows.map((row) => `${row.schema_name}.${row.table_name}`).join(", ")}`,
     );
     status(
@@ -195,6 +223,13 @@ async function main() {
       `${onlineId.data_type ?? "introuvable"} / default=${onlineId.column_default || "absent"}`,
     );
     status("SQL de 0004", sqlHasOnlyAllowedOperations ? "PASS" : "FAIL");
+    status(
+      "Schéma surveillance",
+      SURVEILLANCE_TABLES.every((tableName) => actualTables.includes(tableName)) &&
+        missingSurveillanceIndexes.length === 0
+        ? "PASS — tables et index présents"
+        : "FAIL — tables ou index manquants",
+    );
     console.log("Compteurs des tables ciblées:");
     for (const [tableName, rowCount] of countRows) {
       console.log(`  ${tableName}: ${rowCount}`);
@@ -202,6 +237,11 @@ async function main() {
 
     console.log("Index attendus par 0004:");
     for (const [tableName, indexName] of EXPECTED_INDEXES) {
+      const present = indexesByName.has(`${tableName}.${indexName}`);
+      console.log(`  ${indexName}: ${present ? "présent" : "à créer"}`);
+    }
+    console.log("Index surveillance:");
+    for (const [tableName, indexName] of SURVEILLANCE_INDEXES) {
       const present = indexesByName.has(`${tableName}.${indexName}`);
       console.log(`  ${indexName}: ${present ? "présent" : "à créer"}`);
     }
@@ -218,6 +258,7 @@ async function main() {
       functionAvailable &&
       sqlHasOnlyAllowedOperations &&
       (missingIndexes.length === 0 || missingIndexes.length === EXPECTED_INDEXES.length) &&
+      missingSurveillanceIndexes.length === 0 &&
       unexpectedTargetIndexes.length === 0 &&
       onlineRows.length === 1 &&
       journalRows.length === 0;
@@ -230,7 +271,9 @@ async function main() {
     );
     status(
       "Application de 0004",
-      "NON — snapshot restaurable et baseline Drizzle manquants",
+      missingIndexes.length === 0 && defaultAlreadyCorrect
+        ? "DÉJÀ APPLIQUÉE — vérification lecture seule"
+        : "À REVOIR — index ou default manquant",
     );
 
     if (!safeReadOnlyPreflight) {
