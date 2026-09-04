@@ -1,13 +1,22 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 
-import { decryptSensitiveData } from "../encryptionService";
-import {
+// The encryption singleton is initialized during module import. Keep this
+// deterministic test key scoped to the test process and set it before the
+// service modules are loaded.
+process.env.MASTER_ENCRYPTION_KEY =
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+process.env.KMS_ENABLED = "false";
+
+const { decryptSensitiveData } = await import("../encryptionService");
+const {
   encryptCameraPassword,
   parseCreateSurveillanceCamera,
   parseUpdateSurveillanceCamera,
-} from "../surveillanceService";
-import { SurveillanceValidationError } from "../surveillancePreparation";
+} = await import("../surveillanceService");
+const { SurveillanceValidationError } = await import(
+  "../surveillancePreparation"
+);
 
 describe("Surveillance camera service", () => {
   test("validates create data and never accepts a client-controlled owner", () => {
