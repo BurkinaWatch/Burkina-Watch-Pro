@@ -68,6 +68,11 @@ async function assertControlledSourceUrl(
       "Seule une source RTSP locale sans credential est autorisée dans le prototype",
     );
   }
+  if (!options.testMode && !options.realCameraEnabled) {
+    throw new VideoGatewayUnavailableError(
+      "Les caméras réelles sont désactivées pour cet environnement",
+    );
+  }
   if (!options.testMode) {
     try {
       await validateOutboundUrl(sourceUrl, {

@@ -68,7 +68,6 @@ import {
   getSurveillanceTestCamera,
   isSurveillanceGatewayPathName,
   isSurveillanceTestCameraForUser,
-  isSurveillanceTestPathName,
   SURVEILLANCE_TEST_SOURCE_URL,
   SURVEILLANCE_TEST_PATH_NAME,
 } from "./surveillancePrototype";
@@ -4702,6 +4701,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           nowSeconds,
         });
 
+        storage.logAudit({
+          userId,
+          action: "stream_started",
+          resourceType: "surveillance_camera",
+          resourceId: cameraId,
+          details: { mode: isTestCamera ? "local_test" : "rtsp" },
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent"),
+          severity: "info",
+        }).catch((auditError) =>
+          console.error(
+            "[AUDIT] Erreur log démarrage live:",
+            auditError instanceof Error ? auditError.message : "erreur inconnue",
+          ),
+        );
+
         res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
         return res.json({
           cameraId: access.cameraId,
@@ -4860,6 +4875,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       try {
         await videoGateway.revokeViewerAccess(sessionId);
+        storage.logAudit({
+          userId,
+          action: "stream_stopped",
+          resourceType: "surveillance_camera",
+          resourceId: grant.cameraId,
+          details: { sessionId },
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent"),
+          severity: "info",
+        }).catch((auditError) =>
+          console.error(
+            "[AUDIT] Erreur log arrêt live:",
+            auditError instanceof Error ? auditError.message : "erreur inconnue",
+          ),
+        );
         res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
         return res.status(204).send();
       } catch (error) {
