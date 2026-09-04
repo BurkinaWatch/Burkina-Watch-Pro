@@ -50,7 +50,9 @@ function parseResponse(buffer: string): RtspResponse | null {
 
 function parseAuthParameters(value: string): Record<string, string> {
   const parameters: Record<string, string> = {};
-  for (const match of value.matchAll(/([a-z]+)=("(?:[^"\\]|\\.)*"|[^,\s]+)/gi)) {
+  const parameterPattern = /([a-z]+)=("(?:[^"\\]|\\.)*"|[^,\s]+)/gi;
+  let match: RegExpExecArray | null;
+  while ((match = parameterPattern.exec(value)) !== null) {
     parameters[match[1].toLowerCase()] = match[2].replace(/^"|"$/g, "");
   }
   return parameters;

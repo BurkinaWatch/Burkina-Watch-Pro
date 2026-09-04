@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Trash2,
   Video,
+  Wifi,
   WifiOff,
   X,
 } from "lucide-react";
@@ -509,6 +510,38 @@ export default function Surveillance() {
     },
   });
 
+  const connectionTestMutation = useMutation({
+    mutationFn: async (cameraId: string) => {
+      const response = await apiRequest(
+        "POST",
+        `/api/surveillance/cameras/${encodeURIComponent(cameraId)}/test-connection`,
+      );
+      return (await response.json()) as {
+        success: boolean;
+        status: CameraStatus;
+      };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({
+        queryKey: ["/api/surveillance/cameras"],
+      });
+      toast({
+        title: result.success ? "Caméra accessible" : "Caméra inaccessible",
+        description: result.success
+          ? "La connexion RTSP a été vérifiée."
+          : "Le serveur n'a pas pu joindre cette caméra.",
+        variant: result.success ? "default" : "destructive",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Test de connexion impossible",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const openCreateForm = () => {
     setEditingCamera(null);
     setForm(emptyForm);
@@ -876,10 +909,7 @@ export default function Surveillance() {
                     <p className="min-h-10 text-sm text-muted-foreground">
                       {camera.description || "Aucune description"}
                     </p>
-                     <div className="rounded-lg border border-dashed bg-muted/30 p-3 text-sm text-muted-foreground">
-                       Le live des caméras enregistrées sera activé après la
-                       validation du prototype local.
-                     </div>
+                    <LiveCameraPlayer cameraId={camera.id} />
                     <div className="flex flex-wrap gap-2">
                       <Button
                         variant="outline"
@@ -907,6 +937,24 @@ export default function Surveillance() {
                           <Power className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
                         )}
                         {isDisabled ? "Activer" : "Désactiver"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => connectionTestMutation.mutate(camera.id)}
+                        disabled={
+                          deleteMutation.isPending ||
+                          isMutating ||
+                          connectionTestMutation.isPending
+                        }
+                      >
+                        {connectionTestMutation.isPending &&
+                        connectionTestMutation.variables === camera.id ? (
+                          <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Wifi className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
+                        )}
+                        Tester la connexion
                       </Button>
                       <Button
                         variant="ghost"
