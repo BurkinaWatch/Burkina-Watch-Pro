@@ -30,6 +30,10 @@ import {
   type VirtualTourWithPhotos,
   type InsertOtpCode,
   type OtpCode,
+  type SurveillanceCamera,
+  type SurveillanceCameraSummary,
+  type InsertSurveillanceCamera,
+  type UpdateSurveillanceCamera,
   magicLinks,
   users,
   signalements,
@@ -53,6 +57,7 @@ import {
   insertLocationPointSchema,
   insertNotificationSchema,
   onlineSessions,
+  surveillanceCameras,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, isNull, gt } from "drizzle-orm";
@@ -106,6 +111,18 @@ export interface IStorage {
   getSessionLocationPoints(sessionId: string): Promise<LocationPoint[]>;
   getUserTrackingSessions(userId: string): Promise<TrackingSession[]>;
   deleteTrackingSession(sessionId: string): Promise<boolean>; // Added method
+
+  // --- Surveillance cameras ---
+  getSurveillanceCameras(ownerId: string): Promise<SurveillanceCameraSummary[]>;
+  getSurveillanceCamera(ownerId: string, cameraId: string): Promise<SurveillanceCameraSummary | undefined>;
+  getSurveillanceCameraForUpdate(ownerId: string, cameraId: string): Promise<SurveillanceCamera | undefined>;
+  createSurveillanceCamera(camera: InsertSurveillanceCamera): Promise<SurveillanceCamera>;
+  updateSurveillanceCamera(
+    ownerId: string,
+    cameraId: string,
+    updates: UpdateSurveillanceCamera,
+  ): Promise<SurveillanceCamera | undefined>;
+  deleteSurveillanceCamera(ownerId: string, cameraId: string): Promise<boolean>;
 
   // Méthodes pour les notifications
   createNotification(data: typeof insertNotificationSchema._type): Promise<any | undefined>;

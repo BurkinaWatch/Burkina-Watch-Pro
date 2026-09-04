@@ -33,6 +33,17 @@ export const signalementMutationLimiter = rateLimit({
   message: { message: "Limite de publication atteinte. Veuillez patienter avant de publier à nouveau." }
 });
 
+// Rate limiting for camera management mutations. This is intentionally
+// separate from the global limiter because camera setup can trigger expensive
+// validation/encryption work even though no network connection is made here.
+export const surveillanceMutationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Trop de modifications de caméra. Veuillez réessayer plus tard." },
+});
+
 function getConfiguredMediaGatewayOrigins(): string[] {
   return (process.env.MEDIA_GATEWAY_ORIGINS || "")
     .split(",")

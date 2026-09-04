@@ -12,10 +12,11 @@ export const SURVEILLANCE_PROTOCOLS = ["rtsp", "onvif"] as const;
 export type SurveillanceProtocol = (typeof SURVEILLANCE_PROTOCOLS)[number];
 
 export const SURVEILLANCE_CAMERA_STATUSES = [
-  "pending",
+  "unknown",
   "online",
   "offline",
   "disabled",
+  "error",
 ] as const;
 export type SurveillanceCameraStatus =
   (typeof SURVEILLANCE_CAMERA_STATUSES)[number];

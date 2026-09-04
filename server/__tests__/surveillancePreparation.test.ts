@@ -31,7 +31,7 @@ describe("Surveillance Phase 2 preparation", () => {
         algorithm: "aes-256-gcm",
         keyVersion: 1,
       },
-      status: "pending",
+      status: "unknown",
       lastSeenAt: null,
       createdAt: new Date("2026-09-04T00:00:00.000Z"),
       updatedAt: new Date("2026-09-04T00:00:00.000Z"),

@@ -36,6 +36,26 @@ export const users = pgTable("users", {
   userLevel: text("user_level").default("sentinelle").notNull(),
 });
 
+export const surveillanceCameras = pgTable("surveillance_cameras", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  ownerId: text("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  connectionType: text("connection_type").notNull().default("rtsp"),
+  host: text("host").notNull(),
+  port: integer("port").notNull(),
+  username: text("username"),
+  encryptedPassword: text("encrypted_password").notNull(),
+  streamPath: text("stream_path"),
+  status: text("status").notNull().default("unknown"),
+  lastSeenAt: timestamp("last_seen_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("surveillance_cameras_owner_created_idx").on(table.ownerId, table.createdAt),
+  index("surveillance_cameras_owner_status_idx").on(table.ownerId, table.status),
+]);
+
 export const magicLinks = pgTable("magic_links", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -389,6 +409,15 @@ export const selectAuditLogSchema = createSelectSchema(auditLogs);
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type UpdateUserProfile = z.infer<typeof updateUserProfileSchema>;
 export type User = typeof users.$inferSelect;
+export type SurveillanceCamera = typeof surveillanceCameras.$inferSelect;
+export type InsertSurveillanceCamera = typeof surveillanceCameras.$inferInsert;
+export type UpdateSurveillanceCamera = Partial<
+  Omit<InsertSurveillanceCamera, "id" | "ownerId" | "createdAt">
+>;
+export type SurveillanceCameraSummary = Omit<
+  SurveillanceCamera,
+  "username" | "encryptedPassword"
+>;
 export type InsertSignalement = z.infer<typeof insertSignalementSchema>;
 export type UpdateSignalement = z.infer<typeof updateSignalementSchema>;
 export type Signalement = typeof signalements.$inferSelect;
