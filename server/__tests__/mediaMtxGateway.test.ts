@@ -53,7 +53,7 @@ describe("MediaMTX video gateway adapter", () => {
       cameraId: "camera-a",
       sourceUrl: "rtsp://127.0.0.1:8554/custom-camera-path",
     });
-    assert.match(registered.pathName, /^phase5-/);
+    assert.match(registered.pathName, /^surveillance-/);
     assert.equal(registered.status, "connecting");
     assert.equal(await gateway.getStreamStatus("camera-a"), "online");
     await gateway.removeStream("camera-a");
@@ -99,6 +99,31 @@ describe("MediaMTX video gateway adapter", () => {
         }),
       /locale/,
     );
+  });
+
+  test("accepts a controlled real RTSP source and uses a stable opaque path", async () => {
+    const realGateway = new MediaMtxVideoGateway({
+      config: {
+        ...config,
+        testMode: false,
+        realCameraEnabled: true,
+        allowPrivateCameraNetwork: true,
+        apiToken: "gateway-token",
+        pathSecret: "path-secret",
+      },
+      fetchImpl: async () => new Response(null, { status: 204 }),
+    });
+    const sourceUrl = "rtsp://camera-user:camera-password@192.168.10.20:554/live";
+    const first = await realGateway.registerStream({
+      cameraId: "camera-real",
+      sourceUrl,
+    });
+    const second = await realGateway.registerStream({
+      cameraId: "camera-real",
+      sourceUrl,
+    });
+    assert.match(first.pathName, /^surveillance-[a-f0-9]{32}$/);
+    assert.equal(second.pathName, first.pathName);
   });
 
   test("supports multiple viewer grants on one registered path", async () => {

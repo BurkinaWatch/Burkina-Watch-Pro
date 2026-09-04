@@ -137,6 +137,8 @@ describe("Phase 1 security foundations", () => {
       assert.equal(isBlockedIp(ip), true, ip);
     }
     assert.equal(isBlockedIp("8.8.8.8"), false);
+    assert.equal(isBlockedIp("192.168.1.10", { allowPrivateNetworks: true }), false);
+    assert.equal(isBlockedIp("127.0.0.1", { allowPrivateNetworks: true }), true);
   });
 
   test("redacts credentials, tokens, and secret-shaped fields", () => {

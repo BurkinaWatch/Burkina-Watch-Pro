@@ -82,6 +82,36 @@ describe("Phase 4 video gateway contract", () => {
     );
   });
 
+  test("requires an explicit non-production real-camera configuration", () => {
+    const config = readVideoGatewayConfig({
+      NODE_ENV: "development",
+      VIDEO_GATEWAY_ENABLED: "true",
+      VIDEO_GATEWAY_PROVIDER: "mediamtx",
+      VIDEO_GATEWAY_API_URL: "http://127.0.0.1:9997",
+      VIDEO_GATEWAY_PUBLIC_ORIGIN: "http://127.0.0.1:8889",
+      VIDEO_GATEWAY_API_TOKEN: "gateway-token",
+      VIDEO_GATEWAY_REAL_CAMERA_ENABLED: "true",
+      VIDEO_GATEWAY_ALLOW_PRIVATE_NETWORK: "true",
+      VIDEO_GATEWAY_PATH_SECRET: "opaque-path-secret",
+    });
+    assert.equal(config.realCameraEnabled, true);
+    assert.equal(config.allowPrivateCameraNetwork, true);
+    assert.equal(config.pathSecret, "opaque-path-secret");
+    assert.throws(
+      () =>
+        readVideoGatewayConfig({
+          NODE_ENV: "development",
+          VIDEO_GATEWAY_ENABLED: "true",
+          VIDEO_GATEWAY_PROVIDER: "mediamtx",
+          VIDEO_GATEWAY_API_URL: "http://127.0.0.1:9997",
+          VIDEO_GATEWAY_PUBLIC_ORIGIN: "http://127.0.0.1:8889",
+          VIDEO_GATEWAY_API_TOKEN: "gateway-token",
+          VIDEO_GATEWAY_REAL_CAMERA_ENABLED: "true",
+        }),
+      VideoGatewayConfigurationError,
+    );
+  });
+
   test("validates ownership, camera state, and token scope before gateway access", () => {
     assert.doesNotThrow(() => assertVideoStreamAuthorization(validRequest));
 
