@@ -266,11 +266,13 @@ export interface IStorage {
       width: number | null;
       height: number | null;
       orientation: string | null;
+      clientMetadata: Record<string, unknown> | null;
       uploadedAt: Date | null;
       processedAt: Date | null;
       updatedAt: Date;
     }>,
   ): Promise<StreetviewContribution | undefined>;
+  deleteStreetviewContribution(id: string, userId: string): Promise<StreetviewContribution | undefined>;
   createStreetviewProcessingJob(data: InsertStreetviewProcessingJob): Promise<StreetviewProcessingJob>;
   updateStreetviewProcessingJob(
     id: string,
@@ -1894,6 +1896,17 @@ L'équipe Burkina Watch
       .where(eq(streetviewContributions.id, id))
       .returning();
     return updated;
+  }
+
+  async deleteStreetviewContribution(
+    id: string,
+    userId: string,
+  ): Promise<StreetviewContribution | undefined> {
+    const [deleted] = await db
+      .delete(streetviewContributions)
+      .where(and(eq(streetviewContributions.id, id), eq(streetviewContributions.userId, userId)))
+      .returning();
+    return deleted;
   }
 
   async createStreetviewProcessingJob(
