@@ -1,6 +1,8 @@
 logLevel: info
 
 api: yes
+# The compose file binds this port to loopback on the host. A production
+# deployment must place the admin API on a private control-plane network.
 apiAddress: 0.0.0.0:9997
 
 rtsp: yes

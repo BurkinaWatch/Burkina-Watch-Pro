@@ -5,9 +5,11 @@ services:
     restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    # The prototype must remain reachable only from the local machine.
+    # Production media deployment needs a private network/firewall instead.
     ports:
-      - "8554:8554"
-      - "9997:9997"
-      - "8889:8889"
+      - "127.0.0.1:8554:8554"
+      - "127.0.0.1:9997:9997"
+      - "127.0.0.1:8889:8889"
     volumes:
       - ./mediamtx/phase5.yml:/mediamtx.yml:ro
