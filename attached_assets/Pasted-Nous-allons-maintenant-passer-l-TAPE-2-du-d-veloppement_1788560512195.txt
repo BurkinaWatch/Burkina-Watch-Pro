@@ -1,0 +1,612 @@
+Nous allons maintenant passer à l'ÉTAPE 2 du développement de Street View.
+
+IMPORTANT :
+Tu as confirmé lors de l'audit que :
+
+* `client/src/components/HamburgerMenu.tsx` contient déjà l'entrée StreetView ;
+* cette entrée est actuellement désactivée avec `disabled: true` ;
+* `client/src/components/StreetView.tsx` existe déjà ;
+* la route `/streetview` dans `client/src/App.tsx` est actuellement commentée ;
+* la fonctionnalité n'est donc pas supprimée mais volontairement désactivée.
+
+NE RÉACTIVE PAS ENCORE LE BOUTON.
+NE MODIFIE PAS ENCORE LE CODE.
+NE SUPPRIME RIEN.
+
+Nous devons d'abord concevoir l'architecture correcte de la nouvelle génération de Street View.
+
+==================================================
+VISION PRODUIT
+==============
+
+Street View de Burkina Watch ne doit pas être conçu comme une simple page permettant de regarder des vidéos.
+
+C'est un projet de très long terme de reconstruction collaborative du Burkina Faso en environnement 3D.
+
+CONCEPT CENTRAL :
+
+Chaque utilisateur peut documenter un lieu réel du Burkina Faso au moyen d'une vidéo ou, ultérieurement, d'une série de photographies.
+
+La plateforme traite cette captation afin de produire une représentation spatiale/3D du lieu.
+
+Cette représentation devient une "SCÈNE".
+
+Plusieurs scènes géographiquement proches pourront progressivement constituer un espace 3D plus vaste.
+
+À terme :
+
+CAPTATION UTILISATEUR
+↓
+TRAITEMENT
+↓
+SCÈNE 3D
+↓
+LOCALISATION GÉOGRAPHIQUE
+↓
+CARTE DES SCÈNES
+↓
+REGROUPEMENT DE SCÈNES
+↓
+ESPACE 3D PLUS VASTE
+↓
+BURKINA FASO 3D COLLABORATIF
+
+L'objectif final est de pouvoir progressivement documenter :
+
+Burkina Faso
+→ régions
+→ provinces
+→ villes
+→ communes
+→ quartiers
+→ rues
+→ places
+→ bâtiments
+→ lieux particuliers
+→ scènes 3D.
+
+==================================================
+OBJECTIF DE CETTE ÉTAPE
+=======================
+
+Nous ne voulons PAS encore implémenter cette architecture.
+
+Nous voulons d'abord produire une conception technique précise, compatible avec le code actuel de Burkina Watch.
+
+Tu dois donc analyser le repository existant avant de proposer des changements.
+
+==================================================
+
+1. ANALYSE DE L'ARCHITECTURE EXISTANTE
+   ==================================================
+
+Inspecte précisément :
+
+* frontend ;
+* backend ;
+* API ;
+* base de données ;
+* système d'authentification ;
+* stockage de fichiers ;
+* upload existant ;
+* traitement média existant ;
+* système de jobs éventuel ;
+* cartes existantes ;
+* géolocalisation ;
+* infrastructure Railway ;
+* variables d'environnement ;
+* système de logs ;
+* architecture de déploiement.
+
+Identifie ce qui peut être réutilisé par Street View.
+
+Ne propose pas de nouvelle technologie lorsqu'une technologie existante dans Burkina Watch peut remplir correctement la fonction.
+
+==================================================
+2. MODÈLE CONCEPTUEL DE STREET VIEW
+===================================
+
+Propose un modèle de données permettant de gérer au minimum :
+
+USER
+CONTRIBUTION
+CAPTURE
+MEDIA
+PROCESSING_JOB
+SCENE_3D
+LOCATION
+QUALITY_CHECK
+PUBLICATION
+
+Une contribution doit pouvoir conserver notamment :
+
+* identifiant ;
+* utilisateur ;
+* titre ;
+* description ;
+* latitude ;
+* longitude ;
+* altitude si disponible ;
+* ville ;
+* quartier ;
+* lieu ;
+* type de capture ;
+* fichier source ;
+* durée ;
+* date de capture ;
+* date d'envoi ;
+* statut ;
+* qualité ;
+* miniature ;
+* scène générée ;
+* métadonnées ;
+* visibilité ;
+* date de publication.
+
+Ne crée pas encore les tables.
+
+Présente d'abord le modèle proposé et explique les relations entre les entités.
+
+==================================================
+3. PIPELINE DE TRAITEMENT
+=========================
+
+Conçois le pipeline suivant :
+
+UTILISATEUR
+↓
+CAPTURE
+↓
+UPLOAD
+↓
+VALIDATION
+↓
+STOCKAGE SOURCE
+↓
+JOB ASYNCHRONE
+↓
+EXTRACTION DES IMAGES / KEYFRAMES
+↓
+ANALYSE
+↓
+RECONSTRUCTION SPATIALE
+↓
+GÉNÉRATION SCÈNE 3D
+↓
+CONTRÔLE QUALITÉ
+↓
+PUBLICATION
+↓
+VISUALISATION
+
+Le traitement 3D doit être asynchrone.
+
+Une requête HTTP ne doit jamais rester ouverte pendant toute la durée d'une reconstruction.
+
+==================================================
+4. STATUTS
+==========
+
+Propose un système de statuts clair.
+
+Par exemple :
+
+UPLOADED
+VALIDATING
+VALIDATED
+QUEUED
+PROCESSING
+RECONSTRUCTING
+QUALITY_CHECK
+READY
+PUBLISHED
+FAILED
+
+Tu peux proposer de meilleurs noms si nécessaire, mais explique-les.
+
+Prévois également :
+
+* progression ;
+* message d'erreur ;
+* nombre de tentatives ;
+* date de début ;
+* date de fin ;
+* logs de traitement.
+
+==================================================
+5. MOTEUR DE RECONSTRUCTION 3D
+==============================
+
+POINT TRÈS IMPORTANT :
+
+Ne prétends pas que le frontend ou Three.js peut transformer directement une vidéo en véritable scène 3D.
+
+La reconstruction spatiale est une opération distincte et potentiellement lourde.
+
+Nous voulons une architecture capable d'accueillir ultérieurement différents moteurs :
+
+* photogrammétrie ;
+* NeRF ;
+* 3D Gaussian Splatting ;
+* autre technologie de reconstruction spatiale.
+
+Le système doit donc utiliser une abstraction de type :
+
+RECONSTRUCTION ENGINE
+
+afin que le moteur puisse être remplacé sans réécrire tout Street View.
+
+À ce stade :
+
+NE CHOISIS PAS DÉFINITIVEMENT UN FOURNISSEUR.
+
+Compare les possibilités et indique :
+
+* qualité ;
+* coût ;
+* GPU nécessaire ;
+* temps de traitement ;
+* taille des fichiers ;
+* difficulté d'intégration ;
+* possibilité d'automatisation ;
+* compatibilité navigateur ;
+* capacité à passer de 10 à 100 000+ scènes.
+
+==================================================
+6. STOCKAGE
+===========
+
+Propose une séparation claire entre :
+
+1. vidéo originale ;
+2. fichiers temporaires ;
+3. images/keyframes ;
+4. fichiers de reconstruction ;
+5. scène 3D finale ;
+6. miniature ;
+7. métadonnées.
+
+Analyse le système de stockage déjà utilisé par Burkina Watch.
+
+Nous voulons éviter de stocker inutilement de gros fichiers directement dans la base de données.
+
+==================================================
+7. VISUALISATION 3D
+===================
+
+La page StreetView.tsx existante devra devenir à terme le point d'entrée de l'exploration.
+
+Elle devra pouvoir permettre :
+
+* affichage de la carte ;
+* affichage des scènes disponibles ;
+* sélection d'une scène ;
+* ouverture du viewer 3D ;
+* navigation dans la scène ;
+* retour à la carte ;
+* informations sur la contribution.
+
+Le système doit charger les scènes à la demande.
+
+NE PAS charger toutes les scènes 3D simultanément.
+
+Prévoir une architecture permettant un chargement progressif selon :
+
+* zone géographique ;
+* niveau de zoom ;
+* scène sélectionnée ;
+* distance.
+
+==================================================
+8. CARTE GÉOGRAPHIQUE
+=====================
+
+Chaque scène doit avoir des coordonnées géographiques.
+
+Conçois le système afin de pouvoir afficher :
+
+* scènes individuelles ;
+* densité des contributions ;
+* zones couvertes ;
+* zones partiellement couvertes ;
+* zones non documentées.
+
+À terme, nous voulons pouvoir avoir une représentation du type :
+
+VERT = zone documentée
+JAUNE = zone partiellement documentée
+GRIS = zone non documentée
+
+Ne développe pas encore cette interface.
+
+Conçois seulement l'architecture nécessaire.
+
+==================================================
+9. RACCORDEMENT DES SCÈNES
+==========================
+
+C'est une fonction fondamentale du projet à long terme.
+
+Exemple :
+
+SCÈNE A
+Ouagadougou — Rue X
+↓
+SCÈNE B
+50 mètres plus loin
+↓
+SCÈNE C
+100 mètres plus loin
+
+À terme, ces scènes devront pouvoir être reliées pour former une représentation spatiale plus vaste.
+
+Mais :
+
+NE DÉVELOPPE PAS ENCORE L'ALGORITHME DE RACCORDEMENT.
+
+Prévois seulement dans le modèle de données et l'architecture la possibilité d'avoir :
+
+* scènes voisines ;
+* scènes connectées ;
+* distance entre scènes ;
+* orientation ;
+* système de coordonnées ;
+* transformation spatiale ;
+* confiance dans le raccordement.
+
+==================================================
+10. VERSIONNEMENT TEMPOREL
+==========================
+
+Prévois également la possibilité qu'une même zone soit capturée plusieurs fois.
+
+Exemple :
+
+Rue X — 2026
+Rue X — 2027
+Rue X — 2028
+
+Une nouvelle contribution ne doit donc pas nécessairement remplacer l'ancienne.
+
+Elle peut devenir une nouvelle version temporelle de la scène.
+
+Ne développe pas encore l'interface historique.
+
+Prévois seulement le modèle.
+
+==================================================
+11. QUALITÉ DES CONTRIBUTIONS
+=============================
+
+Une vidéo utilisateur peut être :
+
+* trop courte ;
+* floue ;
+* tremblante ;
+* mal exposée ;
+* insuffisante pour une reconstruction ;
+* mal géolocalisée ;
+* déjà existante ;
+* dupliquée.
+
+Prévois un système de contrôle qualité.
+
+Une contribution doit pouvoir recevoir :
+
+* score de qualité ;
+* raisons de rejet ;
+* avertissements ;
+* statut de validation.
+
+==================================================
+12. MODÉRATION ET VIE PRIVÉE
+============================
+
+Street View étant alimenté par les utilisateurs, prévois dès l'architecture :
+
+* modération ;
+* signalement ;
+* suppression ;
+* dépublication ;
+* contrôle des contenus ;
+* protection des données personnelles ;
+* possibilité future de flouter automatiquement les visages ;
+* possibilité future de flouter les plaques d'immatriculation ;
+* gestion des contenus privés.
+
+Ne développe pas encore ces fonctions.
+
+Prévois leur emplacement dans l'architecture.
+
+==================================================
+13. SÉCURITÉ DES UPLOADS
+========================
+
+Les vidéos sont des fichiers potentiellement très volumineux.
+
+Prévoir :
+
+* limites de taille ;
+* validation MIME ;
+* validation extension ;
+* contrôle du fichier réel ;
+* authentification ;
+* autorisation ;
+* rate limiting ;
+* URLs signées lorsque nécessaire ;
+* nettoyage des fichiers temporaires ;
+* protection contre les fichiers malveillants ;
+* expiration des uploads incomplets.
+
+Analyse les mécanismes de sécurité déjà présents dans Burkina Watch.
+
+==================================================
+14. SCALABILITÉ
+===============
+
+Street View doit pouvoir commencer petit :
+
+10 scènes.
+
+Puis :
+
+100 scènes
+1 000 scènes
+10 000 scènes
+100 000 scènes
+1 000 000+ scènes à très long terme.
+
+L'architecture doit donc séparer :
+
+* API ;
+* base de données ;
+* stockage ;
+* traitement ;
+* reconstruction ;
+* visualisation.
+
+Une reconstruction 3D ne doit pas ralentir le reste de Burkina Watch.
+
+==================================================
+15. COÛTS
+=========
+
+Identifie les postes susceptibles de devenir coûteux :
+
+* stockage vidéo ;
+* stockage scènes 3D ;
+* bande passante ;
+* GPU ;
+* traitement ;
+* génération de previews ;
+* CDN ;
+* API cartographiques ;
+* services externes.
+
+Indique également les risques de coût à grande échelle.
+
+==================================================
+16. COMPATIBILITÉ AVEC BURKINA WATCH
+====================================
+
+Ne construis pas une application indépendante.
+
+Street View doit rester un module de Burkina Watch.
+
+Il doit respecter :
+
+* authentification existante ;
+* design system existant ;
+* palette actuelle ;
+* navigation existante ;
+* architecture frontend ;
+* architecture backend ;
+* système de déploiement ;
+* sécurité globale.
+
+Ne change pas la palette graphique de Burkina Watch.
+
+==================================================
+17. ARCHITECTURE CIBLE
+======================
+
+À la fin de ton analyse, présente une architecture cible sous forme de schéma textuel.
+
+Par exemple :
+
+USER
+↓
+BURKINAWATCH FRONTEND
+↓
+STREET VIEW API
+↓
+DATABASE
+↓
+OBJECT STORAGE
+↓
+PROCESSING QUEUE
+↓
+3D RECONSTRUCTION WORKER
+↓
+3D SCENE STORAGE
+↓
+STREET VIEW VIEWER
+
+Puis explique chaque composant.
+
+==================================================
+18. PHASAGE
+===========
+
+Propose un développement par phases.
+
+Je veux notamment une distinction entre :
+
+PHASE A
+Réactivation propre de l'interface existante.
+
+PHASE B
+Contribution + upload.
+
+PHASE C
+Pipeline de traitement.
+
+PHASE D
+Première vraie reconstruction 3D.
+
+PHASE E
+Viewer 3D.
+
+PHASE F
+Carte des scènes.
+
+PHASE G
+Contributions multiples.
+
+PHASE H
+Raccordement des scènes.
+
+PHASE I
+Extension nationale.
+
+Pour chaque phase, indique :
+
+* objectif ;
+* dépendances ;
+* difficulté ;
+* risques ;
+* ce qui doit être testé.
+
+==================================================
+RÈGLE ABSOLUE
+=============
+
+Cette étape est UNIQUEMENT une étape d'architecture.
+
+NE MODIFIE AUCUN FICHIER.
+
+NE RÉACTIVE PAS LE BOUTON.
+
+NE DÉCOMMENTE PAS LA ROUTE.
+
+NE CRÉE PAS DE TABLE.
+
+NE CRÉE PAS DE NOUVELLE API.
+
+NE SUPPRIME RIEN.
+
+NE CHANGE PAS LA BASE DE DONNÉES.
+
+NE CHANGE PAS LES DÉPENDANCES.
+
+Je veux d'abord un rapport technique précis basé sur le code réel actuellement présent dans le repository.
+
+À la fin du rapport, indique clairement :
+
+1. ce qui existe déjà ;
+2. ce qui peut être réutilisé ;
+3. ce qui doit être créé ;
+4. ce qui nécessite un service externe ;
+5. les décisions que je dois valider avant l'implémentation.
+
+Puis ARRÊTE-TOI et attends ma validation.
