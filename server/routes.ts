@@ -4645,6 +4645,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ? authorization.slice("Bearer ".length).trim() || null
       : null;
   };
+  const isUuid = (value: unknown): value is string =>
+    typeof value === "string" && z.string().uuid().safeParse(value).success;
 
   app.post(
     "/api/surveillance/agents/enrollments",
@@ -4751,6 +4753,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         now,
       );
       if (!agent) {
+        const candidate = await storage.getCameraAgentById(parsed.data.agentId);
+        if (candidate) {
+          storage.logAudit({
+            userId: candidate.ownerId,
+            action: "agent.authentication_failed",
+            resourceType: "camera_agent",
+            resourceId: candidate.id,
+            details: {},
+            ipAddress: req.ip,
+            userAgent: req.get("user-agent"),
+            severity: "warning",
+          }).catch(() => undefined);
+        }
         return res.status(401).json({ error: "Agent invalide ou révoqué" });
       }
 
@@ -4784,6 +4799,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: any, res) => {
       const ownerId = getAuthenticatedUserId(req);
       if (!ownerId) return res.status(401).json({ error: "Authentification requise" });
+      if (!isUuid(req.params.id)) {
+        return res.status(404).json({ error: "Agent non trouvé" });
+      }
       const revoked = await storage.revokeCameraAgent(ownerId, req.params.id);
       if (!revoked) return res.status(404).json({ error: "Agent non trouvé" });
 
@@ -4808,6 +4826,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: any, res) => {
       const ownerId = getAuthenticatedUserId(req);
       if (!ownerId) return res.status(401).json({ error: "Authentification requise" });
+      if (!isUuid(req.params.id) || !isUuid(req.params.cameraId)) {
+        return res.status(404).json({ error: "Agent ou caméra non trouvé" });
+      }
       const agent = await storage.getCameraAgent(ownerId, req.params.id);
       const camera = await storage.getSurveillanceCameraForUpdate(
         ownerId,
@@ -4851,12 +4872,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: any, res) => {
       const ownerId = getAuthenticatedUserId(req);
       if (!ownerId) return res.status(401).json({ error: "Authentification requise" });
+      if (!isUuid(req.params.id) || !isUuid(req.params.cameraId)) {
+        return res.status(404).json({ error: "Binding non trouvé" });
+      }
       const deleted = await storage.deleteAgentCameraBinding(
         ownerId,
         req.params.id,
         req.params.cameraId,
       );
       if (!deleted) return res.status(404).json({ error: "Binding non trouvé" });
+      storage.logAudit({
+        userId: ownerId,
+        action: "agent.camera_unbound",
+        resourceType: "camera_agent",
+        resourceId: req.params.id,
+        details: { cameraId: req.params.cameraId },
+        ipAddress: req.ip,
+        userAgent: req.get("user-agent"),
+        severity: "info",
+      }).catch(() => undefined);
       return res.status(204).send();
     },
   );
