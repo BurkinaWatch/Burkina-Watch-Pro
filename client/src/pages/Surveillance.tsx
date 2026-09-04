@@ -183,7 +183,13 @@ function waitForIceGatheringComplete(
   });
 }
 
-function LiveCameraPlayer({ cameraId }: { cameraId: string }) {
+function LiveCameraPlayer({
+  cameraId,
+  cameraStatus,
+}: {
+  cameraId: string;
+  cameraStatus?: CameraStatus;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const sessionIdRef = useRef<string | null>(null);
@@ -191,6 +197,7 @@ function LiveCameraPlayer({ cameraId }: { cameraId: string }) {
   const mountedRef = useRef(true);
   const reconnectAttemptRef = useRef(0);
   const [state, setState] = useState<LiveState>("idle");
+  const [gatewayStatus, setGatewayStatus] = useState<StreamStatus>("unknown");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const revokeSession = useCallback(async () => {
@@ -240,6 +247,7 @@ function LiveCameraPlayer({ cameraId }: { cameraId: string }) {
       );
       const access = (await accessResponse.json()) as LiveAccessResponse;
       sessionIdRef.current = access.sessionId;
+      setGatewayStatus(access.streamStatus ?? access.status);
 
       if (access.status === "offline") {
         await closePeerConnection();
