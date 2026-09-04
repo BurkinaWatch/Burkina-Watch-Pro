@@ -207,6 +207,8 @@ function isValidTemporaryVideoToken(
     claims.scope !== SURVEILLANCE_VIDEO_SCOPE ||
     typeof claims.jti !== "string" ||
     claims.jti.trim() === "" ||
+    typeof iat !== "number" ||
+    typeof exp !== "number" ||
     !Number.isInteger(iat) ||
     !Number.isInteger(exp)
   ) {

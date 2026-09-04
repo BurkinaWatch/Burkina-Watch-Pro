@@ -226,15 +226,18 @@ workflow, caméra, port RTSP, gateway ou écran frontend n’a été modifié.
 
 ## M. Vérifications
 
-À compléter après les modifications :
+Les vérifications finales sont :
 
-- `npm run check` — à exécuter ;
-- `npm run build` — à exécuter ;
-- tests de sécurité existants et préparatoires — à exécuter avec
-  `npx tsx --test` ;
-- `git diff --check` — à exécuter.
+- `npm run check` — **PASS** ;
+- `npm run build` — **PASS** (warnings Vite non bloquants préexistants sur le
+  découpage dynamique et la taille de certains bundles) ;
+- `npx tsx --test server/__tests__/phase1Security.test.ts
+  server/__tests__/encryptionService.test.ts
+  server/__tests__/surveillancePreparation.test.ts` — **PASS**, 33 tests ;
+- `git diff --check` — **PASS**.
 
-Le résultat réel sera reporté dans cette section avant livraison.
+Le build a généré `dist/` comme sortie locale de compilation ; cette sortie
+n’est pas une modification de l’architecture Surveillance.
 
 ## N. Risques restants
 
