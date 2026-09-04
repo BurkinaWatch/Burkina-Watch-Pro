@@ -45,6 +45,7 @@ describe("Phase 4 video gateway contract", () => {
       realCameraEnabled: false,
       allowPrivateCameraNetwork: false,
       pathSecret: null,
+      maxViewerSessionsPerCamera: 8,
     });
     assert.equal(createVideoGateway(config) instanceof DisabledVideoGateway, true);
   });
@@ -93,10 +94,12 @@ describe("Phase 4 video gateway contract", () => {
       VIDEO_GATEWAY_REAL_CAMERA_ENABLED: "true",
       VIDEO_GATEWAY_ALLOW_PRIVATE_NETWORK: "true",
       VIDEO_GATEWAY_PATH_SECRET: "opaque-path-secret",
+      VIDEO_GATEWAY_MAX_VIEWERS_PER_CAMERA: "3",
     });
     assert.equal(config.realCameraEnabled, true);
     assert.equal(config.allowPrivateCameraNetwork, true);
     assert.equal(config.pathSecret, "opaque-path-secret");
+    assert.equal(config.maxViewerSessionsPerCamera, 3);
     assert.throws(
       () =>
         readVideoGatewayConfig({

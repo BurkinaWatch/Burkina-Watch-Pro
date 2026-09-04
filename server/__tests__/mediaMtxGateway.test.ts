@@ -14,6 +14,7 @@ const config = {
   realCameraEnabled: false,
   allowPrivateCameraNetwork: false,
   pathSecret: null,
+  maxViewerSessionsPerCamera: 8,
 };
 
 function authorizedRequest() {
@@ -110,6 +111,7 @@ describe("MediaMTX video gateway adapter", () => {
         allowPrivateCameraNetwork: true,
         apiToken: "gateway-token",
         pathSecret: "path-secret",
+        maxViewerSessionsPerCamera: 8,
       },
       fetchImpl: async () => new Response(null, { status: 204 }),
     });
