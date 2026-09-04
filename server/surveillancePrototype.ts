@@ -38,7 +38,7 @@ export function getSurveillanceTestCamera(
       "Flux synthétique local Phase 5. Cette caméra n'est pas une caméra de production.",
     connectionType: "rtsp",
     host: "local-test-source",
-    port: 8555,
+    port: 8554,
     streamPath: "/phase5-test",
     status: "unknown",
     isTest: true,
