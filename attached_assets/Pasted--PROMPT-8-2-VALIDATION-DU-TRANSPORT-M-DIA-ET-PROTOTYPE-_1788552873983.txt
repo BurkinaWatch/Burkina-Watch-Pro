@@ -1,0 +1,1597 @@
+# PROMPT 8.2 — VALIDATION DU TRANSPORT MÉDIA ET PROTOTYPE CAMERA AGENT → MEDIAMTX
+
+## CONTEXTE
+
+BurkinaWatch dispose maintenant d’une architecture de surveillance vidéo séparant clairement :
+
+* le **Control Plane** : BurkinaWatch / Express ;
+* le **Media Plane** : MediaMTX / WebRTC ;
+* les caméras IP ;
+* le futur **Camera Agent** installé dans le réseau local de l’utilisateur.
+
+Le Prompt 8 a défini l’architecture de production.
+
+Le Prompt 8.1 a préparé l’architecture et le mécanisme de contrôle du Camera Agent.
+
+Cependant, le Camera Agent actuel **ne transporte encore aucun flux vidéo**.
+
+Les éléments suivants restent volontairement non implémentés :
+
+* transport média réel Agent → MediaMTX ;
+* caméra physique ;
+* test LAN/WAN/CGNAT/4G/5G ;
+* STUN/TURN ;
+* MediaMTX distant ;
+* stockage persistant sécurisé du credential caméra côté Agent ;
+* fonctionnement multi-instance avec état partagé ;
+* charge réelle multi-agents.
+
+Le dernier audit a explicitement conclu qu’il ne fallait pas inventer un protocole média non validé.
+
+---
+
+# OBJECTIF DE CETTE PHASE
+
+Cette phase doit répondre à une seule question principale :
+
+> **Quel est le mécanisme technique correct, sécurisé et réellement supporté permettant au Camera Agent de prendre un flux vidéo local et de l’acheminer vers MediaMTX, sans exposer la caméra sur Internet ?**
+
+Puis construire un **prototype fonctionnel de bout en bout en environnement local/dev uniquement**.
+
+La chaîne cible de cette phase est :
+
+```text
+┌──────────────────────┐
+│ Source vidéo de test │
+│      RTSP            │
+└──────────┬───────────┘
+           │
+           ▼
+┌──────────────────────┐
+│    Camera Agent      │
+│      local           │
+└──────────┬───────────┘
+           │
+           │ transport média validé
+           ▼
+┌──────────────────────┐
+│       MediaMTX       │
+│     Media Plane      │
+└──────────┬───────────┘
+           │
+           │ WHEP/WebRTC
+           ▼
+┌──────────────────────┐
+│     BurkinaWatch     │
+│      navigateur      │
+└──────────────────────┘
+```
+
+## IMPORTANT
+
+Cette phase ne constitue PAS une mise en production.
+
+Elle ne doit PAS :
+
+* exposer une caméra sur Internet ;
+* ouvrir le port RTSP 554 publiquement ;
+* utiliser une DMZ ;
+* utiliser UPnP ;
+* désactiver le firewall ;
+* déployer un TURN public ;
+* déployer le système chez des utilisateurs réels ;
+* modifier l’architecture de sécurité existante pour faciliter le prototype.
+
+---
+
+# 1. AUDIT OBLIGATOIRE AVANT TOUT CODE
+
+Avant de modifier le moindre fichier :
+
+inspecter le repository réel.
+
+Lire notamment :
+
+```text
+docs/PHASE_8_AUDIT_INITIAL.md
+docs/PHASE_8_ARCHITECTURE_PRODUCTION.md
+docs/PHASE_8_1_CAMERA_AGENT.md
+```
+
+Si `PHASE_8_1_CAMERA_AGENT.md` n’existe pas, identifier le document réellement produit par la phase précédente.
+
+Inspecter également :
+
+* `package.json` ;
+* configuration Docker/Compose ;
+* MediaMTX ;
+* VideoGateway ;
+* routes caméra ;
+* authentification ;
+* autorisation ;
+* SSRF ;
+* chiffrement ;
+* gestion des secrets ;
+* frontend vidéo ;
+* WebRTC ;
+* WHEP ;
+* RTSP ;
+* ONVIF ;
+* tests ;
+* migrations ;
+* variables d’environnement.
+
+Rechercher dans tout le projet :
+
+```text
+MediaMTX
+mediamtx
+RTSP
+rtsp
+WebRTC
+WebRTC
+WHEP
+WHEP
+ONVIF
+FFmpeg
+GStreamer
+CameraAgent
+VideoGateway
+stream
+publisher
+reader
+```
+
+---
+
+# 2. NE PAS INVENTER LE PROTOCOLE MÉDIA
+
+C’est la règle principale de cette phase.
+
+Avant d’écrire le transport Agent → MediaMTX, déterminer précisément les mécanismes officiellement supportés par la version de MediaMTX utilisée par le projet.
+
+Vérifier notamment les possibilités de :
+
+* publication RTSP ;
+* publication WebRTC ;
+* publication SRT ;
+* publication RTMP ;
+* API ;
+* authentification ;
+* TLS ;
+* transport TCP ;
+* transport UDP ;
+* mécanismes de push/publish ;
+* mécanismes de pull/read ;
+* configuration dynamique ;
+* API de contrôle ;
+* hooks éventuels.
+
+Utiliser la documentation officielle de la version réellement utilisée.
+
+Ne pas supposer qu’une fonctionnalité existe simplement parce qu’elle existe dans une autre version.
+
+---
+
+# 3. CHOISIR LE PROTOCOLE APRÈS ANALYSE
+
+Produire avant l’implémentation un court document :
+
+```text
+docs/PHASE_8_2_MEDIA_TRANSPORT_DECISION.md
+```
+
+Ce document doit comparer les options réellement disponibles.
+
+Pour chaque option :
+
+```text
+PROTOCOLE
+Supporté par MediaMTX ?
+Supporté par l’Agent ?
+Bidirectionnel ?
+Nécessite connexion entrante ?
+Nécessite connexion sortante ?
+Compatible NAT ?
+Compatible CGNAT ?
+TLS possible ?
+Authentification possible ?
+Complexité
+Latence
+Fiabilité
+Avantages
+Inconvénients
+```
+
+Puis choisir une seule architecture pour le prototype.
+
+---
+
+# 4. CRITÈRE DE CHOIX
+
+Le protocole choisi doit respecter autant que possible :
+
+1. connexion sortante depuis le réseau local ;
+2. aucun port RTSP public ;
+3. authentification ;
+4. chiffrement lorsque nécessaire ;
+5. compatibilité MediaMTX ;
+6. reconnexion ;
+7. séparation Control Plane / Media Plane ;
+8. faible latence ;
+9. simplicité opérationnelle ;
+10. possibilité d’évolution vers NAT/CGNAT.
+
+Ne pas choisir une technologie simplement parce qu’elle est facile à coder.
+
+---
+
+# 5. ATTENTION À L’ARCHITECTURE NAT/CGNAT
+
+Ne pas confondre :
+
+```text
+Camera Agent → MediaMTX
+```
+
+avec :
+
+```text
+Navigateur → Camera Agent
+```
+
+L’objectif est précisément d’éviter la seconde architecture.
+
+Le navigateur ne doit jamais avoir besoin de contacter directement l’Agent.
+
+Architecture souhaitée :
+
+```text
+Camera Agent
+      │
+      │ OUTBOUND
+      ▼
+Media infrastructure
+      │
+      ▼
+WebRTC
+      │
+      ▼
+Browser
+```
+
+---
+
+# 6. SOURCE VIDÉO DE TEST
+
+Ne pas commencer par une caméra physique.
+
+Utiliser une source vidéo de test contrôlée.
+
+Par exemple :
+
+```text
+fichier vidéo local
+        ↓
+FFmpeg/GStreamer
+        ↓
+flux RTSP de test
+        ↓
+Camera Agent
+```
+
+ou toute autre source de test reproductible.
+
+La source doit être clairement identifiée comme :
+
+```text
+TEST SOURCE
+```
+
+Elle ne doit pas être présentée comme une caméra utilisateur réelle.
+
+---
+
+# 7. CAMÉRA DE TEST
+
+Si le repository dispose déjà d’une caméra virtuelle ou d’un flux RTSP de test, le réutiliser.
+
+Sinon créer uniquement une source locale de test.
+
+Ne pas :
+
+* scanner le LAN ;
+* découvrir automatiquement les caméras ;
+* tester des adresses arbitraires ;
+* tenter de trouver des caméras sur Internet.
+
+---
+
+# 8. PREMIER PROTOTYPE : SOURCE → AGENT
+
+Faire fonctionner :
+
+```text
+TEST RTSP SOURCE
+       ↓
+CAMERA AGENT
+```
+
+L’Agent doit être capable de :
+
+* se connecter au flux ;
+* vérifier que le flux est valide ;
+* détecter la perte du flux ;
+* se reconnecter ;
+* exposer uniquement l’état nécessaire au Control Plane.
+
+Le Camera Agent ne doit pas devenir un proxy réseau générique.
+
+---
+
+# 9. TRANSPORT AGENT → MEDIAMTX
+
+Une fois le protocole choisi :
+
+implémenter uniquement le transport validé.
+
+Exemple conceptuel :
+
+```text
+Camera Agent
+     │
+     │ publish
+     ▼
+MediaMTX
+     │
+     │ WHEP
+     ▼
+Browser
+```
+
+Le mécanisme exact doit correspondre à la décision documentée dans :
+
+```text
+docs/PHASE_8_2_MEDIA_TRANSPORT_DECISION.md
+```
+
+Ne pas implémenter plusieurs transports simultanément.
+
+---
+
+# 10. AUTHENTIFICATION DU PUBLISHER
+
+Le Camera Agent ne doit pas publier anonymement.
+
+MediaMTX doit pouvoir identifier le publisher.
+
+Utiliser :
+
+* credentials dédiés ;
+* token ;
+* mécanisme d’authentification supporté ;
+* ou autre mécanisme sécurisé réellement compatible avec MediaMTX.
+
+Ne jamais utiliser :
+
+```text
+SESSION_SECRET
+MASTER_ENCRYPTION_KEY
+REFRESH_TOKEN_SALT
+DATABASE_URL
+RAILWAY_DATABASE_URL
+```
+
+comme credential média.
+
+---
+
+# 11. IDENTITÉ DU FLUX
+
+Chaque flux doit avoir une identité déterministe.
+
+Conceptuellement :
+
+```text
+agentId
+cameraId
+streamId
+```
+
+Ne pas exposer :
+
+* mot de passe RTSP ;
+* URL RTSP complète ;
+* credentials ;
+* secret d’authentification média
+
+au frontend.
+
+---
+
+# 12. CONTROL PLANE / MEDIA PLANE
+
+Maintenir strictement :
+
+### Control Plane
+
+Express :
+
+```text
+User
+Camera
+Agent
+Permissions
+Stream metadata
+Tokens
+Audit
+Status
+```
+
+### Media Plane
+
+MediaMTX :
+
+```text
+Video
+RTSP
+WebRTC
+WHEP
+Publisher
+Reader
+```
+
+Express ne doit pas :
+
+```text
+recevoir chaque frame
+```
+
+ou
+
+```text
+proxyfier toute la vidéo
+```
+
+---
+
+# 13. VIDEO GATEWAY
+
+Réutiliser l’abstraction `VideoGateway` si elle existe déjà.
+
+Elle doit rester indépendante du fournisseur média.
+
+Conceptuellement :
+
+```text
+interface VideoGateway {
+  registerStream(...)
+  removeStream(...)
+  getStreamStatus(...)
+  createViewerAccess(...)
+  revokeViewerAccess(...)
+}
+```
+
+Adapter exactement à l’architecture réelle du projet.
+
+Ne pas créer une deuxième abstraction concurrente.
+
+---
+
+# 14. STREAM REGISTRATION
+
+Le Control Plane doit pouvoir associer :
+
+```text
+User
+  ↓
+Camera
+  ↓
+Agent
+  ↓
+Stream
+```
+
+Le Media Plane doit connaître le flux nécessaire.
+
+Ne pas exposer au navigateur des paramètres internes inutiles.
+
+---
+
+# 15. URL DU FLUX
+
+Le frontend ne doit jamais recevoir :
+
+```text
+rtsp://user:password@192.168.x.x:554/...
+```
+
+Le frontend doit recevoir uniquement ce qui est nécessaire pour établir la lecture WebRTC/WHEP.
+
+Les URLs internes et credentials doivent rester côté serveur/MediaMTX.
+
+---
+
+# 16. TOKEN DE LECTURE
+
+Le navigateur doit utiliser un mécanisme d’accès temporaire.
+
+Le token doit idéalement être :
+
+* court ;
+* expirant ;
+* lié à l’utilisateur ;
+* lié à la caméra ;
+* lié au stream ;
+* révocable lorsque l’architecture le permet.
+
+Un utilisateur ne doit pas pouvoir transformer son token :
+
+```text
+Camera A
+```
+
+en accès :
+
+```text
+Camera B
+```
+
+---
+
+# 17. WEBRTC / WHEP
+
+Réutiliser le lecteur WebRTC/WHEP déjà présent s’il existe.
+
+Sinon créer le minimum nécessaire.
+
+Le navigateur ne doit jamais tenter :
+
+```text
+RTSP
+```
+
+directement.
+
+Le chemin attendu est :
+
+```text
+MediaMTX
+   ↓
+WHEP/WebRTC
+   ↓
+Browser
+```
+
+---
+
+# 18. ÉTATS FRONTEND
+
+Le lecteur doit distinguer au minimum :
+
+```text
+IDLE
+CONNECTING
+LIVE
+OFFLINE
+DEGRADED
+ERROR
+DISCONNECTED
+```
+
+Ne pas afficher :
+
+```text
+LIVE
+```
+
+simplement parce que le serveur a répondu HTTP 200.
+
+Le frontend doit refléter réellement l’état du lecteur WebRTC.
+
+---
+
+# 19. RECONNEXION DU FLUX
+
+Tester :
+
+```text
+Source vidéo
+      ↓
+Agent
+      ↓
+MediaMTX
+      ↓
+Browser
+```
+
+Puis interrompre la source.
+
+Vérifier :
+
+```text
+LIVE
+↓
+DISCONNECTED/OFFLINE
+↓
+source restaurée
+↓
+reconnexion
+↓
+LIVE
+```
+
+Tester également le redémarrage de MediaMTX.
+
+---
+
+# 20. RECONNEXION AGENT
+
+Tester :
+
+```text
+Agent ONLINE
+↓
+MediaMTX arrêté
+↓
+MediaMTX redémarré
+↓
+Agent reconnecte
+↓
+flux récupéré
+```
+
+L’Agent doit utiliser un backoff.
+
+Ne pas générer des milliers de tentatives par seconde.
+
+---
+
+# 21. SÉCURITÉ DU FLUX
+
+Vérifier que :
+
+* aucune caméra n’est exposée publiquement ;
+* aucun RTSP entrant public n’est nécessaire ;
+* aucun port 554 Internet n’est ouvert ;
+* MediaMTX admin n’est pas public ;
+* les credentials ne sont pas dans les logs ;
+* les tokens ne sont pas dans les logs ;
+* les secrets ne sont pas dans Git ;
+* le frontend ne reçoit aucun secret caméra.
+
+---
+
+# 22. LOGS
+
+Tester les logs pendant :
+
+* connexion ;
+* publication ;
+* déconnexion ;
+* reconnexion ;
+* erreur ;
+* révocation.
+
+Les logs peuvent contenir :
+
+```text
+agentId
+cameraId
+streamId
+status
+timestamp
+```
+
+mais jamais :
+
+```text
+password
+token
+secret
+RTSP credential
+MASTER_ENCRYPTION_KEY
+```
+
+---
+
+# 23. SSRF
+
+Ne pas supprimer ni contourner le validateur SSRF existant.
+
+Si l’Agent reçoit une adresse de caméra :
+
+* validation stricte ;
+* contrôle du protocole ;
+* contrôle des adresses privées selon l’architecture ;
+* protection DNS rebinding ;
+* validation avant connexion.
+
+Documenter pourquoi certaines adresses locales peuvent être autorisées **uniquement dans le contexte du réseau local de l’Agent**.
+
+Ne pas transformer cette exception en bypass SSRF global du serveur.
+
+---
+
+# 24. CREDENTIALS CAMÉRA
+
+Cette phase doit déterminer comment les credentials caméra doivent circuler.
+
+Architecture à privilégier :
+
+```text
+Control Plane
+     │
+     │ credential protégé
+     ▼
+Camera Agent
+     │
+     ▼
+Camera
+```
+
+Mais ne pas encore considérer cette partie comme terminée si le stockage sécurisé local n’est pas correctement conçu.
+
+Évaluer :
+
+* stockage local chiffré ;
+* permissions du fichier ;
+* secret de déchiffrement ;
+* rotation ;
+* suppression ;
+* mémoire ;
+* logs ;
+* crash dumps éventuels.
+
+Si une solution sécurisée n’est pas encore disponible :
+
+**ne pas stocker un mot de passe en clair simplement pour faire fonctionner la démo.**
+
+Utiliser une source de test sans authentification ou des credentials temporaires de test clairement isolés.
+
+---
+
+# 25. NE PAS IMPLÉMENTER LE STOCKAGE FINAL À LA HÂTE
+
+Le stockage persistant sécurisé des credentials côté Agent est une problématique distincte.
+
+Si sa conception nécessite une décision d’architecture supplémentaire :
+
+* documenter le problème ;
+* proposer les solutions ;
+* ne pas introduire une solution faible simplement pour obtenir `LIVE`.
+
+---
+
+# 26. MULTI-CAMÉRAS
+
+Cette phase ne doit pas encore viser une charge réelle.
+
+Cependant, l’architecture doit permettre conceptuellement :
+
+```text
+Agent A
+ ├── Camera A
+ ├── Camera B
+ └── Camera C
+```
+
+Les identités de flux doivent rester distinctes.
+
+Tester au minimum :
+
+```text
+Camera A → Stream A
+Camera B → Stream B
+```
+
+si cela peut être fait sans complexifier inutilement le prototype.
+
+---
+
+# 27. MULTI-UTILISATEURS
+
+Tester l'isolation :
+
+```text
+User A
+ └── Agent A
+      └── Camera A
+
+User B
+ └── Agent B
+      └── Camera B
+```
+
+Vérifier que :
+
+```text
+User A ❌ Stream B
+User B ❌ Stream A
+```
+
+même si les IDs sont manipulés directement.
+
+---
+
+# 28. IDOR
+
+Créer des tests pour :
+
+```text
+GET /stream/camera-B
+```
+
+avec un utilisateur qui ne possède que :
+
+```text
+camera-A
+```
+
+Résultat attendu :
+
+```text
+403
+```
+
+ou
+
+```text
+404
+```
+
+selon les conventions de sécurité du projet.
+
+Même chose pour :
+
+* Agent ;
+* Camera ;
+* Stream ;
+* viewer token.
+
+---
+
+# 29. RATE LIMITING
+
+Les opérations suivantes doivent être protégées :
+
+```text
+publish
+viewer-token
+stream-status
+agent-auth
+reconnect
+```
+
+Adapter les limites à l’architecture réelle.
+
+Ne pas appliquer un rate limit tellement strict qu’un Agent légitime ne peut plus fonctionner.
+
+---
+
+# 30. MEDIA GATEWAY STATUS
+
+Le Control Plane doit pouvoir distinguer :
+
+```text
+Agent status
+Camera status
+Stream status
+Viewer status
+```
+
+Exemple :
+
+```text
+Agent = ONLINE
+Camera = ONLINE
+Stream = OFFLINE
+Viewer = DISCONNECTED
+```
+
+Ne pas fusionner tous ces états en un simple :
+
+```text
+ONLINE
+```
+
+---
+
+# 31. TEST DE LATENCE
+
+Mesurer approximativement :
+
+```text
+Source
+→ Agent
+→ MediaMTX
+→ WebRTC
+→ Browser
+```
+
+Documenter :
+
+* méthode de mesure ;
+* résultat ;
+* conditions ;
+* codec utilisé ;
+* résolution ;
+* framerate ;
+* bitrate.
+
+Ne pas promettre une latence spécifique sans mesure.
+
+---
+
+# 32. CODECS
+
+Identifier les codecs utilisés par la source de test.
+
+Vérifier leur compatibilité avec :
+
+```text
+MediaMTX
+WebRTC
+navigateur
+```
+
+Documenter les éventuels problèmes.
+
+Si une conversion est nécessaire :
+
+```text
+RTSP
+↓
+FFmpeg/GStreamer
+↓
+codec compatible
+↓
+MediaMTX
+```
+
+la documenter clairement.
+
+Ne pas transcoder inutilement si le flux est déjà compatible.
+
+---
+
+# 33. RESSOURCES
+
+Mesurer approximativement :
+
+* CPU ;
+* RAM ;
+* débit réseau ;
+* nombre de processus ;
+* utilisation FFmpeg/GStreamer éventuelle.
+
+Le but est de détecter les architectures manifestement trop coûteuses.
+
+Ne pas lancer un test de charge massif.
+
+---
+
+# 34. TEST DE RESTART
+
+Tester :
+
+```text
+Agent restart
+MediaMTX restart
+Browser refresh
+Source restart
+```
+
+et vérifier la récupération du flux.
+
+Documenter chaque résultat.
+
+---
+
+# 35. TEST DE PERTE RÉSEAU SIMULÉE
+
+Sans encore utiliser Internet réel :
+
+simuler une coupure entre Agent et MediaMTX.
+
+Vérifier :
+
+```text
+connexion
+↓
+coupure
+↓
+détection
+↓
+backoff
+↓
+restauration
+↓
+reconnexion
+```
+
+---
+
+# 36. TEST DU CONTROL PLANE
+
+Vérifier que la vidéo continue de respecter :
+
+```text
+authentication
+authorization
+ownership
+token expiration
+token binding
+revocation
+```
+
+Un flux média ne doit pas devenir un moyen de contourner le Control Plane.
+
+---
+
+# 37. TEST TOKEN EXPIRÉ
+
+Tester :
+
+```text
+token valide
+↓
+lecture
+↓
+expiration
+↓
+nouvelle tentative
+```
+
+Le comportement doit être documenté.
+
+Un token expiré ne doit pas permettre une nouvelle session indéfiniment.
+
+---
+
+# 38. TEST TOKEN CROSS-CAMERA
+
+Tester :
+
+```text
+Token Camera A
+```
+
+puis tentative d’utilisation sur :
+
+```text
+Camera B
+```
+
+Résultat attendu :
+
+```text
+REFUS
+```
+
+---
+
+# 39. AUCUN PARTAGE PUBLIC
+
+Ne pas implémenter :
+
+```text
+public stream URL
+```
+
+ou :
+
+```text
+share camera publicly
+```
+
+La surveillance reste privée et authentifiée.
+
+---
+
+# 40. AUCUN ENREGISTREMENT
+
+Ne pas implémenter :
+
+* DVR ;
+* stockage vidéo ;
+* replay ;
+* capture automatique ;
+* analyse IA.
+
+Ce sera traité dans une phase séparée.
+
+---
+
+# 41. AUCUN STUN/TURN PRODUCTION
+
+Cette phase ne doit pas prétendre résoudre :
+
+```text
+NAT
+CGNAT
+NAT symétrique
+STUN
+TURN
+4G
+5G
+```
+
+Elle doit simplement préparer le transport de manière compatible avec l’évolution future.
+
+Les tests réseau réels feront l’objet d’une phase dédiée.
+
+---
+
+# 42. BASE DE DONNÉES
+
+Avant toute modification :
+
+* inspecter le schéma actuel ;
+* vérifier les migrations ;
+* vérifier Railway ;
+* déterminer si une modification est réellement nécessaire.
+
+Ne pas exécuter :
+
+```text
+db:push
+db:push --force
+```
+
+Ne pas reset la base.
+
+Ne pas supprimer de tables.
+
+Si une migration est indispensable :
+
+1. créer une migration dédiée ;
+2. la rendre non destructive ;
+3. documenter précisément les changements ;
+4. ne pas l’exécuter automatiquement sans validation.
+
+---
+
+# 43. TESTS AUTOMATISÉS
+
+Ajouter les tests nécessaires pour couvrir au minimum :
+
+### Transport
+
+* publication réussie ;
+* publication refusée ;
+* perte de connexion ;
+* reconnexion.
+
+### Agent
+
+* authentification ;
+* révocation ;
+* reconnexion ;
+* heartbeat.
+
+### Stream
+
+* création ;
+* état ;
+* suppression ;
+* accès interdit.
+
+### Sécurité
+
+* IDOR ;
+* token expiré ;
+* token cross-camera ;
+* cross-user ;
+* credential leakage ;
+* log leakage ;
+* SSRF.
+
+---
+
+# 44. TEST D’INTÉGRATION END-TO-END
+
+Le test principal doit démontrer :
+
+```text
+TEST VIDEO SOURCE
+      ↓
+CAMERA AGENT
+      ↓
+MEDIA TRANSPORT
+      ↓
+MEDIAMTX
+      ↓
+WHEP/WEBRTC
+      ↓
+BURKINAWATCH
+      ↓
+VIDEO LIVE
+```
+
+Le résultat doit être observable.
+
+Ne pas simplement déclarer :
+
+```text
+stream registered successfully
+```
+
+Il faut démontrer que le navigateur reçoit réellement le média.
+
+---
+
+# 45. TEST D’ÉCHEC END-TO-END
+
+Tester :
+
+```text
+Source arrêtée
+```
+
+Le frontend ne doit pas afficher :
+
+```text
+LIVE
+```
+
+Tester :
+
+```text
+Agent arrêté
+```
+
+Le flux doit finir par devenir indisponible.
+
+Tester :
+
+```text
+MediaMTX arrêté
+```
+
+Le flux doit devenir indisponible.
+
+---
+
+# 46. ENVIRONNEMENT
+
+Tout doit rester clairement marqué :
+
+```text
+DEVELOPMENT
+TEST
+LOCAL
+```
+
+Ne pas utiliser les credentials de production.
+
+Ne pas connecter le prototype à une vraie caméra d’un utilisateur.
+
+Ne pas envoyer de vidéo sensible vers une infrastructure publique de test.
+
+---
+
+# 47. DOCKER / MEDIAMTX
+
+Si MediaMTX est exécuté localement :
+
+conserver les protections existantes.
+
+Notamment :
+
+```text
+RTSP      → localhost uniquement
+ADMIN API → localhost uniquement
+WHEP      → localhost/test uniquement
+```
+
+Ne pas rendre ces ports publics simplement pour faciliter les tests.
+
+Si un changement est nécessaire, documenter précisément :
+
+* pourquoi ;
+* pendant combien de temps ;
+* quel risque ;
+* comment revenir à l’état sécurisé.
+
+---
+
+# 48. OBSERVABILITÉ
+
+Prévoir des métriques ou logs permettant de comprendre :
+
+```text
+agent connected
+agent disconnected
+stream published
+stream unavailable
+viewer connected
+viewer disconnected
+```
+
+Sans enregistrer les secrets.
+
+---
+
+# 49. DOCUMENTATION FINALE
+
+Créer :
+
+```text
+docs/PHASE_8_2_MEDIA_TRANSPORT.md
+```
+
+Le document doit contenir :
+
+1. architecture retenue ;
+2. protocole média choisi ;
+3. justification ;
+4. version MediaMTX ;
+5. configuration utilisée ;
+6. flux de données ;
+7. authentification ;
+8. TLS ;
+9. ports ;
+10. sécurité ;
+11. source vidéo de test ;
+12. codecs ;
+13. latence ;
+14. CPU/RAM ;
+15. reconnexion ;
+16. limites ;
+17. problèmes rencontrés ;
+18. tests ;
+19. résultats ;
+20. prochaines étapes.
+
+---
+
+# 50. RAPPORT DE DÉCISION
+
+Le fichier :
+
+```text
+docs/PHASE_8_2_MEDIA_TRANSPORT_DECISION.md
+```
+
+doit répondre clairement à :
+
+### Pourquoi ce protocole ?
+
+### Pourquoi pas les autres ?
+
+### Est-il compatible avec MediaMTX ?
+
+### Est-il compatible avec une future architecture NAT/CGNAT ?
+
+### A-t-il besoin d'une connexion entrante ?
+
+### Utilise-t-il TLS ?
+
+### Comment l’Agent s’authentifie-t-il ?
+
+### Comment MediaMTX authentifie-t-il le publisher ?
+
+### Comment le flux est-il reconnecté ?
+
+### Quelles sont les limites ?
+
+---
+
+# 51. CE QUI DOIT RESTER NON IMPLÉMENTÉ
+
+Sauf nécessité absolue découverte pendant cette phase, ne pas implémenter :
+
+* STUN ;
+* TURN ;
+* CGNAT réel ;
+* NAT symétrique ;
+* 4G ;
+* 5G ;
+* Camera Agent multi-instance ;
+* infrastructure distribuée ;
+* haute disponibilité ;
+* load balancing ;
+* enregistrement ;
+* IA vidéo ;
+* reconnaissance faciale ;
+* partage public ;
+* réseau mesh ;
+* scanner LAN ;
+* découverte automatique des caméras ;
+* UPnP ;
+* DMZ.
+
+Ces sujets seront traités séparément.
+
+---
+
+# 52. RAPPORT FINAL OBLIGATOIRE
+
+À la fin, fournir un rapport précis.
+
+## A. Architecture
+
+Indiquer :
+
+```text
+Source
+→ Agent
+→ Transport
+→ MediaMTX
+→ WebRTC/WHEP
+→ Browser
+```
+
+## B. Protocole choisi
+
+Nom exact + justification.
+
+## C. Version MediaMTX
+
+Version exacte utilisée.
+
+## D. Implémentation
+
+Lister exactement :
+
+* fichiers créés ;
+* fichiers modifiés ;
+* services ajoutés ;
+* variables d’environnement ajoutées ;
+* endpoints ajoutés ;
+* tests ajoutés.
+
+## E. Base de données
+
+Indiquer :
+
+```text
+migration créée : OUI/NON
+migration exécutée : OUI/NON
+db:push exécuté : OUI/NON
+db:push --force exécuté : OUI/NON
+reset effectué : OUI/NON
+```
+
+## F. Tests
+
+Donner les résultats exacts de :
+
+```text
+npm run check
+npm run build
+npm test
+git diff --check
+```
+
+ainsi que :
+
+```text
+test publication
+test lecture WebRTC
+test reconnexion
+test token
+test ownership
+test IDOR
+test révocation
+test sécurité
+```
+
+## G. Performance
+
+Donner les mesures réellement obtenues :
+
+```text
+résolution
+fps
+bitrate
+latence approximative
+CPU
+RAM
+```
+
+## H. Sécurité
+
+Confirmer explicitement :
+
+```text
+RTSP public : NON
+port 554 public : NON
+API admin MediaMTX publique : NON
+UPnP : NON
+DMZ : NON
+credentials frontend : NON
+secrets dans logs : NON
+secrets Git : NON
+```
+
+## I. Non testé
+
+Lister explicitement :
+
+```text
+WAN réel
+CGNAT
+NAT symétrique
+4G
+5G
+STUN
+TURN
+caméra physique
+MediaMTX distant
+multi-instance
+charge réelle
+```
+
+## J. Verdict
+
+Le verdict doit être exactement l’un des trois :
+
+```text
+READY FOR PHASE 8.3
+```
+
+ou
+
+```text
+READY WITH CONDITIONS
+```
+
+ou
+
+```text
+NOT READY
+```
+
+Ne jamais déclarer `READY FOR PHASE 8.3` si le flux vidéo de test ne fonctionne pas réellement de bout en bout.
+
+---
+
+# 53. RÈGLE ABSOLUE
+
+**Ne jamais sacrifier l’architecture de sécurité pour obtenir une vidéo LIVE.**
+
+Si une fonctionnalité n’est pas techniquement validée :
+
+1. ne pas l’inventer ;
+2. ne pas la simuler ;
+3. ne pas la déclarer terminée ;
+4. documenter le blocage ;
+5. proposer une solution ;
+6. attendre la prochaine phase.
+
+Le but de cette phase est de transformer :
+
+```text
+Architecture théorique
+```
+
+en :
+
+```text
+Prototype média réellement fonctionnel
+```
+
+tout en conservant :
+
+```text
+Control Plane sécurisé
++
+Media Plane séparé
++
+aucune exposition RTSP publique
++
+Agent identifié
++
+flux authentifié
++
+reconnexion
++
+accès WebRTC contrôlé
+```
+
+**Ne commence pas une autre phase automatiquement après ce travail.**
+
+Arrête-toi après le rapport final et attends une validation humaine.
