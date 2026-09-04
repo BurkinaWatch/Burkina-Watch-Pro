@@ -1,0 +1,450 @@
+Nous passons maintenant à la PHASE 3 de Street View.
+
+Tu as précédemment identifié que :
+
+* `StreetView.tsx` existe déjà ;
+* l'entrée Street View dans `HamburgerMenu.tsx` est désactivée ;
+* la route `/streetview` dans `App.tsx` est commentée ;
+* aucune reconstruction de Street View n'a encore été effectuée depuis cet audit.
+
+L'objectif de cette étape est de réactiver proprement le module existant et de construire le PREMIER FLUX FONCTIONNEL de contribution.
+
+IMPORTANT :
+
+Nous ne construisons PAS encore le moteur de reconstruction 3D.
+
+Nous ne devons PAS prétendre qu'une vidéo devient une scène 3D à cette étape.
+
+Le résultat attendu est :
+
+UTILISATEUR
+↓
+STREET VIEW
+↓
+NOUVELLE CONTRIBUTION
+↓
+SÉLECTION/ENREGISTREMENT D'UNE VIDÉO
+↓
+INFORMATIONS DU LIEU
+↓
+GÉOLOCALISATION
+↓
+UPLOAD
+↓
+VALIDATION
+↓
+JOB DE TRAITEMENT
+↓
+STATUT "EN ATTENTE DE RECONSTRUCTION"
+
+==================================================
+
+1. RÉACTIVATION DU MODULE EXISTANT
+   ==================================================
+
+Réactive proprement :
+
+* l'entrée Street View dans `HamburgerMenu.tsx` ;
+* la route `/streetview` dans `App.tsx`.
+
+Réutilise autant que possible `StreetView.tsx`.
+
+NE recrée pas inutilement une nouvelle page si le composant existant peut être modernisé proprement.
+
+Le module doit respecter intégralement :
+
+* le système de navigation existant ;
+* l'authentification existante ;
+* le design system existant ;
+* la palette de couleurs actuelle de Burkina Watch ;
+* les composants existants lorsqu'ils sont pertinents.
+
+Ne modifie pas les autres fonctionnalités de l'application.
+
+==================================================
+2. ÉTAT INITIAL DE STREET VIEW
+==============================
+
+Lorsque l'utilisateur ouvre Street View, il doit comprendre immédiatement la vision.
+
+Présenter un espace du type :
+
+STREET VIEW
+
+"Explorez et construisez progressivement le Burkina Faso en 3D."
+
+Puis deux actions principales :
+
+[ Explorer ]
+
+[ Ajouter une contribution ]
+
+L'exploration peut rester limitée à l'affichage des scènes existantes si aucune scène n'est encore disponible.
+
+Ne fabrique PAS de fausses scènes 3D pour donner l'impression que la fonction fonctionne.
+
+S'il n'existe aucune scène :
+
+"Le Burkina Faso 3D se construit progressivement."
+
+Puis :
+
+"Soyez parmi les premiers à documenter un lieu."
+
+==================================================
+3. CRÉER UNE CONTRIBUTION
+=========================
+
+Créer un parcours utilisateur clair permettant de commencer une contribution.
+
+L'utilisateur doit pouvoir :
+
+* sélectionner une vidéo existante ;
+* ou enregistrer une vidéo si les capacités actuelles de la plateforme le permettent.
+
+Pour cette première version, la sélection d'une vidéo existante est prioritaire.
+
+Ne force pas l'accès caméra si l'architecture actuelle ne le permet pas proprement.
+
+==================================================
+4. INFORMATIONS DE LA CONTRIBUTION
+==================================
+
+Avant l'envoi, permettre de renseigner :
+
+* titre ;
+* description facultative ;
+* lieu ;
+* ville ;
+* quartier ;
+* coordonnées GPS.
+
+La géolocalisation doit pouvoir fonctionner de deux manières :
+
+A. GPS disponible automatiquement
+
+B. sélection manuelle du lieu sur la carte
+
+Réutilise les mécanismes cartographiques déjà présents dans Burkina Watch.
+
+Ne crée pas une nouvelle solution cartographique si une solution existante peut être réutilisée.
+
+==================================================
+5. INFORMATIONS TECHNIQUES DE LA VIDÉO
+======================================
+
+Lors de la sélection de la vidéo, récupérer si possible :
+
+* format ;
+* taille ;
+* durée ;
+* résolution ;
+* orientation ;
+* métadonnées disponibles ;
+* GPS intégré à la vidéo lorsqu'il existe.
+
+Afficher les erreurs de manière compréhensible.
+
+Exemples :
+
+"Cette vidéo est trop courte."
+
+"Cette vidéo dépasse la taille maximale autorisée."
+
+"Le format de cette vidéo n'est pas pris en charge."
+
+==================================================
+6. VALIDATION AVANT UPLOAD
+==========================
+
+Avant l'upload final, effectuer les contrôles disponibles :
+
+* type de fichier ;
+* taille ;
+* format ;
+* durée ;
+* fichier exploitable ;
+* authentification de l'utilisateur.
+
+Prévoir des limites configurables.
+
+NE PAS mettre de valeurs arbitraires directement dans plusieurs fichiers.
+
+Centraliser les limites dans la configuration appropriée.
+
+==================================================
+7. UPLOAD
+=========
+
+Utiliser l'architecture de stockage déjà présente dans Burkina Watch lorsqu'elle est adaptée.
+
+NE stocke PAS les vidéos directement dans la base de données.
+
+La base de données doit conserver les métadonnées et la référence vers le fichier.
+
+Si l'infrastructure actuelle n'est pas suffisamment adaptée aux gros fichiers, indique-le clairement avant de choisir une solution externe.
+
+==================================================
+8. CONTRIBUTION ET STATUT
+=========================
+
+Après l'upload, créer ou utiliser l'entité de contribution appropriée selon l'architecture validée précédemment.
+
+La contribution doit avoir un statut clair.
+
+Exemple :
+
+UPLOADING
+↓
+UPLOADED
+↓
+VALIDATING
+↓
+QUEUED
+↓
+WAITING_FOR_3D
+
+Tu peux utiliser une nomenclature différente si ton audit précédent a identifié une meilleure structure.
+
+L'utilisateur doit pouvoir consulter le statut de sa contribution.
+
+==================================================
+9. JOB ASYNCHRONE
+=================
+
+Préparer le système afin que le traitement futur soit asynchrone.
+
+IMPORTANT :
+
+Ne lance PAS encore un moteur de reconstruction 3D.
+
+Le job peut actuellement effectuer uniquement :
+
+* validation ;
+* extraction de métadonnées ;
+* préparation ;
+* génération éventuelle de miniature ;
+* préparation du fichier pour le futur pipeline.
+
+Puis terminer avec un statut indiquant :
+
+"En attente de reconstruction 3D."
+
+L'objectif est de préparer proprement le pipeline sans inventer une reconstruction.
+
+==================================================
+10. MINIATURE
+=============
+
+Si l'infrastructure actuelle le permet, générer une miniature représentative de la contribution.
+
+Cette miniature servira ultérieurement :
+
+* dans la liste des contributions ;
+* sur la carte ;
+* dans les résultats de recherche ;
+* dans le profil du contributeur.
+
+==================================================
+11. LISTE DES CONTRIBUTIONS
+===========================
+
+Dans Street View, prévoir une section permettant à l'utilisateur de voir ses contributions.
+
+Chaque contribution peut afficher :
+
+* miniature ;
+* titre ;
+* lieu ;
+* date ;
+* statut ;
+* qualité lorsqu'elle sera disponible.
+
+Exemples :
+
+"Marché de Ouagadougou"
+Ouagadougou
+● En attente de traitement
+
+ou :
+
+"Rue ..."
+Bobo-Dioulasso
+● Traitement en cours
+
+==================================================
+12. EXPLORATION
+===============
+
+La section Explorer doit être préparée pour le futur système de scènes 3D.
+
+Pour l'instant :
+
+* afficher les scènes réellement disponibles ;
+* ne pas générer de fausses données ;
+* ne pas simuler une couverture inexistante.
+
+Si aucune scène n'existe :
+
+afficher un état vide élégant et cohérent avec Burkina Watch.
+
+==================================================
+13. PRÉPARATION DU VIEWER 3D
+============================
+
+Ne construis PAS encore le moteur complet.
+
+Mais prépare une architecture permettant ultérieurement :
+
+Scene
+↓
+3D Asset
+↓
+3D Viewer
+
+Le viewer doit pouvoir recevoir ultérieurement une URL ou un identifiant de scène 3D.
+
+Ne charge aucun modèle fictif.
+
+==================================================
+14. SÉCURITÉ
+============
+
+Avant d'accepter une contribution :
+
+* utilisateur authentifié ;
+* validation stricte du fichier ;
+* limites de taille ;
+* contrôle MIME ;
+* protection des endpoints ;
+* rate limiting si déjà disponible ;
+* contrôle d'autorisation ;
+* aucune confiance accordée aux métadonnées envoyées par le client.
+
+Ne mets aucune clé secrète dans le frontend.
+
+==================================================
+15. GESTION DES ERREURS
+=======================
+
+Toutes les étapes doivent avoir des états d'erreur explicites :
+
+UPLOAD_FAILED
+VALIDATION_FAILED
+PROCESSING_FAILED
+
+Les erreurs internes ne doivent pas être exposées directement à l'utilisateur.
+
+L'utilisateur doit recevoir un message compréhensible.
+
+Les détails techniques doivent aller dans les logs.
+
+==================================================
+16. EXPÉRIENCE UTILISATEUR
+==========================
+
+L'interface doit donner l'impression d'une fonctionnalité réellement conçue pour Burkina Watch.
+
+Évite :
+
+* composants génériques générés automatiquement ;
+* interfaces surchargées ;
+* cartes inutiles ;
+* énormes boutons ;
+* textes artificiels ;
+* faux indicateurs ;
+* données fictives.
+
+Le design doit rester sobre, professionnel et cohérent avec l'application existante.
+
+==================================================
+17. MOBILE
+==========
+
+Street View doit être utilisable correctement sur mobile.
+
+Le parcours principal doit être :
+
+Street View
+→ Ajouter
+→ Choisir une vidéo
+→ Vérifier
+→ Localiser
+→ Publier
+→ Suivre le traitement.
+
+Évite les étapes inutiles.
+
+==================================================
+18. CE QUI EST INTERDIT À CETTE ÉTAPE
+=====================================
+
+NE PAS :
+
+* intégrer un moteur NeRF ;
+* intégrer 3D Gaussian Splatting ;
+* intégrer un moteur photogrammétrique externe ;
+* prétendre transformer réellement la vidéo en 3D ;
+* créer de fausses scènes ;
+* créer de fausses statistiques ;
+* créer de faux marqueurs de couverture ;
+* modifier les fonctionnalités hors Street View ;
+* changer la palette globale ;
+* remplacer l'architecture backend existante sans nécessité ;
+* créer une application séparée.
+
+==================================================
+19. TESTS
+=========
+
+Après implémentation, effectuer des tests sur :
+
+1. ouverture de Street View ;
+2. navigation ;
+3. authentification ;
+4. sélection d'une vidéo valide ;
+5. rejet d'une vidéo invalide ;
+6. dépassement de taille ;
+7. upload ;
+8. création de contribution ;
+9. récupération du statut ;
+10. génération de miniature si disponible ;
+11. erreur réseau ;
+12. utilisateur non authentifié ;
+13. accès à une contribution appartenant à un autre utilisateur ;
+14. comportement mobile.
+
+Ne considère pas une fonctionnalité comme terminée simplement parce que le frontend l'affiche.
+
+Vérifie le flux réel frontend → backend → stockage → base de données.
+
+==================================================
+20. RAPPORT FINAL
+=================
+
+Une fois cette étape terminée, donne-moi :
+
+A. fichiers modifiés ;
+B. fichiers créés ;
+C. architecture utilisée ;
+D. routes API ajoutées/modifiées ;
+E. modifications de base de données ;
+F. système de stockage utilisé ;
+G. système de job utilisé ;
+H. limites configurées ;
+I. tests réalisés ;
+J. tests réussis ;
+K. problèmes rencontrés ;
+L. éléments restant à construire pour la vraie reconstruction 3D.
+
+IMPORTANT :
+
+À la fin, confirme explicitement :
+
+"Street View est réactivé et le flux contribution → upload → traitement préparatoire fonctionne."
+
+OU, si ce n'est pas entièrement fonctionnel :
+
+"Street View n'est pas encore entièrement fonctionnel."
+
+Ne prétends jamais qu'une reconstruction 3D fonctionne si aucun véritable moteur de reconstruction n'a encore été intégré.
