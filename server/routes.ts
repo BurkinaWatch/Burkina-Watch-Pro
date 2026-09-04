@@ -5318,6 +5318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       publisherPassword &&
       body.user === publisherUsername &&
       typeof body.password === "string" &&
+      Buffer.byteLength(body.password) === Buffer.byteLength(publisherPassword) &&
       crypto.timingSafeEqual(
         Buffer.from(body.password),
         Buffer.from(publisherPassword),
