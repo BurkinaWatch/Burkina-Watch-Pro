@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Upload,
   Video,
+  Trash2,
   X,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -35,6 +36,10 @@ type StreetviewConfig = {
   minDurationSeconds: number;
   maxDurationSeconds: number;
   allowedMimeTypes: string[];
+  storage: "filesystem" | "s3";
+  durableStorage: boolean;
+  uploadMode: "proxy" | "multipart";
+  multipartPartSizeBytes: number | null;
 };
 
 type VideoInspection = {
@@ -191,7 +196,13 @@ function inspectVideo(file: File): Promise<VideoInspection> {
   });
 }
 
-function ContributionCard({ contribution }: { contribution: Contribution }) {
+function ContributionCard({
+  contribution,
+  onDelete,
+}: {
+  contribution: Contribution;
+  onDelete: (id: string) => void;
+}) {
   return (
     <div className="flex gap-3 rounded-xl border bg-card p-3">
       {contribution.thumbnailKey ? (
@@ -208,9 +219,20 @@ function ContributionCard({ contribution }: { contribution: Contribution }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <p className="truncate font-medium">{contribution.title}</p>
-          <Badge variant={statusTone(contribution.status)} className="shrink-0 text-[10px]">
-            {statusLabels[contribution.status] || contribution.status}
-          </Badge>
+          <div className="flex shrink-0 items-center gap-1">
+            <Badge variant={statusTone(contribution.status)} className="text-[10px]">
+              {statusLabels[contribution.status] || contribution.status}
+            </Badge>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              aria-label={`Supprimer ${contribution.title}`}
+              onClick={() => onDelete(contribution.id)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
           {contribution.city}{contribution.quartier ? ` · ${contribution.quartier}` : ""}
@@ -347,6 +369,8 @@ export default function StreetViewContributionFlow() {
     }
 
     setIsSubmitting(true);
+    let sessionToken: string | null = null;
+    let createdContributionId: string | null = null;
     try {
       const createResponse = await fetch("/api/streetview/contributions", {
         method: "POST",
@@ -372,15 +396,90 @@ export default function StreetViewContributionFlow() {
         throw new Error(`${createResponse.status}: ${await createResponse.text()}`);
       }
       const created = await createResponse.json() as { id: string };
+      createdContributionId = created.id;
 
-      const uploadResponse = await fetch(`/api/streetview/contributions/${created.id}/upload`, {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": selectedFile.type },
-        body: selectedFile,
-      });
-      if (!uploadResponse.ok) {
-        throw new Error(`${uploadResponse.status}: ${await uploadResponse.text()}`);
+      if (config?.uploadMode === "multipart") {
+        const sessionResponse = await fetch(
+          `/api/streetview/contributions/${created.id}/upload-session`,
+          {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ size: selectedFile.size, mimeType: selectedFile.type }),
+          },
+        );
+        if (!sessionResponse.ok) {
+          throw new Error(`${sessionResponse.status}: ${await sessionResponse.text()}`);
+        }
+        const session = await sessionResponse.json() as {
+          sessionToken: string;
+          partSizeBytes: number;
+          partCount: number;
+        };
+        sessionToken = session.sessionToken;
+        const uploadedParts: Array<{ partNumber: number; etag: string }> = [];
+        for (let partNumber = 1; partNumber <= session.partCount; partNumber += 1) {
+          const start = (partNumber - 1) * session.partSizeBytes;
+          const end = Math.min(start + session.partSizeBytes, selectedFile.size);
+          let lastError: unknown = null;
+          for (let attempt = 1; attempt <= 3; attempt += 1) {
+            try {
+              const urlResponse = await fetch(
+                `/api/streetview/contributions/${created.id}/upload-session/part-url`,
+                {
+                  method: "POST",
+                  credentials: "include",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ sessionToken, partNumber }),
+                },
+              );
+              if (!urlResponse.ok) {
+                throw new Error(`${urlResponse.status}: ${await urlResponse.text()}`);
+              }
+              const { url } = await urlResponse.json() as { url: string };
+              const partResponse = await fetch(url, {
+                method: "PUT",
+                headers: { "Content-Type": selectedFile.type },
+                body: selectedFile.slice(start, end),
+              });
+              if (!partResponse.ok) {
+                throw new Error(`Part ${partNumber} upload failed (${partResponse.status})`);
+              }
+              const etag = partResponse.headers.get("ETag") || partResponse.headers.get("etag");
+              if (!etag) throw new Error("Le stockage n'a pas renvoyé l'ETag de la partie.");
+              uploadedParts.push({ partNumber, etag });
+              lastError = null;
+              break;
+            } catch (error) {
+              lastError = error;
+              await new Promise((resolve) => setTimeout(resolve, Math.min(1000 * attempt, 3000)));
+            }
+          }
+          if (lastError) throw lastError;
+        }
+
+        const completeResponse = await fetch(
+          `/api/streetview/contributions/${created.id}/upload-session/complete`,
+          {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionToken, parts: uploadedParts }),
+          },
+        );
+        if (!completeResponse.ok) {
+          throw new Error(`${completeResponse.status}: ${await completeResponse.text()}`);
+        }
+      } else {
+        const uploadResponse = await fetch(`/api/streetview/contributions/${created.id}/upload`, {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": selectedFile.type },
+          body: selectedFile,
+        });
+        if (!uploadResponse.ok) {
+          throw new Error(`${uploadResponse.status}: ${await uploadResponse.text()}`);
+        }
       }
 
       await queryClient.invalidateQueries({ queryKey: ["/api/streetview/contributions"] });
@@ -391,6 +490,14 @@ export default function StreetViewContributionFlow() {
       resetForm();
       setMode("home");
     } catch (error) {
+      if (sessionToken && createdContributionId) {
+        void fetch(`/api/streetview/contributions/${createdContributionId}/upload-session/abort`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionToken }),
+        }).catch(() => undefined);
+      }
       toast({
         title: "Échec de la contribution",
         description: errorMessage(error),
@@ -398,6 +505,21 @@ export default function StreetViewContributionFlow() {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Supprimer définitivement cette contribution et ses fichiers ?")) return;
+    try {
+      const response = await fetch(`/api/streetview/contributions/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error(`${response.status}: ${await response.text()}`);
+      await queryClient.invalidateQueries({ queryKey: ["/api/streetview/contributions"] });
+      toast({ title: "Contribution supprimée" });
+    } catch (error) {
+      toast({ title: "Suppression impossible", description: errorMessage(error), variant: "destructive" });
     }
   };
 
@@ -471,8 +593,12 @@ export default function StreetViewContributionFlow() {
                 <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin" /></div>
               ) : contributions.length > 0 ? (
                 <div className="grid gap-3 md:grid-cols-2">
-                  {contributions.map((contribution) => (
-                    <ContributionCard key={contribution.id} contribution={contribution} />
+                    {contributions.map((contribution) => (
+                      <ContributionCard
+                        key={contribution.id}
+                        contribution={contribution}
+                        onDelete={handleDelete}
+                      />
                   ))}
                 </div>
               ) : (
