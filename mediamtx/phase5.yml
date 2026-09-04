@@ -1,0 +1,22 @@
+logLevel: info
+
+api: yes
+apiAddress: 0.0.0.0:9997
+
+rtsp: yes
+rtspAddress: :8554
+
+webrtc: yes
+webrtcAddress: :8889
+webrtcAllowOrigins:
+  - http://localhost:5000
+  - https://localhost:5000
+
+# MediaMTX asks the Express control plane before serving a reader. The
+# callback accepts only short-lived Phase 5 grants in test mode.
+authMethod: http
+authHTTPAddress: http://host.docker.internal:5000/api/surveillance/media-auth
+
+paths:
+  all_others:
+    source: publisher

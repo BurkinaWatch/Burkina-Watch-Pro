@@ -557,8 +557,8 @@ export default function Surveillance() {
                 Surveillance
               </h1>
               <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                Gérez vos caméras privées. Le flux vidéo sera disponible dans
-                une prochaine version.
+                 Gérez vos caméras privées et testez le prototype de live local
+                 lorsqu'il est activé pour cet environnement.
               </p>
             </div>
           </div>
@@ -578,8 +578,8 @@ export default function Surveillance() {
               <p className="font-medium">Vos accès restent privés</p>
               <p className="mt-1 text-muted-foreground">
                 Les mots de passe caméra sont chiffrés côté serveur et ne sont
-                jamais renvoyés à votre navigateur. Aucun flux réel n'est
-                encore activé.
+                 jamais renvoyés à votre navigateur. Les caméras enregistrées
+                 ne sont pas encore connectées au gateway.
               </p>
             </div>
           </CardContent>
@@ -830,7 +830,8 @@ export default function Surveillance() {
               </h2>
               <p className="mt-2 max-w-md text-sm text-muted-foreground">
                 Ajoutez une caméra IP privée pour préparer votre espace
-                Surveillance. Le visionnage en direct sera ajouté plus tard.
+                 Surveillance. Le visionnage des caméras réelles reste désactivé
+                 pendant la validation du prototype local.
               </p>
               <Button className="mt-5" onClick={openCreateForm}>
                 <Plus className="mr-2 h-4 w-4" aria-hidden="true" />

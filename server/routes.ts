@@ -4895,6 +4895,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!camera) {
           return res.status(404).json({ error: "Caméra non trouvée" });
         }
+        if (input.status === "disabled") {
+          revokeViewerAccessForCamera(camera.id);
+        }
 
         const action =
           input.status === "disabled"
@@ -4940,6 +4943,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!deleted) {
           return res.status(404).json({ error: "Caméra non trouvée" });
         }
+        revokeViewerAccessForCamera(req.params.id);
 
         storage.logAudit({
           userId,
