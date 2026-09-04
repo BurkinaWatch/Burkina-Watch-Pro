@@ -15,7 +15,8 @@ import {
   updateUserProfileSchema, 
   insertLocationPointSchema, 
   insertEmergencyContactSchema, 
-  insertChatMessageSchema 
+  insertChatMessageSchema,
+  ouaga3dSceneTiles,
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { z } from "zod";
@@ -4107,6 +4108,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       allowedMimeTypes: streetviewConfig.allowedMimeTypes,
       storage: getStreetviewStorageInfo().provider,
     });
+  });
+
+  app.get("/api/streetview/scenes", isAuthenticated, async (_req, res) => {
+    try {
+      const tiles = await db
+        .select()
+        .from(ouaga3dSceneTiles)
+        .orderBy(ouaga3dSceneTiles.updatedAt)
+        .limit(200);
+      res.json(
+        tiles.filter((tile) => tile.status === "completed" && Boolean(tile.tileUrl)),
+      );
+    } catch (error) {
+      console.error("Erreur récupération scènes StreetView:", error);
+      res.status(500).json({ message: "Impossible de récupérer les scènes disponibles." });
+    }
   });
 
   app.get("/api/streetview/contributions", isAuthenticated, async (req: any, res) => {
