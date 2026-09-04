@@ -248,7 +248,7 @@ export class MediaMtxVideoGateway implements VideoGateway {
       );
     }
     if (
-      countViewerAccessForCamera(request.cameraId) >=
+      countViewerAccessForCamera(request.cameraId, request.nowSeconds) >=
       this.options.config.maxViewerSessionsPerCamera
     ) {
       throw new VideoGatewayCapacityError();
