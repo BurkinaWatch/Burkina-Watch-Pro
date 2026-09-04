@@ -182,11 +182,11 @@ avant toute décision de staging.
 
 ```text
 npm run check       PASS
-npm run build       À exécuter après la dernière modification
+npm run build       PASS
 git diff --check    PASS
 security tests      PASS
 video tests         PASS (19 tests ciblés)
-regression tests    À compléter avec la suite complète du projet
+regression tests    PASS (46 tests du projet)
 ```
 
 Tests ciblés exécutés :
