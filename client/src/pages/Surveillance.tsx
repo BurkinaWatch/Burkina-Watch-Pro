@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Camera,
@@ -8,9 +8,11 @@ import {
   Pencil,
   Power,
   Plus,
+  RefreshCw,
   ShieldCheck,
   Trash2,
   Video,
+  WifiOff,
   X,
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -57,6 +59,38 @@ interface CameraFormState {
   streamPath: string;
 }
 
+type LiveState =
+  | "idle"
+  | "connecting"
+  | "live"
+  | "offline"
+  | "error"
+  | "disconnected";
+
+interface TestCameraResponse {
+  enabled: boolean;
+  camera?: {
+    id: string;
+    name: string;
+    description: string;
+    connectionType: "rtsp";
+    host: string;
+    port: number;
+    streamPath: string;
+    status: "unknown";
+    isTest: true;
+  };
+}
+
+interface LiveAccessResponse {
+  cameraId: string;
+  status: "unknown" | "connecting" | "online" | "offline" | "error";
+  whepUrl: string;
+  viewerToken: string;
+  expiresAt: number;
+  sessionId: string;
+}
+
 const emptyForm: CameraFormState = {
   name: "",
   description: "",
@@ -100,6 +134,269 @@ function cameraToForm(camera: SurveillanceCamera): CameraFormState {
   };
 }
 
+function liveStateLabel(state: LiveState): string {
+  return {
+    idle: "Prêt à démarrer",
+    connecting: "Connexion à la caméra…",
+    live: "En direct",
+    offline: "Caméra hors ligne",
+    error: "Erreur de connexion",
+    disconnected: "Connexion interrompue",
+  }[state];
+}
+
+function waitForIceGatheringComplete(
+  peerConnection: RTCPeerConnection,
+): Promise<void> {
+  if (peerConnection.iceGatheringState === "complete") {
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => {
+    const handleStateChange = () => {
+      if (peerConnection.iceGatheringState === "complete") {
+        peerConnection.removeEventListener(
+          "icegatheringstatechange",
+          handleStateChange,
+        );
+        resolve();
+      }
+    };
+    peerConnection.addEventListener(
+      "icegatheringstatechange",
+      handleStateChange,
+    );
+  });
+}
+
+function LiveCameraPlayer({ cameraId }: { cameraId: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+  const reconnectAttemptRef = useRef(0);
+  const [state, setState] = useState<LiveState>("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const revokeSession = useCallback(async () => {
+    const sessionId = sessionIdRef.current;
+    sessionIdRef.current = null;
+    if (!sessionId) return;
+    try {
+      await apiRequest(
+        "POST",
+        `/api/surveillance/live/${encodeURIComponent(sessionId)}/revoke`,
+      );
+    } catch {
+      // The grant is short-lived; an unavailable control plane cannot make
+      // the browser continue receiving media after the peer is closed.
+    }
+  }, []);
+
+  const closePeerConnection = useCallback(async () => {
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+    const peerConnection = peerConnectionRef.current;
+    peerConnectionRef.current = null;
+    if (peerConnection) {
+      peerConnection.ontrack = null;
+      peerConnection.onconnectionstatechange = null;
+      peerConnection.oniceconnectionstatechange = null;
+      peerConnection.close();
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    await revokeSession();
+  }, [revokeSession]);
+
+  const connect = useCallback(async () => {
+    await closePeerConnection();
+    if (!mountedRef.current) return;
+
+    setState("connecting");
+    setErrorMessage(null);
+    try {
+      const accessResponse = await apiRequest(
+        "GET",
+        `/api/surveillance/cameras/${encodeURIComponent(cameraId)}/live`,
+      );
+      const access = (await accessResponse.json()) as LiveAccessResponse;
+      sessionIdRef.current = access.sessionId;
+
+      if (access.status === "offline") {
+        await closePeerConnection();
+        if (mountedRef.current) setState("offline");
+        return;
+      }
+
+      const peerConnection = new RTCPeerConnection({ iceServers: [] });
+      peerConnectionRef.current = peerConnection;
+      peerConnection.addTransceiver("video", { direction: "recvonly" });
+      peerConnection.addTransceiver("audio", { direction: "recvonly" });
+
+      peerConnection.ontrack = (event) => {
+        if (!videoRef.current) return;
+        const [stream] = event.streams;
+        if (stream) {
+          videoRef.current.srcObject = stream;
+        }
+        void videoRef.current.play().catch(() => {
+          // The video is muted and inline; this handles stricter autoplay
+          // policies without pretending that the connection is live.
+        });
+      };
+      peerConnection.onconnectionstatechange = () => {
+        if (!mountedRef.current) return;
+        if (peerConnection.connectionState === "connected") {
+          reconnectAttemptRef.current = 0;
+          setState("live");
+        } else if (
+          peerConnection.connectionState === "failed" ||
+          peerConnection.connectionState === "disconnected"
+        ) {
+          setState("disconnected");
+        }
+      };
+      peerConnection.oniceconnectionstatechange = () => {
+        if (!mountedRef.current) return;
+        if (peerConnection.iceConnectionState === "failed") {
+          setState("error");
+        }
+      };
+
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      await waitForIceGatheringComplete(peerConnection);
+      const localDescription = peerConnection.localDescription;
+      if (!localDescription?.sdp) {
+        throw new Error("Offre WebRTC absente");
+      }
+
+      const whepResponse = await fetch(access.whepUrl, {
+        method: "POST",
+        headers: {
+          Accept: "application/sdp",
+          Authorization: `Bearer ${access.viewerToken}`,
+          "Content-Type": "application/sdp",
+        },
+        body: localDescription.sdp,
+      });
+      if (!whepResponse.ok) {
+        throw new Error(`WHEP ${whepResponse.status}`);
+      }
+      const answer = await whepResponse.text();
+      await peerConnection.setRemoteDescription({
+        type: "answer",
+        sdp: answer,
+      });
+    } catch (error) {
+      await closePeerConnection();
+      if (!mountedRef.current) return;
+      const message =
+        error instanceof Error ? error.message : "Connexion impossible";
+      setErrorMessage(
+        message.includes("503") || message.includes("offline")
+          ? "La caméra de test est hors ligne."
+          : "Le lecteur WebRTC n'a pas pu se connecter.",
+      );
+      setState(message.includes("503") ? "offline" : "error");
+    }
+  }, [cameraId, closePeerConnection]);
+
+  const scheduleReconnect = useCallback(() => {
+    if (!mountedRef.current || reconnectTimerRef.current) return;
+    if (reconnectAttemptRef.current >= 3) {
+      setState("error");
+      return;
+    }
+    const delay = 1500 * 2 ** reconnectAttemptRef.current;
+    reconnectAttemptRef.current += 1;
+    reconnectTimerRef.current = setTimeout(() => {
+      reconnectTimerRef.current = null;
+      void connect();
+    }, delay);
+  }, [connect]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      void closePeerConnection();
+    };
+  }, [closePeerConnection]);
+
+  useEffect(() => {
+    if (state === "disconnected") scheduleReconnect();
+  }, [scheduleReconnect, state]);
+
+  const stop = async () => {
+    reconnectAttemptRef.current = 3;
+    await closePeerConnection();
+    if (mountedRef.current) setState("idle");
+  };
+
+  return (
+    <div className="overflow-hidden rounded-xl border bg-black" data-testid="live-camera-player">
+      <div className="relative aspect-video">
+        <video
+          ref={videoRef}
+          className="h-full w-full object-contain"
+          autoPlay
+          muted
+          playsInline
+          aria-label="Flux vidéo de la caméra de test"
+        />
+        {state !== "live" && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950/90 px-4 text-center text-white">
+            {state === "connecting" ? (
+              <Loader2 className="h-7 w-7 animate-spin text-primary" aria-hidden="true" />
+            ) : state === "offline" ? (
+              <WifiOff className="h-7 w-7 text-amber-300" aria-hidden="true" />
+            ) : state === "error" ? (
+              <CircleAlert className="h-7 w-7 text-red-300" aria-hidden="true" />
+            ) : (
+              <Video className="h-7 w-7 text-slate-300" aria-hidden="true" />
+            )}
+            <p className="text-sm font-medium">{liveStateLabel(state)}</p>
+            {errorMessage && (
+              <p className="max-w-xs text-xs text-slate-300">{errorMessage}</p>
+            )}
+          </div>
+        )}
+        {state === "live" && (
+          <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-red-600 px-2.5 py-1 text-xs font-semibold text-white">
+            <span className="h-1.5 w-1.5 rounded-full bg-white" aria-hidden="true" />
+            EN DIRECT
+          </div>
+        )}
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-background p-3">
+        <span className="text-xs text-muted-foreground">{liveStateLabel(state)}</span>
+        <div className="flex gap-2">
+          {(state === "idle" ||
+            state === "offline" ||
+            state === "error") && (
+            <Button size="sm" onClick={() => void connect()}>
+              <RefreshCw className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
+              {state === "idle" ? "Démarrer le live" : "Réessayer"}
+            </Button>
+          )}
+          {(state === "connecting" ||
+            state === "live" ||
+            state === "disconnected") && (
+            <Button size="sm" variant="outline" onClick={() => void stop()}>
+              Arrêter
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Surveillance() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -111,6 +408,9 @@ export default function Surveillance() {
 
   const camerasQuery = useQuery<SurveillanceCamera[]>({
     queryKey: ["/api/surveillance/cameras"],
+  });
+  const testCameraQuery = useQuery<TestCameraResponse>({
+    queryKey: ["/api/surveillance/test-camera"],
   });
 
   const saveMutation = useMutation({
@@ -284,6 +584,37 @@ export default function Surveillance() {
             </div>
           </CardContent>
         </Card>
+
+        {testCameraQuery.data?.enabled && testCameraQuery.data.camera && (
+          <Card className="border-amber-500/30 bg-amber-500/[0.04]" data-testid="test-camera-card">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-lg bg-amber-500/15 p-2 text-amber-600">
+                    <Video className="h-5 w-5" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">
+                      {testCameraQuery.data.camera.name}
+                    </CardTitle>
+                    <CardDescription className="mt-1">
+                      RTSP synthétique local · Phase 5
+                    </CardDescription>
+                  </div>
+                </div>
+                <Badge variant="outline" className="border-amber-500/40 text-amber-700">
+                  TEST LOCAL
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {testCameraQuery.data.camera.description}
+              </p>
+              <LiveCameraPlayer cameraId={testCameraQuery.data.camera.id} />
+            </CardContent>
+          </Card>
+        )}
 
         {formOpen && (
           <Card data-testid="camera-form">
@@ -544,9 +875,10 @@ export default function Surveillance() {
                     <p className="min-h-10 text-sm text-muted-foreground">
                       {camera.description || "Aucune description"}
                     </p>
-                    <div className="rounded-lg border border-dashed bg-muted/30 p-3 text-sm text-muted-foreground">
-                      Flux vidéo disponible dans une prochaine version.
-                    </div>
+                     <div className="rounded-lg border border-dashed bg-muted/30 p-3 text-sm text-muted-foreground">
+                       Le live des caméras enregistrées sera activé après la
+                       validation du prototype local.
+                     </div>
                     <div className="flex flex-wrap gap-2">
                       <Button
                         variant="outline"
