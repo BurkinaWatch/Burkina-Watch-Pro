@@ -935,7 +935,21 @@ export default function Surveillance() {
                     <p className="min-h-10 text-sm text-muted-foreground">
                       {camera.description || "Aucune description"}
                     </p>
-                    <LiveCameraPlayer cameraId={camera.id} />
+                     <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                       <span>
+                         Dernière vérification :{" "}
+                         {camera.lastSeenAt
+                           ? new Date(camera.lastSeenAt).toLocaleString()
+                           : "Jamais"}
+                       </span>
+                       <span className="rounded-full bg-muted px-2 py-1">
+                         Session temporaire
+                       </span>
+                     </div>
+                     <LiveCameraPlayer
+                       cameraId={camera.id}
+                       cameraStatus={camera.status}
+                     />
                     <div className="flex flex-wrap gap-2">
                       <Button
                         variant="outline"

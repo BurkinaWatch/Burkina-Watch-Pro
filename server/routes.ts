@@ -5121,6 +5121,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const input = parseUpdateSurveillanceCamera(req.body);
         const updates: Record<string, unknown> = {};
+        const currentCamera = await storage.getSurveillanceCameraForUpdate(
+          userId,
+          req.params.id,
+        );
+        if (!currentCamera) {
+          storage.logAudit({
+            userId,
+            action: "unauthorized_camera_access",
+            resourceType: "surveillance_camera",
+            resourceId: String(req.params.id),
+            details: { operation: "camera_update" },
+            ipAddress: req.ip,
+            userAgent: req.get("user-agent"),
+            severity: "warning",
+          }).catch(() => undefined);
+          return res.status(404).json({ error: "Caméra non trouvée" });
+        }
 
         for (const field of [
           "name",
@@ -5145,6 +5162,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ error: "Aucune modification fournie" });
         }
 
+        const gatewayNeedsCleanup =
+          videoGatewayConfig.enabled &&
+          videoGatewayConfig.realCameraEnabled &&
+          (input.status === "disabled" ||
+            ["connectionType", "host", "port", "username", "streamPath"].some(
+              (field) => input[field as keyof typeof input] !== undefined,
+            ) ||
+            input.password !== undefined);
+        if (gatewayNeedsCleanup) {
+          revokeViewerAccessForCamera(currentCamera.id);
+          try {
+            await videoGateway.removeStream(currentCamera.id);
+          } catch (error) {
+            console.error(
+              "[SURVEILLANCE] Nettoyage gateway avant modification échoué:",
+              error instanceof Error ? error.message : "erreur inconnue",
+            );
+            return res.status(503).json({
+              error: "Impossible de mettre à jour la configuration du flux",
+            });
+          }
+        }
+
         const camera = await storage.updateSurveillanceCamera(
           userId,
           req.params.id,
@@ -5155,20 +5195,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         if (input.status === "disabled") {
           revokeViewerAccessForCamera(camera.id);
-        }
-        if (
-          videoGatewayConfig.enabled &&
-          videoGatewayConfig.realCameraEnabled
-        ) {
-          revokeViewerAccessForCamera(camera.id);
-          try {
-            await videoGateway.removeStream(camera.id);
-          } catch (error) {
-            console.error(
-              "[SURVEILLANCE] Nettoyage gateway après modification échoué:",
-              error instanceof Error ? error.message : "erreur inconnue",
-            );
-          }
         }
 
         const action =
