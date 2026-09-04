@@ -42,10 +42,14 @@ import { PHARMACIES_DATA } from "./pharmaciesData";
 import type { Place } from "@shared/schema";
 import {
   encryptCameraPassword,
+  decryptCameraPassword,
+  buildCameraRtspUrl,
   parseCreateSurveillanceCamera,
   parseUpdateSurveillanceCamera,
   toSurveillanceCameraDto,
 } from "./surveillanceService";
+import { probeRtspConnection } from "./rtspConnection";
+import { validateOutboundUrl } from "./ssrfProtection";
 import {
   SURVEILLANCE_NO_STORE_HEADERS,
   SurveillanceValidationError,
@@ -62,6 +66,7 @@ import {
 } from "./videoGateway";
 import {
   getSurveillanceTestCamera,
+  isSurveillanceGatewayPathName,
   isSurveillanceTestCameraForUser,
   isSurveillanceTestPathName,
   SURVEILLANCE_TEST_SOURCE_URL,
@@ -4591,10 +4596,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================
-  // SURVEILLANCE — CONTROL PLANE + LOCAL PHASE 5 LIVE
+  // SURVEILLANCE — CONTROL PLANE + CONTROLLED LIVE
   // ============================================
-  // The test camera is virtual and user-scoped. No camera record is created
-  // and no production camera endpoint is contacted by this prototype.
   app.get(
     "/api/surveillance/test-camera",
     isAuthenticated,
@@ -4627,21 +4630,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const cameraId = String(req.params.id);
-      if (!isSurveillanceTestCameraForUser(cameraId, userId)) {
+      const isTestCamera = isSurveillanceTestCameraForUser(cameraId, userId);
+      const camera = isTestCamera
+        ? null
+        : await storage.getSurveillanceCameraForUpdate(userId, cameraId);
+      if (!isTestCamera && !camera) {
         return res.status(404).json({ error: "Caméra non trouvée" });
       }
-      if (!videoGatewayConfig.enabled || !videoGatewayConfig.testMode) {
+      if (
+        !videoGatewayConfig.enabled ||
+        (!videoGatewayConfig.testMode && !videoGatewayConfig.realCameraEnabled)
+      ) {
         return res.status(503).json({
-          error: "Le prototype vidéo local n'est pas activé",
+          error: "Le live caméra n'est pas activé pour cet environnement",
+          status: "offline" satisfies VideoGatewayStreamStatus,
+        });
+      }
+      if (!isTestCamera && camera?.connectionType !== "rtsp") {
+        return res.status(503).json({
+          error: "Ce type de caméra n'est pas encore supporté pour le live",
           status: "offline" satisfies VideoGatewayStreamStatus,
         });
       }
 
       try {
         const nowSeconds = Math.floor(Date.now() / 1000);
+        let sourceUrl = SURVEILLANCE_TEST_SOURCE_URL;
+        let cameraStatus: "unknown" | "online" | "offline" | "disabled" | "error" =
+          "unknown";
+        if (!isTestCamera && camera) {
+          const password = await decryptCameraPassword(camera.encryptedPassword);
+          sourceUrl = buildCameraRtspUrl({
+            host: camera.host,
+            port: camera.port,
+            streamPath: camera.streamPath,
+            username: camera.username,
+            password,
+          });
+          await validateOutboundUrl(sourceUrl, {
+            allowedProtocols: ["rtsp"],
+            allowCredentials: true,
+            allowPrivateNetworks: videoGatewayConfig.allowPrivateCameraNetwork,
+          });
+          cameraStatus = camera.status as typeof cameraStatus;
+        }
         const registered = await videoGateway.registerStream({
           cameraId,
-          sourceUrl: SURVEILLANCE_TEST_SOURCE_URL,
+          sourceUrl,
         });
         const streamStatus = await videoGateway.getStreamStatus(cameraId);
         if (streamStatus === "offline") {
@@ -4662,7 +4697,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           authenticatedUserId: userId,
           cameraId,
           cameraOwnerUserId: userId,
-          cameraStatus: "unknown",
+          cameraStatus,
           tokenClaims,
           nowSeconds,
         });
@@ -4692,6 +4727,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
           error instanceof Error ? error.message : "erreur inconnue",
         );
         return res.status(500).json({ error: "Erreur lors de l'ouverture du live" });
+      }
+    },
+  );
+
+  app.post(
+    "/api/surveillance/cameras/:id/test-connection",
+    isAuthenticated,
+    surveillanceMutationLimiter,
+    async (req: any, res) => {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Authentification requise" });
+      }
+
+      const camera = await storage.getSurveillanceCameraForUpdate(
+        userId,
+        req.params.id,
+      );
+      if (!camera) {
+        return res.status(404).json({ error: "Caméra non trouvée" });
+      }
+      if (camera.connectionType !== "rtsp") {
+        return res.status(400).json({
+          success: false,
+          status: "error",
+          error: "Le test de connexion ONVIF n'est pas encore disponible",
+        });
+      }
+      if (!videoGatewayConfig.realCameraEnabled) {
+        return res.status(503).json({
+          success: false,
+          status: "offline",
+          error: "Les connexions caméra réelles sont désactivées pour cet environnement",
+        });
+      }
+
+      try {
+        const password = await decryptCameraPassword(camera.encryptedPassword);
+        const sourceUrl = buildCameraRtspUrl({
+          host: camera.host,
+          port: camera.port,
+          streamPath: camera.streamPath,
+          username: camera.username,
+          password,
+        });
+        await validateOutboundUrl(sourceUrl, {
+          allowedProtocols: ["rtsp"],
+          allowCredentials: true,
+          allowPrivateNetworks: videoGatewayConfig.allowPrivateCameraNetwork,
+        });
+        const result = await probeRtspConnection({
+          host: camera.host,
+          port: camera.port,
+          streamPath: camera.streamPath,
+          username: camera.username,
+          password,
+        });
+        await storage.updateSurveillanceCamera(userId, camera.id, {
+          status: result.status,
+          lastSeenAt: result.success ? new Date() : camera.lastSeenAt,
+        });
+        storage.logAudit({
+          userId,
+          action: "camera_connection_tested",
+          resourceType: "surveillance_camera",
+          resourceId: camera.id,
+          details: { status: result.status },
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent"),
+          severity: result.success ? "info" : "warning",
+        }).catch((error) =>
+          console.error(
+            "[AUDIT] Erreur log caméra:",
+            error instanceof Error ? error.message : "erreur inconnue",
+          ),
+        );
+        res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
+        return res.json(result);
+      } catch (error) {
+        const safeStatus =
+          error instanceof SurveillanceValidationError ||
+          (error && typeof error === "object" && "name" in error)
+            ? "error"
+            : "offline";
+        await storage.updateSurveillanceCamera(userId, camera.id, {
+          status: safeStatus,
+        });
+        storage.logAudit({
+          userId,
+          action: "camera_connection_tested",
+          resourceType: "surveillance_camera",
+          resourceId: camera.id,
+          details: { status: safeStatus },
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent"),
+          severity: "warning",
+        }).catch((auditError) =>
+          console.error(
+            "[AUDIT] Erreur log caméra:",
+            auditError instanceof Error ? auditError.message : "erreur inconnue",
+          ),
+        );
+        console.error(
+          "[SURVEILLANCE] Test de connexion échoué:",
+          error instanceof Error ? error.message : "erreur inconnue",
+        );
+        res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
+        return res.json({
+          success: false,
+          status: safeStatus,
+        });
       }
     },
   );
@@ -4733,7 +4879,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // available without a browser session because the gateway has no session
   // cookie; authorization comes from the short-lived viewer grant instead.
   app.post("/api/surveillance/media-auth", async (req: any, res) => {
-    if (!videoGatewayConfig.enabled || !videoGatewayConfig.testMode) {
+    if (
+      !videoGatewayConfig.enabled ||
+      (!videoGatewayConfig.testMode && !videoGatewayConfig.realCameraEnabled)
+    ) {
       return res.status(404).send();
     }
 
@@ -4755,7 +4904,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ) {
       return res.status(204).send();
     }
-    if (!isSurveillanceTestPathName(pathName)) {
+    if (!isSurveillanceGatewayPathName(pathName)) {
       return res.status(401).send();
     }
 
@@ -4912,6 +5061,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (input.status === "disabled") {
           revokeViewerAccessForCamera(camera.id);
         }
+        if (
+          videoGatewayConfig.enabled &&
+          videoGatewayConfig.realCameraEnabled
+        ) {
+          revokeViewerAccessForCamera(camera.id);
+          try {
+            await videoGateway.removeStream(camera.id);
+          } catch (error) {
+            console.error(
+              "[SURVEILLANCE] Nettoyage gateway après modification échoué:",
+              error instanceof Error ? error.message : "erreur inconnue",
+            );
+          }
+        }
 
         const action =
           input.status === "disabled"
@@ -4958,6 +5121,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ error: "Caméra non trouvée" });
         }
         revokeViewerAccessForCamera(req.params.id);
+        if (
+          videoGatewayConfig.enabled &&
+          videoGatewayConfig.realCameraEnabled
+        ) {
+          try {
+            await videoGateway.removeStream(req.params.id);
+          } catch (error) {
+            console.error(
+              "[SURVEILLANCE] Nettoyage gateway après suppression échoué:",
+              error instanceof Error ? error.message : "erreur inconnue",
+            );
+          }
+        }
 
         storage.logAudit({
           userId,

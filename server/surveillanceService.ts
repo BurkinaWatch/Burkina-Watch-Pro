@@ -158,6 +158,24 @@ export async function decryptCameraPassword(
   }
 }
 
+export function buildCameraRtspUrl(input: {
+  host: string;
+  port: number;
+  streamPath: string | null;
+  username: string | null;
+  password: string;
+}): string {
+  const normalizedHost =
+    input.host.includes(":") && !input.host.startsWith("[")
+      ? `[${input.host}]`
+      : input.host;
+  const url = new URL(`rtsp://${normalizedHost}:${input.port}`);
+  url.pathname = input.streamPath || "/";
+  if (input.username) url.username = input.username;
+  url.password = input.password;
+  return url.toString();
+}
+
 export function toSurveillanceCameraDto(
   camera: SurveillanceCamera | SurveillanceCameraSummary,
 ): SurveillanceCameraDto {

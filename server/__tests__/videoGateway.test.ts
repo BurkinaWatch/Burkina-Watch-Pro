@@ -42,6 +42,9 @@ describe("Phase 4 video gateway contract", () => {
       publicOrigin: null,
       apiToken: null,
       testMode: false,
+      realCameraEnabled: false,
+      allowPrivateCameraNetwork: false,
+      pathSecret: null,
     });
     assert.equal(createVideoGateway(config) instanceof DisabledVideoGateway, true);
   });

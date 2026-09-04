@@ -11,6 +11,9 @@ const config = {
   publicOrigin: "http://127.0.0.1:8889",
   apiToken: null,
   testMode: true,
+  realCameraEnabled: false,
+  allowPrivateCameraNetwork: false,
+  pathSecret: null,
 };
 
 function authorizedRequest() {
