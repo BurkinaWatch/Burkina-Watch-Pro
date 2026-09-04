@@ -50,6 +50,21 @@ import {
   SURVEILLANCE_NO_STORE_HEADERS,
   SurveillanceValidationError,
 } from "./surveillancePreparation";
+import {
+  createVideoGateway,
+  getViewerAccessGrant,
+  readVideoGatewayConfig,
+  revokeViewerAccessForCamera,
+  type VideoGatewayStreamStatus,
+  VideoGatewayAuthorizationError,
+  VideoGatewayUnavailableError,
+} from "./videoGateway";
+import {
+  getSurveillanceTestCamera,
+  isSurveillanceTestCameraForUser,
+  isSurveillanceTestCameraId,
+  SURVEILLANCE_TEST_SOURCE_URL,
+} from "./surveillancePrototype";
 
 // Create a Map for quick pharmacy lookups by name
 const pharmaciesDataMap = new Map<string, typeof PHARMACIES_DATA[0]>();
@@ -653,6 +668,8 @@ function mapOsmBrandToMarque(brand: string): string {
 // ============================================
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
+  const videoGatewayConfig = readVideoGatewayConfig();
+  const videoGateway = createVideoGateway(videoGatewayConfig);
   app.get("/api/auth/csrf", issueCsrfToken);
   app.use(csrfProtection);
 
@@ -4572,10 +4589,182 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================
-  // SURVEILLANCE — CONTROL PLANE ONLY
+  // SURVEILLANCE — CONTROL PLANE + LOCAL PHASE 5 LIVE
   // ============================================
-  // No route here opens a camera connection or returns a video URL. The
-  // future media gateway will be integrated separately in Phase 4.
+  // The test camera is virtual and user-scoped. No camera record is created
+  // and no production camera endpoint is contacted by this prototype.
+  app.get(
+    "/api/surveillance/test-camera",
+    isAuthenticated,
+    async (req: any, res) => {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Authentification requise" });
+      }
+
+      res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
+      if (!videoGatewayConfig.enabled || !videoGatewayConfig.testMode) {
+        return res.json({ enabled: false });
+      }
+
+      return res.json({
+        enabled: true,
+        camera: getSurveillanceTestCamera(userId),
+      });
+    },
+  );
+
+  app.get(
+    "/api/surveillance/cameras/:id/live",
+    isAuthenticated,
+    surveillanceMutationLimiter,
+    async (req: any, res) => {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Authentification requise" });
+      }
+
+      const cameraId = String(req.params.id);
+      if (!isSurveillanceTestCameraForUser(cameraId, userId)) {
+        return res.status(404).json({ error: "Caméra non trouvée" });
+      }
+      if (!videoGatewayConfig.enabled || !videoGatewayConfig.testMode) {
+        return res.status(503).json({
+          error: "Le prototype vidéo local n'est pas activé",
+          status: "offline" satisfies VideoGatewayStreamStatus,
+        });
+      }
+
+      try {
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        const registered = await videoGateway.registerStream({
+          cameraId,
+          sourceUrl: SURVEILLANCE_TEST_SOURCE_URL,
+        });
+        const tokenClaims = {
+          userId,
+          cameraId,
+          scope: "surveillance:stream" as const,
+          iat: nowSeconds,
+          exp: nowSeconds + 60,
+          jti: crypto.randomUUID(),
+        };
+        const access = await videoGateway.createViewerAccess({
+          authenticatedUserId: userId,
+          cameraId,
+          cameraOwnerUserId: userId,
+          cameraStatus: "unknown",
+          tokenClaims,
+          nowSeconds,
+        });
+
+        res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
+        return res.json({
+          cameraId: access.cameraId,
+          status: registered.status,
+          pathName: access.pathName,
+          whepUrl: access.whepUrl,
+          viewerToken: access.viewerToken,
+          expiresAt: access.expiresAt,
+          sessionId: access.gatewaySessionId,
+        });
+      } catch (error) {
+        if (error instanceof VideoGatewayAuthorizationError) {
+          return res.status(403).json({ error: error.message });
+        }
+        if (error instanceof VideoGatewayUnavailableError) {
+          return res.status(503).json({
+            error: error.message,
+            status: "offline" satisfies VideoGatewayStreamStatus,
+          });
+        }
+        console.error(
+          "[SURVEILLANCE] Erreur ouverture live:",
+          error instanceof Error ? error.message : "erreur inconnue",
+        );
+        return res.status(500).json({ error: "Erreur lors de l'ouverture du live" });
+      }
+    },
+  );
+
+  app.post(
+    "/api/surveillance/live/:sessionId/revoke",
+    isAuthenticated,
+    surveillanceMutationLimiter,
+    async (req: any, res) => {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Authentification requise" });
+      }
+
+      const sessionId = String(req.params.sessionId);
+      const grant = getViewerAccessGrant(sessionId);
+      if (!grant || grant.userId !== userId) {
+        return res.status(404).json({ error: "Session live non trouvée" });
+      }
+
+      try {
+        await videoGateway.revokeViewerAccess(sessionId);
+        res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
+        return res.status(204).send();
+      } catch (error) {
+        if (error instanceof VideoGatewayUnavailableError) {
+          return res.status(503).json({ error: error.message });
+        }
+        console.error(
+          "[SURVEILLANCE] Erreur révocation live:",
+          error instanceof Error ? error.message : "erreur inconnue",
+        );
+        return res.status(500).json({ error: "Erreur lors de la révocation du live" });
+      }
+    },
+  );
+
+  // MediaMTX calls this endpoint for WebRTC reads. It is intentionally
+  // available without a browser session because the gateway has no session
+  // cookie; authorization comes from the short-lived viewer grant instead.
+  app.post("/api/surveillance/media-auth", async (req: any, res) => {
+    if (!videoGatewayConfig.enabled || !videoGatewayConfig.testMode) {
+      return res.status(404).send();
+    }
+
+    const configuredApiToken = videoGatewayConfig.apiToken;
+    const authorization = req.get("authorization") || "";
+    if (
+      configuredApiToken &&
+      authorization === `Bearer ${configuredApiToken}` &&
+      req.body?.action !== "read"
+    ) {
+      return res.status(204).send();
+    }
+
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const pathName = typeof body.path === "string" ? body.path : "";
+    if (!isSurveillanceTestCameraId(pathName)) {
+      return res.status(401).send();
+    }
+
+    const bearerToken =
+      authorization.startsWith("Bearer ") &&
+      authorization.slice("Bearer ".length).trim();
+    const query =
+      typeof body.query === "string" ? new URLSearchParams(body.query) : null;
+    const candidateToken =
+      (bearerToken && bearerToken !== configuredApiToken
+        ? bearerToken
+        : undefined) ||
+      (typeof body.token === "string" ? body.token : undefined) ||
+      (typeof body.password === "string" ? body.password : undefined) ||
+      query?.get("token") ||
+      "";
+
+    const grant = validateViewerAccess(candidateToken, pathName);
+    if (!grant) {
+      return res.status(401).send();
+    }
+    return res.status(204).send();
+  });
+
   app.get("/api/surveillance/cameras", isAuthenticated, async (req: any, res) => {
     const userId = getAuthenticatedUserId(req);
     if (!userId) {

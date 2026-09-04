@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { MediaMtxVideoGateway } from "./mediaMtxGateway";
 import {
   assertTemporarySurveillanceVideoToken,
   isSurveillanceVideoTokenScopedTo,
@@ -114,11 +115,11 @@ export interface ViewerAccessGrant {
 const viewerAccessGrants = new Map<string, ViewerAccessGrant>();
 
 function cleanupExpiredViewerAccess(nowSeconds = Math.floor(Date.now() / 1000)) {
-  for (const [token, grant] of viewerAccessGrants) {
+  viewerAccessGrants.forEach((grant, token) => {
     if (grant.expiresAt <= nowSeconds) {
       viewerAccessGrants.delete(token);
     }
-  }
+  });
 }
 
 export function issueViewerAccess(input: {
@@ -159,13 +160,37 @@ export function validateViewerAccess(
 }
 
 export function revokeViewerAccess(sessionId: string): boolean {
-  for (const [token, grant] of viewerAccessGrants) {
+  let revoked = false;
+  viewerAccessGrants.forEach((grant, token) => {
     if (grant.sessionId === sessionId) {
       viewerAccessGrants.delete(token);
-      return true;
+      revoked = true;
     }
-  }
-  return false;
+  });
+  return revoked;
+}
+
+export function getViewerAccessGrant(
+  sessionId: string,
+): ViewerAccessGrant | null {
+  let matchingGrant: ViewerAccessGrant | null = null;
+  viewerAccessGrants.forEach((grant) => {
+    if (grant.sessionId === sessionId) {
+      matchingGrant = grant;
+    }
+  });
+  return matchingGrant;
+}
+
+export function revokeViewerAccessForCamera(cameraId: string): number {
+  let revoked = 0;
+  viewerAccessGrants.forEach((grant, token) => {
+    if (grant.cameraId === cameraId) {
+      viewerAccessGrants.delete(token);
+      revoked += 1;
+    }
+  });
+  return revoked;
 }
 
 function parseServiceUrl(
@@ -207,8 +232,8 @@ function parseServiceUrl(
 
 /**
  * Reads an inactive-by-default configuration. The provider name is retained
- * for a future adapter, but "mediamtx" cannot be activated until that adapter
- * is implemented and explicitly tested.
+ * for the local Phase 5 adapter. Production remains disabled unless an
+ * explicitly configured HTTPS gateway is supplied.
  */
 export function readVideoGatewayConfig(
   env: NodeJS.ProcessEnv = process.env,
@@ -384,7 +409,18 @@ export function createVideoGateway(
     return new DisabledVideoGateway();
   }
 
-  throw new VideoGatewayUnavailableError(
-    `L'adaptateur ${config.provider} n'est pas encore activé`,
-  );
+  if (config.provider === "mediamtx") {
+    // Kept here rather than in routes so the control plane only depends on the
+    // VideoGateway abstraction. The adapter itself never carries media bytes.
+    return new MediaMtxVideoGateway({
+      config: config as VideoGatewayConfig & {
+        enabled: true;
+        provider: "mediamtx";
+        apiUrl: string;
+        publicOrigin: string;
+      },
+    });
+  }
+
+  throw new VideoGatewayUnavailableError("Fournisseur de passerelle vidéo inconnu");
 }
