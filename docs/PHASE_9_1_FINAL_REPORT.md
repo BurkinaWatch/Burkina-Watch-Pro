@@ -42,6 +42,11 @@ publication agent.
 La suite d’intégration HTTP complète du callback MediaMTX reste à réaliser ;
 elle fait l’objet du suivi proposé séparément.
 
+Le workflow local a également observé `GET /api/surveillance/cameras` en
+`500`, avec `relation "surveillance_cameras" does not exist`. Cet écart
+confirme que les routes de surveillance ne peuvent pas être considérées
+opérationnelles sur la base actuelle.
+
 ## 5. Réseau et WebRTC
 
 Aucune preuve réelle WAN, CGNAT, STUN, TURN ou navigateur distant n’est
@@ -67,6 +72,6 @@ ni readiness production sans test réel.
 
 **NOT READY**
 
-Les blocages sont la baseline/snapshot Railway non validés et l’absence de
-preuve WAN/CGNAT et vidéo réelle dans un navigateur. Aucune modification de
-production n’a été effectuée.
+Les blocages sont la relation de surveillance absente, la baseline/snapshot
+Railway non validés et l’absence de preuve WAN/CGNAT et vidéo réelle dans un
+navigateur. Aucune modification de production n’a été effectuée.

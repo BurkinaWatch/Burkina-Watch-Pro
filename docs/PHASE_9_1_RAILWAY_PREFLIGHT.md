@@ -36,6 +36,9 @@ npm run db:railway:preflight
   dans cette base ; la structure exacte observée ne les inclut pas.
 - Service Railway, healthcheck, domaine, ports, runtime et logs de déploiement :
   **NOT VERIFIED** dans ce preflight.
+- Le workflow local a confirmé l’écart runtime : `GET
+  /api/surveillance/cameras` retourne `500` avec `relation
+  "surveillance_cameras" does not exist`.
 
 ## Décision
 
