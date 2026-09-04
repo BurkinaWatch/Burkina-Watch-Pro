@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 // ============================================
 // IMPORTS
 // ============================================
-import type { Express, Request, Response } from "express";
+import express, { type Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -22,6 +22,15 @@ import { z } from "zod";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { csrfProtection, issueCsrfToken } from "./csrfProtection";
 import { getAuthenticatedUserId } from "./authorization";
+import { streetviewConfig } from "./streetviewConfig";
+import {
+  getStreetviewStorageInfo,
+  streetviewStorageKey,
+  streetviewThumbnailKey,
+  writeStreetviewBuffer,
+  writeStreetviewDataUrl,
+} from "./streetviewStorage";
+import { runStreetviewPreparation } from "./streetviewPreparationService";
 import { OverpassService } from "./overpassService";
 import { reverseGeocode } from "./geocoding";
 import { sendLocationEmail, sendEmergencyTrackingStartEmail } from "./emailService";
@@ -4087,8 +4096,239 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----------------------------------------
-  // ROUTES STREETVIEW (Mode Anonyme)
+  // ROUTES STREETVIEW (lecture publique historique + contributions authentifiées)
   // ----------------------------------------
+
+  app.get("/api/streetview/config", isAuthenticated, (_req, res) => {
+    res.json({
+      maxVideoBytes: streetviewConfig.maxVideoBytes,
+      minDurationSeconds: streetviewConfig.minDurationSeconds,
+      maxDurationSeconds: streetviewConfig.maxDurationSeconds,
+      allowedMimeTypes: streetviewConfig.allowedMimeTypes,
+      storage: getStreetviewStorageInfo().provider,
+    });
+  });
+
+  app.get("/api/streetview/contributions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      const contributions = await storage.getStreetviewContributionsByUser(userId);
+      res.json(contributions.map((contribution) => ({
+        ...contribution,
+        storageKey: undefined,
+        thumbnailKey: contribution.thumbnailKey ? `/api/streetview/contributions/${contribution.id}/thumbnail` : null,
+      })));
+    } catch (error) {
+      console.error("Erreur récupération contributions StreetView:", error);
+      res.status(500).json({ message: "Impossible de récupérer vos contributions." });
+    }
+  });
+
+  app.get("/api/streetview/contributions/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      const contribution = await storage.getStreetviewContribution(req.params.id, userId);
+      if (!contribution) return res.status(404).json({ message: "Contribution introuvable." });
+      res.json({
+        ...contribution,
+        storageKey: undefined,
+        thumbnailKey: contribution.thumbnailKey ? `/api/streetview/contributions/${contribution.id}/thumbnail` : null,
+      });
+    } catch (error) {
+      console.error("Erreur récupération contribution StreetView:", error);
+      res.status(500).json({ message: "Impossible de récupérer cette contribution." });
+    }
+  });
+
+  app.get("/api/streetview/contributions/:id/thumbnail", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) return res.status(401).end();
+      const contribution = await storage.getStreetviewContribution(req.params.id, userId);
+      if (!contribution?.thumbnailKey) return res.status(404).end();
+      const { readFile } = await import("node:fs/promises");
+      const { resolve } = await import("node:path");
+      const root = resolve(process.env.STREETVIEW_STORAGE_DIR || "uploads/streetview");
+      const file = resolve(root, contribution.thumbnailKey);
+      if (file !== root && !file.startsWith(`${root}/`)) return res.status(404).end();
+      const content = await readFile(file);
+      res.set("Content-Type", "image/jpeg");
+      res.set("Cache-Control", "private, max-age=3600");
+      res.send(content);
+    } catch (error: any) {
+      if (error?.code === "ENOENT") return res.status(404).end();
+      console.error("Erreur lecture miniature StreetView:", error);
+      res.status(500).end();
+    }
+  });
+
+  app.post("/api/streetview/contributions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      const {
+        title,
+        description,
+        city,
+        quartier,
+        latitude,
+        longitude,
+        originalFileName,
+        mediaType,
+        durationMs,
+        width,
+        height,
+        orientation,
+        thumbnailData,
+      } = req.body || {};
+
+      const lat = Number(latitude);
+      const lng = Number(longitude);
+      if (!title || typeof title !== "string" || title.trim().length < 2 || title.length > 160) {
+        return res.status(400).json({ message: "Le titre est requis." });
+      }
+      if (!city || typeof city !== "string" || city.trim().length < 2 || city.length > 120) {
+        return res.status(400).json({ message: "La ville est requise." });
+      }
+      if (!Number.isFinite(lat) || lat < -90 || lat > 90 || !Number.isFinite(lng) || lng < -180 || lng > 180) {
+        return res.status(400).json({ message: "Les coordonnées GPS sont invalides." });
+      }
+      if (typeof mediaType !== "string" || !streetviewConfig.allowedMimeTypes.includes(mediaType as never)) {
+        return res.status(400).json({ message: "Le format vidéo n'est pas pris en charge." });
+      }
+      if (durationMs !== undefined && (!Number.isFinite(Number(durationMs)) || Number(durationMs) <= 0)) {
+        return res.status(400).json({ message: "La durée de la vidéo est invalide." });
+      }
+      if (thumbnailData !== undefined && typeof thumbnailData !== "string") {
+        return res.status(400).json({ message: "La miniature est invalide." });
+      }
+
+      const contribution = await storage.createStreetviewContribution({
+        userId,
+        title: title.trim(),
+        description: typeof description === "string" ? description.trim().slice(0, 2000) || null : null,
+        city: city.trim(),
+        quartier: typeof quartier === "string" ? quartier.trim().slice(0, 160) || null : null,
+        latitude: lat.toFixed(7),
+        longitude: lng.toFixed(7),
+        originalFileName: typeof originalFileName === "string" ? originalFileName.slice(0, 255) : null,
+        mediaType,
+        durationMs: Number.isFinite(Number(durationMs)) ? Math.round(Number(durationMs)) : null,
+        width: Number.isFinite(Number(width)) ? Math.round(Number(width)) : null,
+        height: Number.isFinite(Number(height)) ? Math.round(Number(height)) : null,
+        orientation: typeof orientation === "string" ? orientation.slice(0, 32) : null,
+        clientMetadata: {
+          durationMs,
+          width,
+          height,
+          orientation,
+        },
+      });
+
+      if (thumbnailData) {
+        try {
+          const thumbnailKey = streetviewThumbnailKey(contribution.id);
+          await writeStreetviewDataUrl(
+            thumbnailKey,
+            thumbnailData,
+            streetviewConfig.thumbnailMaxBytes,
+          );
+          await storage.updateStreetviewContribution(contribution.id, {
+            thumbnailKey,
+            updatedAt: new Date(),
+          });
+        } catch (thumbnailError) {
+          console.warn("Miniature StreetView ignorée:", thumbnailError);
+        }
+      }
+
+      res.status(201).json({
+        id: contribution.id,
+        status: contribution.status,
+        message: "Contribution créée. Sélectionnez maintenant le fichier vidéo.",
+      });
+    } catch (error) {
+      console.error("Erreur création contribution StreetView:", error);
+      res.status(500).json({ message: "Impossible de créer la contribution." });
+    }
+  });
+
+  app.put(
+    "/api/streetview/contributions/:id/upload",
+    isAuthenticated,
+    express.raw({ type: ["video/*", "application/octet-stream"], limit: streetviewConfig.maxVideoBytes }),
+    async (req: any, res) => {
+      try {
+        const userId = getAuthenticatedUserId(req);
+        if (!userId) return res.status(401).json({ message: "Unauthorized" });
+        const contribution = await storage.getStreetviewContribution(req.params.id, userId);
+        if (!contribution) return res.status(404).json({ message: "Contribution introuvable." });
+        if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+          return res.status(400).json({ message: "Fichier vidéo manquant." });
+        }
+        if (req.body.length > streetviewConfig.maxVideoBytes) {
+          return res.status(413).json({ message: "Cette vidéo dépasse la taille maximale autorisée." });
+        }
+
+        const mimeType = req.get("content-type")?.split(";")[0]?.toLowerCase() || contribution.mediaType || "";
+        if (!streetviewConfig.allowedMimeTypes.includes(mimeType as never)) {
+          return res.status(400).json({ message: "Le format de cette vidéo n'est pas pris en charge." });
+        }
+
+        const storageKey = streetviewStorageKey(contribution.id, mimeType);
+        await writeStreetviewBuffer(storageKey, req.body);
+        const updated = await storage.updateStreetviewContribution(contribution.id, {
+          status: "UPLOADED",
+          progress: 35,
+          statusMessage: "Vidéo reçue, validation en préparation",
+          storageKey,
+          mediaType: mimeType,
+          fileSizeBytes: req.body.length,
+          uploadedAt: new Date(),
+          errorCode: null,
+          updatedAt: new Date(),
+        });
+        const job = await storage.createStreetviewProcessingJob({
+          contributionId: contribution.id,
+          type: "PREPARE_CONTRIBUTION",
+        });
+        setImmediate(() => {
+          runStreetviewPreparation(job.id, contribution.id, req.body, mimeType).catch((error) => {
+            console.error("Erreur job préparation StreetView:", error);
+          });
+        });
+
+        res.status(202).json({
+          id: contribution.id,
+          status: updated?.status || "UPLOADED",
+          jobId: job.id,
+          message: "Vidéo reçue. En attente de reconstruction 3D.",
+        });
+      } catch (error: any) {
+        console.error("Erreur upload contribution StreetView:", error);
+        const userId = getAuthenticatedUserId(req);
+        if (userId) {
+          const failed = await storage.getStreetviewContribution(req.params.id, userId);
+          if (failed) {
+            await storage.updateStreetviewContribution(failed.id, {
+              status: "UPLOAD_FAILED",
+              progress: 100,
+              statusMessage: "L'upload a échoué",
+              errorCode: "UPLOAD_FAILED",
+              updatedAt: new Date(),
+            });
+          }
+        }
+        res.status(error?.statusCode === 413 ? 413 : 500).json({
+          message: error?.statusCode === 413
+            ? "Cette vidéo dépasse la taille maximale autorisée."
+            : "L'upload de la vidéo a échoué.",
+        });
+      }
+    },
+  );
 
   // Récupérer le token Mapillary pour le frontend
   app.get("/api/config/mapillary-token", (req, res) => {
