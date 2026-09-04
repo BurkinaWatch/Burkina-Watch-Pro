@@ -1,0 +1,387 @@
+Nous allons traiter en priorité le point 1 : STOCKAGE VIDÉO DURABLE EN PRODUCTION.
+
+Le flux Street View fonctionne maintenant au niveau applicatif et les migrations, tests et build passent.
+
+Aucun moteur 3D réel n'est encore activé.
+
+Cette étape est consacrée exclusivement à l'infrastructure de stockage des médias Street View.
+
+==================================================
+OBJECTIF
+========
+
+Nous devons disposer d'un système de stockage durable, sécurisé et scalable pour les vidéos envoyées par les utilisateurs.
+
+Les vidéos Street View peuvent devenir volumineuses et leur nombre peut augmenter progressivement :
+
+10 vidéos
+→ 100
+→ 1 000
+→ 10 000
+→ 100 000+
+→ potentiellement beaucoup plus à long terme.
+
+La solution doit donc être pensée comme une infrastructure de production et non comme une simple solution de test.
+
+==================================================
+
+1. AUDIT DE L'IMPLÉMENTATION ACTUELLE
+   ==================================================
+
+Avant toute modification, inspecte le code actuel et détermine précisément :
+
+* où les vidéos Street View sont actuellement envoyées ;
+* comment les fichiers sont stockés ;
+* si les fichiers passent actuellement par le serveur backend ;
+* si le backend conserve temporairement les fichiers ;
+* si une base de données contient les URLs/références ;
+* quel stockage est actuellement utilisé par Burkina Watch ;
+* quelles variables d'environnement sont nécessaires ;
+* quelles limites de taille existent ;
+* comment les erreurs d'upload sont gérées ;
+* comment les retries fonctionnent.
+
+Ne suppose rien.
+
+==================================================
+2. COMPARAISON DES SOLUTIONS
+============================
+
+Compare les solutions réellement compatibles avec l'infrastructure actuelle.
+
+Au minimum, analyse :
+
+A. Railway Volume
+
+B. Object Storage compatible S3
+
+C. autre stockage objet déjà disponible ou déjà utilisé dans Burkina Watch
+
+D. éventuellement un fournisseur spécialisé si cela apporte un avantage majeur.
+
+Pour chaque solution, indique :
+
+* coût approximatif ;
+* durabilité ;
+* capacité ;
+* scalabilité ;
+* bande passante ;
+* vitesse ;
+* facilité d'intégration ;
+* sécurité ;
+* compatibilité Railway ;
+* compatibilité avec les futurs workers GPU ;
+* possibilité d'utiliser des URLs signées ;
+* possibilité d'effectuer des uploads directs depuis le client ;
+* facilité de migration future.
+
+==================================================
+3. DÉCISION D'ARCHITECTURE
+==========================
+
+Ne choisis pas simplement la solution la plus facile à coder.
+
+Nous voulons une architecture capable de fonctionner à long terme.
+
+Privilégie une séparation :
+
+BURKINAWATCH BACKEND
+↓
+UPLOAD AUTHORIZATION
+↓
+OBJECT STORAGE
+↓
+MEDIA FILE
+
+plutôt que :
+
+CLIENT
+↓
+BACKEND
+↓
+DISQUE LOCAL DU SERVEUR
+
+si l'architecture et l'infrastructure permettent correctement le premier modèle.
+
+==================================================
+4. UPLOAD DIRECT SI POSSIBLE
+============================
+
+Analyse la possibilité de mettre en place :
+
+CLIENT
+↓
+BACKEND : demande d'autorisation
+↓
+URL SIGNÉE TEMPORAIRE
+↓
+OBJECT STORAGE
+↓
+CLIENT UPLOAD DIRECTEMENT
+
+Le backend ne devrait pas avoir à transporter inutilement l'intégralité des vidéos si un upload direct sécurisé est possible.
+
+Ne mets évidemment jamais de credentials de stockage dans le frontend.
+
+==================================================
+5. ORGANISATION DU STOCKAGE
+===========================
+
+Propose une convention de stockage claire.
+
+Par exemple :
+
+streetview/
+originals/
+thumbnails/
+keyframes/
+processing/
+scenes/
+
+Les chemins doivent permettre de retrouver proprement les fichiers sans dépendre du nom fourni par l'utilisateur.
+
+Ne fais jamais confiance au nom de fichier utilisateur pour construire directement un chemin de stockage.
+
+==================================================
+6. VIDÉO ORIGINALE
+==================
+
+La vidéo originale doit être conservée séparément des fichiers générés ultérieurement.
+
+Architecture souhaitée :
+
+ORIGINAL VIDEO
+↓
+PROCESSING
+↓
+KEYFRAMES
+↓
+3D RECONSTRUCTION
+↓
+3D ASSET
+
+Ne remplace pas automatiquement l'original par les fichiers transformés.
+
+La conservation de l'original est importante pour permettre éventuellement une nouvelle reconstruction avec une meilleure technologie dans le futur.
+
+==================================================
+7. MÉTADONNÉES
+==============
+
+La base de données doit stocker les métadonnées et références nécessaires, mais PAS les gros fichiers binaires.
+
+Prévoir notamment :
+
+* storage key ;
+* taille ;
+* MIME type ;
+* durée ;
+* résolution ;
+* hash/checksum si approprié ;
+* date d'upload ;
+* statut ;
+* version éventuelle ;
+* référence à la contribution.
+
+==================================================
+8. SÉCURITÉ
+===========
+
+Vérifie et renforce si nécessaire :
+
+* authentification ;
+* autorisation ;
+* validation MIME ;
+* validation réelle du fichier ;
+* limite de taille ;
+* noms de fichiers sûrs ;
+* URLs signées ;
+* expiration des URLs ;
+* protection contre l'accès direct non autorisé ;
+* suppression sécurisée ;
+* isolation des fichiers utilisateurs.
+
+Un utilisateur ne doit jamais pouvoir modifier ou supprimer arbitrairement la vidéo d'un autre utilisateur en changeant simplement un identifiant dans une requête.
+
+==================================================
+9. UPLOAD INCOMPLET ET REPRISE
+==============================
+
+Analyse la gestion des :
+
+* interruptions réseau ;
+* uploads incomplets ;
+* timeout ;
+* retry ;
+* double upload ;
+* utilisateur qui ferme l'application ;
+* fichier envoyé deux fois.
+
+Si le stockage choisi le permet, étudie la possibilité d'un upload multipart/résumable pour les gros fichiers.
+
+Ne l'implémente que si c'est réellement nécessaire et compatible avec l'architecture actuelle.
+
+==================================================
+10. NETTOYAGE
+=============
+
+Prévoir la gestion des fichiers temporaires :
+
+UPLOAD ABANDONNÉ
+↓
+FICHIER TEMPORAIRE
+↓
+EXPIRATION
+↓
+SUPPRESSION
+
+Même principe pour les artefacts de traitement devenus inutiles.
+
+==================================================
+11. THUMBNAILS
+==============
+
+Les miniatures doivent être stockées séparément de la vidéo originale.
+
+Ne charge jamais une vidéo complète simplement pour afficher une miniature dans l'interface.
+
+==================================================
+12. FUTUR PIPELINE 3D
+=====================
+
+Le stockage doit être compatible avec le futur pipeline :
+
+VIDEO
+↓
+PROCESSING WORKER
+↓
+KEYFRAMES
+↓
+3D RECONSTRUCTION WORKER
+↓
+3D ASSET
+↓
+STREET VIEW VIEWER
+
+Les workers doivent pouvoir récupérer les fichiers depuis le stockage sans dépendre du disque local du serveur web.
+
+==================================================
+13. RAILWAY
+===========
+
+Analyse précisément les contraintes de l'environnement Railway actuel de Burkina Watch.
+
+Nous voulons savoir notamment :
+
+* si le disque local est persistant ou non dans notre architecture actuelle ;
+* si un Railway Volume serait approprié ;
+* quelles limites il impose ;
+* si plusieurs instances pourraient accéder correctement aux fichiers ;
+* ce qui se passe lors d'un redeploy ;
+* ce qui se passe lors d'un scaling horizontal ;
+* si le stockage peut être partagé avec de futurs workers.
+
+NE suppose pas que Railway Volume est automatiquement la meilleure solution.
+
+==================================================
+14. ENVIRONNEMENT
+=================
+
+Toutes les informations sensibles doivent rester dans les secrets/environnement appropriés.
+
+Ne mets aucune clé :
+
+* API ;
+* secret ;
+* access key ;
+* secret key ;
+
+dans le code source ou le frontend.
+
+Documente précisément les variables d'environnement nécessaires sans afficher leurs valeurs.
+
+==================================================
+15. MIGRATION
+=============
+
+Si un système de stockage existe déjà, ne le remplace pas brutalement.
+
+Propose une stratégie de migration sans perte :
+
+ANCIEN STOCKAGE
+↓
+MIGRATION
+↓
+NOUVEAU STOCKAGE
+↓
+VÉRIFICATION
+↓
+BASCULEMENT
+
+Si aucune migration n'est nécessaire, indique-le.
+
+==================================================
+16. IMPLÉMENTATION
+==================
+
+Après ton audit et ta recommandation, implémente uniquement la solution que tu considères appropriée pour la production.
+
+Ne modifie pas les fonctionnalités non liées à Street View.
+
+Ne touche pas au moteur 3D.
+
+Ne crée pas encore de worker GPU.
+
+Ne crée pas encore de reconstruction 3D.
+
+==================================================
+17. TESTS
+=========
+
+Teste au minimum :
+
+1. upload vidéo valide ;
+2. vidéo trop volumineuse ;
+3. format interdit ;
+4. utilisateur non authentifié ;
+5. accès à une vidéo d'un autre utilisateur ;
+6. téléchargement/lecture autorisé ;
+7. URL signée si utilisée ;
+8. expiration d'une URL signée ;
+9. retry après échec ;
+10. suppression ;
+11. upload interrompu ;
+12. comportement mobile ;
+13. comportement après redémarrage du backend ;
+14. persistance du fichier après redeploy si applicable.
+
+Les tests doivent vérifier le flux réel.
+
+==================================================
+18. RAPPORT FINAL OBLIGATOIRE
+=============================
+
+À la fin, fournis :
+
+A. stockage utilisé ;
+B. justification du choix ;
+C. architecture d'upload ;
+D. architecture de stockage ;
+E. variables d'environnement nécessaires ;
+F. fichiers modifiés ;
+G. fichiers créés ;
+H. migrations éventuelles ;
+I. tests réalisés ;
+J. résultats des tests ;
+K. limites actuelles ;
+L. coût estimatif à petite échelle ;
+M. principaux risques à grande échelle ;
+N. compatibilité avec le futur pipeline 3D.
+
+IMPORTANT :
+
+Si tu estimes qu'une décision d'infrastructure importante doit être validée avant de continuer, ARRÊTE-TOI avant de l'implémenter et explique précisément pourquoi.
+
+Ne prétends pas qu'un stockage est "production ready" simplement parce qu'un upload de 20 MB fonctionne.
+
+Nous devons raisonner à l'échelle du projet Street View à long terme.
