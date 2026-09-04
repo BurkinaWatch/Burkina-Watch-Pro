@@ -16,6 +16,23 @@ export interface CameraAgentHeartbeat {
   version?: string;
 }
 
+export interface CameraAgentMediaSessionRequest {
+  agentId: string;
+  cameraId: string;
+  streamId: string;
+}
+
+export interface CameraAgentMediaSession {
+  sessionId: string;
+  agentId: string;
+  cameraId: string;
+  streamId: string;
+  pathName: string;
+  publishUsername: string;
+  publishCredential: string;
+  expiresAt: string;
+}
+
 function assertControlUrl(controlUrl: string, production: boolean): string {
   const parsed = new URL(controlUrl);
   if (production && parsed.protocol !== "https:") {
@@ -100,6 +117,42 @@ export class CameraAgentClient {
       if (response.status === 401) this.credential = null;
       throw new Error(`Heartbeat agent refusé (${response.status})`);
     }
+  }
+
+  async createMediaSession(
+    input: CameraAgentMediaSessionRequest,
+  ): Promise<CameraAgentMediaSession> {
+    if (!this.credential) {
+      throw new Error("Agent non enrôlé");
+    }
+    const response = await this.fetchImpl(
+      `${this.controlUrl}/api/surveillance/agents/media-sessions`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.credential}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(input),
+      },
+    );
+    if (!response.ok) {
+      if (response.status === 401) this.credential = null;
+      throw new Error(`Session média agent refusée (${response.status})`);
+    }
+    const payload = (await response.json()) as Partial<CameraAgentMediaSession>;
+    if (
+      payload.agentId !== input.agentId ||
+      payload.cameraId !== input.cameraId ||
+      !payload.sessionId ||
+      !payload.pathName ||
+      !payload.publishUsername ||
+      !payload.publishCredential ||
+      !payload.expiresAt
+    ) {
+      throw new Error("Réponse de session média agent invalide");
+    }
+    return payload as CameraAgentMediaSession;
   }
 
   async run(

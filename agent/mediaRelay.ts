@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
 import { deriveOpaqueStreamPath } from "../shared/mediaIdentity";
 
