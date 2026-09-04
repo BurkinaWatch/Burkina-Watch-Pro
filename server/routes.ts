@@ -5315,18 +5315,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const isLocalAgentPublishPath =
       pathName === SURVEILLANCE_TEST_PATH_NAME ||
       pathName === SURVEILLANCE_AGENT_TEST_SOURCE_PATH_NAME;
+    const hasDedicatedPublisherCredential =
+      Boolean(publisherUsername && publisherPassword) &&
+      body.user === publisherUsername &&
+      typeof body.password === "string" &&
+      Buffer.byteLength(body.password) === Buffer.byteLength(publisherPassword!) &&
+      crypto.timingSafeEqual(
+        Buffer.from(body.password),
+        Buffer.from(publisherPassword!),
+      );
     if (
       body.action === "publish" &&
       isLocalAgentPublishPath &&
-      publisherUsername &&
-      publisherPassword &&
-      body.user === publisherUsername &&
-      typeof body.password === "string" &&
-      Buffer.byteLength(body.password) === Buffer.byteLength(publisherPassword) &&
-      crypto.timingSafeEqual(
-        Buffer.from(body.password),
-        Buffer.from(publisherPassword),
-      )
+      hasDedicatedPublisherCredential
+    ) {
+      return res.status(204).send();
+    }
+    if (
+      body.action === "read" &&
+      pathName === SURVEILLANCE_AGENT_TEST_SOURCE_PATH_NAME &&
+      hasDedicatedPublisherCredential
     ) {
       return res.status(204).send();
     }
