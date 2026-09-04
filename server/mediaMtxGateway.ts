@@ -52,7 +52,7 @@ function assertControlledSourceUrl(sourceUrl: string, testMode: boolean) {
     parsed.protocol !== "rtsp:" ||
     parsed.username ||
     parsed.password ||
-    (!testMode && !localHosts.has(parsed.hostname)) ||
+    !localHosts.has(parsed.hostname) ||
     parsed.search ||
     parsed.hash
   ) {
