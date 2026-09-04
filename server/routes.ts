@@ -28,6 +28,7 @@ import { verifySignalement } from "./aiVerification";
 import { moderateContent, logModerationAction } from "./contentModeration";
 import {
   signalementMutationLimiter,
+  surveillanceConnectionTestLimiter,
   surveillanceMutationLimiter,
 } from "./securityHardening";
 import { generateChatResponse, isAIAvailable } from "./aiService";
@@ -61,6 +62,7 @@ import {
   validateViewerAccess,
   revokeViewerAccessForCamera,
   type VideoGatewayStreamStatus,
+  VideoGatewayCapacityError,
   VideoGatewayAuthorizationError,
   VideoGatewayUnavailableError,
 } from "./videoGateway";
