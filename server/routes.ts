@@ -4507,6 +4507,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/streetview/contributions/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      const contribution = await storage.getStreetviewContribution(req.params.id, userId);
+      if (!contribution) return res.status(404).json({ message: "Contribution introuvable." });
+
+      for (const key of [contribution.storageKey, contribution.thumbnailKey]) {
+        if (key) await deleteStreetviewObject(key);
+      }
+      const deleted = await storage.deleteStreetviewContribution(contribution.id, userId);
+      if (!deleted) return res.status(404).json({ message: "Contribution introuvable." });
+      return res.status(204).end();
+    } catch (error) {
+      console.error("Erreur suppression contribution StreetView:", error);
+      return res.status(500).json({ message: "Impossible de supprimer cette contribution." });
+    }
+  });
+
   app.put(
     "/api/streetview/contributions/:id/upload",
     isAuthenticated,
@@ -4515,6 +4534,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const userId = getAuthenticatedUserId(req);
         if (!userId) return res.status(401).json({ message: "Unauthorized" });
+        if (getStreetviewStorageInfo().uploadMode !== "proxy") {
+          return res.status(409).json({
+            message: "Cette configuration utilise l'upload direct vers le stockage objet.",
+          });
+        }
         const contribution = await storage.getStreetviewContribution(req.params.id, userId);
         if (!contribution) return res.status(404).json({ message: "Contribution introuvable." });
         if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
@@ -4547,7 +4571,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           type: "PREPARE_CONTRIBUTION",
         });
         setImmediate(() => {
-          runStreetviewPreparation(job.id, contribution.id, req.body, mimeType).catch((error) => {
+          runStreetviewStoredObjectPreparation(
+            job.id,
+            contribution.id,
+            storageKey,
+            mimeType,
+          ).catch((error) => {
             console.error("Erreur job préparation StreetView:", error);
           });
         });
