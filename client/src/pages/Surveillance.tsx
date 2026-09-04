@@ -397,7 +397,11 @@ function LiveCameraPlayer({
         )}
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 bg-background p-3">
-        <span className="text-xs text-muted-foreground">{liveStateLabel(state)}</span>
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <span>Lecteur : {liveStateLabel(state)}</span>
+          <span>Gateway : {streamStatusLabel(gatewayStatus)}</span>
+          {cameraStatus && <span>Caméra : {statusLabel(cameraStatus)}</span>}
+        </div>
         <div className="flex gap-2">
           {(state === "idle" ||
             state === "offline" ||
@@ -612,8 +616,8 @@ export default function Surveillance() {
                 Surveillance
               </h1>
               <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                 Gérez vos caméras privées et testez le prototype de live local
-                 lorsqu'il est activé pour cet environnement.
+                 Gérez vos caméras privées et regardez leur flux live lorsque le
+                 gateway contrôlé est activé pour cet environnement.
               </p>
             </div>
           </div>
@@ -633,8 +637,8 @@ export default function Surveillance() {
               <p className="font-medium">Vos accès restent privés</p>
               <p className="mt-1 text-muted-foreground">
                 Les mots de passe caméra sont chiffrés côté serveur et ne sont
-                 jamais renvoyés à votre navigateur. Les caméras enregistrées
-                 ne sont pas encore connectées au gateway.
+                 jamais renvoyés à votre navigateur. Le flux RTSP reste isolé
+                 dans le gateway et seul le visionnage authentifié est exposé.
               </p>
             </div>
           </CardContent>
@@ -679,8 +683,8 @@ export default function Surveillance() {
                   {editingCamera ? "Modifier la caméra" : "Ajouter une caméra"}
                 </CardTitle>
                 <CardDescription className="mt-2">
-                  Décrivez l'endpoint privé de votre caméra. Aucun test réseau
-                  n'est effectué dans cette version.
+                   Décrivez l'endpoint privé de votre caméra. Le test réseau
+                   reste une action explicite via le bouton dédié.
                 </CardDescription>
               </div>
               <Button
@@ -884,9 +888,9 @@ export default function Surveillance() {
                 Aucune caméra configurée
               </h2>
               <p className="mt-2 max-w-md text-sm text-muted-foreground">
-                Ajoutez une caméra IP privée pour préparer votre espace
-                 Surveillance. Le visionnage des caméras réelles reste désactivé
-                 pendant la validation du prototype local.
+                 Ajoutez une caméra IP privée pour préparer votre espace
+                  Surveillance. Les credentials sont conservés chiffrés côté
+                  serveur et le live reste soumis à l'authentification.
               </p>
               <Button className="mt-5" onClick={openCreateForm}>
                 <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
