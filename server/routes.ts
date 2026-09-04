@@ -81,6 +81,7 @@ import {
   isSurveillanceTestCameraForUser,
   SURVEILLANCE_TEST_SOURCE_URL,
   SURVEILLANCE_TEST_PATH_NAME,
+  SURVEILLANCE_AGENT_TEST_SOURCE_PATH_NAME,
 } from "./surveillancePrototype";
 
 // Create a Map for quick pharmacy lookups by name
@@ -5311,9 +5312,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const pathName = typeof body.path === "string" ? body.path : "";
     const publisherUsername = process.env.VIDEO_GATEWAY_PUBLISHER_USERNAME;
     const publisherPassword = process.env.VIDEO_GATEWAY_PUBLISHER_PASSWORD;
+    const isLocalAgentPublishPath =
+      pathName === SURVEILLANCE_TEST_PATH_NAME ||
+      pathName === SURVEILLANCE_AGENT_TEST_SOURCE_PATH_NAME;
     if (
       body.action === "publish" &&
-      pathName === SURVEILLANCE_TEST_PATH_NAME &&
+      isLocalAgentPublishPath &&
       publisherUsername &&
       publisherPassword &&
       body.user === publisherUsername &&

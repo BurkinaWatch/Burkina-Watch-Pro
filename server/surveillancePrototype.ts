@@ -8,6 +8,7 @@ if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$/.test(configuredTestPathName)) {
   throw new Error("SURVEILLANCE_TEST_PATH_NAME invalide");
 }
 export const SURVEILLANCE_TEST_PATH_NAME = configuredTestPathName;
+export const SURVEILLANCE_AGENT_TEST_SOURCE_PATH_NAME = "phase8-2-source";
 export const SURVEILLANCE_REAL_PATH_PREFIX = "surveillance-";
 export const SURVEILLANCE_TEST_CAMERA_NAME = "TEST — CAMÉRA DE DÉVELOPPEMENT";
 export const SURVEILLANCE_TEST_SOURCE_URL =

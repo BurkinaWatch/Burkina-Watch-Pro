@@ -30,7 +30,10 @@ for _ in $(seq 1 30); do
   sleep 1
 done
 
-PHASE5_SOURCE_PATH=phase8-2-source scripts/phase5-test-source.sh >/tmp/burkinawatch-phase8-2-source.log 2>&1 &
+PHASE5_SOURCE_PATH=phase8-2-source \
+PHASE5_PUBLISH_USERNAME="$VIDEO_GATEWAY_PUBLISHER_USERNAME" \
+PHASE5_PUBLISH_PASSWORD="$VIDEO_GATEWAY_PUBLISHER_PASSWORD" \
+bash scripts/phase5-test-source.sh >/tmp/burkinawatch-phase8-2-source.log 2>&1 &
 SOURCE_PID=$!
 
 BURKINAWATCH_AGENT_ID="00000000-0000-4000-8000-000000000001" \
