@@ -18,3 +18,5 @@ or exposing credentials.
 camera and path-secret configuration outside production, use private/VPN
 networking rather than public RTSP, and complete physical-camera ownership,
 token, offline/reconnect, codec, and NAT tests before any production decision.
+Treat in-memory paths and viewer grants as single-instance only; shared
+observability and persistence are prerequisites for multi-instance operation.
