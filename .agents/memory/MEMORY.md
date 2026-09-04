@@ -2,3 +2,4 @@
 - [Railway Railpack runtime pinning](railway-railpack.md) — pin Node/npm in package metadata because Railpack may ignore the Nixpacks runtime selection.
 - [Encryption bootstrap](encryption-bootstrap.md) — the encryption singleton validates its key at import time; tests and workflows must provide it before loading server modules.
 - [Phase 5 media gateway](phase5-media-gateway.md) — MediaMTX 1.12.x uses singular origin configuration; FFmpeg should publish to its RTSP listener in this environment.
+- [Phase 6 real-camera guardrails](phase6-real-camera.md) — real RTSP support stays gated to non-production, with explicit private-network access and opaque MediaMTX paths.
