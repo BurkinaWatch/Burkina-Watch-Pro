@@ -39,7 +39,7 @@ export interface MediaMtxGatewayOptions {
 interface RegisteredPath {
   cameraId: string;
   pathName: string;
-  sourceUrl: string;
+  sourceUrl: string | null;
 }
 
 async function assertControlledSourceUrl(
@@ -149,24 +149,34 @@ export class MediaMtxVideoGateway implements VideoGateway {
   async registerStream(
     request: RegisterVideoStreamRequest,
   ): Promise<RegisteredVideoStream> {
-    await assertControlledSourceUrl(
-      request.sourceUrl,
-      this.options.config,
-    );
+    if (request.sourceUrl) {
+      await assertControlledSourceUrl(request.sourceUrl, this.options.config);
+    } else if (
+      !request.pathName ||
+      !/^surveillance-[a-f0-9]{32}$/.test(request.pathName)
+    ) {
+      throw new VideoGatewayUnavailableError("Path publisher non autorisé");
+    }
 
     const existing = this.registeredPaths.get(request.cameraId);
-    if (existing) {
+    if (
+      existing &&
+      (!request.pathName || existing.pathName === request.pathName)
+    ) {
       return {
         cameraId: request.cameraId,
         pathName: existing.pathName,
         status: "connecting",
       };
     }
+    if (existing) {
+      await this.removeStream(request.cameraId);
+    }
 
     const isControlledTestSource =
       this.options.config.testMode &&
       request.sourceUrl === SURVEILLANCE_TEST_SOURCE_URL;
-    const pathName = isControlledTestSource
+    const pathName = request.pathName || (isControlledTestSource
       ? SURVEILLANCE_TEST_PATH_NAME
       : `surveillance-${crypto
           .createHmac(
@@ -175,16 +185,17 @@ export class MediaMtxVideoGateway implements VideoGateway {
           )
           .update(request.cameraId)
           .digest("hex")
-          .slice(0, 32)}`;
+          .slice(0, 32)}`);
     if (!isControlledTestSource) {
       await this.request(
         `/v3/config/paths/add/${encodeURIComponent(pathName)}`,
         {
           method: "POST",
-          body: JSON.stringify({
-            source: request.sourceUrl,
-            rtspTransport: "tcp",
-          }),
+          body: JSON.stringify(
+            request.pathName
+              ? { source: "publisher" }
+              : { source: request.sourceUrl, rtspTransport: "tcp" },
+          ),
         },
       );
     }
@@ -192,7 +203,7 @@ export class MediaMtxVideoGateway implements VideoGateway {
     this.registeredPaths.set(request.cameraId, {
       cameraId: request.cameraId,
       pathName,
-      sourceUrl: request.sourceUrl,
+      sourceUrl: request.sourceUrl ?? null,
     });
     return {
       cameraId: request.cameraId,

@@ -4803,7 +4803,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (
         !videoGatewayConfig.enabled ||
         !videoGatewayConfig.pathSecret ||
-        (!videoGatewayConfig.realCameraEnabled && !videoGatewayConfig.testMode)
+        (!videoGatewayConfig.realCameraEnabled &&
+          !videoGatewayConfig.agentEnabled &&
+          !videoGatewayConfig.testMode)
       ) {
         return res.status(503).json({
           error: "Les sessions de publication média ne sont pas activées",
@@ -5061,7 +5063,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       if (
         !videoGatewayConfig.enabled ||
-        (!videoGatewayConfig.testMode && !videoGatewayConfig.realCameraEnabled)
+        (!videoGatewayConfig.testMode &&
+          !videoGatewayConfig.realCameraEnabled &&
+          !videoGatewayConfig.agentEnabled)
       ) {
         return res.status(503).json({
           error: "Le live caméra n'est pas activé pour cet environnement",
@@ -5080,6 +5084,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let sourceUrl = SURVEILLANCE_TEST_SOURCE_URL;
         let cameraStatus: "unknown" | "online" | "offline" | "disabled" | "error" =
           "unknown";
+        if (
+          !isTestCamera &&
+          camera &&
+          videoGatewayConfig.agentEnabled &&
+          !videoGatewayConfig.testMode
+        ) {
+          const mediaSession = await storage.getActiveAgentMediaSessionForCamera(
+            userId,
+            camera.id,
+            new Date(),
+          );
+          if (!mediaSession) {
+            return res.status(503).json({
+              error: "Aucun agent caméra autorisé ne publie actuellement ce flux",
+              status: "offline" satisfies VideoGatewayStreamStatus,
+              cameraStatus: camera.status,
+              streamStatus: "offline" satisfies VideoGatewayStreamStatus,
+            });
+          }
+          cameraStatus = camera.status as typeof cameraStatus;
+          const registered = await videoGateway.registerStream({
+            cameraId,
+            pathName: mediaSession.pathName,
+          });
+          const streamStatus = await videoGateway.getStreamStatus(cameraId);
+          if (streamStatus === "offline") {
+            return res.status(503).json({
+              error: "Le flux de l'agent caméra est hors ligne",
+              status: streamStatus,
+              cameraStatus,
+              streamStatus,
+            });
+          }
+          const tokenClaims = {
+            userId,
+            cameraId,
+            scope: "surveillance:stream" as const,
+            iat: nowSeconds,
+            exp: nowSeconds + 60,
+            jti: crypto.randomUUID(),
+          };
+          const access = await videoGateway.createViewerAccess({
+            authenticatedUserId: userId,
+            cameraId,
+            cameraOwnerUserId: userId,
+            cameraStatus,
+            tokenClaims,
+            nowSeconds,
+          });
+          return res.json({
+            cameraId: access.cameraId,
+            status: streamStatus === "unknown" ? registered.status : streamStatus,
+            cameraStatus,
+            streamStatus,
+            pathName: access.pathName,
+            whepUrl: access.whepUrl,
+            viewerToken: access.viewerToken,
+            expiresAt: access.expiresAt,
+            sessionId: access.gatewaySessionId,
+          });
+        }
         if (!isTestCamera && camera) {
           const password = await decryptCameraPassword(camera.encryptedPassword);
           sourceUrl = buildCameraRtspUrl({

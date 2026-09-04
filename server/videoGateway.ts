@@ -24,6 +24,7 @@ export const VIDEO_GATEWAY_DEFAULT_MAX_VIEWERS_PER_CAMERA = 8;
 export interface VideoGatewayConfig {
   enabled: boolean;
   provider: VideoGatewayProvider;
+  agentEnabled?: boolean;
   apiUrl: string | null;
   publicOrigin: string | null;
   apiToken: string | null;
@@ -73,7 +74,8 @@ export interface VideoGatewayStreamRequest {
 
 export interface RegisterVideoStreamRequest {
   cameraId: string;
-  sourceUrl: string;
+  sourceUrl?: string;
+  pathName?: string;
 }
 
 export interface RegisteredVideoStream {
@@ -269,6 +271,7 @@ export function readVideoGatewayConfig(
   const realCameraEnabled =
     env.VIDEO_GATEWAY_REAL_CAMERA_ENABLED === "true" &&
     env.NODE_ENV !== "production";
+  const agentEnabled = env.VIDEO_GATEWAY_AGENT_ENABLED === "true";
   const allowPrivateCameraNetwork =
     realCameraEnabled &&
     env.VIDEO_GATEWAY_ALLOW_PRIVATE_NETWORK === "true" &&
@@ -288,6 +291,7 @@ export function readVideoGatewayConfig(
     return {
       enabled: false,
       provider: "disabled",
+      agentEnabled: false,
       apiUrl: null,
       publicOrigin: null,
       apiToken: null,
@@ -317,7 +321,7 @@ export function readVideoGatewayConfig(
       "VIDEO_GATEWAY_API_TOKEN est obligatoire hors mode de test",
     );
   }
-  if (realCameraEnabled && !env.VIDEO_GATEWAY_PATH_SECRET?.trim()) {
+  if ((realCameraEnabled || agentEnabled) && !env.VIDEO_GATEWAY_PATH_SECRET?.trim()) {
     throw new VideoGatewayConfigurationError(
       "VIDEO_GATEWAY_PATH_SECRET est obligatoire lorsque les caméras réelles sont activées",
     );
@@ -340,6 +344,7 @@ export function readVideoGatewayConfig(
   return {
     enabled: true,
     provider: "mediamtx",
+    agentEnabled,
     apiUrl: parseServiceUrl(
       configuredApiUrl,
       "VIDEO_GATEWAY_API_URL",

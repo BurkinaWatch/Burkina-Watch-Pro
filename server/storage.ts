@@ -174,6 +174,11 @@ export interface IStorage {
   touchAgentMediaSession(sessionId: string, now: Date): Promise<void>;
   revokeAgentMediaSessionsForAgent(agentId: string): Promise<void>;
   revokeAgentMediaSessionsForBinding(agentId: string, cameraId: string): Promise<void>;
+  getActiveAgentMediaSessionForCamera(
+    ownerId: string,
+    cameraId: string,
+    now: Date,
+  ): Promise<AgentMediaSession | undefined>;
 
   // Méthodes pour les notifications
   createNotification(data: typeof insertNotificationSchema._type): Promise<any | undefined>;
@@ -1258,6 +1263,27 @@ export class DbStorage implements IStorage {
           isNull(agentMediaSessions.revokedAt),
         ),
       );
+  }
+
+  async getActiveAgentMediaSessionForCamera(
+    ownerId: string,
+    cameraId: string,
+    now: Date,
+  ): Promise<AgentMediaSession | undefined> {
+    const [session] = await db
+      .select()
+      .from(agentMediaSessions)
+      .where(
+        and(
+          eq(agentMediaSessions.ownerId, ownerId),
+          eq(agentMediaSessions.cameraId, cameraId),
+          isNull(agentMediaSessions.revokedAt),
+          gt(agentMediaSessions.expiresAt, now),
+        ),
+      )
+      .orderBy(desc(agentMediaSessions.createdAt))
+      .limit(1);
+    return session;
   }
 
   // ============================================
