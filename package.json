@@ -19,6 +19,7 @@
     "db:generate": "drizzle-kit generate",
     "db:railway:preflight": "node scripts/railway-migration-preflight.mjs",
     "db:railway:apply-surveillance": "node scripts/apply-railway-surveillance.mjs",
+    "db:railway:apply-streetview": "node scripts/apply-railway-streetview.mjs",
     "db:push": "node scripts/db-push-blocked.mjs"
   },
   "dependencies": {
