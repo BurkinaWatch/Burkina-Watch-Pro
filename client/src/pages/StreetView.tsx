@@ -47,6 +47,7 @@ import {
   Navigation
 } from "lucide-react";
 import { useLocation } from "wouter";
+import StreetViewContributionFlow from "@/components/streetview/StreetViewContributionFlow";
 import "leaflet/dist/leaflet.css";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -1212,6 +1213,10 @@ function CreateTourDialog({
 }
 
 export default function StreetView() {
+  return <StreetViewContributionFlow />;
+}
+
+function LegacyStreetView() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
 
