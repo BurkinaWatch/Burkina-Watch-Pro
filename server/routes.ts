@@ -4116,12 +4116,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
 
   app.get("/api/streetview/config", isAuthenticated, (_req, res) => {
+    const storageInfo = getStreetviewStorageInfo();
     res.json({
       maxVideoBytes: streetviewConfig.maxVideoBytes,
       minDurationSeconds: streetviewConfig.minDurationSeconds,
       maxDurationSeconds: streetviewConfig.maxDurationSeconds,
       allowedMimeTypes: streetviewConfig.allowedMimeTypes,
-      storage: getStreetviewStorageInfo().provider,
+      storage: storageInfo.provider,
+      durableStorage: storageInfo.durable,
+      uploadMode: storageInfo.uploadMode,
+      multipartPartSizeBytes: storageInfo.uploadMode === "multipart"
+        ? getStreetviewMultipartPartSizeBytes()
+        : null,
     });
   });
 
@@ -4180,12 +4186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!userId) return res.status(401).end();
       const contribution = await storage.getStreetviewContribution(req.params.id, userId);
       if (!contribution?.thumbnailKey) return res.status(404).end();
-      const { readFile } = await import("node:fs/promises");
-      const { resolve } = await import("node:path");
-      const root = resolve(process.env.STREETVIEW_STORAGE_DIR || "uploads/streetview");
-      const file = resolve(root, contribution.thumbnailKey);
-      if (file !== root && !file.startsWith(`${root}/`)) return res.status(404).end();
-      const content = await readFile(file);
+      const content = await readStreetviewObject(contribution.thumbnailKey);
       res.set("Content-Type", "image/jpeg");
       res.set("Cache-Control", "private, max-age=3600");
       res.send(content);
@@ -4193,6 +4194,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error?.code === "ENOENT") return res.status(404).end();
       console.error("Erreur lecture miniature StreetView:", error);
       res.status(500).end();
+    }
+  });
+
+  app.get("/api/streetview/contributions/:id/video", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) return res.status(401).end();
+      const contribution = await storage.getStreetviewContribution(req.params.id, userId);
+      if (!contribution?.storageKey) return res.status(404).end();
+
+      const signedUrl = await createStreetviewDownloadUrl(contribution.storageKey);
+      if (signedUrl) {
+        return res.redirect(302, signedUrl);
+      }
+
+      const content = await readStreetviewObject(contribution.storageKey);
+      res.set("Content-Type", contribution.mediaType || "application/octet-stream");
+      res.set("Content-Length", String(content.length));
+      res.set("Cache-Control", "private, max-age=3600");
+      return res.send(content);
+    } catch (error: any) {
+      if (error?.name === "NoSuchKey" || error?.code === "ENOENT") return res.status(404).end();
+      console.error("Erreur lecture vidéo StreetView:", error);
+      return res.status(500).end();
     }
   });
 
@@ -4284,6 +4309,201 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erreur création contribution StreetView:", error);
       res.status(500).json({ message: "Impossible de créer la contribution." });
+    }
+  });
+
+  app.post("/api/streetview/contributions/:id/upload-session", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      const contribution = await storage.getStreetviewContribution(req.params.id, userId);
+      if (!contribution) return res.status(404).json({ message: "Contribution introuvable." });
+      if (getStreetviewStorageInfo().uploadMode !== "multipart") {
+        return res.json({ provider: "filesystem", uploadMode: "proxy" });
+      }
+
+      const size = Number(req.body?.size);
+      const mimeType = typeof req.body?.mimeType === "string"
+        ? req.body.mimeType.toLowerCase()
+        : contribution.mediaType || "";
+      if (!Number.isInteger(size) || size <= 0) {
+        return res.status(400).json({ message: "La taille de la vidéo est invalide." });
+      }
+      if (size > streetviewConfig.maxVideoBytes) {
+        return res.status(413).json({ message: "Cette vidéo dépasse la taille maximale autorisée." });
+      }
+      if (!streetviewConfig.allowedMimeTypes.includes(mimeType as never)) {
+        return res.status(400).json({ message: "Le format de cette vidéo n'est pas pris en charge." });
+      }
+
+      const storageKey = streetviewStorageKey(contribution.id, mimeType);
+      const upload = await createStreetviewMultipartUpload(storageKey, mimeType);
+      const sessionToken = issueStreetviewUploadSession({
+        contributionId: contribution.id,
+        userId,
+        storageKey,
+        uploadId: upload.uploadId,
+        size,
+        mimeType,
+        partSizeBytes: upload.partSizeBytes,
+      });
+      return res.json({
+        provider: "s3",
+        uploadMode: "multipart",
+        sessionToken,
+        partSizeBytes: upload.partSizeBytes,
+        partCount: Math.ceil(size / upload.partSizeBytes),
+      });
+    } catch (error) {
+      console.error("Erreur création session upload StreetView:", error);
+      return res.status(500).json({ message: "Impossible de préparer l'upload." });
+    }
+  });
+
+  app.post("/api/streetview/contributions/:id/upload-session/part-url", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      const contribution = await storage.getStreetviewContribution(req.params.id, userId);
+      if (!contribution) return res.status(404).json({ message: "Contribution introuvable." });
+      const session = verifyStreetviewUploadSession(String(req.body?.sessionToken || ""));
+      if (session.contributionId !== contribution.id || session.userId !== userId) {
+        return res.status(403).json({ message: "Session d'upload non autorisée." });
+      }
+      const partNumber = Number(req.body?.partNumber);
+      const partCount = Math.ceil(session.size / session.partSizeBytes);
+      if (!Number.isInteger(partNumber) || partNumber < 1 || partNumber > partCount) {
+        return res.status(400).json({ message: "Numéro de partie invalide." });
+      }
+      const url = await createStreetviewMultipartPartUrl(
+        session.storageKey,
+        session.uploadId,
+        partNumber,
+      );
+      return res.json({ url, expiresInSeconds: 900 });
+    } catch (error: any) {
+      console.error("Erreur URL de partie StreetView:", error);
+      return res.status(error?.message?.includes("expired") ? 410 : 400).json({
+        message: "La session d'upload n'est plus valide.",
+      });
+    }
+  });
+
+  app.post("/api/streetview/contributions/:id/upload-session/complete", isAuthenticated, async (req: any, res) => {
+    let session: StreetviewUploadSession | null = null;
+    try {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      const contribution = await storage.getStreetviewContribution(req.params.id, userId);
+      if (!contribution) return res.status(404).json({ message: "Contribution introuvable." });
+      session = verifyStreetviewUploadSession(String(req.body?.sessionToken || ""));
+      if (session.contributionId !== contribution.id || session.userId !== userId) {
+        return res.status(403).json({ message: "Session d'upload non autorisée." });
+      }
+
+      const partCount = Math.ceil(session.size / session.partSizeBytes);
+      const parts = Array.isArray(req.body?.parts)
+        ? req.body.parts.map((part: any) => ({
+            partNumber: Number(part?.partNumber),
+            etag: typeof part?.etag === "string" ? part.etag : "",
+          }))
+        : [];
+      const uniqueParts = new Set(parts.map((part: { partNumber: number }) => part.partNumber));
+      if (
+        parts.length !== partCount ||
+        uniqueParts.size !== partCount ||
+        parts.some((part: { partNumber: number; etag: string }) =>
+          !Number.isInteger(part.partNumber) ||
+          part.partNumber < 1 ||
+          part.partNumber > partCount ||
+          !part.etag,
+        )
+      ) {
+        return res.status(400).json({ message: "Les parties de l'upload sont incomplètes." });
+      }
+
+      await completeStreetviewMultipartUpload(session.storageKey, session.uploadId, parts);
+      const head = await headStreetviewObject(session.storageKey);
+      if (head.contentLength !== session.size) {
+        await deleteStreetviewObject(session.storageKey);
+        throw new Error("UPLOADED_SIZE_MISMATCH");
+      }
+
+      const existingMetadata = contribution.clientMetadata &&
+        typeof contribution.clientMetadata === "object" &&
+        !Array.isArray(contribution.clientMetadata)
+        ? contribution.clientMetadata as Record<string, unknown>
+        : {};
+      const updated = await storage.updateStreetviewContribution(contribution.id, {
+        status: "UPLOADED",
+        progress: 35,
+        statusMessage: "Vidéo reçue, validation en préparation",
+        storageKey: session.storageKey,
+        mediaType: session.mimeType,
+        fileSizeBytes: head.contentLength,
+        uploadedAt: new Date(),
+        errorCode: null,
+        clientMetadata: {
+          ...existingMetadata,
+          storageProvider: "s3",
+          storageEtag: head.etag,
+        },
+        updatedAt: new Date(),
+      });
+      const job = await storage.createStreetviewProcessingJob({
+        contributionId: contribution.id,
+        type: "PREPARE_CONTRIBUTION",
+      });
+      setImmediate(() => {
+        runStreetviewStoredObjectPreparation(
+          job.id,
+          contribution.id,
+          session!.storageKey,
+          session!.mimeType,
+        ).catch((error) => {
+          console.error("Erreur job préparation StreetView:", error);
+        });
+      });
+
+      return res.status(202).json({
+        id: contribution.id,
+        status: updated?.status || "UPLOADED",
+        jobId: job.id,
+        message: "Vidéo reçue. En attente de reconstruction 3D.",
+      });
+    } catch (error: any) {
+      if (session) {
+        await abortStreetviewMultipartUpload(session.storageKey, session.uploadId).catch(() => undefined);
+        const userId = getAuthenticatedUserId(req);
+        if (userId) {
+          await storage.updateStreetviewContribution(req.params.id, {
+            status: "UPLOAD_FAILED",
+            progress: 100,
+            statusMessage: "L'upload a échoué",
+            errorCode: "UPLOAD_FAILED",
+            updatedAt: new Date(),
+          });
+        }
+      }
+      console.error("Erreur finalisation upload StreetView:", error);
+      return res.status(500).json({ message: "L'upload de la vidéo a échoué." });
+    }
+  });
+
+  app.post("/api/streetview/contributions/:id/upload-session/abort", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      const contribution = await storage.getStreetviewContribution(req.params.id, userId);
+      if (!contribution) return res.status(404).json({ message: "Contribution introuvable." });
+      const session = verifyStreetviewUploadSession(String(req.body?.sessionToken || ""));
+      if (session.contributionId !== contribution.id || session.userId !== userId) {
+        return res.status(403).json({ message: "Session d'upload non autorisée." });
+      }
+      await abortStreetviewMultipartUpload(session.storageKey, session.uploadId);
+      return res.status(204).end();
+    } catch (error) {
+      return res.status(400).json({ message: "Impossible d'annuler l'upload." });
     }
   });
 
