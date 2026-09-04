@@ -27,6 +27,9 @@ export interface VideoGatewayConfig {
   publicOrigin: string | null;
   apiToken: string | null;
   testMode: boolean;
+  realCameraEnabled: boolean;
+  allowPrivateCameraNetwork: boolean;
+  pathSecret: string | null;
 }
 
 export class VideoGatewayConfigurationError extends Error {
@@ -242,6 +245,13 @@ export function readVideoGatewayConfig(
   const provider = (env.VIDEO_GATEWAY_PROVIDER || "disabled").trim().toLowerCase();
   const testMode =
     env.VIDEO_GATEWAY_TEST_MODE === "true" && env.NODE_ENV !== "production";
+  const realCameraEnabled =
+    env.VIDEO_GATEWAY_REAL_CAMERA_ENABLED === "true" &&
+    env.NODE_ENV !== "production";
+  const allowPrivateCameraNetwork =
+    realCameraEnabled &&
+    env.VIDEO_GATEWAY_ALLOW_PRIVATE_NETWORK === "true" &&
+    env.NODE_ENV !== "production";
 
   if (
     !VIDEO_GATEWAY_PROVIDERS.includes(
@@ -261,6 +271,9 @@ export function readVideoGatewayConfig(
       publicOrigin: null,
       apiToken: null,
       testMode,
+      realCameraEnabled: false,
+      allowPrivateCameraNetwork: false,
+      pathSecret: null,
     };
   }
 
@@ -282,6 +295,11 @@ export function readVideoGatewayConfig(
       "VIDEO_GATEWAY_API_TOKEN est obligatoire hors mode de test",
     );
   }
+  if (realCameraEnabled && !env.VIDEO_GATEWAY_PATH_SECRET?.trim()) {
+    throw new VideoGatewayConfigurationError(
+      "VIDEO_GATEWAY_PATH_SECRET est obligatoire lorsque les caméras réelles sont activées",
+    );
+  }
 
   return {
     enabled: true,
@@ -298,6 +316,9 @@ export function readVideoGatewayConfig(
     ),
     apiToken: env.VIDEO_GATEWAY_API_TOKEN?.trim() || null,
     testMode,
+    realCameraEnabled,
+    allowPrivateCameraNetwork,
+    pathSecret: env.VIDEO_GATEWAY_PATH_SECRET?.trim() || null,
   };
 }
 

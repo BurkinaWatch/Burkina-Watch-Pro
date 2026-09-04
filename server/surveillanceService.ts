@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { encryptSensitiveData } from "./encryptionService";
+import {
+  decryptSensitiveData,
+  encryptSensitiveData,
+} from "./encryptionService";
 import {
   SurveillanceValidationError,
   validateSurveillanceEndpoint,
@@ -140,6 +143,19 @@ export async function encryptCameraPassword(password: string): Promise<string> {
   // Store the complete AES-256-GCM envelope, never the plaintext or a
   // reversible encoding. Decryption remains server/gateway-only.
   return JSON.stringify(await encryptSensitiveData(password));
+}
+
+export async function decryptCameraPassword(
+  encryptedPassword: string,
+): Promise<string> {
+  try {
+    const encrypted = JSON.parse(encryptedPassword);
+    return await decryptSensitiveData(encrypted);
+  } catch {
+    throw new SurveillanceValidationError(
+      "Les credentials de la caméra sont invalides",
+    );
+  }
 }
 
 export function toSurveillanceCameraDto(

@@ -9,7 +9,7 @@ const BLOCKED_HOSTNAMES = new Set([
   "instance-data",
 ]);
 
-function isBlockedIpv4(ip: string): boolean {
+function isBlockedIpv4(ip: string, allowPrivateNetworks = false): boolean {
   const parts = ip.split(".").map(Number);
   if (
     parts.length !== 4 ||
@@ -21,13 +21,13 @@ function isBlockedIpv4(ip: string): boolean {
   const [a, b] = parts;
   return (
     a === 0 ||
-    a === 10 ||
+    (!allowPrivateNetworks && a === 10) ||
     a === 127 ||
     (a === 100 && b >= 64 && b <= 127) ||
     (a === 169 && b === 254) ||
-    (a === 172 && b >= 16 && b <= 31) ||
+    (!allowPrivateNetworks && a === 172 && b >= 16 && b <= 31) ||
     (a === 192 && b === 0) ||
-    (a === 192 && b === 168) ||
+    (!allowPrivateNetworks && a === 192 && b === 168) ||
     (a === 198 && (b === 18 || b === 19)) ||
     (a === 198 && b === 51) ||
     (a === 203 && b === 0) ||
@@ -74,12 +74,16 @@ function parseIpv6(ip: string): number[] | undefined {
   return parts.map((part) => Number.parseInt(part, 16));
 }
 
-export function isBlockedIp(ip: string): boolean {
+export function isBlockedIp(
+  ip: string,
+  options: { allowPrivateNetworks?: boolean } = {},
+): boolean {
+  const allowPrivateNetworks = options.allowPrivateNetworks === true;
   const normalized = ip.replace(/^\[|\]$/g, "");
   const version = net.isIP(normalized);
 
   if (version === 4) {
-    return isBlockedIpv4(normalized);
+    return isBlockedIpv4(normalized, allowPrivateNetworks);
   }
 
   if (version !== 6) {
@@ -100,7 +104,7 @@ export function isBlockedIp(ip: string): boolean {
       parts[7] >> 8,
       parts[7] & 0xff,
     ].join(".");
-    return isBlockedIpv4(ipv4);
+    return isBlockedIpv4(ipv4, allowPrivateNetworks);
   }
 
   const isUnspecified = parts.every((part) => part === 0);
@@ -127,6 +131,7 @@ export async function validateOutboundUrl(
   options: {
     allowedProtocols?: readonly string[];
     allowCredentials?: boolean;
+    allowPrivateNetworks?: boolean;
   } = {},
 ): Promise<URL> {
   const allowedProtocols = options.allowedProtocols || ["https"];
@@ -155,7 +160,7 @@ export async function validateOutboundUrl(
   }
 
   if (net.isIP(hostname)) {
-    if (isBlockedIp(hostname)) {
+    if (isBlockedIp(hostname, options)) {
       throw new OutboundUrlValidationError();
     }
     return url;
@@ -169,7 +174,9 @@ export async function validateOutboundUrl(
 
     if (
       resolvedAddresses.length === 0 ||
-      resolvedAddresses.some((address) => isBlockedIp(address.address))
+      resolvedAddresses.some((address) =>
+        isBlockedIp(address.address, options),
+      )
     ) {
       throw new OutboundUrlValidationError();
     }

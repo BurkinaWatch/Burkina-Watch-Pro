@@ -16,6 +16,7 @@ import {
   SURVEILLANCE_TEST_PATH_NAME,
   SURVEILLANCE_TEST_SOURCE_URL,
 } from "./surveillancePrototype";
+import { validateOutboundUrl } from "./ssrfProtection";
 
 interface MediaMtxPathResponse {
   ready?: boolean;
@@ -39,7 +40,10 @@ interface RegisteredPath {
   sourceUrl: string;
 }
 
-function assertControlledSourceUrl(sourceUrl: string, testMode: boolean) {
+async function assertControlledSourceUrl(
+  sourceUrl: string,
+  options: MediaMtxGatewayOptions["config"],
+) {
   let parsed: URL;
   try {
     parsed = new URL(sourceUrl);
@@ -47,23 +51,33 @@ function assertControlledSourceUrl(sourceUrl: string, testMode: boolean) {
     throw new VideoGatewayUnavailableError("Source RTSP de test invalide");
   }
 
-  const localHosts = new Set([
-    "127.0.0.1",
-    "localhost",
-    "::1",
-    "host.docker.internal",
-  ]);
+  if (parsed.protocol !== "rtsp:" || parsed.search || parsed.hash) {
+    throw new VideoGatewayUnavailableError(
+      "Source RTSP non autorisée",
+    );
+  }
   if (
-    parsed.protocol !== "rtsp:" ||
-    parsed.username ||
-    parsed.password ||
-    !localHosts.has(parsed.hostname) ||
-    parsed.search ||
-    parsed.hash
+    options.testMode &&
+    (parsed.username ||
+      parsed.password ||
+      !["127.0.0.1", "localhost", "::1", "host.docker.internal"].includes(
+        parsed.hostname,
+      ))
   ) {
     throw new VideoGatewayUnavailableError(
       "Seule une source RTSP locale sans credential est autorisée dans le prototype",
     );
+  }
+  if (!options.testMode) {
+    try {
+      await validateOutboundUrl(sourceUrl, {
+        allowedProtocols: ["rtsp"],
+        allowCredentials: true,
+        allowPrivateNetworks: options.allowPrivateCameraNetwork,
+      });
+    } catch {
+      throw new VideoGatewayUnavailableError("Source RTSP non autorisée");
+    }
   }
 }
 
@@ -128,9 +142,9 @@ export class MediaMtxVideoGateway implements VideoGateway {
   async registerStream(
     request: RegisterVideoStreamRequest,
   ): Promise<RegisteredVideoStream> {
-    assertControlledSourceUrl(
+    await assertControlledSourceUrl(
       request.sourceUrl,
-      this.options.config.testMode,
+      this.options.config,
     );
 
     const existing = this.registeredPaths.get(request.cameraId);
@@ -147,7 +161,14 @@ export class MediaMtxVideoGateway implements VideoGateway {
       request.sourceUrl === SURVEILLANCE_TEST_SOURCE_URL;
     const pathName = isControlledTestSource
       ? SURVEILLANCE_TEST_PATH_NAME
-      : `phase5-${crypto.randomBytes(12).toString("base64url")}`;
+      : `surveillance-${crypto
+          .createHmac(
+            "sha256",
+            this.options.config.pathSecret || this.options.config.publicOrigin,
+          )
+          .update(request.cameraId)
+          .digest("hex")
+          .slice(0, 32)}`;
     if (!isControlledTestSource) {
       await this.request(
         `/v3/config/paths/add/${encodeURIComponent(pathName)}`,
