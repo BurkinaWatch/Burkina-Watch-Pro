@@ -322,7 +322,7 @@ function LiveCameraPlayer({
         error instanceof Error ? error.message : "Connexion impossible";
       setErrorMessage(
         message.includes("503") || message.includes("offline")
-          ? "La caméra de test est hors ligne."
+          ? "La caméra est hors ligne ou le gateway ne reçoit pas encore le flux."
           : "Le lecteur WebRTC n'a pas pu se connecter.",
       );
       setState(message.includes("503") ? "offline" : "error");
