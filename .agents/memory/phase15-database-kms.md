@@ -15,11 +15,11 @@ The repository declares Google Cloud KMS, but the local node_modules can omit th
 
 **How to apply:** Restore the declared Node-compatible KMS dependency in a writable clean install, verify KMS IAM/identifiers and stable secret configuration without logging values, then run the encryption tests before relying on the service.
 
-Drizzle's available CLI commands do not by themselves provide evidence of a safe, non-destructive baseline for a populated Railway database with no migration ledger.
+Drizzle's available CLI commands do not by themselves provide evidence of a safe, non-destructive baseline for a populated Railway database with no migration ledger. The approved strategy for this project is a reviewed, transaction-locked, forward-only runner that verifies the complete schema before commit; it must not fabricate `__drizzle_migrations`.
 
 **Why:** Replaying the historical migrations could recreate or drop objects, while fabricating `__drizzle_migrations` metadata could make future migration state appear valid without proving provenance.
 
-**How to apply:** Keep the historical migrations untouched, document the Railway snapshot, and require a reviewed baseline method plus a restore point before applying any versioned schema change.
+**How to apply:** Keep historical migrations untouched, document a compatible logical backup and any Railway-managed restore point, require an explicit migration guard, and run read-only preflight checks immediately after the transaction.
 
 Logical PostgreSQL backups require a `pg_dump` client from the same major version
 as the server; an older client must be rejected rather than used. A successful
