@@ -54,6 +54,7 @@ import {
   createVideoGateway,
   getViewerAccessGrant,
   readVideoGatewayConfig,
+  validateViewerAccess,
   revokeViewerAccessForCamera,
   type VideoGatewayStreamStatus,
   VideoGatewayAuthorizationError,
@@ -62,7 +63,7 @@ import {
 import {
   getSurveillanceTestCamera,
   isSurveillanceTestCameraForUser,
-  isSurveillanceTestCameraId,
+  isSurveillanceTestPathName,
   SURVEILLANCE_TEST_SOURCE_URL,
 } from "./surveillancePrototype";
 
@@ -4740,7 +4741,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     const body = req.body && typeof req.body === "object" ? req.body : {};
     const pathName = typeof body.path === "string" ? body.path : "";
-    if (!isSurveillanceTestCameraId(pathName)) {
+    if (!isSurveillanceTestPathName(pathName)) {
       return res.status(401).send();
     }
 

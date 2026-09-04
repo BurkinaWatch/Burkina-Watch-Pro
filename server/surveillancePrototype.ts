@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 
 export const SURVEILLANCE_TEST_CAMERA_ID_PREFIX = "phase5-local-test-camera";
+export const SURVEILLANCE_TEST_PATH_PREFIX = "phase5-";
 export const SURVEILLANCE_TEST_CAMERA_NAME = "TEST — CAMÉRA DE DÉVELOPPEMENT";
 export const SURVEILLANCE_TEST_SOURCE_URL =
   "rtsp://host.docker.internal:8555/phase5-test";
@@ -52,4 +53,8 @@ export function isSurveillanceTestCameraForUser(
 
 export function isSurveillanceTestCameraId(cameraId: string): boolean {
   return cameraId.startsWith(`${SURVEILLANCE_TEST_CAMERA_ID_PREFIX}-`);
+}
+
+export function isSurveillanceTestPathName(pathName: string): boolean {
+  return pathName.startsWith(SURVEILLANCE_TEST_PATH_PREFIX);
 }

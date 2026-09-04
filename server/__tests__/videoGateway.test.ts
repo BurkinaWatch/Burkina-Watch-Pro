@@ -5,7 +5,12 @@ import {
   assertVideoStreamAuthorization,
   createVideoGateway,
   DisabledVideoGateway,
+  getViewerAccessGrant,
+  issueViewerAccess,
   readVideoGatewayConfig,
+  revokeViewerAccess,
+  validateViewerAccess,
+  VIDEO_GATEWAY_STREAM_TTL_SECONDS,
   VideoGatewayAuthorizationError,
   VideoGatewayConfigurationError,
   VideoGatewayUnavailableError,
@@ -33,7 +38,10 @@ describe("Phase 4 video gateway contract", () => {
     assert.deepEqual(config, {
       enabled: false,
       provider: "disabled",
-      origin: null,
+      apiUrl: null,
+      publicOrigin: null,
+      apiToken: null,
+      testMode: false,
     });
     assert.equal(createVideoGateway(config) instanceof DisabledVideoGateway, true);
   });
@@ -44,6 +52,8 @@ describe("Phase 4 video gateway contract", () => {
         readVideoGatewayConfig({
           VIDEO_GATEWAY_ENABLED: "true",
           VIDEO_GATEWAY_PROVIDER: "mediamtx",
+          VIDEO_GATEWAY_API_URL: "http://gateway.example.test",
+          VIDEO_GATEWAY_PUBLIC_ORIGIN: "https://gateway.example.test",
         }),
       VideoGatewayConfigurationError,
     );
@@ -52,7 +62,8 @@ describe("Phase 4 video gateway contract", () => {
         readVideoGatewayConfig({
           VIDEO_GATEWAY_ENABLED: "true",
           VIDEO_GATEWAY_PROVIDER: "mediamtx",
-          VIDEO_GATEWAY_ORIGIN: "http://gateway.example.test",
+          VIDEO_GATEWAY_API_URL: "http://gateway.example.test",
+          VIDEO_GATEWAY_PUBLIC_ORIGIN: "http://gateway.example.test",
         }),
       VideoGatewayConfigurationError,
     );
@@ -61,7 +72,8 @@ describe("Phase 4 video gateway contract", () => {
         readVideoGatewayConfig({
           VIDEO_GATEWAY_ENABLED: "true",
           VIDEO_GATEWAY_PROVIDER: "mediamtx",
-          VIDEO_GATEWAY_ORIGIN: "https://user:password@gateway.example.test",
+          VIDEO_GATEWAY_API_URL: "https://user:password@gateway.example.test",
+          VIDEO_GATEWAY_PUBLIC_ORIGIN: "https://gateway.example.test",
         }),
       VideoGatewayConfigurationError,
     );
@@ -101,5 +113,32 @@ describe("Phase 4 video gateway contract", () => {
       () => new DisabledVideoGateway().authorizeStream(validRequest),
       VideoGatewayUnavailableError,
     );
+  });
+
+  test("issues scoped, expiring viewer grants and supports revocation", () => {
+    const grant = issueViewerAccess({
+      userId: "user-a",
+      cameraId: "camera-a",
+      pathName: "phase5-path-a",
+      nowSeconds: 2_000,
+    });
+    assert.equal(grant.expiresAt, 2_000 + VIDEO_GATEWAY_STREAM_TTL_SECONDS);
+    assert.equal(validateViewerAccess(grant.token, "phase5-path-a", 2_001)?.userId, "user-a");
+    assert.equal(validateViewerAccess(grant.token, "phase5-path-b", 2_001), null);
+    assert.equal(getViewerAccessGrant(grant.sessionId)?.cameraId, "camera-a");
+    assert.equal(revokeViewerAccess(grant.sessionId), true);
+    assert.equal(validateViewerAccess(grant.token, "phase5-path-a", 2_001), null);
+    assert.equal(getViewerAccessGrant(grant.sessionId), null);
+  });
+
+  test("removes expired grants before they can be used", () => {
+    const grant = issueViewerAccess({
+      userId: "user-expired",
+      cameraId: "camera-expired",
+      pathName: "phase5-expired",
+      nowSeconds: 3_000,
+    });
+    assert.equal(validateViewerAccess(grant.token, "phase5-expired", grant.expiresAt), null);
+    assert.equal(getViewerAccessGrant(grant.sessionId), null);
   });
 });
