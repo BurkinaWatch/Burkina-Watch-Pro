@@ -46,7 +46,7 @@ describe("Surveillance Phase 2 preparation", () => {
       host: "camera.example.test",
       port: 554,
       streamPath: "/live/main",
-      status: "pending",
+      status: "unknown",
       lastSeenAt: null,
       createdAt: "2026-09-04T00:00:00.000Z",
       updatedAt: "2026-09-04T00:00:00.000Z",

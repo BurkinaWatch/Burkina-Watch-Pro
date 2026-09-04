@@ -43,6 +43,7 @@ export default function HamburgerMenu({ open, onOpenChange }: HamburgerMenuProps
     { href: "/bulletin", icon: Newspaper, label: "Actualités", color: "text-yellow-700 dark:text-yellow-500" },
     { href: "/events", icon: Calendar, label: t("nav.events"), color: "text-purple-600 dark:text-purple-500" },
     { href: "/tracking-live", icon: Navigation, label: t("nav.tracking"), color: "text-cyan-600 dark:text-cyan-500" },
+    { href: "/surveillance", icon: Camera, label: "Surveillance", color: "text-green-600 dark:text-green-500" },
     { href: "/streetview", icon: Camera, label: t("nav.streetview"), color: "text-gray-400 dark:text-gray-600", disabled: true },
   ];
 

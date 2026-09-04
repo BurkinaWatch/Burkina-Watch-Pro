@@ -31,6 +31,7 @@ const APropos = lazy(() => import("@/pages/APropos"));
 const Conditions = lazy(() => import("@/pages/Conditions"));
 const Leaderboard = lazy(() => import("@/pages/Leaderboard"));
 const TrackingLive = lazy(() => import("@/pages/TrackingLive"));
+const Surveillance = lazy(() => import("@/pages/Surveillance"));
 const Notifications = lazy(() => import("@/pages/Notifications"));
 const Contribuer = lazy(() => import("@/pages/Contribuer"));
 const PharmaciesDuFaso = lazy(() => import("@/pages/PharmaciesDuFaso"));
@@ -95,6 +96,7 @@ function Router() {
         <Route path="/leaderboard" component={Leaderboard} />
         <Route path="/classement" component={Leaderboard} />
         <Route path="/tracking-live" component={TrackingLive} />
+        <Route path="/surveillance">{() => <AuthGuard><Surveillance /></AuthGuard>}</Route>
         <Route path="/contribuer" component={Contribuer} />
         <Route path="/pharmacies">{() => <AuthGuard><PharmaciesDuFaso /></AuthGuard>}</Route>
         <Route path="/pharmacies-ii">{() => <AuthGuard><PharmaciesDuFaso /></AuthGuard>}</Route>
