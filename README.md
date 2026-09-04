@@ -41,6 +41,29 @@ Le projet utilise PostgreSQL Railway comme base de production avec Drizzle ORM.
 `RAILWAY_DATABASE_URL` est prioritaire ; `DATABASE_URL` reste un fallback réservé au
 développement local.
 
+### Street View Phase 3
+
+Street View est réactivé avec un premier flux de contribution vidéo authentifié :
+
+```text
+Street View → Ajouter → choisir une vidéo → vérifier → localiser → envoyer
+→ validation préparatoire → attente de reconstruction 3D
+```
+
+La Phase 3 ne lance aucun moteur de reconstruction 3D. Les vidéos ne sont pas
+stockées dans PostgreSQL : la base conserve uniquement les métadonnées et une
+référence de stockage. L’adaptateur actuel utilise `STREETVIEW_STORAGE_DIR`
+pour le développement ; un volume persistant Railway ou un Object Storage devra
+être configuré avant une utilisation de production.
+
+La migration additive est `migrations/0008_streetview_contributions.sql`.
+Après sauvegarde et validation de la cible, elle peut être appliquée avec :
+
+```bash
+ALLOW_RAILWAY_STREETVIEW_MIGRATION=true \
+  npm run db:railway:apply-streetview
+```
+
 ### Migrations
 
 Pour créer une nouvelle migration :
