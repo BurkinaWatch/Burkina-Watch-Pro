@@ -1,5 +1,9 @@
 import { storage } from "./storage";
 import { streetviewConfig } from "./streetviewConfig";
+import {
+  headStreetviewObject,
+  readStreetviewObjectRange,
+} from "./streetviewStorage";
 
 function isSupportedVideoBuffer(buffer: Buffer, mimeType: string): boolean {
   if (mimeType === "video/webm") {
@@ -13,12 +17,7 @@ function isSupportedVideoBuffer(buffer: Buffer, mimeType: string): boolean {
   return false;
 }
 
-export async function runStreetviewPreparation(
-  jobId: string,
-  contributionId: string,
-  buffer: Buffer,
-  mimeType: string,
-): Promise<void> {
+async function markPreparationStarted(jobId: string, contributionId: string): Promise<void> {
   await storage.updateStreetviewProcessingJob(jobId, {
     status: "PROCESSING",
     progress: 10,
@@ -32,21 +31,16 @@ export async function runStreetviewPreparation(
     errorCode: null,
     updatedAt: new Date(),
   });
+}
 
+async function finishPreparation(
+  jobId: string,
+  contributionId: string,
+  validate: () => Promise<void>,
+): Promise<void> {
+  await markPreparationStarted(jobId, contributionId);
   try {
-    if (!streetviewConfig.allowedMimeTypes.includes(mimeType as never)) {
-      throw new Error("UNSUPPORTED_MIME_TYPE");
-    }
-    if (buffer.length === 0 || buffer.length > streetviewConfig.maxVideoBytes) {
-      throw new Error("INVALID_VIDEO_SIZE");
-    }
-    if (!isSupportedVideoBuffer(buffer, mimeType)) {
-      throw new Error("INVALID_VIDEO_CONTAINER");
-    }
-
-    // Phase 3 deliberately stops here. No photogrammetry, NeRF or Gaussian
-    // Splatting is invoked. The job prepares the contribution for a future
-    // reconstruction worker only.
+    await validate();
     await storage.updateStreetviewProcessingJob(jobId, {
       status: "COMPLETED",
       progress: 100,
@@ -78,4 +72,47 @@ export async function runStreetviewPreparation(
       updatedAt: new Date(),
     });
   }
+}
+
+function validateVideoMetadata(
+  buffer: Buffer,
+  mimeType: string,
+  fileSizeBytes: number,
+): void {
+  if (!streetviewConfig.allowedMimeTypes.includes(mimeType as never)) {
+    throw new Error("UNSUPPORTED_MIME_TYPE");
+  }
+  if (fileSizeBytes === 0 || fileSizeBytes > streetviewConfig.maxVideoBytes) {
+    throw new Error("INVALID_VIDEO_SIZE");
+  }
+  if (!isSupportedVideoBuffer(buffer, mimeType)) {
+    throw new Error("INVALID_VIDEO_CONTAINER");
+  }
+}
+
+export async function runStreetviewPreparation(
+  jobId: string,
+  contributionId: string,
+  buffer: Buffer,
+  mimeType: string,
+): Promise<void> {
+  await finishPreparation(jobId, contributionId, async () => {
+    validateVideoMetadata(buffer, mimeType, buffer.length);
+    // Phase 3 deliberately stops here. No photogrammetry, NeRF or Gaussian
+    // Splatting is invoked. The job prepares the contribution for a future
+    // reconstruction worker only.
+  });
+}
+
+export async function runStreetviewStoredObjectPreparation(
+  jobId: string,
+  contributionId: string,
+  storageKey: string,
+  mimeType: string,
+): Promise<void> {
+  await finishPreparation(jobId, contributionId, async () => {
+    const head = await headStreetviewObject(storageKey);
+    const header = await readStreetviewObjectRange(storageKey, 0, 63);
+    validateVideoMetadata(header, mimeType, head.contentLength);
+  });
 }
