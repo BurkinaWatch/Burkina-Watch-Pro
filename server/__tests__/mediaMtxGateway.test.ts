@@ -148,4 +148,32 @@ describe("MediaMTX video gateway adapter", () => {
     assert.notEqual(first.viewerToken, second.viewerToken);
     assert.notEqual(first.gatewaySessionId, second.gatewaySessionId);
   });
+
+  test("enforces the configured viewer limit per camera", async () => {
+    const gateway = new MediaMtxVideoGateway({
+      config: {
+        ...config,
+        maxViewerSessionsPerCamera: 1,
+      },
+      fetchImpl: async () => new Response(null, { status: 204 }),
+    });
+    await gateway.registerStream({
+      cameraId: "capacity-camera",
+      sourceUrl: SURVEILLANCE_TEST_SOURCE_URL,
+    });
+    const baseRequest = authorizedRequest();
+    const request = {
+      ...baseRequest,
+      cameraId: "capacity-camera",
+      tokenClaims: {
+        ...baseRequest.tokenClaims,
+        cameraId: "capacity-camera",
+      },
+    };
+    await gateway.createViewerAccess(request);
+    await assert.rejects(
+      () => gateway.createViewerAccess(request),
+      /limite de viewers simultanés/i,
+    );
+  });
 });
