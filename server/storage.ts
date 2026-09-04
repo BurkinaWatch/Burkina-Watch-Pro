@@ -245,6 +245,46 @@ export interface IStorage {
   getVirtualTourWithPhotos(tourId: string): Promise<VirtualTourWithPhotos | undefined>;
   createVirtualTour(tour: InsertVirtualTour, photos: InsertStreetviewPoint[]): Promise<VirtualTour>;
   incrementTourViewCount(tourId: string): Promise<void>;
+
+  // --- StreetView video contributions ---
+  createStreetviewContribution(data: InsertStreetviewContribution): Promise<StreetviewContribution>;
+  getStreetviewContributionsByUser(userId: string): Promise<StreetviewContribution[]>;
+  getStreetviewContribution(id: string, userId?: string): Promise<StreetviewContribution | undefined>;
+  updateStreetviewContribution(
+    id: string,
+    updates: Partial<{
+      status: string;
+      progress: number;
+      statusMessage: string | null;
+      errorCode: string | null;
+      originalFileName: string | null;
+      mediaType: string | null;
+      storageKey: string | null;
+      thumbnailKey: string | null;
+      fileSizeBytes: number | null;
+      durationMs: number | null;
+      width: number | null;
+      height: number | null;
+      orientation: string | null;
+      uploadedAt: Date | null;
+      processedAt: Date | null;
+      updatedAt: Date;
+    }>,
+  ): Promise<StreetviewContribution | undefined>;
+  createStreetviewProcessingJob(data: InsertStreetviewProcessingJob): Promise<StreetviewProcessingJob>;
+  updateStreetviewProcessingJob(
+    id: string,
+    updates: Partial<{
+      status: string;
+      progress: number;
+      attempts: number;
+      errorCode: string | null;
+      errorMessage: string | null;
+      startedAt: Date | null;
+      completedAt: Date | null;
+    }>,
+  ): Promise<StreetviewProcessingJob | undefined>;
+
   // --- Metadata methods for sync tracking ---
   getMetadata(key: string): Promise<string | undefined>;
   setMetadata(key: string, value: string): Promise<void>;
@@ -1808,6 +1848,74 @@ L'équipe Burkina Watch
       .update(virtualTours)
       .set({ viewCount: sql`${virtualTours.viewCount} + 1` })
       .where(eq(virtualTours.id, tourId));
+  }
+
+  // --- StreetView video contributions ---
+  async createStreetviewContribution(
+    data: InsertStreetviewContribution,
+  ): Promise<StreetviewContribution> {
+    const [created] = await db
+      .insert(streetviewContributions)
+      .values(data)
+      .returning();
+    return created;
+  }
+
+  async getStreetviewContributionsByUser(userId: string): Promise<StreetviewContribution[]> {
+    return db
+      .select()
+      .from(streetviewContributions)
+      .where(eq(streetviewContributions.userId, userId))
+      .orderBy(desc(streetviewContributions.createdAt));
+  }
+
+  async getStreetviewContribution(
+    id: string,
+    userId?: string,
+  ): Promise<StreetviewContribution | undefined> {
+    const conditions = userId
+      ? and(eq(streetviewContributions.id, id), eq(streetviewContributions.userId, userId))
+      : eq(streetviewContributions.id, id);
+    const [contribution] = await db
+      .select()
+      .from(streetviewContributions)
+      .where(conditions)
+      .limit(1);
+    return contribution;
+  }
+
+  async updateStreetviewContribution(
+    id: string,
+    updates: Parameters<IStorage["updateStreetviewContribution"]>[1],
+  ): Promise<StreetviewContribution | undefined> {
+    const [updated] = await db
+      .update(streetviewContributions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(streetviewContributions.id, id))
+      .returning();
+    return updated;
+  }
+
+  async createStreetviewProcessingJob(
+    data: InsertStreetviewProcessingJob,
+  ): Promise<StreetviewProcessingJob> {
+    const [created] = await db
+      .insert(streetviewProcessingJobs)
+      .values(data)
+      .returning();
+    return created;
+  }
+
+  async updateStreetviewProcessingJob(
+    id: string,
+    updates: Parameters<IStorage["updateStreetviewProcessingJob"]>[1],
+  ): Promise<StreetviewProcessingJob | undefined> {
+    const [updated] = await db
+      .update(streetviewProcessingJobs)
+      .set(updates)
+      .where(eq(streetviewProcessingJobs.id, id))
+      .returning();
+    return updated;
   }
 
   async incrementTourReportCount(tourId: string): Promise<{ reportCount: number; status: string }> {
