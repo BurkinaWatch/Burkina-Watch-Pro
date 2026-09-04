@@ -36,6 +36,7 @@ import {
 } from "./securityHardening";
 import {
   CAMERA_AGENT_ENROLLMENT_TTL_SECONDS,
+  CAMERA_AGENT_MEDIA_SESSION_TTL_SECONDS,
   getAgentStatus,
   generateAgentSecret,
   hashAgentSecret,
@@ -83,6 +84,10 @@ import {
   SURVEILLANCE_TEST_PATH_NAME,
   SURVEILLANCE_AGENT_TEST_SOURCE_PATH_NAME,
 } from "./surveillancePrototype";
+import {
+  assertStreamId,
+  deriveOpaqueStreamPath,
+} from "@shared/mediaIdentity";
 
 // Create a Map for quick pharmacy lookups by name
 const pharmaciesDataMap = new Map<string, typeof PHARMACIES_DATA[0]>();
@@ -4622,6 +4627,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     agentId: z.string().uuid(),
     version: z.string().trim().min(1).max(64).optional(),
   }).strict();
+  const agentMediaSessionSchema = z.object({
+    agentId: z.string().uuid(),
+    cameraId: z.string().uuid(),
+    streamId: z.string().trim().min(1).max(64).regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/),
+  }).strict();
 
   const agentDto = (agent: Awaited<ReturnType<typeof storage.getCameraAgent>>) =>
     agent
@@ -4781,6 +4791,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
+  app.post(
+    "/api/surveillance/agents/media-sessions",
+    surveillanceAgentHeartbeatLimiter,
+    async (req: any, res) => {
+      const parsed = agentMediaSessionSchema.safeParse(req.body);
+      const credential = getAgentBearerToken(req);
+      if (!parsed.success || !credential) {
+        return res.status(401).json({ error: "Authentification agent requise" });
+      }
+      if (
+        !videoGatewayConfig.enabled ||
+        !videoGatewayConfig.pathSecret ||
+        (!videoGatewayConfig.realCameraEnabled && !videoGatewayConfig.testMode)
+      ) {
+        return res.status(503).json({
+          error: "Les sessions de publication média ne sont pas activées",
+        });
+      }
+
+      const now = new Date();
+      const agent = await storage.authenticateCameraAgent(
+        parsed.data.agentId,
+        hashAgentSecret(credential),
+        now,
+      );
+      if (!agent) {
+        return res.status(401).json({ error: "Agent invalide ou révoqué" });
+      }
+
+      const binding = await storage.getActiveAgentCameraBinding(
+        agent.id,
+        parsed.data.cameraId,
+      );
+      const camera = await storage.getSurveillanceCamera(
+        agent.ownerId,
+        parsed.data.cameraId,
+      );
+      if (
+        !binding ||
+        !camera ||
+        camera.status === "disabled" ||
+        camera.status === "error"
+      ) {
+        return res.status(403).json({
+          error: "Agent non autorisé à publier cette caméra",
+        });
+      }
+
+      const streamId = assertStreamId(parsed.data.streamId);
+      const pathName = deriveOpaqueStreamPath(
+        agent.id,
+        camera.id,
+        streamId,
+        videoGatewayConfig.pathSecret,
+      );
+      const mediaCredential = generateAgentSecret();
+      const expiresAt = new Date(
+        now.getTime() + CAMERA_AGENT_MEDIA_SESSION_TTL_SECONDS * 1000,
+      );
+      const session = await storage.createAgentMediaSession({
+        ownerId: agent.ownerId,
+        agentId: agent.id,
+        cameraId: camera.id,
+        streamId,
+        pathName,
+        credentialHash: hashAgentSecret(mediaCredential),
+        expiresAt,
+      });
+
+      storage.logAudit({
+        userId: agent.ownerId,
+        action: "stream.publish_session_created",
+        resourceType: "surveillance_camera",
+        resourceId: camera.id,
+        details: {
+          agentId: agent.id,
+          streamId,
+          sessionId: session.id,
+          expiresAt: expiresAt.toISOString(),
+        },
+        ipAddress: req.ip,
+        userAgent: req.get("user-agent"),
+        severity: "info",
+      }).catch(() => undefined);
+
+      res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
+      return res.status(201).json({
+        sessionId: session.id,
+        agentId: agent.id,
+        cameraId: camera.id,
+        streamId,
+        pathName,
+        publishUsername: agent.id,
+        publishCredential: mediaCredential,
+        expiresAt: expiresAt.toISOString(),
+      });
+    },
+  );
+
   app.get(
     "/api/surveillance/agents",
     isAuthenticated,
@@ -4805,6 +4914,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const revoked = await storage.revokeCameraAgent(ownerId, req.params.id);
       if (!revoked) return res.status(404).json({ error: "Agent non trouvé" });
+      await storage.revokeAgentMediaSessionsForAgent(revoked.id);
 
       storage.logAudit({
         userId: ownerId,
@@ -4882,6 +4992,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.params.cameraId,
       );
       if (!deleted) return res.status(404).json({ error: "Binding non trouvé" });
+      await storage.revokeAgentMediaSessionsForBinding(
+        req.params.id,
+        req.params.cameraId,
+      );
       storage.logAudit({
         userId: ownerId,
         action: "agent.camera_unbound",
@@ -5310,6 +5424,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     const body = req.body && typeof req.body === "object" ? req.body : {};
     const pathName = typeof body.path === "string" ? body.path : "";
+    if (
+      body.action === "publish" &&
+      isUuid(body.user) &&
+      typeof body.password === "string"
+    ) {
+      const mediaSession = await storage.getActiveAgentMediaSession(
+        body.user,
+        pathName,
+        hashAgentSecret(body.password),
+        new Date(),
+      );
+      if (mediaSession) {
+        await storage.touchAgentMediaSession(mediaSession.id, new Date());
+        return res.status(204).send();
+      }
+      return res.status(401).send();
+    }
     const publisherUsername = process.env.VIDEO_GATEWAY_PUBLISHER_USERNAME;
     const publisherPassword = process.env.VIDEO_GATEWAY_PUBLISHER_PASSWORD;
     const isLocalAgentPublishPath =
