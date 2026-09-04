@@ -5472,20 +5472,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/surveillance/media-auth", async (req: any, res) => {
     if (
       !videoGatewayConfig.enabled ||
-      (!videoGatewayConfig.testMode && !videoGatewayConfig.realCameraEnabled)
+      (!videoGatewayConfig.testMode &&
+        !videoGatewayConfig.realCameraEnabled &&
+        !videoGatewayConfig.agentEnabled)
     ) {
       return res.status(404).send();
     }
 
-    const configuredApiToken = videoGatewayConfig.apiToken;
     const authorization = req.get("authorization") || "";
-    if (
-      configuredApiToken &&
-      authorization === `Bearer ${configuredApiToken}` &&
-      req.body?.action !== "read"
-    ) {
-      return res.status(204).send();
-    }
 
     const body = req.body && typeof req.body === "object" ? req.body : {};
     const pathName = typeof body.path === "string" ? body.path : "";
@@ -5551,9 +5545,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const query =
       typeof body.query === "string" ? new URLSearchParams(body.query) : null;
     const candidateToken =
-      (bearerToken && bearerToken !== configuredApiToken
-        ? bearerToken
-        : undefined) ||
+      bearerToken ||
       (typeof body.token === "string" ? body.token : undefined) ||
       (typeof body.password === "string" ? body.password : undefined) ||
       query?.get("token") ||
