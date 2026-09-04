@@ -3,6 +3,10 @@
 Date d’exécution : 4 septembre 2026  
 Mode : **lecture seule**
 
+Ce document conserve le résultat historique du preflight effectué avant
+l'application du schéma surveillance. L'état courant post-migration est ajouté
+à la fin du document.
+
 Commande exécutée :
 
 ```text
@@ -59,3 +63,25 @@ Contrôle effectué sans afficher de valeur :
 Ne pas appliquer 0004, 0005, 0006 ou 0007. Ne pas lancer `db:push`, reset ou
 DDL. Une revue humaine doit d’abord établir un snapshot restaurable et une
 baseline Drizzle cohérente.
+
+## Mise à jour post-migration contrôlée
+
+Après création d'un dump logique PostgreSQL 17 vérifié avec `pg_restore --list`,
+les migrations `0004` à `0007` ont été exécutées dans une transaction unique
+par `npm run db:railway:apply-surveillance`, avec la garde
+`ALLOW_RAILWAY_SURVEILLANCE_MIGRATION=true`.
+
+Le preflight lecture seule suivant a confirmé :
+
+- 33/33 tables publiques ; structure exacte : `PASS` ;
+- `online_sessions.id` avec `DEFAULT gen_random_uuid()` ;
+- les neuf index de `0004` présents ;
+- les quatre tables surveillance et leurs dix index présents ;
+- `surveillance_cameras`, `camera_agents`, `agent_camera_bindings` et
+  `agent_media_sessions` à 0 ligne ;
+- aucune migration historique `0000` à `0003` rejouée ;
+- aucune table `__drizzle_migrations` créée artificiellement.
+
+Le verdict de cette étape est **SCHEMA READY**. Les essais WAN/CGNAT, caméra
+réelle, WebRTC depuis un navigateur autorisé et la décision de publication
+restent séparés et ne sont pas déduits de ce contrôle de schéma.

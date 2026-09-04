@@ -53,17 +53,27 @@ Avant toute revue de migration Railway, exécuter le précontrôle en lecture se
 npm run db:railway:preflight
 ```
 
-Il vérifie les 29 tables attendues, les cinq compteurs concernés, les index de
-`0004`, le défaut UUID, la fonction PostgreSQL et l’existence du journal Drizzle.
-Il ne modifie jamais la base.
+Il vérifie les 33 tables attendues, les compteurs concernés, les index de `0004`
+et du module surveillance, le défaut UUID, la fonction PostgreSQL et l’existence
+du journal Drizzle. Il ne modifie jamais la base.
 
 `npm run db:push` est volontairement bloqué. Les migrations historiques ne doivent
-pas être rejouées sur Railway. La migration
-`migrations/0004_runtime_alignment_draft.sql` reste en attente tant qu’un snapshot
-restaurable et une baseline Drizzle validée n’existent pas.
+pas être rejouées sur Railway. Les migrations `0004` à `0007` ont été appliquées
+avec le runner transactionnel contrôlé suivant, après sauvegarde logique :
 
-Le runbook de baseline, les preuves de restauration et les conditions de revue
-humaine sont documentés dans
+```bash
+ALLOW_RAILWAY_SURVEILLANCE_MIGRATION=true \
+  npm run db:railway:apply-surveillance
+```
+
+Le runner cible uniquement `RAILWAY_DATABASE_URL`, refuse les schémas partiels,
+utilise un verrou PostgreSQL et annule toute la transaction si la vérification
+finale échoue. Le journal `__drizzle_migrations` reste absent volontairement :
+ne pas lancer `drizzle-kit migrate` avec le dossier historique actuel.
+
+La procédure complète de sauvegarde, application et vérification est documentée
+dans [`docs/RAILWAY_SURVEILLANCE_MIGRATION.md`](docs/RAILWAY_SURVEILLANCE_MIGRATION.md).
+Le runbook historique de baseline reste disponible dans
 [`docs/RAILWAY_DRIZZLE_BASELINE.md`](docs/RAILWAY_DRIZZLE_BASELINE.md).
 
 ## 📱 Fonctionnalités
