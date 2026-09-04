@@ -352,7 +352,7 @@ function LiveCameraPlayer({
   }, [closePeerConnection]);
 
   useEffect(() => {
-    if (state === "disconnected") scheduleReconnect();
+    if (state === "reconnecting") scheduleReconnect();
   }, [scheduleReconnect, state]);
 
   const stop = async () => {
@@ -409,7 +409,7 @@ function LiveCameraPlayer({
           )}
           {(state === "connecting" ||
             state === "live" ||
-            state === "disconnected") && (
+            state === "reconnecting") && (
             <Button size="sm" variant="outline" onClick={() => void stop()}>
               Arrêter
             </Button>
