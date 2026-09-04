@@ -44,6 +44,14 @@ export const surveillanceMutationLimiter = rateLimit({
   message: { message: "Trop de modifications de caméra. Veuillez réessayer plus tard." },
 });
 
+export const surveillanceConnectionTestLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Trop de tests de connexion. Veuillez réessayer plus tard." },
+});
+
 function getConfiguredMediaGatewayOrigins(): string[] {
   return (process.env.MEDIA_GATEWAY_ORIGINS || "")
     .split(",")

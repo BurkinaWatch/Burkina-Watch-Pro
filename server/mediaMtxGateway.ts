@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import {
   assertVideoStreamAuthorization,
+  countViewerAccessForCamera,
   issueViewerAccess,
   revokeViewerAccess,
   type AuthorizedVideoStream,
@@ -10,6 +11,7 @@ import {
   type VideoGatewayConfig,
   type VideoGatewayStreamRequest,
   type VideoGatewayStreamStatus,
+  VideoGatewayCapacityError,
 } from "./videoGateway";
 import { VideoGatewayUnavailableError } from "./videoGateway";
 import {
@@ -244,6 +246,12 @@ export class MediaMtxVideoGateway implements VideoGateway {
       throw new VideoGatewayUnavailableError(
         "Le flux caméra n'est pas enregistré auprès de la passerelle",
       );
+    }
+    if (
+      countViewerAccessForCamera(request.cameraId) >=
+      this.options.config.maxViewerSessionsPerCamera
+    ) {
+      throw new VideoGatewayCapacityError();
     }
 
     const grant = issueViewerAccess({

@@ -19,6 +19,7 @@ import {
 export const VIDEO_GATEWAY_PROVIDERS = ["disabled", "mediamtx"] as const;
 export type VideoGatewayProvider = (typeof VIDEO_GATEWAY_PROVIDERS)[number];
 export const VIDEO_GATEWAY_STREAM_TTL_SECONDS = 60;
+export const VIDEO_GATEWAY_DEFAULT_MAX_VIEWERS_PER_CAMERA = 8;
 
 export interface VideoGatewayConfig {
   enabled: boolean;
@@ -30,6 +31,7 @@ export interface VideoGatewayConfig {
   realCameraEnabled: boolean;
   allowPrivateCameraNetwork: boolean;
   pathSecret: string | null;
+  maxViewerSessionsPerCamera: number;
 }
 
 export class VideoGatewayConfigurationError extends Error {
@@ -50,6 +52,13 @@ export class VideoGatewayUnavailableError extends Error {
   constructor(message = "La passerelle vidéo n'est pas disponible") {
     super(message);
     this.name = "VideoGatewayUnavailableError";
+  }
+}
+
+export class VideoGatewayCapacityError extends VideoGatewayUnavailableError {
+  constructor() {
+    super("La limite de viewers simultanés pour cette caméra est atteinte");
+    this.name = "VideoGatewayCapacityError";
   }
 }
 
@@ -196,6 +205,18 @@ export function revokeViewerAccessForCamera(cameraId: string): number {
   return revoked;
 }
 
+export function countViewerAccessForCamera(
+  cameraId: string,
+  nowSeconds = Math.floor(Date.now() / 1000),
+): number {
+  cleanupExpiredViewerAccess(nowSeconds);
+  let count = 0;
+  viewerAccessGrants.forEach((grant) => {
+    if (grant.cameraId === cameraId) count += 1;
+  });
+  return count;
+}
+
 function parseServiceUrl(
   value: string,
   label: string,
@@ -274,6 +295,7 @@ export function readVideoGatewayConfig(
       realCameraEnabled: false,
       allowPrivateCameraNetwork: false,
       pathSecret: null,
+      maxViewerSessionsPerCamera: VIDEO_GATEWAY_DEFAULT_MAX_VIEWERS_PER_CAMERA,
     };
   }
 
@@ -300,6 +322,20 @@ export function readVideoGatewayConfig(
       "VIDEO_GATEWAY_PATH_SECRET est obligatoire lorsque les caméras réelles sont activées",
     );
   }
+  const maxViewerSessionsPerCamera = Number.parseInt(
+    env.VIDEO_GATEWAY_MAX_VIEWERS_PER_CAMERA ||
+      String(VIDEO_GATEWAY_DEFAULT_MAX_VIEWERS_PER_CAMERA),
+    10,
+  );
+  if (
+    !Number.isInteger(maxViewerSessionsPerCamera) ||
+    maxViewerSessionsPerCamera < 1 ||
+    maxViewerSessionsPerCamera > 100
+  ) {
+    throw new VideoGatewayConfigurationError(
+      "VIDEO_GATEWAY_MAX_VIEWERS_PER_CAMERA doit être un entier entre 1 et 100",
+    );
+  }
 
   return {
     enabled: true,
@@ -319,6 +355,7 @@ export function readVideoGatewayConfig(
     realCameraEnabled,
     allowPrivateCameraNetwork,
     pathSecret: env.VIDEO_GATEWAY_PATH_SECRET?.trim() || null,
+    maxViewerSessionsPerCamera,
   };
 }
 
