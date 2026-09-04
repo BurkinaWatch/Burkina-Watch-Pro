@@ -65,6 +65,7 @@ import {
   isSurveillanceTestCameraForUser,
   isSurveillanceTestPathName,
   SURVEILLANCE_TEST_SOURCE_URL,
+  SURVEILLANCE_TEST_PATH_NAME,
 } from "./surveillancePrototype";
 
 // Create a Map for quick pharmacy lookups by name
@@ -4642,6 +4643,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           cameraId,
           sourceUrl: SURVEILLANCE_TEST_SOURCE_URL,
         });
+        const streamStatus = await videoGateway.getStreamStatus(cameraId);
+        if (streamStatus === "offline") {
+          return res.status(503).json({
+            error: "La caméra de test est hors ligne",
+            status: streamStatus,
+          });
+        }
         const tokenClaims = {
           userId,
           cameraId,
@@ -4662,7 +4670,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
         return res.json({
           cameraId: access.cameraId,
-          status: registered.status,
+          status: streamStatus === "unknown" ? registered.status : streamStatus,
           pathName: access.pathName,
           whepUrl: access.whepUrl,
           viewerToken: access.viewerToken,
@@ -4741,6 +4749,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     const body = req.body && typeof req.body === "object" ? req.body : {};
     const pathName = typeof body.path === "string" ? body.path : "";
+    if (
+      body.action === "publish" &&
+      pathName === SURVEILLANCE_TEST_PATH_NAME
+    ) {
+      return res.status(204).send();
+    }
     if (!isSurveillanceTestPathName(pathName)) {
       return res.status(401).send();
     }
