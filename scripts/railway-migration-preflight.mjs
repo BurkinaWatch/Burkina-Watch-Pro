@@ -188,7 +188,7 @@ async function main() {
     );
     const unexpectedTargetIndexes = indexRows.filter(
       (row) =>
-        !EXPECTED_INDEXES.some(
+        ![...EXPECTED_INDEXES, ...SURVEILLANCE_INDEXES].some(
           ([tableName, indexName]) =>
             tableName === row.tablename && indexName === row.indexname,
         ) &&
