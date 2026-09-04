@@ -144,6 +144,7 @@ export interface IStorage {
     credentialHash: string,
     now: Date,
   ): Promise<CameraAgent | undefined>;
+  updateCameraAgentVersion(agentId: string, version: string): Promise<void>;
   revokeCameraAgent(ownerId: string, agentId: string): Promise<CameraAgent | undefined>;
   createAgentCameraBinding(
     ownerId: string,
@@ -1102,6 +1103,16 @@ export class DbStorage implements IStorage {
       )
       .returning();
     return authenticated;
+  }
+
+  async updateCameraAgentVersion(
+    agentId: string,
+    version: string,
+  ): Promise<void> {
+    await db
+      .update(cameraAgents)
+      .set({ version, updatedAt: new Date() })
+      .where(eq(cameraAgents.id, agentId));
   }
 
   async revokeCameraAgent(
