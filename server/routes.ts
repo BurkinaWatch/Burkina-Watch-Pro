@@ -26,7 +26,10 @@ import { reverseGeocode } from "./geocoding";
 import { sendLocationEmail, sendEmergencyTrackingStartEmail } from "./emailService";
 import { verifySignalement } from "./aiVerification";
 import { moderateContent, logModerationAction } from "./contentModeration";
-import { signalementMutationLimiter } from "./securityHardening";
+import {
+  signalementMutationLimiter,
+  surveillanceMutationLimiter,
+} from "./securityHardening";
 import { generateChatResponse, isAIAvailable } from "./aiService";
 import { fetchBulletins, clearCache } from "./rssService";
 import { getOfficialNews } from "./newsService";
@@ -37,6 +40,16 @@ import { dataMigrationService } from "./dataMigrationService";
 import { BOUTIQUES_DATA } from "./boutiquesData";
 import { PHARMACIES_DATA } from "./pharmaciesData";
 import type { Place } from "@shared/schema";
+import {
+  encryptCameraPassword,
+  parseCreateSurveillanceCamera,
+  parseUpdateSurveillanceCamera,
+  toSurveillanceCameraDto,
+} from "./surveillanceService";
+import {
+  SURVEILLANCE_NO_STORE_HEADERS,
+  SurveillanceValidationError,
+} from "./surveillancePreparation";
 
 // Create a Map for quick pharmacy lookups by name
 const pharmaciesDataMap = new Map<string, typeof PHARMACIES_DATA[0]>();
@@ -4557,6 +4570,205 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Erreur lors de la récupération des données météo" });
     }
   });
+
+  // ============================================
+  // SURVEILLANCE — CONTROL PLANE ONLY
+  // ============================================
+  // No route here opens a camera connection or returns a video URL. The
+  // future media gateway will be integrated separately in Phase 4.
+  app.get("/api/surveillance/cameras", isAuthenticated, async (req: any, res) => {
+    const userId = getAuthenticatedUserId(req);
+    if (!userId) {
+      return res.status(401).json({ error: "Authentification requise" });
+    }
+
+    try {
+      const cameras = await storage.getSurveillanceCameras(userId);
+      res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
+      return res.json(cameras.map(toSurveillanceCameraDto));
+    } catch (error) {
+      console.error("[SURVEILLANCE] Erreur liste caméras:", error instanceof Error ? error.message : "erreur inconnue");
+      return res.status(500).json({ error: "Erreur lors de la récupération des caméras" });
+    }
+  });
+
+  app.post(
+    "/api/surveillance/cameras",
+    isAuthenticated,
+    surveillanceMutationLimiter,
+    async (req: any, res) => {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Authentification requise" });
+      }
+
+      try {
+        const input = parseCreateSurveillanceCamera(req.body);
+        const encryptedPassword = await encryptCameraPassword(input.password);
+        const camera = await storage.createSurveillanceCamera({
+          ownerId: userId,
+          name: input.name,
+          description: input.description ?? null,
+          connectionType: input.connectionType,
+          host: input.host,
+          port: input.port,
+          username: input.username ?? null,
+          encryptedPassword,
+          streamPath: input.streamPath ?? null,
+          status: "unknown",
+        });
+
+        storage.logAudit({
+          userId,
+          action: "camera_created",
+          resourceType: "surveillance_camera",
+          resourceId: camera.id,
+          details: { connectionType: camera.connectionType },
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent"),
+          severity: "info",
+        }).catch((error) => console.error("[AUDIT] Erreur log caméra:", error instanceof Error ? error.message : "erreur inconnue"));
+
+        res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
+        return res.status(201).json(toSurveillanceCameraDto(camera));
+      } catch (error) {
+        if (error instanceof SurveillanceValidationError) {
+          return res.status(400).json({ error: error.message });
+        }
+        console.error("[SURVEILLANCE] Erreur création caméra:", error instanceof Error ? error.message : "erreur inconnue");
+        return res.status(500).json({ error: "Erreur lors de la création de la caméra" });
+      }
+    },
+  );
+
+  app.get("/api/surveillance/cameras/:id", isAuthenticated, async (req: any, res) => {
+    const userId = getAuthenticatedUserId(req);
+    if (!userId) {
+      return res.status(401).json({ error: "Authentification requise" });
+    }
+
+    try {
+      const camera = await storage.getSurveillanceCamera(userId, req.params.id);
+      res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
+      if (!camera) {
+        return res.status(404).json({ error: "Caméra non trouvée" });
+      }
+      return res.json(toSurveillanceCameraDto(camera));
+    } catch (error) {
+      console.error("[SURVEILLANCE] Erreur détail caméra:", error instanceof Error ? error.message : "erreur inconnue");
+      return res.status(500).json({ error: "Erreur lors de la récupération de la caméra" });
+    }
+  });
+
+  app.patch(
+    "/api/surveillance/cameras/:id",
+    isAuthenticated,
+    surveillanceMutationLimiter,
+    async (req: any, res) => {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Authentification requise" });
+      }
+
+      try {
+        const input = parseUpdateSurveillanceCamera(req.body);
+        const updates: Record<string, unknown> = {};
+
+        for (const field of [
+          "name",
+          "description",
+          "connectionType",
+          "host",
+          "port",
+          "username",
+          "streamPath",
+          "status",
+        ] as const) {
+          if (input[field] !== undefined) {
+            updates[field] = input[field];
+          }
+        }
+
+        if (input.password) {
+          updates.encryptedPassword = await encryptCameraPassword(input.password);
+        }
+
+        if (Object.keys(updates).length === 0) {
+          return res.status(400).json({ error: "Aucune modification fournie" });
+        }
+
+        const camera = await storage.updateSurveillanceCamera(
+          userId,
+          req.params.id,
+          updates,
+        );
+        if (!camera) {
+          return res.status(404).json({ error: "Caméra non trouvée" });
+        }
+
+        const action =
+          input.status === "disabled"
+            ? "camera_disabled"
+            : input.status === "unknown"
+              ? "camera_enabled"
+              : "camera_updated";
+        storage.logAudit({
+          userId,
+          action,
+          resourceType: "surveillance_camera",
+          resourceId: camera.id,
+          details: { connectionType: camera.connectionType, status: camera.status },
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent"),
+          severity: "info",
+        }).catch((error) => console.error("[AUDIT] Erreur log caméra:", error instanceof Error ? error.message : "erreur inconnue"));
+
+        res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
+        return res.json(toSurveillanceCameraDto(camera));
+      } catch (error) {
+        if (error instanceof SurveillanceValidationError) {
+          return res.status(400).json({ error: error.message });
+        }
+        console.error("[SURVEILLANCE] Erreur modification caméra:", error instanceof Error ? error.message : "erreur inconnue");
+        return res.status(500).json({ error: "Erreur lors de la modification de la caméra" });
+      }
+    },
+  );
+
+  app.delete(
+    "/api/surveillance/cameras/:id",
+    isAuthenticated,
+    surveillanceMutationLimiter,
+    async (req: any, res) => {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Authentification requise" });
+      }
+
+      try {
+        const deleted = await storage.deleteSurveillanceCamera(userId, req.params.id);
+        if (!deleted) {
+          return res.status(404).json({ error: "Caméra non trouvée" });
+        }
+
+        storage.logAudit({
+          userId,
+          action: "camera_deleted",
+          resourceType: "surveillance_camera",
+          resourceId: req.params.id,
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent"),
+          severity: "warning",
+        }).catch((error) => console.error("[AUDIT] Erreur log caméra:", error instanceof Error ? error.message : "erreur inconnue"));
+
+        res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
+        return res.status(204).send();
+      } catch (error) {
+        console.error("[SURVEILLANCE] Erreur suppression caméra:", error instanceof Error ? error.message : "erreur inconnue");
+        return res.status(500).json({ error: "Erreur lors de la suppression de la caméra" });
+      }
+    },
+  );
 
   const httpServer = createServer(app);
 
