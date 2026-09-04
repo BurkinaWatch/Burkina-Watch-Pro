@@ -111,7 +111,7 @@ IMPORTANT: Retourne UNIQUEMENT le JSON, rien d'autre.`;
   if (groqClient) {
     try {
       const completion = await groqClient.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
         messages: [
           { role: "system", content: "Tu es un expert du cinéma en Afrique de l'Ouest. Tu réponds uniquement en JSON valide." },
           { role: "user", content: prompt }

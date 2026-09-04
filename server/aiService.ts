@@ -222,6 +222,7 @@ const geminiClient = geminiApiKey
 const groqClient = process.env.GROQ_API_KEY
   ? new Groq({ apiKey: process.env.GROQ_API_KEY })
   : null;
+const groqModel = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 
 // Initialize OpenAI (using Replit AI Integrations)
 const openaiClient = process.env.AI_INTEGRATIONS_OPENAI_API_KEY
@@ -351,7 +352,7 @@ export async function generateChatResponse(
       ];
 
       const completion = await groqClient.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: groqModel,
         messages: groqMessages,
         temperature: 0.7,
         max_tokens: 1024,
