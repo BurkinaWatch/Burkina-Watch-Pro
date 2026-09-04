@@ -89,6 +89,24 @@ export const agentCameraBindings = pgTable("agent_camera_bindings", {
   index("agent_camera_bindings_camera_idx").on(table.cameraId),
 ]);
 
+export const agentMediaSessions = pgTable("agent_media_sessions", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  ownerId: text("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  agentId: text("agent_id").notNull().references(() => cameraAgents.id, { onDelete: "cascade" }),
+  cameraId: text("camera_id").notNull().references(() => surveillanceCameras.id, { onDelete: "cascade" }),
+  streamId: text("stream_id").notNull(),
+  pathName: text("path_name").notNull(),
+  credentialHash: text("credential_hash").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  lastPublishedAt: timestamp("last_published_at"),
+  revokedAt: timestamp("revoked_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("agent_media_sessions_path_idx").on(table.pathName),
+  index("agent_media_sessions_agent_camera_idx").on(table.agentId, table.cameraId),
+  index("agent_media_sessions_expires_idx").on(table.expiresAt),
+]);
+
 export const magicLinks = pgTable("magic_links", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -453,6 +471,7 @@ export type SurveillanceCameraSummary = Omit<
 >;
 export type CameraAgent = typeof cameraAgents.$inferSelect;
 export type AgentCameraBinding = typeof agentCameraBindings.$inferSelect;
+export type AgentMediaSession = typeof agentMediaSessions.$inferSelect;
 export type InsertSignalement = z.infer<typeof insertSignalementSchema>;
 export type UpdateSignalement = z.infer<typeof updateSignalementSchema>;
 export type Signalement = typeof signalements.$inferSelect;

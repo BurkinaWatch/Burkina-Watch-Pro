@@ -36,6 +36,7 @@ import {
   type UpdateSurveillanceCamera,
   type CameraAgent,
   type AgentCameraBinding,
+  type AgentMediaSession,
   magicLinks,
   users,
   signalements,
@@ -62,6 +63,7 @@ import {
   surveillanceCameras,
   cameraAgents,
   agentCameraBindings,
+  agentMediaSessions,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, isNull, gt } from "drizzle-orm";
@@ -156,6 +158,22 @@ export interface IStorage {
     agentId: string,
     cameraId: string,
   ): Promise<boolean>;
+  getActiveAgentCameraBinding(
+    agentId: string,
+    cameraId: string,
+  ): Promise<AgentCameraBinding | undefined>;
+  createAgentMediaSession(
+    session: typeof agentMediaSessions.$inferInsert,
+  ): Promise<AgentMediaSession>;
+  getActiveAgentMediaSession(
+    agentId: string,
+    pathName: string,
+    credentialHash: string,
+    now: Date,
+  ): Promise<AgentMediaSession | undefined>;
+  touchAgentMediaSession(sessionId: string, now: Date): Promise<void>;
+  revokeAgentMediaSessionsForAgent(agentId: string): Promise<void>;
+  revokeAgentMediaSessionsForBinding(agentId: string, cameraId: string): Promise<void>;
 
   // Méthodes pour les notifications
   createNotification(data: typeof insertNotificationSchema._type): Promise<any | undefined>;
@@ -1160,6 +1178,86 @@ export class DbStorage implements IStorage {
       )
       .returning({ id: agentCameraBindings.id });
     return deleted.length > 0;
+  }
+
+  async getActiveAgentCameraBinding(
+    agentId: string,
+    cameraId: string,
+  ): Promise<AgentCameraBinding | undefined> {
+    const [binding] = await db
+      .select()
+      .from(agentCameraBindings)
+      .where(
+        and(
+          eq(agentCameraBindings.agentId, agentId),
+          eq(agentCameraBindings.cameraId, cameraId),
+          eq(agentCameraBindings.status, "active"),
+        ),
+      )
+      .limit(1);
+    return binding;
+  }
+
+  async createAgentMediaSession(
+    session: typeof agentMediaSessions.$inferInsert,
+  ): Promise<AgentMediaSession> {
+    const [created] = await db
+      .insert(agentMediaSessions)
+      .values(session)
+      .returning();
+    return created;
+  }
+
+  async getActiveAgentMediaSession(
+    agentId: string,
+    pathName: string,
+    credentialHash: string,
+    now: Date,
+  ): Promise<AgentMediaSession | undefined> {
+    const [session] = await db
+      .select()
+      .from(agentMediaSessions)
+      .where(
+        and(
+          eq(agentMediaSessions.agentId, agentId),
+          eq(agentMediaSessions.pathName, pathName),
+          eq(agentMediaSessions.credentialHash, credentialHash),
+          isNull(agentMediaSessions.revokedAt),
+          gt(agentMediaSessions.expiresAt, now),
+        ),
+      )
+      .limit(1);
+    return session;
+  }
+
+  async touchAgentMediaSession(sessionId: string, now: Date): Promise<void> {
+    await db
+      .update(agentMediaSessions)
+      .set({ lastPublishedAt: now })
+      .where(eq(agentMediaSessions.id, sessionId));
+  }
+
+  async revokeAgentMediaSessionsForAgent(agentId: string): Promise<void> {
+    await db
+      .update(agentMediaSessions)
+      .set({ revokedAt: new Date() })
+      .where(and(eq(agentMediaSessions.agentId, agentId), isNull(agentMediaSessions.revokedAt)));
+  }
+
+  async revokeAgentMediaSessionsForBinding(
+    agentId: string,
+    cameraId: string,
+  ): Promise<void> {
+    await db
+      .update(agentMediaSessions)
+      .set({ revokedAt: new Date() })
+      .where(
+        and(
+          eq(agentMediaSessions.agentId, agentId),
+          eq(agentMediaSessions.cameraId, cameraId),
+          isNull(agentMediaSessions.revokedAt),
+        ),
+      );
   }
 
   // ============================================

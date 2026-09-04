@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
+import { deriveOpaqueStreamPath } from "../shared/mediaIdentity";
 
 export type MediaRelayStatus =
   | "idle"
@@ -41,19 +42,7 @@ function assertLocalRtspUrl(value: string, label: string): URL {
   return parsed;
 }
 
-export function deriveAgentStreamPath(
-  agentId: string,
-  cameraId: string,
-  streamId: string,
-  pathSecret: string,
-): string {
-  const digest = crypto
-    .createHmac("sha256", pathSecret)
-    .update(`${agentId}:${cameraId}:${streamId}`)
-    .digest("hex")
-    .slice(0, 32);
-  return `surveillance-${digest}`;
-}
+export const deriveAgentStreamPath = deriveOpaqueStreamPath;
 
 export function buildMediaRelayArgs(
   sourceUrl: string,
