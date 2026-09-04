@@ -4730,6 +4730,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             auditError instanceof Error ? auditError.message : "erreur inconnue",
           ),
         );
+        storage.logAudit({
+          userId,
+          action: "viewer_session_created",
+          resourceType: "surveillance_camera",
+          resourceId: cameraId,
+          details: { sessionId: access.gatewaySessionId },
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent"),
+          severity: "info",
+        }).catch(() => undefined);
 
         res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
         return res.json({
@@ -4955,6 +4965,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             auditError instanceof Error ? auditError.message : "erreur inconnue",
           ),
         );
+        storage.logAudit({
+          userId,
+          action: "viewer_session_revoked",
+          resourceType: "surveillance_camera",
+          resourceId: grant.cameraId,
+          details: { sessionId },
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent"),
+          severity: "info",
+        }).catch(() => undefined);
         res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
         return res.status(204).send();
       } catch (error) {
