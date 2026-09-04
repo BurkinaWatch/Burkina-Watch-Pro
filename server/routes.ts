@@ -4768,6 +4768,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
+  app.get(
+    "/api/surveillance/cameras/:id/status",
+    isAuthenticated,
+    async (req: any, res) => {
+      const userId = getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Authentification requise" });
+      }
+
+      const camera = await storage.getSurveillanceCamera(userId, req.params.id);
+      if (!camera) {
+        storage.logAudit({
+          userId,
+          action: "unauthorized_camera_access",
+          resourceType: "surveillance_camera",
+          resourceId: String(req.params.id),
+          details: { operation: "status_read" },
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent"),
+          severity: "warning",
+        }).catch(() => undefined);
+        return res.status(404).json({ error: "Caméra non trouvée" });
+      }
+
+      let streamStatus: VideoGatewayStreamStatus = "offline";
+      if (videoGatewayConfig.enabled) {
+        try {
+          streamStatus = await videoGateway.getStreamStatus(camera.id);
+        } catch {
+          streamStatus = "error";
+        }
+      }
+
+      res.set({ ...SURVEILLANCE_NO_STORE_HEADERS });
+      return res.json({
+        cameraStatus: camera.status,
+        streamStatus,
+        viewerStatus: "idle",
+        lastCheckedAt: camera.lastSeenAt?.toISOString() ?? null,
+      });
+    },
+  );
+
   app.post(
     "/api/surveillance/cameras/:id/test-connection",
     isAuthenticated,
