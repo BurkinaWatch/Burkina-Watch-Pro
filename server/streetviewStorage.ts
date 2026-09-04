@@ -34,7 +34,7 @@ export function streetviewThumbnailKey(contributionId: string): string {
 export async function writeStreetviewBuffer(key: string, content: Buffer): Promise<void> {
   const filename = resolveStorageKey(key);
   await mkdir(path.dirname(filename), { recursive: true });
-  await writeFile(filename, content, { flag: "wx" });
+  await writeFile(filename, content, { flag: "w" });
 }
 
 export async function writeStreetviewDataUrl(
