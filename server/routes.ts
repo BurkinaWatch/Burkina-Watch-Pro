@@ -4636,6 +4636,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? null
         : await storage.getSurveillanceCameraForUpdate(userId, cameraId);
       if (!isTestCamera && !camera) {
+        storage.logAudit({
+          userId,
+          action: "unauthorized_camera_access",
+          resourceType: "surveillance_camera",
+          resourceId: cameraId,
+          details: { operation: "stream_started" },
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent"),
+          severity: "warning",
+        }).catch(() => undefined);
         return res.status(404).json({ error: "Caméra non trouvée" });
       }
       if (
@@ -4684,6 +4694,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(503).json({
             error: "La caméra de test est hors ligne",
             status: streamStatus,
+            cameraStatus,
+            streamStatus,
           });
         }
         const tokenClaims = {
@@ -4723,6 +4735,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({
           cameraId: access.cameraId,
           status: streamStatus === "unknown" ? registered.status : streamStatus,
+          cameraStatus,
+          streamStatus,
           pathName: access.pathName,
           whepUrl: access.whepUrl,
           viewerToken: access.viewerToken,
@@ -4732,6 +4746,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         if (error instanceof VideoGatewayAuthorizationError) {
           return res.status(403).json({ error: error.message });
+        }
+        if (error instanceof VideoGatewayCapacityError) {
+          return res.status(429).json({
+            error: error.message,
+            status: "error" satisfies VideoGatewayStreamStatus,
+          });
         }
         if (error instanceof VideoGatewayUnavailableError) {
           return res.status(503).json({
@@ -4751,7 +4771,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(
     "/api/surveillance/cameras/:id/test-connection",
     isAuthenticated,
-    surveillanceMutationLimiter,
+    surveillanceConnectionTestLimiter,
     async (req: any, res) => {
       const userId = getAuthenticatedUserId(req);
       if (!userId) {
