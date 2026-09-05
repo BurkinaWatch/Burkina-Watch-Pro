@@ -159,7 +159,8 @@ Le worker :
 4. termine à `WAITING_FOR_3D`, sans NeRF, photogrammétrie ou reconstruction GPU.
 
 Les jobs reprennent automatiquement après expiration d'un bail. Les erreurs
-temporaires utilisent un backoff exponentiel jusqu'à `max_attempts`; les erreurs
+temporaires utilisent un backoff exponentiel jusqu'à `max_attempts` (configurable
+avec `STREETVIEW_MAX_ATTEMPTS`, de 1 à 10); les erreurs
 de fichier ou de métadonnées sont arrêtées immédiatement. Les détails techniques
 restent dans les logs et la base de suivi, tandis que l'utilisateur reçoit un
 message générique.

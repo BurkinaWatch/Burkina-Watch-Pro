@@ -1930,9 +1930,13 @@ L'équipe Burkina Watch
   async createStreetviewProcessingJob(
     data: InsertStreetviewProcessingJob,
   ): Promise<StreetviewProcessingJob> {
+    const configuredMaxAttempts = Number(process.env.STREETVIEW_MAX_ATTEMPTS);
+    const maxAttempts = Number.isInteger(configuredMaxAttempts) && configuredMaxAttempts >= 1 && configuredMaxAttempts <= 10
+      ? configuredMaxAttempts
+      : 3;
     const [created] = await db
       .insert(streetviewProcessingJobs)
-      .values(data)
+      .values({ ...data, maxAttempts })
       .returning();
     return created;
   }
