@@ -1,0 +1,146 @@
+2026-09-05T18:30:30.496463169Z [inf]  scheduling build on Metal builder "builder-rdptcy"
+2026-09-05T18:30:30.644334265Z [inf]  unpacking archive
+2026-09-05T18:30:30.737457186Z [inf]  using build driver railpack-v0.39.0
+2026-09-05T18:30:30.873928527Z [inf]  [railway] prepare railpack-v0.39.0
+2026-09-05T18:30:30.873931221Z [inf]  local://prepare-driver
+2026-09-05T18:30:30.873931942Z [inf]  local://prepare-context
+2026-09-05T18:30:30.873932703Z [inf]  docker-image://ghcr.io/railwayapp/railpack-builder:latest
+2026-09-05T18:30:30.874053254Z [inf]  local://prepare-driver
+2026-09-05T18:30:30.874054045Z [inf]  docker-image://ghcr.io/railwayapp/railpack-builder:latest
+2026-09-05T18:30:30.874392433Z [inf]  local://prepare-context
+2026-09-05T18:30:30.875546374Z [inf]  local://prepare-driver
+2026-09-05T18:30:30.875550410Z [inf]  local://prepare-context
+2026-09-05T18:30:31.051406003Z [inf]  local://prepare-driver
+2026-09-05T18:30:31.119149274Z [inf]  docker-image://ghcr.io/railwayapp/railpack-builder:latest
+2026-09-05T18:30:31.119921072Z [inf]  docker-image://ghcr.io/railwayapp/railpack-builder:mise-2026.8.16
+2026-09-05T18:30:31.119924487Z [inf]  docker-image://ghcr.io/railwayapp/railpack-builder:mise-2026.8.16
+2026-09-05T18:30:31.120134573Z [inf]  docker-image://ghcr.io/railwayapp/railpack-builder:mise-2026.8.16
+2026-09-05T18:30:31.524693731Z [inf]  local://prepare-context
+2026-09-05T18:30:31.548157055Z [inf]  [railway] prepare railpack-v0.39.0
+2026-09-05T18:30:31.639181708Z [inf]  uploading snapshot
+2026-09-05T18:30:33.098749283Z [inf]                     
+[38;2;125;86;243m╭─────────────────╮[0m
+[38;2;125;86;243m│[0m Railpack 0.39.0 [38;2;125;86;243m│[0m
+[38;2;125;86;243m╰─────────────────╯[0m
+
+  [97m↳ Detected Node[0m
+  [97m↳ Using npm package manager[0m
+  [97m↳ Custom start command detected, skipping Caddy start[0m
+  [97m↳ Installing npm@10.8.2 with Corepack[0m
+            
+  [1mPackages[0m  
+  [38;5;238m──────────[0m
+  [95mnode[0m  [38;5;238m│[0m  [96m20.20.0[0m  [38;5;238m│[0m  idiomatic-version-file (20.20.0)
+            
+  [1mSteps[0m     
+  [38;5;238m──────────[0m
+  [95m▸ install[0m
+    [38;5;245m$[0m [1mnpm i -g corepack@latest && corepack enable && corepack prepare --activate[0m
+    [38;5;245m$[0m [1mnpm ci --include=dev --legacy-peer-deps[0m
+         
+  [95m▸ build[0m
+    [38;5;245m$[0m [1mnpm install --include=dev --no-audit --no-fund && npm run build[0m
+            
+  [1mDeploy[0m    
+  [38;5;238m──────────[0m
+    [38;5;245m$[0m [1mnpm run start[0m
+
+
+2026-09-05T18:30:33.771726203Z [inf]  [railway] prepare railpack-v0.39.0
+2026-09-05T18:30:33.990465739Z [inf]  resolve image config for docker-image://ghcr.io/railwayapp/railpack-frontend:v0.39.0
+2026-09-05T18:30:34.241710064Z [inf]  resolve image config for docker-image://ghcr.io/railwayapp/railpack-frontend:v0.39.0
+2026-09-05T18:30:34.241981301Z [inf]  docker-image://ghcr.io/railwayapp/railpack-frontend:v0.39.0@sha256:db24dc37640b6887c3d455b40876ea30f75182964479670cba6e4cde7ffef103
+2026-09-05T18:30:34.241983424Z [inf]  docker-image://ghcr.io/railwayapp/railpack-frontend:v0.39.0@sha256:db24dc37640b6887c3d455b40876ea30f75182964479670cba6e4cde7ffef103
+2026-09-05T18:30:34.241985227Z [inf]  docker-image://ghcr.io/railwayapp/railpack-frontend:v0.39.0@sha256:db24dc37640b6887c3d455b40876ea30f75182964479670cba6e4cde7ffef103
+2026-09-05T18:30:34.453680613Z [inf]  load build definition from ./railpack-plan.json
+2026-09-05T18:30:34.453953843Z [inf]  load build definition from ./railpack-plan.json
+2026-09-05T18:30:34.454664600Z [inf]  load build definition from ./railpack-plan.json
+2026-09-05T18:30:34.562894968Z [inf]  load build definition from ./railpack-plan.json
+2026-09-05T18:30:35.019292453Z [inf]  loading .
+2026-09-05T18:30:35.019293735Z [inf]  create mise config
+2026-09-05T18:30:35.019294046Z [inf]  copy .nvmrc
+2026-09-05T18:30:35.019294447Z [inf]  copy /etc/mise/config.toml
+2026-09-05T18:30:35.019295188Z [inf]  install mise packages: node
+2026-09-05T18:30:35.019295478Z [inf]  copy package-lock.json
+2026-09-05T18:30:35.019295748Z [inf]  copy /root/.local/state/mise
+2026-09-05T18:30:35.019296139Z [inf]  npm ci --include=dev --legacy-peer-deps
+2026-09-05T18:30:35.019296409Z [inf]  [railpack] secrets hash
+2026-09-05T18:30:35.019296690Z [inf]  mkdir -p /app/node_modules/.cache
+2026-09-05T18:30:35.019297200Z [inf]  copy /usr/local/bin/mise
+2026-09-05T18:30:35.019299444Z [inf]  copy /mise/shims
+2026-09-05T18:30:35.019299945Z [inf]  npm i -g corepack@latest && corepack enable && corepack prepare --activate
+2026-09-05T18:30:35.019300245Z [inf]  install apt packages: libatomic1
+2026-09-05T18:30:35.019300525Z [inf]  [railpack] copy used secrets hash
+2026-09-05T18:30:35.019301086Z [inf]  copy package.json
+2026-09-05T18:30:35.019301577Z [inf]  copy package.json
+2026-09-05T18:30:35.019301988Z [inf]  copy .nvmrc
+2026-09-05T18:30:35.019302238Z [inf]  [railpack] hash used secrets
+2026-09-05T18:30:35.019302629Z [inf]  [railpack] copy secrets hash
+2026-09-05T18:30:35.019302909Z [inf]  mkdir /etc/mise
+2026-09-05T18:30:35.019304151Z [inf]  copy /mise/installs
+2026-09-05T18:30:35.019304812Z [inf]  docker-image://ghcr.io/railwayapp/railpack-builder:mise-2026.8.16
+2026-09-05T18:30:35.019305203Z [inf]  docker-image://ghcr.io/railwayapp/railpack-runtime:mise-2026.8.16
+2026-09-05T18:30:35.019305563Z [inf]  docker-image://ghcr.io/railwayapp/railpack-runtime:mise-2026.8.16
+2026-09-05T18:30:35.019305924Z [inf]  [railpack] loading secrets
+2026-09-05T18:30:35.019308047Z [inf]  [railpack] loading secrets
+2026-09-05T18:30:35.019308327Z [inf]  [railpack] loading secrets
+2026-09-05T18:30:35.019308888Z [inf]  docker-image://ghcr.io/railwayapp/railpack-builder:mise-2026.8.16
+2026-09-05T18:30:35.019309189Z [inf]  docker-image://ghcr.io/railwayapp/railpack-builder:mise-2026.8.16
+2026-09-05T18:30:35.019321938Z [inf]  copy /mise/shims
+2026-09-05T18:30:35.019322248Z [inf]  copy /mise/installs
+2026-09-05T18:30:35.019322529Z [inf]  copy /opt/corepack
+2026-09-05T18:30:35.019323090Z [inf]  copy /app
+2026-09-05T18:30:35.019323720Z [inf]  copy /root/.cache
+2026-09-05T18:30:35.019324011Z [inf]  copy /app/node_modules
+2026-09-05T18:30:35.019324391Z [inf]  npm install --include=dev --no-audit --no-fund && npm run build
+2026-09-05T18:30:35.019325703Z [inf]  copy .
+2026-09-05T18:30:35.019325964Z [inf]  copy / /app
+2026-09-05T18:30:35.019585313Z [inf]  [railpack] secrets hash
+2026-09-05T18:30:35.019721187Z [inf]  loading .
+2026-09-05T18:30:35.102856032Z [inf]  [railpack] secrets hash
+2026-09-05T18:30:35.102858866Z [inf]  loading .
+2026-09-05T18:30:35.127481329Z [inf]  [railpack] secrets hash
+2026-09-05T18:30:35.453831343Z [inf]  loading .
+2026-09-05T18:30:35.508733928Z [inf]  install apt packages: libatomic1
+2026-09-05T18:30:35.508735370Z [inf]  copy .nvmrc
+2026-09-05T18:30:35.508735701Z [inf]  mkdir /etc/mise
+2026-09-05T18:30:35.508736062Z [inf]  create mise config
+2026-09-05T18:30:35.508736382Z [inf]  install mise packages: node
+2026-09-05T18:30:35.508736652Z [inf]  copy /mise/shims
+2026-09-05T18:30:35.508736913Z [inf]  copy /mise/installs
+2026-09-05T18:30:35.508737694Z [inf]  copy /usr/local/bin/mise
+2026-09-05T18:30:35.508737964Z [inf]  copy /etc/mise/config.toml
+2026-09-05T18:30:35.508738245Z [inf]  copy /root/.local/state/mise
+2026-09-05T18:30:35.530969951Z [inf]  copy package.json
+2026-09-05T18:30:35.530971974Z [inf]  [railpack] copy secrets hash
+2026-09-05T18:30:35.530972455Z [inf]  [railpack] hash used secrets
+2026-09-05T18:30:35.530972825Z [inf]  [railpack] copy used secrets hash
+2026-09-05T18:30:35.530973636Z [inf]  npm i -g corepack@latest && corepack enable && corepack prepare --activate
+2026-09-05T18:30:35.530974027Z [inf]  mkdir -p /app/node_modules/.cache
+2026-09-05T18:30:35.530974288Z [inf]  copy .nvmrc
+2026-09-05T18:30:35.530974588Z [inf]  copy package-lock.json
+2026-09-05T18:30:35.530974858Z [inf]  copy package.json
+2026-09-05T18:30:35.530975299Z [inf]  npm ci --include=dev --legacy-peer-deps
+2026-09-05T18:30:35.530977893Z [inf]  copy / /app
+2026-09-05T18:30:35.530978193Z [inf]  copy .
+2026-09-05T18:30:35.531221398Z [inf]  npm install --include=dev --no-audit --no-fund && npm run build
+2026-09-05T18:30:36.525768931Z [inf]  npm warn config production Use `--omit=dev` instead.
+
+2026-09-05T18:34:55.937570344Z [inf]  npm error Exit handler never called!
+npm error This is an error with npm itself. Please report this error at:
+
+2026-09-05T18:34:55.937602773Z [inf]  npm error   <https://github.com/npm/cli/issues>
+
+2026-09-05T18:34:55.938145567Z [inf]  npm error A complete log of this run can be found in: /root/.npm/_logs/2026-09-05T18_30_36_496Z-debug-0.log
+
+2026-09-05T18:34:56.10883566Z [inf]  npm warn config production Use `--omit=dev` instead.
+
+2026-09-05T18:34:56.129533114Z [inf]  
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && esbuild server/streetviewWorkerMain.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/streetview-worker.js
+
+
+2026-09-05T18:34:56.134565585Z [inf]  sh: 1: vite: not found
+
+2026-09-05T18:34:56.340566847Z [err]  npm install --include=dev --no-audit --no-fund && npm run build
+2026-09-05T18:34:56.404678690Z [err]  Build Failed: build daemon returned an error < failed to solve: process "sh -c npm install --include=dev --no-audit --no-fund && npm run build" did not complete successfully: exit code: 127 >
