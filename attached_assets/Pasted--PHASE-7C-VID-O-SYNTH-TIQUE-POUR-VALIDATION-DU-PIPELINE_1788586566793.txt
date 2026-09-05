@@ -1,0 +1,169 @@
+# PHASE 7C — VIDÉO SYNTHÉTIQUE POUR VALIDATION DU PIPELINE
+
+Le préflight Phase 7B a identifié trois blocages :
+
+* aucune vidéo de test disponible ;
+* COLMAP absent ;
+* aucun GPU NVIDIA disponible dans l'environnement actuel.
+
+Nous allons donc séparer le problème en deux parties.
+
+## OBJECTIF
+
+Préparer une vidéo SYNTHÉTIQUE contrôlée afin de pouvoir tester ultérieurement le pipeline de reconstruction.
+
+IMPORTANT :
+
+Cette vidéo synthétique servira uniquement à tester le PIPELINE TECHNIQUE.
+
+Elle ne constituera PAS une preuve que le système fonctionne correctement avec de vraies vidéos capturées dans les rues du Burkina Faso.
+
+Une vraie vidéo sera utilisée dans une étape ultérieure pour la validation réelle.
+
+---
+
+# 1. NE PAS UTILISER DE VIDÉO IA INCOHÉRENTE
+
+Ne génère pas une vidéo de type :
+
+* scène cinématique ;
+* caméra volante ;
+* paysage génératif ;
+* vidéo IA dont les images changent artificiellement ;
+* animation ;
+* séquence avec géométrie instable.
+
+Ce type de contenu n'est pas adapté à un test photogrammétrique.
+
+---
+
+# 2. VIDÉO SYNTHÉTIQUE CONTRÔLÉE
+
+Si tu peux générer une scène synthétique réellement cohérente image par image, privilégie :
+
+* environnement 3D statique ;
+* caméra se déplaçant progressivement ;
+* géométrie fixe ;
+* textures fixes ;
+* profondeur réelle ;
+* mouvements de caméra contrôlés ;
+* trajectoire connue.
+
+L'idéal serait une scène 3D rendue image par image plutôt qu'une vidéo générative IA.
+
+Par exemple :
+
+SCÈNE 3D STATIQUE
+↓
+CAMÉRA VIRTUELLE
+↓
+TRAJECTOIRE CONNUE
+↓
+FRAMES
+↓
+VIDÉO
+
+Cette approche est beaucoup plus utile pour tester la reconstruction.
+
+---
+
+# 3. CARACTÉRISTIQUES DE LA VIDÉO
+
+Préparer un premier jeu de test raisonnable :
+
+* résolution suffisamment élevée ;
+* FPS constant ;
+* mouvement de caméra lent ;
+* trajectoire progressive ;
+* fort recouvrement entre images ;
+* environnement riche en détails ;
+* plusieurs profondeurs ;
+* surfaces texturées ;
+* objets fixes.
+
+Éviter :
+
+* surfaces parfaitement uniformes ;
+* brouillard ;
+* flou ;
+* objets déformables ;
+* changements de lumière ;
+* mouvement des objets.
+
+---
+
+# 4. SI AUCUN GÉNÉRATEUR 3D APPROPRIÉ N'EST DISPONIBLE
+
+NE PAS remplacer cette vidéo par une vidéo générative IA simplement pour produire un fichier.
+
+Dans ce cas :
+
+* préparer uniquement les spécifications ;
+* créer la structure d'entrée du runner ;
+* indiquer qu'une vidéo synthétique cohérente est nécessaire ;
+* attendre une vraie vidéo ou une scène 3D adaptée.
+
+Ne fabrique jamais un résultat destiné à faire croire que le pipeline a fonctionné.
+
+---
+
+# 5. DOCUMENTATION
+
+Documenter :
+
+* origine de la vidéo ;
+* méthode de génération ;
+* résolution ;
+* FPS ;
+* durée ;
+* nombre de frames ;
+* trajectoire caméra si connue ;
+* paramètres de génération ;
+* coordonnées de caméra si disponibles.
+
+Si la trajectoire de caméra est connue, la conserver.
+
+Elle pourra servir ultérieurement à comparer :
+
+TRAJECTOIRE RÉELLE
+VS
+TRAJECTOIRE ESTIMÉE PAR COLMAP
+
+Cela donnera un test beaucoup plus intéressant.
+
+---
+
+# 6. IMPORTANT — NE PAS ENCORE LANCER LE PIPELINE
+
+Même si la vidéo synthétique est créée :
+
+NE PAS lancer COLMAP.
+
+NE PAS lancer MVS.
+
+NE PAS lancer 3DGS.
+
+NE PAS modifier BurkinaWatch.
+
+NE PAS installer COLMAP automatiquement.
+
+NE PAS installer un GPU worker.
+
+Cette étape sert uniquement à préparer un jeu de données de test contrôlé.
+
+---
+
+# 7. RAPPORT
+
+À la fin, indique :
+
+1. si une vidéo synthétique cohérente a pu être produite ;
+2. comment elle a été produite ;
+3. ses caractéristiques ;
+4. si la trajectoire caméra est connue ;
+5. si elle est adaptée à COLMAP ;
+6. ce qui manque encore pour lancer le pipeline ;
+7. quel environnement GPU serait recommandé ;
+8. comment nous pourrons ensuite comparer les résultats avec une vraie vidéo.
+
+ARRÊTE-TOI ensuite et attends ma validation.
