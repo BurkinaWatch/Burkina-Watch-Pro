@@ -142,3 +142,36 @@ n'y a donc pas de copie applicative à exécuter pour l'environnement de dévelo
   proviennent encore des métadonnées client jusqu'à l'arrivée d'un worker média ;
 - la configuration CORS et lifecycle doit être appliquée côté fournisseur ;
 - le vrai worker de traitement 3D reste volontairement hors de cette étape.
+
+## Préparation asynchrone Phase 5
+
+La préparation vidéo utilise désormais `streetview_processing_jobs` comme queue
+durable PostgreSQL. L'API crée le job après la réception de l'objet puis répond
+sans traiter la vidéo. Un service Railway séparé exécute
+`npm run start:worker`.
+
+Le worker :
+
+1. récupère un job disponible avec un verrou PostgreSQL et un bail temporaire ;
+2. valide l'existence, la taille et le conteneur depuis le stockage ;
+3. enregistre les métadonnées réellement vérifiées et la progression ;
+4. termine à `WAITING_FOR_3D`, sans NeRF, photogrammétrie ou reconstruction GPU.
+
+Les jobs reprennent automatiquement après expiration d'un bail. Les erreurs
+temporaires utilisent un backoff exponentiel jusqu'à `max_attempts`; les erreurs
+de fichier ou de métadonnées sont arrêtées immédiatement. Les détails techniques
+restent dans les logs et la base de suivi, tandis que l'utilisateur reçoit un
+message générique.
+
+La migration additive `migrations/0009_streetview_processing_queue.sql` ajoute
+les colonnes de tentative, disponibilité, verrou, bail et mise à jour. Elle se
+déploie avec `npm run db:railway:apply-streetview-phase5`.
+
+Railway doit utiliser deux services :
+
+- **API** : `npm run start`, avec `STREETVIEW_WORKER_ENABLED=false` ;
+- **Media worker** : `npm run start:worker`, avec les mêmes accès PostgreSQL et
+  S3/R2, et `STREETVIEW_WORKER_ENABLED=true`.
+
+Le worker ne nécessite pas de queue externe : PostgreSQL est déjà la source de
+vérité et `SKIP LOCKED` permet plusieurs workers sans double traitement.
