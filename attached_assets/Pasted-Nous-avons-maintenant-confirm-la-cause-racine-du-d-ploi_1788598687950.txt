@@ -1,0 +1,116 @@
+Nous avons maintenant confirmé la cause racine du déploiement Railway :
+
+`vite`, `esbuild` et TypeScript sont dans `devDependencies`, mais Railway/Nixpacks installe actuellement les dépendances en mode production avant d'exécuter `npm run build`. Le build échoue donc avec :
+
+`sh: 1: vite: not found`
+
+Je veux maintenant APPLIQUER LE CORRECTIF MINIMAL ET CIBLÉ.
+
+Objectif unique :
+permettre à la phase de BUILD Railway d'installer les `devDependencies`, sans modifier l'architecture de l'application.
+
+### 1. Corriger nixpacks.toml
+
+Modifier uniquement la configuration nécessaire afin que la phase d'installation utilise :
+
+`npm ci --include=dev`
+
+si cette syntaxe est compatible avec la configuration Nixpacks actuellement présente.
+
+Conserver le principe actuel :
+
+installation des dépendances → build → démarrage de l'application.
+
+Ne pas remplacer inutilement Nixpacks par Docker et ne pas réécrire la stratégie de déploiement.
+
+### 2. Vérifier les variables/configurations susceptibles d'annuler ce correctif
+
+Inspecter uniquement les fichiers du dépôt et signaler si une configuration impose :
+
+`NPM_CONFIG_PRODUCTION=true`
+
+`NPM_CONFIG_OMIT=dev`
+
+`npm_config_production=true`
+
+`npm_config_omit=dev`
+
+ou une configuration npm équivalente.
+
+Si l'une de ces configurations est présente DANS LE DÉPÔT, corriger uniquement ce qui est nécessaire.
+
+Si elle n'est PAS présente dans le dépôt et semble provenir de Railway, ne pas essayer de la simuler dans le code : indique-moi simplement qu'une vérification de la variable Railway est nécessaire.
+
+IMPORTANT :
+ne pas supprimer `NODE_ENV=production` simplement parce qu'il existe.
+`NODE_ENV=production` peut être parfaitement légitime pour le runtime.
+Le but est que les devDependencies soient disponibles pendant le BUILD.
+
+### 3. Ne pas modifier les dépendances du package.json
+
+NE PAS déplacer `vite`, `esbuild` ou TypeScript de `devDependencies` vers `dependencies` simplement pour contourner le problème.
+
+Ils doivent rester dans `devDependencies` sauf preuve technique contraire.
+
+### 4. Ne rien toucher d'autre
+
+INTERDICTION de modifier :
+
+* PostgreSQL
+* DATABASE_URL / RAILWAY_DATABASE_URL
+* Drizzle
+* migrations
+* schéma de base de données
+* les 29 tables existantes
+* Street View
+* le pipeline photogrammétrique
+* `streetviewWorkerMain.ts`
+* le worker
+* l'authentification
+* les secrets
+* les API externes
+* le frontend
+* les fonctionnalités métier
+
+Aucune migration.
+Aucun `db:push`.
+Aucun `db:push --force`.
+Aucune suppression de données.
+Aucun changement de schéma.
+
+### 5. Vérifications après modification
+
+Après le changement, exécuter :
+
+`npm run check`
+
+`git diff --check`
+
+Puis vérifier le contenu final de `nixpacks.toml` et `package.json`.
+
+Si l'environnement local le permet sans modifier le lockfile, vérifier également que le script de build reste :
+
+`vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && esbuild server/streetviewWorkerMain.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/streetview-worker.js`
+
+### 6. Ne pas lancer de déploiement
+
+Ne lance aucun déploiement Railway depuis Replit.
+
+Ne modifie aucune variable Railway.
+
+Ne commit/push pas automatiquement.
+
+### 7. Rapport final obligatoire
+
+À la fin, donne-moi :
+
+1. les fichiers modifiés ;
+2. le diff exact de chaque modification ;
+3. la raison technique de chaque modification ;
+4. confirmation que `vite`, `esbuild` et TypeScript restent dans `devDependencies` ;
+5. résultat de `npm run check` ;
+6. résultat de `git diff --check` ;
+7. confirmation qu'aucune base de données, migration, donnée ou fonctionnalité métier n'a été touchée ;
+8. ce qui doit éventuellement être vérifié MANUELLEMENT dans Railway avant de relancer le déploiement.
+
+Si tu rencontres une ambiguïté ou si le correctif nécessite une modification autre que celle de la configuration d'installation/build, ARRÊTE-TOI et explique-moi le problème au lieu d'improviser.
