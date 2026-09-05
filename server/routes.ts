@@ -16,7 +16,7 @@ import {
   insertLocationPointSchema, 
   insertEmergencyContactSchema, 
   insertChatMessageSchema,
-  ouaga3dSceneTiles,
+  streetviewScenes,
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { z } from "zod";
@@ -4133,12 +4133,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const tiles = await db
         .select()
-        .from(ouaga3dSceneTiles)
-        .orderBy(ouaga3dSceneTiles.updatedAt)
+        .from(streetviewScenes)
+        .where(eq(streetviewScenes.publicationStatus, "PUBLISHED"))
+        .orderBy(streetviewScenes.createdAt)
         .limit(200);
-      res.json(
-        tiles.filter((tile) => tile.status === "completed" && Boolean(tile.tileUrl)),
-      );
+      res.json(tiles);
     } catch (error) {
       console.error("Erreur récupération scènes StreetView:", error);
       res.status(500).json({ message: "Impossible de récupérer les scènes disponibles." });
@@ -4548,7 +4547,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const contribution = await storage.getStreetviewContribution(req.params.id, userId);
       if (!contribution) return res.status(404).json({ message: "Contribution introuvable." });
 
-      for (const key of [contribution.storageKey, contribution.thumbnailKey]) {
+      const metadata = contribution.clientMetadata &&
+        typeof contribution.clientMetadata === "object" &&
+        !Array.isArray(contribution.clientMetadata)
+        ? contribution.clientMetadata as Record<string, unknown>
+        : {};
+      const cpuPreparation = metadata.cpuPreparation &&
+        typeof metadata.cpuPreparation === "object" &&
+        !Array.isArray(metadata.cpuPreparation)
+        ? metadata.cpuPreparation as Record<string, unknown>
+        : {};
+      const artifactKeys = Array.isArray(cpuPreparation.artifactKeys)
+        ? cpuPreparation.artifactKeys.filter((key): key is string => typeof key === "string")
+        : [];
+      for (const key of [contribution.storageKey, contribution.thumbnailKey, ...artifactKeys]) {
         if (key) await deleteStreetviewObject(key);
       }
       const deleted = await storage.deleteStreetviewContribution(contribution.id, userId);
