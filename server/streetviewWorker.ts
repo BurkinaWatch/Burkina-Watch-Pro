@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { storage } from "./storage";
 import { inspectStreetviewStoredObject } from "./streetviewPreparationService";
+import { runStreetviewCpuPreparation } from "./streetviewCpuPreparation";
+import { cpuReconstructionEngine } from "./streetviewReconstruction";
 import {
   classifyStreetviewError,
   isRetryableStreetviewError,
@@ -55,7 +57,10 @@ export class StreetviewWorker {
       const contribution = await storage.getStreetviewContribution(job.contributionId);
       if (!contribution) throw new Error("FILE_NOT_FOUND");
 
-      if (contribution.status === "WAITING_FOR_3D" && contribution.processedAt) {
+      if (
+        ["WAITING_FOR_RECONSTRUCTION", "WAITING_FOR_GPU", "WAITING_FOR_3D"].includes(contribution.status) &&
+        contribution.processedAt
+      ) {
         await storage.updateStreetviewProcessingJob(job.id, {
           status: "COMPLETED",
           progress: 100,
@@ -102,12 +107,34 @@ export class StreetviewWorker {
       });
       await storage.updateStreetviewProcessingJob(job.id, { progress: 80 });
 
+      const cpuPreparation = await runStreetviewCpuPreparation(
+        contribution.id,
+        contribution.storageKey,
+      );
+      const reconstructionAvailability = await cpuReconstructionEngine.getAvailability();
+      const nextStatus = reconstructionAvailability.status === "WAITING_FOR_GPU"
+        ? "WAITING_FOR_GPU"
+        : "WAITING_FOR_RECONSTRUCTION";
+      const preparationMessage = reconstructionAvailability.status === "WAITING_FOR_GPU"
+        ? `${cpuPreparation.message} ${reconstructionAvailability.reason}`
+        : cpuPreparation.message;
+
       await storage.updateStreetviewContribution(contribution.id, {
-        status: "WAITING_FOR_3D",
+        status: nextStatus,
         progress: 100,
-        statusMessage: "Préparation terminée, en attente de reconstruction 3D",
+        statusMessage: preparationMessage,
         processedAt: new Date(),
         errorCode: null,
+        qualityMetrics: cpuPreparation.qualityMetrics,
+        clientMetadata: {
+          ...(contribution.clientMetadata && typeof contribution.clientMetadata === "object" &&
+          !Array.isArray(contribution.clientMetadata) ? contribution.clientMetadata : {}),
+          cpuPreparation: {
+            capability: cpuPreparation.capability,
+            artifactKeys: cpuPreparation.artifactKeys,
+            reconstruction: reconstructionAvailability,
+          },
+        },
         updatedAt: new Date(),
       });
       await storage.updateStreetviewProcessingJob(job.id, {
