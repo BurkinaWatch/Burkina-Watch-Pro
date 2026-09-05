@@ -57,11 +57,11 @@ export type StreetviewCpuPreparationDependencies = {
   createTempRoot?: () => Promise<string>;
 };
 
-async function probeVideo(inputPath: string): Promise<{
+async function probeVideo(inputPath: string, executeCommand: RunCommand): Promise<{
   probe: ProbeResult;
   stream: VideoStream | undefined;
 }> {
-  const output = await runCommand("ffprobe", [
+  const output = await executeCommand("ffprobe", [
     "-v",
     "error",
     "-show_streams",

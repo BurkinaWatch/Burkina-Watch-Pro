@@ -5,6 +5,12 @@ import { assertStreetviewStorageConfigured } from "./streetviewStorage";
 assertProductionSecurityConfiguration();
 assertStreetviewStorageConfigured();
 
+if (process.env.STREETVIEW_PHASE14_ENABLED !== "true") {
+  throw new Error(
+    "STREETVIEW_PHASE14_ENABLED=true est requis après application et validation de la migration 0010.",
+  );
+}
+
 const shutdown = async (signal: string) => {
   console.log(`[StreetView] worker received ${signal}`);
   await streetviewWorker.stop();

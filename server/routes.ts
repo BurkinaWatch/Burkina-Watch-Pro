@@ -46,6 +46,7 @@ import {
   verifyStreetviewUploadSession,
   type StreetviewUploadSession,
 } from "./streetviewUploadSession";
+import { getCpuPreparationArtifactKeys } from "./streetviewArtifacts";
 import { OverpassService } from "./overpassService";
 import { reverseGeocode } from "./geocoding";
 import { sendLocationEmail, sendEmergencyTrackingStartEmail } from "./emailService";
@@ -4569,14 +4570,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         !Array.isArray(contribution.clientMetadata)
         ? contribution.clientMetadata as Record<string, unknown>
         : {};
-      const cpuPreparation = metadata.cpuPreparation &&
-        typeof metadata.cpuPreparation === "object" &&
-        !Array.isArray(metadata.cpuPreparation)
-        ? metadata.cpuPreparation as Record<string, unknown>
-        : {};
-      const artifactKeys = Array.isArray(cpuPreparation.artifactKeys)
-        ? cpuPreparation.artifactKeys.filter((key): key is string => typeof key === "string")
-        : [];
+       const artifactKeys = getCpuPreparationArtifactKeys(metadata);
       for (const key of [contribution.storageKey, contribution.thumbnailKey, ...artifactKeys]) {
         if (key) await deleteStreetviewObject(key);
       }
