@@ -1,0 +1,589 @@
+# PHASE 7 — PREMIER PROTOTYPE RÉEL DE RECONSTRUCTION 3D
+
+## CONTEXTE
+
+Les phases précédentes ont permis de préparer l'architecture Street View de BurkinaWatch sans implémenter de moteur 3D.
+
+La décision d'architecture retenue est actuellement :
+
+* socle géométrique : photogrammétrie SfM/MVS compatible COLMAP ;
+* représentation visuelle expérimentale : 3D Gaussian Splatting ;
+* API/orchestration : Railway ;
+* base de données : PostgreSQL ;
+* stockage : Object Storage ;
+* calcul lourd : workers séparés ;
+* GPU : probablement infrastructure externe ;
+* NeRF : expérimentation éventuelle uniquement.
+
+L'objectif stratégique de BurkinaWatch est de permettre progressivement aux utilisateurs de contribuer à une reconstruction 3D géolocalisée du Burkina Faso.
+
+Nous ne voulons PAS créer un simple lecteur vidéo.
+
+Nous voulons à terme :
+
+VIDÉO UTILISATEUR
+↓
+RECONSTRUCTION SPATIALE
+↓
+SCÈNE 3D
+↓
+GÉOLOCALISATION
+↓
+EXPLORATION
+↓
+CONNEXION AVEC D'AUTRES SCÈNES
+
+---
+
+# OBJECTIF DE LA PHASE 7
+
+Construire un PREMIER PROTOTYPE RÉEL ET CONTRÔLÉ permettant de prendre une vraie vidéo de test et de vérifier expérimentalement :
+
+1. extraction des images ;
+2. estimation des poses caméra ;
+3. reconstruction géométrique ;
+4. génération d'une représentation 3D ;
+5. génération éventuelle d'un Gaussian Splat ;
+6. export des résultats ;
+7. inspection de la qualité ;
+8. mesure des performances ;
+9. identification des limites.
+
+Cette phase doit être considérée comme un LABORATOIRE TECHNIQUE.
+
+Elle ne doit pas transformer immédiatement le prototype en système de production.
+
+---
+
+# RÈGLE DE SÉCURITÉ ARCHITECTURALE
+
+Avant toute modification :
+
+1. inspecter le repository ;
+2. inspecter les changements des phases précédentes ;
+3. identifier exactement les fichiers concernés ;
+4. identifier les environnements concernés ;
+5. identifier ce qui est production et ce qui peut être expérimental.
+
+NE PAS casser le pipeline actuel.
+
+NE PAS remplacer l'architecture Street View existante.
+
+NE PAS modifier inutilement l'application utilisateur.
+
+Le prototype doit être ISOLÉ autant que possible.
+
+---
+
+# 1. CRÉER UN ESPACE EXPÉRIMENTAL ISOLÉ
+
+Déterminer la meilleure manière de créer le prototype sans polluer l'application principale.
+
+Par exemple :
+
+/experiments/streetview-3d/
+
+ou
+
+/services/streetview-reconstruction/
+
+ou un autre emplacement mieux adapté au repository.
+
+Ne pas supposer.
+
+Choisir la structure la plus propre après inspection du projet.
+
+Le prototype doit pouvoir être supprimé ou remplacé sans affecter :
+
+* API ;
+* frontend ;
+* authentification ;
+* contributions ;
+* stockage ;
+* jobs existants.
+
+---
+
+# 2. NE PAS UTILISER RAILWAY COMME GPU PAR DÉFAUT
+
+Le prototype 3D lourd ne doit PAS être exécuté dans le processus API Railway.
+
+Si l'environnement Railway actuel ne possède pas le matériel nécessaire :
+
+ne pas essayer de contourner artificiellement cette contrainte.
+
+Déterminer plutôt comment exécuter l'expérience sur une infrastructure de calcul appropriée.
+
+Possibilités à étudier :
+
+* machine locale ;
+* environnement GPU temporaire ;
+* GPU cloud ;
+* worker externe ;
+* autre infrastructure adaptée.
+
+Le choix doit être documenté avant utilisation.
+
+---
+
+# 3. PRÉPARER UNE VIDÉO DE TEST
+
+Le prototype doit être conçu pour recevoir une vraie vidéo.
+
+La vidéo idéale de test doit représenter un cas réaliste :
+
+* déplacement lent ;
+* caméra relativement stable ;
+* environnement extérieur ;
+* nombreux éléments visuels ;
+* bâtiments ;
+* sol ;
+* objets fixes ;
+* profondeur perceptible ;
+* suffisamment de recouvrement entre images.
+
+Éviter pour le premier test :
+
+* foule importante ;
+* nuit ;
+* pluie ;
+* brouillard ;
+* caméra extrêmement tremblante ;
+* déplacement très rapide ;
+* scène presque uniforme.
+
+IMPORTANT :
+
+NE PAS créer de faux résultat pour simuler une reconstruction.
+
+Le résultat doit provenir du véritable pipeline de reconstruction.
+
+---
+
+# 4. PIPELINE EXPÉRIMENTAL
+
+Implémenter uniquement le pipeline expérimental nécessaire :
+
+VIDÉO
+↓
+EXTRACTION FRAMES
+↓
+SÉLECTION / ÉCHANTILLONNAGE
+↓
+COLMAP / SfM
+↓
+ESTIMATION DES CAMÉRAS
+↓
+RECONSTRUCTION
+↓
+3D GAUSSIAN SPLATTING SI POSSIBLE
+↓
+EXPORT
+↓
+INSPECTION
+
+Chaque étape doit produire un résultat identifiable.
+
+---
+
+# 5. EXTRACTION DES FRAMES
+
+Déterminer automatiquement une stratégie d'échantillonnage.
+
+Ne pas simplement utiliser toutes les frames.
+
+Comparer ou paramétrer :
+
+* FPS source ;
+* FPS d'extraction ;
+* nombre total d'images ;
+* intervalle ;
+* résolution.
+
+Le système doit conserver les paramètres utilisés.
+
+Exemple de métadonnées :
+
+source_video
+duration
+fps
+resolution
+extracted_frames
+sampling_rate
+
+---
+
+# 6. COLMAP / SfM
+
+Mettre en place l'expérimentation SfM.
+
+Objectif :
+
+déterminer si les images permettent de retrouver suffisamment correctement :
+
+* les caractéristiques ;
+* les correspondances ;
+* les caméras ;
+* les poses ;
+* la structure sparse.
+
+Produire des métriques réelles telles que :
+
+* nombre d'images ;
+* images effectivement reconstruites ;
+* nombre de points ;
+* nombre de caméras ;
+* taux de réussite ;
+* éventuels échecs.
+
+NE PAS inventer de valeurs.
+
+---
+
+# 7. MVS / GÉOMÉTRIE
+
+Si la première étape est suffisamment bonne, tester la reconstruction dense.
+
+Produire si possible :
+
+* dense point cloud ;
+* éventuellement mesh ;
+* textures si le pipeline le permet.
+
+Mesurer :
+
+* temps ;
+* mémoire ;
+* taille des fichiers ;
+* qualité ;
+* éventuels échecs.
+
+---
+
+# 8. 3D GAUSSIAN SPLATTING
+
+Si les résultats SfM sont suffisamment bons, tester ensuite le 3D Gaussian Splatting.
+
+IMPORTANT :
+
+Le système doit documenter précisément :
+
+* quel implémentation est utilisée ;
+* quelles dépendances sont nécessaires ;
+* quel matériel est nécessaire ;
+* quelles données d'entrée sont nécessaires ;
+* quel résultat est produit ;
+* combien de temps prend le traitement ;
+* quelle taille fait le résultat.
+
+NE PAS choisir une implémentation uniquement parce qu'elle possède une belle démonstration.
+
+Le critère principal est sa capacité à devenir ultérieurement un composant automatisable du pipeline BurkinaWatch.
+
+---
+
+# 9. COMPARAISON DES RÉSULTATS
+
+Pour une même vidéo, comparer si possible :
+
+### A
+
+Images originales
+
+### B
+
+Sparse reconstruction
+
+### C
+
+Dense point cloud
+
+### D
+
+Mesh éventuel
+
+### E
+
+Gaussian Splat éventuel
+
+Documenter :
+
+* qualité ;
+* couverture ;
+* trous ;
+* artefacts ;
+* stabilité ;
+* détails ;
+* textures ;
+* objets mobiles ;
+* surfaces difficiles.
+
+---
+
+# 10. GÉORÉFÉRENCEMENT EXPÉRIMENTAL
+
+NE PAS encore construire le système complet de géoréférencement.
+
+Mais préparer un premier test.
+
+Si la vidéo possède des coordonnées GPS :
+
+conserver :
+
+* GPS de départ ;
+* GPS de fin ;
+* éventuellement trajectoire ;
+* timestamp ;
+* altitude si disponible.
+
+Déterminer si les informations disponibles permettent de relier approximativement le repère local de reconstruction à la géographie réelle.
+
+IMPORTANT :
+
+Ne pas présenter une scène comme précisément géoréférencée si la précision n'a pas été démontrée.
+
+---
+
+# 11. MESURES À COLLECTER
+
+Pour chaque expérimentation, enregistrer :
+
+## INPUT
+
+* taille vidéo ;
+* durée ;
+* résolution ;
+* FPS ;
+* nombre de frames ;
+* méthode d'extraction.
+
+## SfM
+
+* nombre d'images ;
+* images reconstruites ;
+* points ;
+* temps ;
+* mémoire ;
+* erreurs.
+
+## MVS
+
+* temps ;
+* points ;
+* taille ;
+* éventuelles erreurs.
+
+## Gaussian Splatting
+
+* temps d'entraînement/reconstruction ;
+* GPU ;
+* VRAM ;
+* taille du résultat ;
+* qualité ;
+* nombre de primitives si disponible.
+
+## OUTPUT
+
+* fichiers produits ;
+* formats ;
+* taille totale ;
+* possibilité de visualisation.
+
+---
+
+# 12. TEST DE ROBUSTESSE
+
+Après un premier test réussi, effectuer si les ressources le permettent quelques variations contrôlées :
+
+### TEST A
+
+Vidéo de bonne qualité.
+
+### TEST B
+
+Même vidéo avec moins de frames.
+
+### TEST C
+
+Même vidéo avec résolution réduite.
+
+### TEST D
+
+Vidéo avec mouvement légèrement plus rapide.
+
+Le but est de déterminer à quel moment la reconstruction commence à se dégrader.
+
+NE PAS multiplier les expériences inutilement.
+
+L'objectif est de comprendre les limites, pas de produire des centaines de tests.
+
+---
+
+# 13. CRITÈRES DE RÉUSSITE
+
+Le prototype sera considéré comme techniquement encourageant si :
+
+1. une vraie vidéo est acceptée ;
+2. les frames sont extraites ;
+3. SfM réussit sur une proportion significative des images ;
+4. une structure 3D cohérente est produite ;
+5. la reconstruction dense fonctionne suffisamment bien ;
+6. un Gaussian Splat exploitable peut être produit lorsque les conditions le permettent ;
+7. le résultat peut être inspecté ;
+8. aucune donnée n'a été inventée ;
+9. les coûts et performances sont mesurables ;
+10. le pipeline peut théoriquement être automatisé plus tard.
+
+---
+
+# 14. CRITÈRES D'ÉCHEC
+
+Un échec est également un résultat utile.
+
+Identifier clairement si :
+
+* trop peu d'images sont alignées ;
+* les poses sont mauvaises ;
+* la reconstruction est trop bruitée ;
+* la scène contient trop d'objets dynamiques ;
+* le GPU est insuffisant ;
+* le temps de calcul est prohibitif ;
+* le résultat est trop volumineux ;
+* le Gaussian Splat est inutilisable ;
+* la géolocalisation est insuffisante.
+
+NE PAS masquer un échec.
+
+NE PAS remplacer le résultat par une démonstration préfabriquée.
+
+---
+
+# 15. NE PAS ENCORE CONSTRUIRE
+
+Cette phase NE DOIT PAS encore construire :
+
+* le système de contribution final ;
+* le viewer public ;
+* la fusion automatique des scènes ;
+* la carte 3D complète ;
+* le géoréférencement précis ;
+* le système de modération automatisé ;
+* le pipeline de production à grande échelle ;
+* le GPU worker permanent ;
+* les quotas utilisateurs ;
+* le système de facturation.
+
+Tout cela viendra après validation du prototype.
+
+---
+
+# 16. ARCHITECTURE FUTURE À PRÉSERVER
+
+Même dans le prototype, conserver conceptuellement :
+
+API
+↓
+JOB
+↓
+WORKER
+↓
+RECONSTRUCTION ENGINE
+↓
+ARTIFACTS
+↓
+SCENE
+
+Le moteur de reconstruction doit être suffisamment isolé pour pouvoir être remplacé.
+
+Ne pas mélanger :
+
+* code API ;
+* code GPU ;
+* logique de reconstruction ;
+* viewer.
+
+---
+
+# 17. RAPPORT FINAL
+
+À la fin de l'expérimentation, produire un rapport comprenant :
+
+## 1. Environnement
+
+* machine ;
+* CPU ;
+* RAM ;
+* GPU ;
+* VRAM ;
+* OS ;
+* versions logicielles.
+
+## 2. Vidéo utilisée
+
+* durée ;
+* résolution ;
+* FPS ;
+* taille ;
+* conditions de capture.
+
+## 3. Pipeline
+
+Décrire chaque étape.
+
+## 4. Résultats SfM
+
+Métriques réelles.
+
+## 5. Résultats MVS
+
+Métriques réelles.
+
+## 6. Résultats Gaussian Splatting
+
+Métriques réelles.
+
+## 7. Qualité
+
+Forces et défauts.
+
+## 8. Coût
+
+Temps et ressources.
+
+## 9. Problèmes rencontrés
+
+Liste complète.
+
+## 10. Recommandation
+
+Répondre clairement :
+
+"Le pipeline COLMAP/SfM-MVS + 3D Gaussian Splatting est-il suffisamment prometteur pour passer à une architecture de production ?"
+
+Réponse :
+
+* OUI ;
+* NON ;
+* OUI MAIS.
+
+Justifier.
+
+---
+
+# 18. IMPORTANT — ARRÊT OBLIGATOIRE
+
+Après le rapport :
+
+NE PAS poursuivre automatiquement vers la production.
+
+NE PAS activer le moteur dans Street View pour les utilisateurs.
+
+NE PAS modifier le workflow utilisateur.
+
+NE PAS lancer de déploiement production.
+
+NE PAS construire le viewer final.
+
+ARRÊTE-TOI et attends ma validation.
+
+Le résultat de cette phase doit être une preuve expérimentale réelle permettant de décider rationnellement de la suite.
