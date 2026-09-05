@@ -4236,6 +4236,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         width,
         height,
         orientation,
+        capturedAt,
+        locationAccuracyM,
+        altitudeM,
+        locationSource,
+        locationCapturedAt,
+        temporalVersion,
         thumbnailData,
       } = req.body || {};
 
@@ -4259,6 +4265,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (thumbnailData !== undefined && typeof thumbnailData !== "string") {
         return res.status(400).json({ message: "La miniature est invalide." });
       }
+      const captureDate = capturedAt ? new Date(String(capturedAt)) : null;
+      const positionDate = locationCapturedAt ? new Date(String(locationCapturedAt)) : null;
+      if ((captureDate && Number.isNaN(captureDate.getTime())) || (positionDate && Number.isNaN(positionDate.getTime()))) {
+        return res.status(400).json({ message: "La date de capture ou de position est invalide." });
+      }
+      const accuracy = locationAccuracyM === undefined || locationAccuracyM === null || locationAccuracyM === ""
+        ? null
+        : Number(locationAccuracyM);
+      const altitude = altitudeM === undefined || altitudeM === null || altitudeM === ""
+        ? null
+        : Number(altitudeM);
+      if ((accuracy !== null && (!Number.isFinite(accuracy) || accuracy < 0)) ||
+          (altitude !== null && !Number.isFinite(altitude))) {
+        return res.status(400).json({ message: "Les métadonnées de position sont invalides." });
+      }
 
       const contribution = await storage.createStreetviewContribution({
         userId,
@@ -4274,11 +4295,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         width: Number.isFinite(Number(width)) ? Math.round(Number(width)) : null,
         height: Number.isFinite(Number(height)) ? Math.round(Number(height)) : null,
         orientation: typeof orientation === "string" ? orientation.slice(0, 32) : null,
+        capturedAt: captureDate,
+        locationAccuracyM: accuracy === null ? null : accuracy.toFixed(2),
+        altitudeM: altitude === null ? null : altitude.toFixed(2),
+        locationSource: typeof locationSource === "string" ? locationSource.slice(0, 32) : null,
+        locationCapturedAt: positionDate,
+        temporalVersion: typeof temporalVersion === "string" ? temporalVersion.slice(0, 64) : null,
         clientMetadata: {
           durationMs,
           width,
           height,
           orientation,
+          capturedAt: captureDate?.toISOString() || null,
+          locationSource,
+          locationCapturedAt: positionDate?.toISOString() || null,
         },
       });
 
@@ -4466,7 +4496,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: contribution.id,
         status: updated?.status || "UPLOADED",
         jobId: job.id,
-        message: "Vidéo reçue. En attente de reconstruction 3D.",
+        message: "Vidéo reçue. En attente de préparation CPU.",
       });
     } catch (error: any) {
       if (session) {
@@ -4578,7 +4608,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: contribution.id,
           status: updated?.status || "UPLOADED",
           jobId: job.id,
-          message: "Vidéo reçue. En attente de reconstruction 3D.",
+           message: "Vidéo reçue. En attente de préparation CPU.",
         });
       } catch (error: any) {
         console.error("Erreur upload contribution StreetView:", error);
