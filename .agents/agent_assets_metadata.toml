@@ -28,3 +28,17 @@ mtime_ms = 1788586683378
 storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:766d3c29-01ad-41d8-90b6-ccbc39f09e61/43832d26-1bdb-4dc4-90e5-a98275c48d5e/96febb47-1355-4ad3-8e4c-5c602fa3b076"
 storage_version_token = "1788586711992239"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "PkQueoOi3qkZevJ0DSSOM"
+uri = "file://experiments/streetview-3d/PHASE_11_RESULT.md"
+type = "text"
+title = "PHASE_11_RESULT.md"
+description = "Rapport complet de validation Phase 11 du moteur 3D sur GPU cloud, avec verdict NO-GO et état des expérimentations réellement exécutées."
+logical_id = "92051be6-3a3f-4da5-90b9-315187097ceb"
+content_hash = "sha256:3c2bd6e82d2d30da36978ef8abbaf1fd960f2c2f65ffd8c2727b76af608c0448"
+size = 12019
+mtime_ms = 1788589302866
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:766d3c29-01ad-41d8-90b6-ccbc39f09e61/92051be6-3a3f-4da5-90b9-315187097ceb/e007988f-1165-4a03-b824-e9966520c8cc"
+storage_version_token = "1788589513724974"
+content_type = "text/markdown"
