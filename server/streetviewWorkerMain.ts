@@ -12,6 +12,9 @@ const shutdown = async (signal: string) => {
 };
 
 async function main(): Promise<void> {
+  if (process.env.STREETVIEW_WORKER_ENABLED !== "true") {
+    throw new Error("STREETVIEW_WORKER_ENABLED=true est requis pour démarrer le worker StreetView.");
+  }
   await streetviewWorker.start();
   process.once("SIGTERM", () => void shutdown("SIGTERM"));
   process.once("SIGINT", () => void shutdown("SIGINT"));
