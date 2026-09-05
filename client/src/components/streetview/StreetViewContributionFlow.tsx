@@ -72,9 +72,10 @@ const preparationWaitingStatuses = new Set([
 
 type Scene = {
   id: string;
-  quadkey: string;
-  lodLevel: number;
-  tileUrl: string | null;
+  contributionId: string;
+  reconstructionEngine: string;
+  engineVersion: string;
+  publicationStatus: string;
   boundingBox: { minLat?: number; maxLat?: number; minLng?: number; maxLng?: number } | null;
 };
 
@@ -669,7 +670,9 @@ export default function StreetViewContributionFlow() {
                   <Card key={scene.id}>
                     <CardHeader>
                       <CardTitle className="text-base">Scène publiée</CardTitle>
-                      <CardDescription>Tuile {scene.quadkey} · niveau {scene.lodLevel}</CardDescription>
+                      <CardDescription>
+                        Moteur {scene.reconstructionEngine} · version {scene.engineVersion}
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-muted-foreground">
