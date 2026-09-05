@@ -183,7 +183,7 @@ function extractFrames(inputPath, outputPath, sampleFps, maxWidth) {
   const framesDirectory = join(outputPath, "frames");
   mkdirSync(framesDirectory, { recursive: true });
 
-  const filter = `fps=${sampleFps},scale=min\\\\(${maxWidth}\\\\,iw\\\\):-2:force_original_aspect_ratio=decrease`;
+  const filter = `fps=${sampleFps},scale=w=min(${maxWidth}\\,iw):h=-2:force_original_aspect_ratio=decrease`;
   run("ffmpeg", [
     "-hide_banner",
     "-loglevel",
