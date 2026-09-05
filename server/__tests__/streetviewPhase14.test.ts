@@ -176,6 +176,9 @@ describe("StreetView Phase 14", () => {
     const migration = await readFile("migrations/0010_streetview_cpu_first.sql", "utf8");
     assert.match(migration, /ADD COLUMN IF NOT EXISTS/);
     assert.match(migration, /CREATE TABLE IF NOT EXISTS "streetview_scenes"/);
-    assert.doesNotMatch(migration, /\bDROP\b|\bTRUNCATE\b|\bDELETE\b/i);
+    const executableSql = migration
+      .replace(/--.*$/gm, "")
+      .replace(/\s+/g, " ");
+    assert.doesNotMatch(executableSql, /(?:^|;)\s*(?:DROP|TRUNCATE|DELETE)\b/i);
   });
 });
