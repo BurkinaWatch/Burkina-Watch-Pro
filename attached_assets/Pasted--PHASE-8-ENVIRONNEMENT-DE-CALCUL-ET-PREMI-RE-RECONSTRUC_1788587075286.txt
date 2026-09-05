@@ -1,0 +1,601 @@
+# PHASE 8 — ENVIRONNEMENT DE CALCUL ET PREMIÈRE RECONSTRUCTION
+
+## CONTEXTE
+
+Les phases précédentes ont établi l'architecture expérimentale Street View.
+
+Architecture retenue :
+
+VIDÉO
+↓
+EXTRACTION FRAMES
+↓
+COLMAP / SfM
+↓
+MVS
+↓
+3D Gaussian Splatting
+↓
+SCÈNE 3D
+
+Le préflight précédent a montré :
+
+* ffmpeg disponible ;
+* ffprobe disponible ;
+* espace disque disponible ;
+* COLMAP absent ;
+* GPU NVIDIA absent ;
+* aucune reconstruction réelle encore effectuée.
+
+Nous devons maintenant préparer un environnement permettant réellement d'exécuter le pipeline.
+
+---
+
+# OBJECTIF
+
+Mettre en place un environnement de calcul expérimental permettant :
+
+1. d'exécuter COLMAP ;
+2. d'exécuter SfM ;
+3. d'exécuter MVS ;
+4. de préparer les données nécessaires à 3D Gaussian Splatting ;
+5. de mesurer les ressources nécessaires ;
+6. de déterminer si un GPU externe est réellement nécessaire ;
+7. de conserver tous les résultats dans un environnement expérimental isolé.
+
+Cette phase ne doit toujours PAS transformer le système en fonctionnalité de production.
+
+---
+
+# 1. AUDIT FINAL DU RUNNER
+
+Inspecter le runner créé précédemment.
+
+Vérifier :
+
+* structure ;
+* scripts ;
+* dépendances ;
+* chemins ;
+* gestion des entrées ;
+* gestion des sorties ;
+* logs ;
+* métriques ;
+* reproductibilité.
+
+Ne pas recréer inutilement ce qui existe déjà.
+
+---
+
+# 2. CHOIX DE L'ENVIRONNEMENT DE CALCUL
+
+Comparer AVANT de déployer :
+
+### OPTION A
+
+Machine locale CPU
+
+### OPTION B
+
+Machine locale avec GPU NVIDIA
+
+### OPTION C
+
+GPU cloud temporaire
+
+### OPTION D
+
+Worker GPU externe
+
+### OPTION E
+
+Autre solution pertinente
+
+Comparer :
+
+* coût ;
+* disponibilité GPU ;
+* VRAM ;
+* stockage ;
+* temps de démarrage ;
+* facilité d'installation ;
+* persistance ;
+* accès aux fichiers ;
+* téléchargement des résultats ;
+* automatisation future ;
+* compatibilité COLMAP ;
+* compatibilité 3DGS.
+
+Ne pas choisir automatiquement la solution la moins chère.
+
+Ne pas choisir automatiquement Railway.
+
+L'objectif est de trouver le meilleur environnement pour cette expérimentation.
+
+---
+
+# 3. NE PAS CRÉER ENCORE DE GPU WORKER DE PRODUCTION
+
+Il est INTERDIT à cette phase de créer :
+
+* GPU worker permanent ;
+* système de production ;
+* autoscaling ;
+* orchestration multi-GPU ;
+* traitement massif ;
+* facturation GPU ;
+* pipeline public.
+
+Nous voulons uniquement un environnement expérimental contrôlé.
+
+---
+
+# 4. ENVIRONNEMENT REPRODUCTIBLE
+
+L'environnement choisi doit idéalement pouvoir être reproduit.
+
+Documenter :
+
+* OS ;
+* architecture CPU ;
+* CPU ;
+* RAM ;
+* GPU ;
+* VRAM ;
+* CUDA si applicable ;
+* driver ;
+* Python ;
+* Node.js si nécessaire ;
+* ffmpeg ;
+* COLMAP ;
+* dépendances du pipeline 3DGS.
+
+Si possible, préparer un fichier de configuration permettant de reconstruire ultérieurement le même environnement.
+
+Par exemple :
+
+* Dockerfile ;
+* script d'installation ;
+* requirements ;
+* configuration documentée.
+
+Choisir la méthode la plus adaptée au projet.
+
+---
+
+# 5. INSTALLATION DE COLMAP
+
+Installer COLMAP uniquement dans l'environnement expérimental choisi.
+
+NE PAS l'installer dans le runtime principal BurkinaWatch si cela n'est pas nécessaire.
+
+Documenter :
+
+* version ;
+* méthode d'installation ;
+* dépendances ;
+* support GPU ;
+* mode CPU/GPU ;
+* commandes utilisées.
+
+Effectuer uniquement un test de fonctionnement :
+
+COLMAP --help
+
+ou une vérification équivalente.
+
+Ne pas lancer encore une reconstruction coûteuse tant que l'environnement n'est pas validé.
+
+---
+
+# 6. TEST MINIMAL COLMAP
+
+Avant d'utiliser notre vidéo, effectuer un test minimal permettant de confirmer que :
+
+* COLMAP démarre ;
+* les dépendances fonctionnent ;
+* la base de données COLMAP peut être créée ;
+* l'extraction/matching peut être exécuté ;
+* les composants nécessaires sont opérationnels.
+
+Le test doit être suffisamment léger pour éviter une consommation inutile de ressources.
+
+Documenter le résultat.
+
+---
+
+# 7. PRÉPARATION 3D GAUSSIAN SPLATTING
+
+Installer/configurer uniquement l'implémentation 3DGS retenue lors de la Phase 6.
+
+Avant toute installation :
+
+documenter :
+
+* nom de l'implémentation ;
+* source ;
+* version/commit si disponible ;
+* licence ;
+* dépendances ;
+* CUDA ;
+* version Python ;
+* GPU minimum recommandé ;
+* VRAM recommandée ;
+* format d'entrée ;
+* format de sortie.
+
+NE PAS choisir une implémentation uniquement parce qu'elle est populaire.
+
+Elle doit être suffisamment exploitable pour devenir éventuellement un composant automatisable du pipeline BurkinaWatch.
+
+---
+
+# 8. COMPATIBILITÉ COLMAP → 3DGS
+
+Vérifier concrètement que les données produites par COLMAP peuvent être utilisées par le pipeline 3DGS retenu.
+
+Identifier :
+
+* format des images ;
+* poses caméra ;
+* intrinsics ;
+* extrinsics ;
+* structure des fichiers ;
+* conversion éventuellement nécessaire.
+
+Cette compatibilité est CRITIQUE.
+
+Si une conversion est nécessaire :
+
+documenter précisément la conversion.
+
+Ne pas encore construire un système automatisé complexe.
+
+---
+
+# 9. TEST AVEC LA VIDÉO SYNTHÉTIQUE
+
+Si une vidéo synthétique cohérente a été préparée lors de la phase précédente, elle peut maintenant être utilisée.
+
+Sinon, ne pas inventer de vidéo.
+
+Dans ce cas :
+
+* terminer uniquement l'installation ;
+* vérifier COLMAP ;
+* vérifier 3DGS ;
+* attendre la vidéo.
+
+Si une vidéo synthétique est disponible, l'utiliser uniquement comme test technique.
+
+---
+
+# 10. PREMIER TEST SfM
+
+Si les prérequis sont satisfaits :
+
+1. extraire les frames ;
+2. créer la base COLMAP ;
+3. effectuer le feature extraction ;
+4. effectuer le matching ;
+5. lancer SfM ;
+6. produire la reconstruction sparse.
+
+Mesurer :
+
+* nombre de frames ;
+* features ;
+* matches ;
+* images reconstruites ;
+* caméras ;
+* points ;
+* temps ;
+* RAM ;
+* GPU ;
+* VRAM.
+
+---
+
+# 11. VALIDATION AVANT MVS
+
+NE PAS lancer MVS automatiquement.
+
+Analyser d'abord la reconstruction SfM.
+
+Si elle est mauvaise :
+
+ARRÊTER.
+
+Identifier la cause.
+
+Si elle est satisfaisante :
+
+continuer vers MVS.
+
+---
+
+# 12. PREMIER TEST MVS
+
+Lancer la reconstruction dense si les résultats SfM le permettent.
+
+Mesurer :
+
+* temps ;
+* RAM ;
+* GPU ;
+* VRAM ;
+* nombre de points ;
+* taille des fichiers ;
+* qualité ;
+* erreurs.
+
+Conserver les résultats.
+
+---
+
+# 13. TEST 3DGS
+
+Uniquement si :
+
+* SfM fonctionne ;
+* les poses caméra sont exploitables ;
+* les données d'entrée sont compatibles ;
+* le GPU est suffisamment puissant.
+
+Lancer une première reconstruction 3DGS.
+
+Ne pas rechercher immédiatement la qualité maximale.
+
+L'objectif est d'obtenir une PREMIÈRE reconstruction fonctionnelle.
+
+Documenter :
+
+* paramètres ;
+* itérations ;
+* GPU ;
+* VRAM ;
+* temps ;
+* taille ;
+* nombre de Gaussians si disponible ;
+* qualité ;
+* erreurs.
+
+---
+
+# 14. COMPARAISON
+
+Comparer :
+
+### COLMAP sparse
+
+### MVS dense
+
+### 3D Gaussian Splatting
+
+Évaluer :
+
+* qualité géométrique ;
+* réalisme ;
+* détails ;
+* trous ;
+* artefacts ;
+* stabilité ;
+* taille ;
+* temps de calcul.
+
+---
+
+# 15. TEST DE VISUALISATION
+
+Si le résultat 3DGS est produit :
+
+trouver un moyen de le visualiser réellement.
+
+Cela peut être :
+
+* viewer local ;
+* viewer fourni par l'implémentation ;
+* outil compatible ;
+* export inspectable.
+
+NE PAS créer encore le viewer BurkinaWatch.
+
+Nous voulons simplement vérifier que le résultat est réellement exploitable.
+
+---
+
+# 16. MESURE DU COÛT
+
+Pour cette première reconstruction, mesurer :
+
+* coût approximatif de l'environnement GPU ;
+* durée d'utilisation ;
+* stockage consommé ;
+* volume des fichiers ;
+* temps CPU ;
+* temps GPU.
+
+Si le coût réel n'est pas disponible, fournir uniquement une estimation clairement identifiée comme telle.
+
+NE PAS inventer de prix.
+
+---
+
+# 17. ANALYSE DE SCALABILITÉ
+
+À partir des mesures réelles, extrapoler prudemment :
+
+100 scènes
+1 000 scènes
+10 000 scènes
+
+Ne pas produire de fausses estimations de précision.
+
+Identifier surtout les variables déterminantes :
+
+* durée moyenne vidéo ;
+* nombre de frames ;
+* résolution ;
+* temps GPU ;
+* VRAM ;
+* taille scène ;
+* stockage ;
+* concurrence des jobs.
+
+---
+
+# 18. RÉSULTAT ATTENDU
+
+À la fin de cette phase, nous devons savoir :
+
+### 1.
+
+COLMAP fonctionne-t-il dans notre environnement ?
+
+### 2.
+
+SfM fonctionne-t-il avec notre type de données ?
+
+### 3.
+
+MVS fonctionne-t-il ?
+
+### 4.
+
+3DGS fonctionne-t-il ?
+
+### 5.
+
+Quel GPU est réellement nécessaire ?
+
+### 6.
+
+Combien de temps prend une reconstruction ?
+
+### 7.
+
+Quelle quantité de stockage produit une scène ?
+
+### 8.
+
+Quelle qualité pouvons-nous réellement obtenir ?
+
+### 9.
+
+Le pipeline est-il suffisamment stable pour envisager une industrialisation ?
+
+---
+
+# 19. RAPPORT FINAL
+
+Fournir un rapport complet :
+
+## ENVIRONNEMENT
+
+CPU / RAM / GPU / VRAM / CUDA / OS
+
+## LOGICIEL
+
+COLMAP / Python / 3DGS / dépendances
+
+## INPUT
+
+Vidéo / frames / résolution / FPS
+
+## SfM
+
+Résultats et métriques
+
+## MVS
+
+Résultats et métriques
+
+## 3DGS
+
+Résultats et métriques
+
+## PERFORMANCE
+
+Temps CPU / GPU
+
+## STOCKAGE
+
+Taille des artefacts
+
+## QUALITÉ
+
+Analyse visuelle
+
+## PROBLÈMES
+
+Liste complète
+
+## COÛT
+
+Coût réel ou estimation clairement identifiée
+
+## RECOMMANDATION
+
+Choisir :
+
+GO
+
+GO AVEC AJUSTEMENTS
+
+NO-GO
+
+---
+
+# 20. RÈGLE ABSOLUE DE TRANSPARENCE
+
+Ne jamais présenter :
+
+* une démo externe ;
+* un modèle préexistant ;
+* une reconstruction téléchargée ;
+* une image générée ;
+* un résultat simulé
+
+comme étant le résultat de notre pipeline.
+
+Chaque résultat doit être clairement identifié comme :
+
+RÉSULTAT RÉEL DU PIPELINE
+
+ou
+
+RÉSULTAT EXTERNE DE RÉFÉRENCE
+
+---
+
+# 21. PROTECTION DU PRODUIT
+
+À aucun moment :
+
+* ne modifier le workflow public Street View ;
+* ne connecter le prototype au système utilisateur ;
+* ne déployer le moteur dans Railway API ;
+* ne remplacer le stockage actuel ;
+* ne modifier la base de production ;
+* ne lancer un traitement de masse.
+
+Le prototype reste expérimental.
+
+---
+
+# 22. ARRÊT OBLIGATOIRE
+
+Après avoir obtenu les résultats et le rapport :
+
+ARRÊTE-TOI.
+
+N'implémente pas encore :
+
+* GPU worker de production ;
+* viewer ;
+* géoréférencement complet ;
+* fusion de scènes ;
+* pipeline utilisateur ;
+* traitement massif.
+
+Nous validerons les résultats avant de passer à l'étape suivante.
