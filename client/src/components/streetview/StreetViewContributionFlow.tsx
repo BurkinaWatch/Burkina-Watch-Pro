@@ -64,6 +64,12 @@ type Contribution = {
   createdAt: string;
 };
 
+const preparationWaitingStatuses = new Set([
+  "WAITING_FOR_RECONSTRUCTION",
+  "WAITING_FOR_GPU",
+  "WAITING_FOR_3D",
+]);
+
 type Scene = {
   id: string;
   quadkey: string;
@@ -86,6 +92,8 @@ const statusLabels: Record<string, string> = {
   UPLOADED: "Vidéo reçue",
   VALIDATING: "Validation en cours",
   QUEUED: "En file de traitement",
+  WAITING_FOR_RECONSTRUCTION: "En attente d'un moteur de reconstruction",
+  WAITING_FOR_GPU: "Préparée, GPU non disponible",
   WAITING_FOR_3D: "En attente de reconstruction 3D",
   UPLOAD_FAILED: "Upload échoué",
   VALIDATION_FAILED: "Validation échouée",
@@ -133,7 +141,7 @@ function LocationPicker({
 
 function statusTone(status: string): "default" | "secondary" | "destructive" {
   if (status.includes("FAILED")) return "destructive";
-  if (status === "WAITING_FOR_3D") return "secondary";
+  if (preparationWaitingStatuses.has(status)) return "secondary";
   return "default";
 }
 
@@ -240,7 +248,7 @@ function ContributionCard({
         <div className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground">
           <span>{formatBytes(contribution.fileSizeBytes)}</span>
           <span>{formatDuration(contribution.durationMs)}</span>
-          {contribution.status !== "WAITING_FOR_3D" && (
+          {!preparationWaitingStatuses.has(contribution.status) && (
             <span className="flex items-center gap-1">
               <Clock3 className="h-3 w-3" />
               {contribution.progress}%
@@ -250,7 +258,7 @@ function ContributionCard({
         {contribution.statusMessage && (
           <p className="mt-1 text-xs text-muted-foreground">{contribution.statusMessage}</p>
         )}
-        {contribution.status !== "WAITING_FOR_3D" && contribution.progress > 0 && (
+        {!preparationWaitingStatuses.has(contribution.status) && contribution.progress > 0 && (
           <Progress value={contribution.progress} className="mt-2 h-1" />
         )}
       </div>
