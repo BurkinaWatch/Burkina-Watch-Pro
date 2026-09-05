@@ -1,0 +1,551 @@
+Nous passons maintenant à la PHASE 5 de Street View : préparation du pipeline de traitement asynchrone.
+
+CONTEXTE :
+
+Street View permet aux utilisateurs de contribuer avec des vidéos géolocalisées.
+
+Le stockage vidéo durable a maintenant été traité lors de l'étape précédente.
+
+Nous voulons maintenant construire une architecture capable de traiter les contributions en arrière-plan.
+
+ARCHITECTURE CIBLE :
+
+UTILISATEUR
+↓
+UPLOAD
+↓
+STORAGE
+↓
+CONTRIBUTION
+↓
+JOB
+↓
+QUEUE
+↓
+WORKER
+↓
+TRAITEMENT
+↓
+RESULTAT
+↓
+MISE À JOUR DU STATUT
+
+IMPORTANT :
+
+Cette étape ne doit PAS encore intégrer de moteur de reconstruction 3D.
+
+NE PAS intégrer :
+
+* NeRF ;
+* 3D Gaussian Splatting ;
+* photogrammétrie ;
+* reconstruction GPU ;
+* fournisseur de reconstruction 3D.
+
+Nous préparons uniquement l'infrastructure permettant de les intégrer ultérieurement.
+
+==================================================
+
+1. AUDIT AVANT MODIFICATION
+   ==================================================
+
+Inspecte le code actuellement présent.
+
+Identifie :
+
+* système de jobs existant ;
+* queue existante ;
+* workers existants ;
+* tâches asynchrones existantes ;
+* cron/jobs éventuels ;
+* mécanismes de retry ;
+* stockage utilisé ;
+* tables Street View ;
+* statuts Street View ;
+* logs ;
+* monitoring ;
+* architecture Railway.
+
+Si Burkina Watch possède déjà un mécanisme générique de jobs utilisable, réutilise-le.
+
+Ne crée pas un deuxième système de queue inutilement.
+
+==================================================
+2. ARCHITECTURE DU JOB
+======================
+
+Une contribution Street View doit pouvoir générer un job de traitement.
+
+Exemple :
+
+CONTRIBUTION
+id = X
+
+JOB
+id = Y
+type = STREETVIEW_PROCESSING
+status = QUEUED
+
+Le job doit conserver au minimum :
+
+* id ;
+* contributionId ;
+* type ;
+* status ;
+* attempts ;
+* maxAttempts ;
+* progress ;
+* errorCode ;
+* errorMessage ;
+* startedAt ;
+* completedAt ;
+* createdAt ;
+* updatedAt.
+
+Adapte cette structure aux conventions déjà présentes dans le projet.
+
+==================================================
+3. MACHINE À ÉTATS
+==================
+
+Définis clairement les transitions.
+
+Exemple :
+
+UPLOADED
+↓
+VALIDATING
+↓
+QUEUED
+↓
+PROCESSING
+↓
+WAITING_FOR_3D
+↓
+READY
+
+En cas d'erreur :
+
+PROCESSING
+↓
+FAILED
+↓
+RETRY
+↓
+QUEUED
+
+Évite les transitions incohérentes.
+
+Le backend doit empêcher les changements de statut invalides lorsque cela est pertinent.
+
+==================================================
+4. QUEUE
+========
+
+Mettre en place une file permettant de traiter les contributions sans bloquer l'API.
+
+Architecture souhaitée :
+
+API
+↓
+DATABASE / JOB
+↓
+QUEUE
+↓
+WORKER
+
+Le worker doit pouvoir prendre un job disponible et le verrouiller afin que deux workers ne traitent pas simultanément la même contribution.
+
+Si une technologie de queue existe déjà dans Burkina Watch, utilise-la.
+
+Sinon, analyse la solution la plus simple et robuste compatible avec Railway.
+
+NE choisis pas une technologie lourde sans justification.
+
+==================================================
+5. WORKER
+=========
+
+Créer ou adapter un worker dédié aux traitements Street View.
+
+Le worker doit :
+
+1. récupérer un job ;
+2. vérifier son statut ;
+3. récupérer les informations de la contribution ;
+4. récupérer le fichier depuis le stockage ;
+5. effectuer les validations nécessaires ;
+6. récupérer les métadonnées ;
+7. générer les artefacts préparatoires disponibles ;
+8. mettre à jour la progression ;
+9. terminer le job proprement.
+
+Pour cette phase, le worker doit s'arrêter avant toute reconstruction 3D.
+
+Le résultat attendu est :
+
+WAITING_FOR_3D
+
+ou un statut équivalent.
+
+==================================================
+6. IDEMPOTENCE
+==============
+
+Le traitement doit être idempotent autant que possible.
+
+Si le même job est exécuté deux fois, il ne doit pas :
+
+* créer deux contributions ;
+* créer deux miniatures inutiles ;
+* corrompre les fichiers ;
+* produire des états incohérents.
+
+Utiliser des identifiants stables et vérifier l'état avant de produire un nouvel artefact.
+
+==================================================
+7. RETRY
+========
+
+Prévoir des retries automatiques pour les erreurs temporaires.
+
+Exemple :
+
+tentative 1
+↓
+échec temporaire
+↓
+attente
+↓
+tentative 2
+↓
+échec
+↓
+tentative 3
+↓
+FAILED
+
+Prévoir un nombre maximum de tentatives configurable.
+
+Utiliser un mécanisme de backoff lorsque pertinent.
+
+Les erreurs permanentes ne doivent pas être répétées inutilement.
+
+==================================================
+8. TYPES D'ERREURS
+==================
+
+Différencier au minimum :
+
+* erreur de fichier ;
+* fichier introuvable ;
+* stockage indisponible ;
+* erreur réseau temporaire ;
+* métadonnées invalides ;
+* erreur de traitement ;
+* erreur interne.
+
+Ne pas exposer les détails internes au frontend.
+
+Le frontend reçoit un message utilisateur compréhensible.
+
+Les détails techniques vont dans les logs.
+
+==================================================
+9. PROGRESSION
+==============
+
+Le système doit pouvoir représenter une progression.
+
+Exemple :
+
+0 %
+→ validation
+
+20 %
+→ récupération
+
+40 %
+→ analyse
+
+60 %
+→ préparation
+
+80 %
+→ génération des artefacts
+
+100 %
+→ préparation terminée
+
+IMPORTANT :
+
+N'affiche pas une progression fictive.
+
+La progression doit correspondre à de véritables étapes exécutées par le worker.
+
+==================================================
+10. MINIATURE
+=============
+
+Si la génération de miniature a été implémentée à l'étape précédente, le worker peut l'exécuter.
+
+Elle doit être :
+
+* stockée séparément ;
+* référencée dans la base ;
+* réutilisable par l'interface.
+
+Si la génération nécessite une dépendance système absente de Railway, ne contourne pas le problème artificiellement.
+
+Informe-moi du problème et propose une solution compatible.
+
+==================================================
+11. EXTRACTION DES MÉTADONNÉES
+==============================
+
+Lorsque cela est possible, extraire :
+
+* durée ;
+* résolution ;
+* codec ;
+* framerate ;
+* orientation ;
+* taille ;
+* format ;
+* métadonnées disponibles.
+
+Conserver uniquement les informations utiles.
+
+Ne jamais faire confiance aveuglément aux données envoyées par le client.
+
+==================================================
+12. FUTUR PIPELINE 3D
+=====================
+
+L'architecture doit être préparée pour permettre ultérieurement :
+
+JOB STREETVIEW
+↓
+PREPROCESSING
+↓
+3D RECONSTRUCTION JOB
+↓
+3D WORKER
+↓
+SCENE 3D
+↓
+QUALITY CHECK
+↓
+PUBLISH
+
+À cette étape, le worker doit donc pouvoir produire un résultat indiquant :
+
+PREPROCESSING_COMPLETE
+WAITING_FOR_3D
+
+Cela permettra de brancher ultérieurement un autre worker spécialisé.
+
+==================================================
+13. SÉPARATION DES WORKERS
+==========================
+
+Ne mélange pas nécessairement :
+
+WEB SERVER
+et
+MEDIA WORKER
+et
+3D WORKER.
+
+L'objectif à terme est de pouvoir scaler séparément :
+
+API
+1 instance
+
+MEDIA WORKER
+N instances
+
+3D WORKER
+GPU instances
+
+Cette séparation est importante pour le futur.
+
+==================================================
+14. RAILWAY
+===========
+
+Analyse comment déployer le worker dans l'infrastructure Railway actuelle.
+
+Détermine si :
+
+* le worker doit être un service Railway séparé ;
+* le backend peut temporairement l'exécuter ;
+* une queue externe est nécessaire ;
+* plusieurs workers peuvent fonctionner ;
+* les variables d'environnement doivent être partagées ;
+* les logs peuvent être distingués.
+
+Ne crée pas de nouvelle infrastructure externe sans nécessité.
+
+==================================================
+15. ARRÊT PROPRE
+================
+
+Le worker doit gérer correctement :
+
+* redémarrage ;
+* arrêt du service ;
+* perte réseau ;
+* job en cours ;
+* timeout ;
+* crash.
+
+Évite qu'un job reste bloqué éternellement en PROCESSING.
+
+Prévoir un mécanisme permettant de détecter les jobs abandonnés et de les remettre dans la queue lorsque cela est sûr.
+
+==================================================
+16. CONCURRENCE
+===============
+
+Prévoir un contrôle permettant d'éviter :
+
+Worker A
+↓
+Contribution X
+
+et simultanément :
+
+Worker B
+↓
+Contribution X
+
+Le même job ne doit être traité qu'une seule fois simultanément.
+
+==================================================
+17. ADMINISTRATION
+==================
+
+Prévoir les informations nécessaires pour que l'administration puisse ultérieurement voir :
+
+* jobs en attente ;
+* jobs en cours ;
+* jobs terminés ;
+* jobs échoués ;
+* nombre de retries ;
+* durée ;
+* erreur.
+
+Ne construis pas nécessairement toute l'interface admin à cette étape.
+
+Assure-toi simplement que les données nécessaires existent.
+
+==================================================
+18. OBSERVABILITÉ
+=================
+
+Les logs doivent permettre de suivre :
+
+[StreetView]
+Contribution X
+Job Y
+STARTED
+
+[StreetView]
+Contribution X
+Job Y
+PROCESSING
+
+[StreetView]
+Contribution X
+Job Y
+COMPLETED
+
+ou :
+
+[StreetView]
+Contribution X
+Job Y
+FAILED
+errorCode=...
+
+Ne jamais écrire dans les logs :
+
+* secrets ;
+* tokens ;
+* URLs signées complètes si elles sont sensibles ;
+* données personnelles inutiles.
+
+==================================================
+19. TESTS
+=========
+
+Effectuer des tests réels sur :
+
+1. création d'une contribution ;
+2. création du job ;
+3. mise en queue ;
+4. récupération par worker ;
+5. traitement ;
+6. mise à jour du statut ;
+7. progression ;
+8. succès ;
+9. erreur ;
+10. retry ;
+11. maximum de retries ;
+12. job concurrent ;
+13. worker redémarré ;
+14. fichier absent ;
+15. stockage temporairement indisponible ;
+16. contribution inexistante ;
+17. utilisateur non autorisé ;
+18. job déjà terminé.
+
+Tester également que le serveur API reste disponible pendant le traitement.
+
+==================================================
+20. NE PAS FAIRE
+================
+
+Ne pas :
+
+* intégrer de moteur 3D ;
+* créer de fausses scènes ;
+* simuler une reconstruction ;
+* afficher "3D prête" alors qu'elle ne l'est pas ;
+* créer de fausses statistiques ;
+* modifier les autres fonctionnalités de Burkina Watch ;
+* changer le design global ;
+* changer la palette ;
+* remplacer l'architecture existante sans justification.
+
+==================================================
+21. RAPPORT FINAL
+=================
+
+À la fin, fournis :
+
+A. architecture finale du pipeline ;
+B. queue utilisée ;
+C. worker utilisé ;
+D. fichiers créés ;
+E. fichiers modifiés ;
+F. nouvelles tables/migrations éventuelles ;
+G. nouveaux endpoints éventuels ;
+H. variables d'environnement ;
+I. stratégie de retry ;
+J. gestion de concurrence ;
+K. gestion des erreurs ;
+L. tests exécutés ;
+M. résultats ;
+N. comportement sur Railway ;
+O. limites restantes ;
+P. ce qui est maintenant prêt pour l'intégration du véritable moteur 3D.
+
+IMPORTANT :
+
+Ne passe pas à la reconstruction 3D automatiquement.
+
+Une fois cette phase terminée, ARRÊTE-TOI.
+
+Je veux examiner l'architecture du worker et de la queue avant de passer au choix du moteur de reconstruction.
