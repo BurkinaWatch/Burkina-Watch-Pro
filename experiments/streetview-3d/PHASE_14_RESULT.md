@@ -85,9 +85,23 @@ npm run build
 
 ## 5. Migration et production
 
-La migration `0010_streetview_cpu_first.sql` n'a pas été appliquée à Railway
-ou à une autre base de production. Elle ajoute les colonnes de capture et les
-tables de scènes/artifacts sans suppression de données.
+Le 5 septembre 2026, une sauvegarde logique PostgreSQL Railway a été créée avec
+`pg_dump` 17.5 et vérifiée avec `pg_restore --list`, puis le précontrôle
+lecture seule a confirmé la structure complète avant toute écriture. La
+migration `0009` manquante a d'abord été appliquée et vérifiée dans sa
+transaction contrôlée. La migration
+`0010_streetview_cpu_first.sql` a ensuite été appliquée une seule fois avec le
+runner Phase 14.
+
+Le précontrôle post-migration a confirmé :
+
+- 37/37 tables publiques, structure exacte ;
+- les six colonnes de queue Phase 5 et les sept colonnes CPU-first ;
+- les tables `streetview_scenes` et `streetview_scene_artifacts` ainsi que
+  leurs trois index ;
+- zéro perte sur les compteurs Street View existants ;
+- aucune entrée `streetview_scenes` ou `streetview_scene_artifacts` créée par
+  la migration.
 
 Le worker dédié refuse désormais de démarrer sans :
 
@@ -95,9 +109,10 @@ Le worker dédié refuse désormais de démarrer sans :
 STREETVIEW_PHASE14_ENABLED=true
 ```
 
-Cette variable ne doit être activée qu'après sauvegarde, précontrôle
-lecture-seule, application contrôlée de `0010` et vérification du schéma.
-`db:push` reste interdit.
+Après la vérification post-migration, cette variable est désormais activée dans
+l'environnement partagé. Elle ne doit être retirée ou réactivée qu'après une
+nouvelle sauvegarde, un précontrôle lecture-seule et une vérification complète
+du schéma. `db:push` reste interdit.
 
 ## 6. Limites et décision suivante
 

@@ -30,11 +30,13 @@ const EXPECTED_TABLES = [
   "sessions",
   "signalement_likes",
   "signalements",
+  "streetview_contributions",
   "surveillance_cameras",
   "camera_agents",
   "agent_camera_bindings",
   "agent_media_sessions",
   "streetview_points",
+  "streetview_processing_jobs",
   "tracking_sessions",
   "users",
   "virtual_tours",
@@ -78,6 +80,30 @@ const SURVEILLANCE_INDEXES = [
   ["agent_media_sessions", "agent_media_sessions_path_idx"],
   ["agent_media_sessions", "agent_media_sessions_agent_camera_idx"],
   ["agent_media_sessions", "agent_media_sessions_expires_idx"],
+];
+
+const STREETVIEW_PHASE5_COLUMNS = [
+  "max_attempts",
+  "available_at",
+  "locked_at",
+  "lease_until",
+  "locked_by",
+  "updated_at",
+];
+
+const STREETVIEW_PHASE14_COLUMNS = [
+  "captured_at",
+  "location_accuracy_m",
+  "altitude_m",
+  "location_source",
+  "location_captured_at",
+  "temporal_version",
+  "quality_metrics",
+];
+
+const STREETVIEW_PHASE14_TABLES = [
+  "streetview_scenes",
+  "streetview_scene_artifacts",
 ];
 
 const migrationPath = path.join(
@@ -156,6 +182,38 @@ async function main() {
         has_function_privilege(current_user, 'gen_random_uuid()', 'EXECUTE') AS can_execute
     `);
 
+    const { rows: phase5ColumnRows } = await client.query(
+      `
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'streetview_processing_jobs'
+          AND column_name = ANY($1::text[])
+      `,
+      [STREETVIEW_PHASE5_COLUMNS],
+    );
+
+    const { rows: phase14ColumnRows } = await client.query(
+      `
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'streetview_contributions'
+          AND column_name = ANY($1::text[])
+      `,
+      [STREETVIEW_PHASE14_COLUMNS],
+    );
+
+    const { rows: phase14TableRows } = await client.query(
+      `
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+          AND table_name = ANY($1::text[])
+      `,
+      [STREETVIEW_PHASE14_TABLES],
+    );
+
     const { rows: journalRows } = await client.query(`
       SELECT n.nspname AS schema_name, c.relname AS table_name
       FROM pg_class c
@@ -174,7 +232,11 @@ async function main() {
     }
 
     const actualTables = tableRows.map((row) => row.table_name);
-    const exactTableSet = sameValues(actualTables, EXPECTED_TABLES);
+    const expectedTablesForState =
+      phase14TableRows.length === STREETVIEW_PHASE14_TABLES.length
+        ? [...EXPECTED_TABLES, ...STREETVIEW_PHASE14_TABLES]
+        : EXPECTED_TABLES;
+    const exactTableSet = sameValues(actualTables, expectedTablesForState);
     const indexesByName = new Map(
       indexRows.map((row) => [`${row.tablename}.${row.indexname}`, row]),
     );
@@ -203,10 +265,27 @@ async function main() {
       migrationSql.includes('ALTER COLUMN "id" SET DEFAULT gen_random_uuid()');
     const functionAvailable =
       functionRows[0]?.function_exists && functionRows[0]?.can_execute;
+    const phase5ColumnsPresent = new Set(phase5ColumnRows.map((row) => row.column_name));
+    const phase14ColumnsPresent = new Set(phase14ColumnRows.map((row) => row.column_name));
+    const phase14TablesPresent = new Set(phase14TableRows.map((row) => row.table_name));
+    const phase5Ready = STREETVIEW_PHASE5_COLUMNS.every((columnName) =>
+      phase5ColumnsPresent.has(columnName),
+    );
+    const phase5Absent = phase5ColumnRows.length === 0;
+    const phase14ObjectsPresent =
+      STREETVIEW_PHASE14_COLUMNS.every((columnName) => phase14ColumnsPresent.has(columnName)) &&
+      STREETVIEW_PHASE14_TABLES.every((tableName) => phase14TablesPresent.has(tableName));
+    const phase14ObjectsAbsent =
+      phase14ColumnRows.length === 0 && phase14TableRows.length === 0;
+    const phase14State = phase14ObjectsPresent
+      ? "PRÉSENTE — vérification uniquement"
+      : phase14ObjectsAbsent
+        ? "ABSENTE — cible d'application"
+        : "PARTIELLE — arrêt requis";
 
     console.log("Railway migration preflight (lecture seule)");
     console.log("------------------------------------------------");
-    status("Tables publiques", `${actualTables.length}/${EXPECTED_TABLES.length}`);
+    status("Tables publiques", `${actualTables.length}/${expectedTablesForState.length}`);
     status("Structure exacte", exactTableSet ? "PASS" : "FAIL");
     status(
       "Journal __drizzle_migrations",
@@ -230,6 +309,15 @@ async function main() {
         ? "PASS — tables et index présents"
         : "FAIL — tables ou index manquants",
     );
+    status(
+      "StreetView Phase 3/5",
+      phase5Ready
+        ? "PASS — queue complète"
+        : phase5Absent
+          ? "ABSENTE — migration 0009 requise"
+          : "FAIL — colonnes manquantes",
+    );
+    status("StreetView Phase 14", phase14State);
     console.log("Compteurs des tables ciblées:");
     for (const [tableName, rowCount] of countRows) {
       console.log(`  ${tableName}: ${rowCount}`);
@@ -257,6 +345,8 @@ async function main() {
       exactTableSet &&
       functionAvailable &&
       sqlHasOnlyAllowedOperations &&
+      (phase5Ready || phase5Absent) &&
+      (phase14ObjectsPresent || phase14ObjectsAbsent) &&
       (missingIndexes.length === 0 || missingIndexes.length === EXPECTED_INDEXES.length) &&
       missingSurveillanceIndexes.length === 0 &&
       unexpectedTargetIndexes.length === 0 &&

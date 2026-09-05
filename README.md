@@ -74,6 +74,8 @@ la migration initiale avec :
 
 ```bash
 ALLOW_RAILWAY_STREETVIEW_MIGRATION=true \
+RAILWAY_STREETVIEW_BACKUP_CONFIRMED=true \
+RAILWAY_STREETVIEW_PREFLIGHT_CONFIRMED=true \
   npm run db:railway:apply-streetview-phase5
 ```
 
@@ -88,8 +90,16 @@ Après sauvegarde et validation de la cible, elle peut être appliquée avec :
 
 ```bash
 ALLOW_RAILWAY_STREETVIEW_MIGRATION=true \
+RAILWAY_STREETVIEW_BACKUP_CONFIRMED=true \
+RAILWAY_STREETVIEW_PREFLIGHT_CONFIRMED=true \
   npm run db:railway:apply-streetview
 ```
+
+Le runner Phase 14 vérifie d'abord que les migrations Street View 0008/0009
+sont complètes, refuse un schéma Phase 14 partiel ou déjà appliqué, verrouille
+la transaction et compare les compteurs des tables Street View avant/après.
+Les deux confirmations explicites empêchent une écriture si la sauvegarde ou le
+précontrôle n'ont pas été revus.
 
 ### Migrations
 
