@@ -15,6 +15,7 @@
     "start": "NODE_ENV=production node dist/index.js",
     "start:worker": "NODE_ENV=production node dist/streetview-worker.js",
     "check": "tsc",
+    "test:streetview": "node --import tsx --test server/__tests__/streetviewPhase3.test.ts server/__tests__/streetviewPhase14.test.ts",
     "phase5:gateway:up": "docker compose -f docker-compose.phase5.yml up -d",
     "phase5:gateway:down": "docker compose -f docker-compose.phase5.yml down",
     "phase5:source": "bash scripts/phase5-test-source.sh",

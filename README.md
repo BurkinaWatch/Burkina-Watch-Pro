@@ -77,6 +77,13 @@ ALLOW_RAILWAY_STREETVIEW_MIGRATION=true \
   npm run db:railway:apply-streetview-phase5
 ```
 
+La migration CPU-first Street View `migrations/0010_streetview_cpu_first.sql`
+reste forward-only et n'est pas appliquée par le workflow de développement.
+Après sauvegarde, précontrôle et validation humaine de Railway, elle doit être
+appliquée séparément. Le worker Phase 14 reste bloqué tant que
+`STREETVIEW_PHASE14_ENABLED=true` n'est pas défini explicitement après cette
+application et une vérification des tables/colonnes.
+
 Après sauvegarde et validation de la cible, elle peut être appliquée avec :
 
 ```bash

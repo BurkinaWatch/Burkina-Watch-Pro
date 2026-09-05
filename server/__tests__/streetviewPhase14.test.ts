@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, test } from "node:test";
@@ -177,14 +177,5 @@ describe("StreetView Phase 14", () => {
     assert.match(migration, /ADD COLUMN IF NOT EXISTS/);
     assert.match(migration, /CREATE TABLE IF NOT EXISTS "streetview_scenes"/);
     assert.doesNotMatch(migration, /\bDROP\b|\bTRUNCATE\b|\bDELETE\b/i);
-  });
-});
-
-after(async () => {
-  // Test-created temporary roots are removed by the production finally block.
-  // This fallback only cleans up a root if a test fails before preparation starts.
-  await rm(path.join(os.tmpdir(), "streetview-phase14-test-unused"), {
-    recursive: true,
-    force: true,
   });
 });
