@@ -1,0 +1,718 @@
+Nous validons une nouvelle orientation stratégique pour le projet Street View 3D de BurkinaWatch.
+
+IMPORTANT :
+
+Nous ne voulons plus bloquer le développement de Street View en attendant un GPU cloud.
+
+Le GPU devient une infrastructure d'accélération future, et NON une dépendance obligatoire du produit.
+
+La stratégie est désormais :
+
+PLATEFORME STREET VIEW COMPLÈTE
++
+PIPELINE CPU-FIRST
++
+RECONSTRUCTION ENGINE ABSTRAIT
++
+GPU AJOUTABLE PLUS TARD
+
+Cette phase doit donc permettre de continuer le développement sans GPU.
+
+==================================================
+
+1. OBJECTIF DE LA PHASE
+   ==================================================
+
+Construire et/ou préparer l'architecture permettant à BurkinaWatch de gérer de véritables contributions Street View :
+
+Utilisateur
+→ capture vidéo
+→ métadonnées
+→ géolocalisation
+→ upload sécurisé
+→ stockage
+→ validation
+→ file de traitement
+→ préparation CPU
+→ tentative de reconstruction
+→ scène 3D lorsque le moteur est disponible
+→ publication.
+
+Le système doit fonctionner même si aucun GPU n'est disponible.
+
+Il ne faut jamais créer de faux résultats 3D pour masquer l'absence de moteur.
+
+==================================================
+2. COMMENCER PAR UN AUDIT
+=========================
+
+Avant toute modification :
+
+inspecter le code existant et les travaux déjà réalisés dans :
+
+experiments/streetview-3d/
+
+Lire notamment :
+
+PHASE_1*
+PHASE_2*
+PHASE_3*
+PHASE_4*
+PHASE_5*
+PHASE_6*
+PHASE_7*
+PHASE_8_RESULT.md
+PHASE_9_RESULT.md
+PHASE_10_RESULT.md
+PHASE_11_RESULT.md
+PHASE_12_RESULT.md
+PHASE_13_RESULT.md
+
+Inspecter également le code réel de :
+
+* StreetView
+* HamburgerMenu
+* routing
+* API
+* authentication
+* upload
+* object storage
+* PostgreSQL
+* jobs
+* queue
+* worker CPU
+* géolocalisation
+* cartes
+* permissions
+* médias
+* éventuels composants 3D existants.
+
+Ne pas supposer que la documentation reflète parfaitement le code.
+
+Comparer documentation et implémentation réelle.
+
+==================================================
+3. NE PAS CASSER L'EXISTANT
+===========================
+
+Règle absolue :
+
+NE PAS casser les fonctionnalités existantes de BurkinaWatch.
+
+NE PAS modifier inutilement :
+
+* authentification ;
+* utilisateurs ;
+* signalements ;
+* SOS ;
+* carte existante ;
+* paiements ;
+* autres fonctionnalités sans rapport ;
+* infrastructure de production ;
+* Railway ;
+* domaine ;
+* variables secrètes.
+
+Réutiliser les systèmes existants lorsque cela est possible.
+
+Ne pas créer un deuxième système parallèle si un système générique existe déjà.
+
+==================================================
+4. STREET VIEW V1
+=================
+
+Street View doit devenir une véritable fonctionnalité exploitable.
+
+Le parcours utilisateur cible est :
+
+Street View
+↓
+Nouvelle contribution
+↓
+Choisir une vidéo / enregistrer une vidéo
+↓
+Informations de capture
+↓
+Géolocalisation
+↓
+Validation
+↓
+Upload
+↓
+Traitement
+↓
+Suivi de contribution.
+
+Une contribution doit pouvoir conserver au minimum :
+
+* id ;
+* utilisateur ;
+* vidéo originale ;
+* date de capture ;
+* date d'envoi ;
+* latitude ;
+* longitude ;
+* précision GPS si disponible ;
+* altitude si disponible ;
+* orientation si disponible ;
+* durée ;
+* résolution ;
+* FPS ;
+* taille ;
+* format ;
+* lieu ;
+* statut ;
+* statut de traitement ;
+* qualité ;
+* éventuelles erreurs ;
+* version temporelle.
+
+==================================================
+5. STOCKAGE
+===========
+
+Les vidéos originales doivent rester hors PostgreSQL.
+
+La base doit conserver uniquement :
+
+* métadonnées ;
+* identifiants ;
+* références de fichiers ;
+* statuts ;
+* résultats ;
+* relations.
+
+Conserver une organisation logique du type :
+
+streetview/
+originals/
+thumbnails/
+keyframes/
+processing/
+scenes/
+exports/
+
+Ne pas créer de duplication inutile du stockage.
+
+Respecter l'architecture de stockage déjà présente si elle est correcte.
+
+==================================================
+6. GÉOLOCALISATION
+==================
+
+Préparer une structure permettant de rattacher une contribution à :
+
+Burkina Faso
+→ Région
+→ Province
+→ Ville
+→ Commune / arrondissement / secteur selon les données disponibles
+→ Quartier
+→ Rue / lieu
+→ bâtiment ou zone.
+
+Ne pas inventer de données géographiques.
+
+Si une résolution automatique existe déjà, la réutiliser.
+
+Prévoir également :
+
+* GPS automatique ;
+* correction manuelle ;
+* précision ;
+* source de la position ;
+* date de position.
+
+==================================================
+7. DIMENSION TEMPORELLE
+=======================
+
+Une même zone doit pouvoir être capturée plusieurs fois.
+
+Exemple :
+
+Rue X
+├── capture 2026
+├── capture 2027
+├── capture 2028
+└── capture 2030
+
+Ne jamais remplacer automatiquement une ancienne capture.
+
+Les différentes versions temporelles doivent pouvoir coexister.
+
+Prévoir cette logique dans le modèle de données.
+
+==================================================
+8. RECONSTRUCTION ENGINE
+========================
+
+C'est le point architectural central de cette phase.
+
+Créer ou préparer une abstraction conceptuelle :
+
+ReconstructionEngine
+
+Elle ne doit pas être liée directement à COLMAP ou à un fournisseur GPU.
+
+Elle doit pouvoir recevoir une contribution préparée et produire des artefacts de reconstruction.
+
+Conceptuellement :
+
+ReconstructionEngine
+│
+├── CpuReconstructionEngine
+│
+└── GpuReconstructionEngine (futur)
+
+Le système actuel peut utiliser :
+
+CpuReconstructionEngine
+
+Le futur système pourra utiliser :
+
+GpuReconstructionEngine
+
+sans modifier le reste de BurkinaWatch.
+
+IMPORTANT :
+
+Ne pas implémenter un faux GpuReconstructionEngine.
+
+Le moteur GPU futur doit être clairement marqué comme non disponible tant qu'il n'existe pas réellement.
+
+==================================================
+9. CPU-FIRST
+============
+
+Déterminer ce qui peut réellement être effectué sur CPU.
+
+Priorité :
+
+1. validation vidéo ;
+2. extraction des métadonnées ;
+3. génération de miniature ;
+4. extraction d'images/keyframes ;
+5. analyse qualité ;
+6. préparation des images ;
+7. éventuellement SfM CPU ;
+8. éventuellement MVS CPU sur de petits datasets.
+
+Ne pas promettre des performances irréalistes.
+
+Mesurer réellement les performances lorsqu'un calcul est exécuté.
+
+==================================================
+10. COLMAP CPU
+==============
+
+Étudier précisément si COLMAP peut être utilisé dans l'environnement actuel en mode CPU.
+
+Ne pas contourner les protections de l'environnement pour forcer une installation dangereuse.
+
+Ne pas utiliser :
+
+NIXPKGS_ALLOW_INSECURE=1
+
+simplement pour faire fonctionner une dépendance bloquée.
+
+Si COLMAP n'est pas installable proprement dans l'environnement actuel :
+
+documenter le problème.
+
+Prévoir une méthode reproductible alternative pour un environnement CPU dédié, sans toucher à la production.
+
+Par exemple :
+
+Docker
+ou
+runner CPU dédié.
+
+Ne pas prétendre qu'une reconstruction fonctionne si elle n'a pas réellement été exécutée.
+
+==================================================
+11. PIPELINE CPU
+================
+
+Préparer le pipeline :
+
+VIDEO
+↓
+VALIDATION
+↓
+METADATA
+↓
+FRAME EXTRACTION
+↓
+QUALITY CHECK
+↓
+PREPROCESSING
+↓
+QUEUE
+↓
+CPU RECONSTRUCTION
+↓
+QUALITY CHECK
+↓
+SCENE_3D
+ou
+WAITING_FOR_RECONSTRUCTION
+ou
+FAILED
+
+Les états doivent être cohérents avec le système de jobs déjà existant.
+
+Ne pas créer inutilement un nouveau système de queue si celui qui existe peut être étendu.
+
+==================================================
+12. JOBS
+========
+
+Réutiliser le système de jobs actuel.
+
+Prévoir des jobs idempotents.
+
+Un job ne doit pas produire plusieurs scènes identiques lorsqu'il est relancé.
+
+Prévoir :
+
+* attempts ;
+* maxAttempts ;
+* progress ;
+* errorCode ;
+* errorMessage ;
+* startedAt ;
+* completedAt ;
+* retry ;
+* timeout ;
+* lease/locking si déjà présent.
+
+Ne jamais afficher un pourcentage fictif.
+
+==================================================
+13. LIMITATION CPU
+==================
+
+Le système doit savoir reconnaître qu'une reconstruction est trop lourde pour le CPU.
+
+Par exemple :
+
+* trop d'images ;
+* résolution excessive ;
+* durée excessive ;
+* mémoire insuffisante ;
+* temps estimé excessif.
+
+Dans ce cas, ne pas bloquer indéfiniment le worker.
+
+Le job doit pouvoir passer à un état du type :
+
+WAITING_FOR_GPU
+
+ou
+
+DEFERRED_FOR_GPU
+
+si cette notion est compatible avec l'architecture existante.
+
+Cela permettra plus tard :
+
+CPU → GPU
+
+sans refaire toute la plateforme.
+
+==================================================
+14. SCÈNE 3D
+============
+
+Une Scene3D doit être une véritable sortie de reconstruction.
+
+Elle peut contenir :
+
+* sceneId ;
+* contributionId ;
+* locationId ;
+* reconstructionEngine ;
+* engineVersion ;
+* sourceCapture ;
+* bounding box ;
+* coordinate reference si disponible ;
+* artefacts ;
+* thumbnails ;
+* preview ;
+* quality metrics ;
+* createdAt ;
+* temporal version ;
+* publication status.
+
+IMPORTANT :
+
+Ne créer aucune Scene3D fictive.
+
+Une scène n'existe que lorsqu'un véritable artefact de reconstruction existe.
+
+==================================================
+15. ARCHITECTURE DE STOCKAGE DES SCÈNES
+=======================================
+
+Préparer la séparation :
+
+vidéo originale
+≠
+images intermédiaires
+≠
+résultats SfM
+≠
+résultats MVS
+≠
+3D Gaussian Splat
+≠
+exports viewer.
+
+Le système doit permettre plus tard de conserver plusieurs représentations d'une même scène.
+
+Exemple :
+
+Scene
+├── source
+├── sfm
+├── mvs
+├── gaussian_splat
+└── web_export
+
+Mais ne créer que les artefacts réellement produits.
+
+==================================================
+16. VIEWER
+==========
+
+NE PAS construire encore un viewer 3D complet.
+
+Préparer uniquement les interfaces/API nécessaires pour qu'un viewer puisse être ajouté plus tard.
+
+Le viewer ne doit afficher que de vraies scènes.
+
+Aucun placeholder présenté comme une reconstruction réelle.
+
+==================================================
+17. CARTE
+=========
+
+Préparer l'intégration future avec la carte BurkinaWatch.
+
+Une contribution peut apparaître comme :
+
+Capture disponible
+
+Une scène 3D peut apparaître comme :
+
+Scène 3D disponible
+
+Une zone sans scène 3D ne doit pas être présentée comme reconstruite.
+
+==================================================
+18. QUALITÉ
+===========
+
+Préparer une structure de QualityCheck.
+
+Exemples de métriques possibles :
+
+* nombre d'images ;
+* images utilisables ;
+* taux d'images rejetées ;
+* résolution ;
+* couverture ;
+* nombre de caméras estimées ;
+* nombre de points 3D ;
+* reprojection error lorsque disponible ;
+* temps de calcul ;
+* mémoire utilisée ;
+* moteur ;
+* version du moteur.
+
+Ne pas inventer de métriques.
+
+==================================================
+19. MODÉRATION ET CONFIDENTIALITÉ
+=================================
+
+Prévoir les mécanismes permettant de traiter :
+
+* personnes ;
+* plaques d'immatriculation ;
+* informations privées ;
+* propriétés privées ;
+* zones sensibles.
+
+Ne pas prétendre disposer d'une anonymisation automatique si elle n'existe pas.
+
+Préparer l'architecture permettant d'ajouter ultérieurement :
+
+détection
+→ floutage
+→ validation
+→ publication.
+
+==================================================
+20. SCALABILITÉ
+===============
+
+Évaluer le fonctionnement pour :
+
+100 contributions
+1 000
+10 000
+100 000+
+
+Identifier les composants qui resteront CPU :
+
+* API ;
+* validation ;
+* métadonnées ;
+* stockage ;
+* orchestration.
+
+Identifier les composants pouvant migrer vers GPU :
+
+* SfM à grande échelle ;
+* MVS ;
+* 3DGS.
+
+Le GPU doit être interchangeable avec le CPU.
+
+==================================================
+21. TESTS
+=========
+
+Ajouter uniquement les tests réellement nécessaires.
+
+Tester notamment :
+
+* création contribution ;
+* upload ;
+* métadonnées ;
+* géolocalisation ;
+* changement de statut ;
+* création job ;
+* retry ;
+* idempotence ;
+* erreur de fichier ;
+* absence de GPS ;
+* scène non disponible ;
+* moteur CPU ;
+* moteur indisponible ;
+* WAITING_FOR_GPU si implémenté.
+
+Utiliser le dataset synthétique déjà disponible pour les tests techniques.
+
+Si un véritable calcul SfM CPU est possible sans danger, l'exécuter sur un dataset suffisamment petit.
+
+Mesurer le temps réel.
+
+==================================================
+22. SÉCURITÉ
+============
+
+Vérifier :
+
+* authentification ;
+* autorisation ;
+* contrôle des uploads ;
+* MIME type ;
+* taille ;
+* extension ;
+* fichiers malveillants ;
+* accès aux médias ;
+* signed URLs ;
+* séparation public/privé ;
+* nettoyage des fichiers temporaires.
+
+Ne pas exposer les fichiers originaux publiquement par défaut.
+
+==================================================
+23. DOCUMENTATION
+=================
+
+Créer :
+
+experiments/streetview-3d/PHASE_14_RESULT.md
+
+Le rapport doit expliquer :
+
+1. architecture existante ;
+2. modifications réalisées ;
+3. architecture CPU-first ;
+4. ReconstructionEngine ;
+5. pipeline ;
+6. modèle de données ;
+7. jobs ;
+8. stockage ;
+9. géolocalisation ;
+10. temporalité ;
+11. sécurité ;
+12. limites CPU ;
+13. tests ;
+14. performances réelles ;
+15. ce qui fonctionne réellement ;
+16. ce qui reste expérimental ;
+17. ce qui nécessitera un GPU ;
+18. prochaine phase recommandée.
+
+==================================================
+24. VERDICT
+===========
+
+Le verdict doit être l'un des suivants :
+
+GO
+GO WITH ADJUSTMENTS
+NO-GO
+
+GO signifie :
+
+la plateforme CPU-first est réellement fonctionnelle et les tests essentiels passent.
+
+GO WITH ADJUSTMENTS signifie :
+
+l'architecture est correcte mais certains éléments nécessitent des corrections avant de continuer.
+
+NO-GO signifie :
+
+un problème critique empêche de poursuivre.
+
+==================================================
+25. RÈGLE ABSOLUE
+=================
+
+NE PAS FAIRE DE FAUX 3D.
+
+NE PAS GÉNÉRER DE FAUSSES SCÈNES.
+
+NE PAS CRÉER DE FAUX COMPTEURS.
+
+NE PAS SIMULER COLMAP.
+
+NE PAS SIMULER MVS.
+
+NE PAS SIMULER 3DGS.
+
+NE PAS prétendre qu'un traitement GPU a été réalisé.
+
+NE PAS connecter de fournisseur GPU.
+
+NE PAS engager de dépense cloud.
+
+NE PAS modifier la production inutilement.
+
+NE PAS déployer automatiquement.
+
+Cette phase doit permettre de continuer à construire BurkinaWatch Street View immédiatement, même sans GPU.
+
+À la fin :
+
+* exécuter les tests ;
+* vérifier git diff ;
+* produire PHASE_14_RESULT.md ;
+* ne pas commencer la Phase 15 automatiquement ;
+* attendre la validation humaine.
