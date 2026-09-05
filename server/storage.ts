@@ -74,6 +74,59 @@ import {
 import { db } from "./db";
 import { eq, desc, and, sql, isNull, gt } from "drizzle-orm";
 
+const baseSignalementSelection = {
+  id: signalements.id,
+  titre: signalements.titre,
+  description: signalements.description,
+  categorie: signalements.categorie,
+  latitude: signalements.latitude,
+  longitude: signalements.longitude,
+  localisation: signalements.localisation,
+  photo: signalements.photo,
+  video: signalements.video,
+  medias: signalements.medias,
+  userId: signalements.userId,
+  isAnonymous: signalements.isAnonymous,
+  isSOS: signalements.isSOS,
+  niveauUrgence: signalements.niveauUrgence,
+  statut: signalements.statut,
+  likes: signalements.likes,
+  commentairesCount: signalements.commentairesCount,
+  sharesCount: signalements.sharesCount,
+  createdAt: signalements.createdAt,
+};
+
+let verificationColumnsAvailable: boolean | undefined;
+
+async function hasSignalementVerificationColumns(): Promise<boolean> {
+  if (verificationColumnsAvailable !== undefined) {
+    return verificationColumnsAvailable;
+  }
+
+  const result = await db.execute(sql`
+    SELECT COUNT(*)::int AS column_count
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'signalements'
+      AND column_name IN ('reliability_score', 'verification_status', 'verification_mode')
+  `);
+  verificationColumnsAvailable = Number(result.rows[0]?.column_count) === 3;
+  return verificationColumnsAvailable;
+}
+
+async function getSignalementSelection() {
+  if (!(await hasSignalementVerificationColumns())) {
+    return baseSignalementSelection;
+  }
+
+  return {
+    ...baseSignalementSelection,
+    reliabilityScore: signalements.reliabilityScore,
+    verificationStatus: signalements.verificationStatus,
+    verificationMode: signalements.verificationMode,
+  };
+}
+
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -468,30 +521,13 @@ export class DbStorage implements IStorage {
     isSOS?: boolean;
     limit?: number;
   }): Promise<SignalementWithAuthor[]> {
+    const signalementSelection = await getSignalementSelection();
     let query = db
       .select({
-        id: signalements.id,
-        titre: signalements.titre,
-        description: signalements.description,
-        categorie: signalements.categorie,
-        latitude: signalements.latitude,
-        longitude: signalements.longitude,
-        localisation: signalements.localisation,
-        photo: signalements.photo,
-        video: signalements.video,
-        medias: signalements.medias,
-        userId: signalements.userId,
-        isAnonymous: signalements.isAnonymous,
-        isSOS: signalements.isSOS,
-        niveauUrgence: signalements.niveauUrgence,
-        statut: signalements.statut,
-        likes: signalements.likes,
-        commentairesCount: signalements.commentairesCount,
-        sharesCount: signalements.sharesCount,
-        createdAt: signalements.createdAt,
+        ...signalementSelection,
         auteurFirstName: users.firstName,
         auteurLastName: users.lastName,
-      })
+      } as any)
       .from(signalements)
       .leftJoin(users, eq(signalements.userId, users.id));
 
@@ -516,43 +552,30 @@ export class DbStorage implements IStorage {
       query = query.limit(filters.limit) as any;
     }
 
-    return await query;
+    return (await query) as unknown as SignalementWithAuthor[];
   }
 
   async getUserSignalements(userId: string): Promise<SignalementWithAuthor[]> {
-    return await db
+    const signalementSelection = await getSignalementSelection();
+    return (await db
       .select({
-        id: signalements.id,
-        titre: signalements.titre,
-        description: signalements.description,
-        categorie: signalements.categorie,
-        latitude: signalements.latitude,
-        longitude: signalements.longitude,
-        localisation: signalements.localisation,
-        photo: signalements.photo,
-        video: signalements.video,
-        medias: signalements.medias,
-        userId: signalements.userId,
-        isAnonymous: signalements.isAnonymous,
-        isSOS: signalements.isSOS,
-        niveauUrgence: signalements.niveauUrgence,
-        statut: signalements.statut,
-        likes: signalements.likes,
-        commentairesCount: signalements.commentairesCount,
-        sharesCount: signalements.sharesCount,
-        createdAt: signalements.createdAt,
+        ...signalementSelection,
         auteurFirstName: users.firstName,
         auteurLastName: users.lastName,
-      })
+      } as any)
       .from(signalements)
       .leftJoin(users, eq(signalements.userId, users.id))
       .where(eq(signalements.userId, userId))
-      .orderBy(desc(signalements.createdAt));
+      .orderBy(desc(signalements.createdAt))) as unknown as SignalementWithAuthor[];
   }
 
   async getSignalement(id: string): Promise<Signalement | undefined> {
-    const result = await db.select().from(signalements).where(eq(signalements.id, id)).limit(1);
-    return result[0];
+    const result = await db
+      .select(await getSignalementSelection())
+      .from(signalements)
+      .where(eq(signalements.id, id))
+      .limit(1);
+    return result[0] as unknown as Signalement | undefined;
   }
 
   async createSignalement(insertSignalement: InsertSignalement): Promise<Signalement> {
@@ -560,17 +583,36 @@ export class DbStorage implements IStorage {
       ...insertSignalement,
       medias: insertSignalement.medias || []
     };
-    const result = await db.insert(signalements).values(values).returning();
-    return result[0];
+    const result = await db
+      .insert(signalements)
+      .values(values)
+      .returning(await getSignalementSelection());
+    return result[0] as unknown as Signalement;
   }
 
   async updateSignalement(id: string, updates: UpdateSignalement | any): Promise<Signalement | undefined> {
+    const verificationColumnsAvailable = await hasSignalementVerificationColumns();
+    const persistedUpdates = verificationColumnsAvailable
+      ? updates
+      : Object.fromEntries(
+          Object.entries(updates).filter(
+            ([key]) =>
+              key !== "reliabilityScore" &&
+              key !== "verificationStatus" &&
+              key !== "verificationMode",
+          ),
+        );
+
+    if (Object.keys(persistedUpdates).length === 0) {
+      return this.getSignalement(id);
+    }
+
     const result = await db
       .update(signalements)
-      .set(updates)
+      .set(persistedUpdates)
       .where(eq(signalements.id, id))
-      .returning();
-    return result[0];
+      .returning(await getSignalementSelection());
+    return result[0] as unknown as Signalement | undefined;
   }
 
   async deleteSignalement(id: string): Promise<boolean> {
@@ -594,10 +636,11 @@ export class DbStorage implements IStorage {
   }
 
   async updateSignalementStatut(id: string, statut: string): Promise<Signalement | undefined> {
+    const signalementSelection = await getSignalementSelection();
     return await db.transaction(async (tx) => {
       // Get the signalement before update to check if status is changing to "resolu"
       const [oldSignalement] = await tx
-        .select()
+        .select(signalementSelection as any)
         .from(signalements)
         .where(eq(signalements.id, id))
         .limit(1);
@@ -611,7 +654,7 @@ export class DbStorage implements IStorage {
         .update(signalements)
         .set({ statut })
         .where(eq(signalements.id, id))
-        .returning();
+        .returning(signalementSelection as any);
 
       // Award points if status changed from non-resolu to resolu
       if (oldSignalement.statut !== 'resolu' && statut === 'resolu' && oldSignalement.userId && oldSignalement.userId !== "demo-user") {
@@ -625,7 +668,7 @@ export class DbStorage implements IStorage {
 
         if (!author) {
           console.warn(`Auteur ${oldSignalement.userId} introuvable, points non attribués`);
-          return result;
+          return result as Signalement;
         }
 
         const newPoints = author.userPoints + POINTS_CONFIG.VERIFIED_SIGNALEMENT;
@@ -642,16 +685,17 @@ export class DbStorage implements IStorage {
         console.log(`✅ Points attribués: +${POINTS_CONFIG.VERIFIED_SIGNALEMENT} points à l'utilisateur ${oldSignalement.userId} (signalement résolu)`);
       }
 
-      return result;
+      return result as Signalement;
     });
   }
 
   async likeSignalement(signalementId: string, userId: string): Promise<{ signalement: Signalement | undefined; isLiked: boolean }> {
+    const signalementSelection = await getSignalementSelection();
     try {
       return await db.transaction(async (tx) => {
         // Get the signalement to know its author
         const [signalement] = await tx
-          .select()
+          .select(signalementSelection as any)
           .from(signalements)
           .where(eq(signalements.id, signalementId))
           .limit(1);
@@ -687,9 +731,9 @@ export class DbStorage implements IStorage {
             .update(signalements)
             .set({ likes: sql`GREATEST(0, ${signalements.likes} - 1)` })
             .where(eq(signalements.id, signalementId))
-            .returning();
+            .returning(signalementSelection as any);
 
-          updated = result;
+          updated = result as Signalement;
           isLiked = false;
 
           // Remove points from author (-5 points)
@@ -724,9 +768,9 @@ export class DbStorage implements IStorage {
             .update(signalements)
             .set({ likes: sql`${signalements.likes} + 1` })
             .where(eq(signalements.id, signalementId))
-            .returning();
+            .returning(signalementSelection as any);
 
-          updated = result;
+          updated = result as Signalement;
           isLiked = true;
 
           // Award points to author (+5 points)
@@ -759,7 +803,7 @@ export class DbStorage implements IStorage {
       if (error?.code === '23505' || error?.message?.includes('duplicate key')) {
         // Duplicate like attempt - treat as idempotent by returning current state
         const [signalement] = await db
-          .select()
+          .select(signalementSelection as any)
           .from(signalements)
           .where(eq(signalements.id, signalementId))
           .limit(1);
@@ -774,7 +818,7 @@ export class DbStorage implements IStorage {
           .limit(1);
 
         return {
-          signalement,
+          signalement: signalement as Signalement | undefined,
           isLiked: existingLike.length > 0
         };
       }
@@ -783,8 +827,9 @@ export class DbStorage implements IStorage {
   }
 
   async shareSignalement(id: string): Promise<Signalement | undefined> {
+    const signalementSelection = await getSignalementSelection();
     const [signalement] = await db
-      .select()
+      .select(signalementSelection as any)
       .from(signalements)
       .where(eq(signalements.id, id))
       .limit(1);
@@ -795,9 +840,9 @@ export class DbStorage implements IStorage {
       .update(signalements)
       .set({ sharesCount: sql`${signalements.sharesCount} + 1` })
       .where(eq(signalements.id, id))
-      .returning();
+      .returning(signalementSelection as any);
 
-    return updated;
+    return updated as Signalement | undefined;
   }
 
   async getCommentaires(signalementId: string): Promise<Commentaire[]> {
@@ -1586,11 +1631,12 @@ L'équipe Burkina Watch
 
   // Added methods for public profiles
   async getSignalementsByUserId(userId: string): Promise<Signalement[]> {
-    return db
-      .select()
+    const signalementSelection = await getSignalementSelection();
+    return (await db
+      .select(signalementSelection as any)
       .from(signalements)
       .where(eq(signalements.userId, userId))
-      .orderBy(desc(signalements.createdAt));
+      .orderBy(desc(signalements.createdAt))) as Signalement[];
   }
 
   // ============================================

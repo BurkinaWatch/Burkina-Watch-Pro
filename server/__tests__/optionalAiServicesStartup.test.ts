@@ -72,9 +72,10 @@ describe("services IA optionnels", () => {
 
           assert.equal(verification.score, 73);
           assert.equal(verification.status, "verified");
+          assert.equal(verification.mode, "fallback");
           assert.ok(
             verification.reasons.includes(
-              "Analyse non disponible (clé API manquante)",
+              "Analyse automatique avancée indisponible ; score de secours utilisé.",
             ),
           );
           assert.ok(verification.reasons.includes("Qualité image: 70/100"));

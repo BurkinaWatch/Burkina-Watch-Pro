@@ -17,6 +17,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import VerificationBadge from "./VerificationBadge";
 
 interface SignalementCardProps {
   id: string;
@@ -39,6 +40,9 @@ interface SignalementCardProps {
   userId?: string | null;
   auteurFirstName?: string | null;
   auteurLastName?: string | null;
+  reliabilityScore?: number | string | null;
+  verificationStatus?: string | null;
+  verificationMode?: string | null;
 }
 
 export default function SignalementCard({
@@ -62,6 +66,9 @@ export default function SignalementCard({
   auteurFirstName,
   auteurLastName,
   medias,
+  reliabilityScore,
+  verificationStatus,
+  verificationMode,
 }: SignalementCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(likes || 0);
@@ -305,6 +312,14 @@ export default function SignalementCard({
           <span className="text-xs text-muted-foreground">
             {formatDistanceToNow(createdAt, { addSuffix: true, locale: fr })}
           </span>
+        </div>
+
+        <div className="mb-3">
+          <VerificationBadge
+            mode={verificationMode}
+            status={verificationStatus}
+            score={reliabilityScore}
+          />
         </div>
 
         <div className="mb-3 space-y-2" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>

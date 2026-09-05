@@ -1125,7 +1125,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: errorMessage });
       }
 
-      // Vérification IA en arrière-plan
+      const signalement = await storage.createSignalement(validationResult.data);
+
+      // Vérification IA en arrière-plan : la publication ne dépend pas de ce service.
       const verificationPromise = (async () => {
         try {
           const verification = await verifySignalement(validationResult.data);
@@ -1133,18 +1135,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await storage.updateSignalement(signalement.id, {
             reliabilityScore: verification.score,
             verificationStatus: verification.status,
+            verificationMode: verification.mode,
           });
 
-          console.log(`✅ Signalement ${signalement.id} vérifié: ${verification.score}/100 (${verification.status})`);
+          console.log(
+            `✅ Signalement ${signalement.id} vérifié: ${verification.score}/100 ` +
+            `(${verification.status}, ${verification.mode})`,
+          );
         } catch (error) {
           console.error("❌ Erreur vérification IA:", error);
         }
       });
 
-      const signalement = await storage.createSignalement(validationResult.data);
-
       // Lancer la vérification sans bloquer la réponse
-      verificationPromise();
+      void verificationPromise();
 
       // 🔒 Audit logging (non-bloquant)
       storage.logAudit({
@@ -1190,9 +1194,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Renvoyer le signalement sans les données base64 volumineuses
       const { medias, ...signalementWithoutMedia } = signalement;
+      const verificationStatus = signalement.verificationStatus || "pending";
+      const verificationMode = signalement.verificationMode || "pending";
       res.status(201).json({
         ...signalementWithoutMedia,
         medias: medias ? medias.map(() => "[MEDIA_DATA]") : [],
+        verification: {
+          status: verificationStatus,
+          mode: verificationMode,
+        },
+        verificationStatus,
+        verificationMode,
       });
     } catch (error) {
       console.error("Error creating signalement:", error);

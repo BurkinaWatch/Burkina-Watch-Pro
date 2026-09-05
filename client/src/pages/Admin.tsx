@@ -18,6 +18,7 @@ import { fr } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
 import type { Signalement } from "@shared/schema";
+import VerificationBadge from "@/components/VerificationBadge";
 
 interface AdminStats {
   totalSignalements: number;
@@ -141,6 +142,7 @@ export default function Admin() {
                         <TableHead>Categorie</TableHead>
                         <TableHead>Localisation</TableHead>
                         <TableHead>Statut</TableHead>
+                        <TableHead>Vérification IA</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
@@ -157,6 +159,13 @@ export default function Admin() {
                           </TableCell>
                           <TableCell>
                             <StatutBadge statut={item.statut as any} />
+                          </TableCell>
+                          <TableCell>
+                            <VerificationBadge
+                              mode={item.verificationMode}
+                              status={item.verificationStatus}
+                              score={item.reliabilityScore}
+                            />
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {item.createdAt ? formatDistanceToNow(new Date(item.createdAt), { addSuffix: true, locale: fr }) : "-"}

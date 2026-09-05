@@ -13,6 +13,7 @@ import CommentDialog from "@/components/CommentDialog";
 import type { Signalement, Categorie, Statut } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import VerificationBadge from "@/components/VerificationBadge";
 
 export default function SignalementDetail() {
   const { id } = useParams<{ id: string }>();
@@ -146,6 +147,17 @@ export default function SignalementDetail() {
             <div className="flex gap-2 mb-4">
               <CategoryBadge categorie={signalement.categorie as Categorie} />
               <StatutBadge statut={(signalement.statut || "en_attente") as Statut} categorie={signalement.categorie as Categorie} />
+            </div>
+
+            <div className="mb-6">
+              <VerificationBadge
+                mode={signalement.verificationMode}
+                status={signalement.verificationStatus}
+                score={signalement.reliabilityScore}
+              />
+              <p className="mt-2 text-xs text-muted-foreground">
+                Ce badge indique la méthode utilisée pour établir le score de fiabilité.
+              </p>
             </div>
 
             <div className="mb-6 max-w-sm">

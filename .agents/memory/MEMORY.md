@@ -7,3 +7,4 @@
 - [StreetView durable storage](streetview-storage.md) — production media uses private S3-compatible storage with owner-scoped signed multipart sessions.
 - [StreetView processing queue](streetview-processing.md) — PostgreSQL jobs and expiring leases decouple preprocessing from the API and stop before 3D.
 - [StreetView Phase 14 gate](streetview-phase14-gate.md) — CPU preparation is safe to validate separately; the worker requires explicit post-migration activation and no scene exists without a validated adapter.
+- [Railway preview schema validation](railway-preview-schema.md) — the app may use Railway while the built-in database tool targets another database; validate migrations without assuming those schemas match.

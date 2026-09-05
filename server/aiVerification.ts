@@ -9,9 +9,12 @@ const openai = process.env.OPENAI_API_KEY
     })
   : null;
 
-interface VerificationResult {
+export type VerificationMode = "full" | "fallback";
+
+export interface VerificationResult {
   score: number;
   status: "verified" | "unverified" | "suspicious";
+  mode: VerificationMode;
   reasons: string[];
 }
 
@@ -81,10 +84,14 @@ async function checkForDuplicates(
 async function analyzeTextCoherence(
   titre: string,
   description: string
-): Promise<{ score: number; analysis: string }> {
+): Promise<{ score: number; analysis: string; mode: VerificationMode }> {
   if (!openai) {
     console.warn("⚠️ OPENAI_API_KEY non configurée, analyse de texte ignorée");
-    return { score: 70, analysis: "Analyse non disponible (clé API manquante)" };
+    return {
+      score: 70,
+      analysis: "Analyse automatique avancée indisponible ; score de secours utilisé.",
+      mode: "fallback",
+    };
   }
 
   try {
@@ -116,17 +123,24 @@ Réponds uniquement en JSON:
     return {
       score: result.score || 50,
       analysis: result.analysis || "Analyse GPT non disponible",
+      mode: "full",
     };
   } catch (error) {
     console.error("❌ Erreur analyse GPT:", error);
-    return { score: 50, analysis: "Erreur lors de l'analyse" };
+    return {
+      score: 50,
+      analysis: "Analyse automatique avancée indisponible ; score de secours utilisé.",
+      mode: "fallback",
+    };
   }
 }
 
 // Analyser l'image avec Vision API
-async function analyzeImageQuality(imageBase64: string): Promise<number> {
+async function analyzeImageQuality(
+  imageBase64: string
+): Promise<{ score: number; mode: VerificationMode }> {
   if (!openai) {
-    return 70; // Score par défaut
+    return { score: 70, mode: "fallback" };
   }
 
   try {
@@ -151,10 +165,13 @@ async function analyzeImageQuality(imageBase64: string): Promise<number> {
     });
 
     const score = parseInt(completion.choices[0].message.content || "70");
-    return isNaN(score) ? 70 : Math.min(100, Math.max(0, score));
+    return {
+      score: isNaN(score) ? 70 : Math.min(100, Math.max(0, score)),
+      mode: isNaN(score) ? "fallback" : "full",
+    };
   } catch (error) {
     console.error("❌ Erreur analyse image:", error);
-    return 70;
+    return { score: 70, mode: "fallback" };
   }
 }
 
@@ -165,6 +182,7 @@ export async function verifySignalement(
   const reasons: string[] = [];
   let totalScore = 0;
   let scoreCount = 0;
+  let mode: VerificationMode = "full";
 
   // 1. Vérifier les doublons
   const { isDuplicate, similarSignalements } = await checkForDuplicates(
@@ -189,13 +207,16 @@ export async function verifySignalement(
   totalScore += textAnalysis.score;
   scoreCount++;
   reasons.push(textAnalysis.analysis);
+  if (textAnalysis.mode === "fallback") mode = "fallback";
 
   // 3. Analyser l'image si présente
-  if (signalement.photo) {
-    const imageScore = await analyzeImageQuality(signalement.photo);
-    totalScore += imageScore;
+  const image = signalement.photo || signalement.medias?.[0];
+  if (image) {
+    const imageAnalysis = await analyzeImageQuality(image);
+    totalScore += imageAnalysis.score;
     scoreCount++;
-    reasons.push(`Qualité image: ${imageScore}/100`);
+    reasons.push(`Qualité image: ${imageAnalysis.score}/100`);
+    if (imageAnalysis.mode === "fallback") mode = "fallback";
   }
 
   // Calculer le score final
@@ -214,6 +235,7 @@ export async function verifySignalement(
   return {
     score: finalScore,
     status,
+    mode,
     reasons,
   };
 }
