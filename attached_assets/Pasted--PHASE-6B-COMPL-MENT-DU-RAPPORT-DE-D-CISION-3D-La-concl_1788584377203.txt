@@ -1,0 +1,477 @@
+# PHASE 6B — COMPLÉMENT DU RAPPORT DE DÉCISION 3D
+
+La conclusion que tu as fournie est intéressante :
+
+* Socle géométrique : Photogrammétrie SfM/MVS compatible COLMAP
+* Représentation visuelle secondaire : 3D Gaussian Splatting
+* Diffusion : Mesh/glTF puis 3D Tiles ou équivalent
+* Orchestration : Railway API + PostgreSQL + Object Storage
+* Calcul lourd : Workers CPU/GPU séparés
+* GPU probablement externe
+* NeRF : expérimentation éventuelle
+
+Cependant, le rapport fourni est trop synthétique pour permettre de valider définitivement cette architecture.
+
+Nous allons donc compléter UNIQUEMENT l'analyse.
+
+## RÈGLE ABSOLUE
+
+NE MODIFIE AUCUN FICHIER.
+
+NE MODIFIE PAS LE CODE.
+
+NE FAIS AUCUNE MIGRATION.
+
+N'INSTALLE AUCUNE DÉPENDANCE.
+
+NE CRÉE AUCUN WORKER.
+
+NE LANCE AUCUNE RECONSTRUCTION.
+
+NE CHANGE PAS L'ARCHITECTURE ACTUELLE.
+
+Cette phase consiste uniquement à documenter et justifier la décision.
+
+---
+
+# 1. JUSTIFICATION DU CHOIX COLMAP / SfM-MVS
+
+Explique précisément pourquoi COLMAP/SfM-MVS est recommandé comme socle géométrique.
+
+Répondre notamment à :
+
+* que produit exactement SfM ?
+* que produit exactement MVS ?
+* pourquoi cette séparation est-elle utile ?
+* comment une vidéo peut-elle être transformée en images exploitables ?
+* comment les poses caméra sont-elles estimées ?
+* comment la géométrie 3D est-elle obtenue ?
+* quelles sont les limites avec une vidéo prise au smartphone ?
+* quels types de scènes burkinabè peuvent poser problème ?
+
+---
+
+# 2. JUSTIFICATION DU 3D GAUSSIAN SPLATTING
+
+Explique pourquoi 3D Gaussian Splatting est proposé comme représentation visuelle secondaire.
+
+Comparer directement :
+
+COLMAP/MVS
+VS
+3D Gaussian Splatting
+
+sur :
+
+* géométrie ;
+* photoréalisme ;
+* temps de reconstruction ;
+* rendu ;
+* taille des fichiers ;
+* GPU ;
+* web ;
+* mobile ;
+* streaming ;
+* qualité visuelle ;
+* scènes extérieures ;
+* scènes urbaines ;
+* végétation ;
+* personnes et véhicules en mouvement.
+
+Explique également clairement si le Gaussian Splatting dépend ou non des résultats de SfM/COLMAP.
+
+---
+
+# 3. ARCHITECTURE COMPLÈTE PROPOSÉE
+
+Documente précisément le pipeline cible :
+
+VIDÉO UTILISATEUR
+↓
+STOCKAGE ORIGINAL
+↓
+VALIDATION
+↓
+EXTRACTION FRAMES
+↓
+PRÉTRAITEMENT
+↓
+SfM
+↓
+ESTIMATION CAMÉRA
+↓
+MVS / reconstruction
+↓
+3D Gaussian Splatting
+↓
+OPTIMISATION
+↓
+GÉORÉFÉRENCEMENT
+↓
+QUALITY CONTROL
+↓
+SCÈNE 3D
+↓
+STOCKAGE
+↓
+VIEWER
+
+Corrige cette chaîne si elle est techniquement incorrecte.
+
+Explique quelles étapes sont :
+
+* CPU ;
+* GPU ;
+* longues ;
+* parallélisables ;
+* facultatives ;
+* obligatoires.
+
+---
+
+# 4. VIDÉO UTILISATEUR
+
+Définis les caractéristiques minimales recommandées pour une vidéo :
+
+* résolution minimale ;
+* FPS ;
+* durée idéale ;
+* durée maximale ;
+* vitesse de déplacement ;
+* distance caméra/objet ;
+* mouvement de caméra ;
+* lumière ;
+* stabilité ;
+* overlap entre images.
+
+Explique également comment gérer :
+
+* vidéo trop courte ;
+* vidéo trop rapide ;
+* caméra tremblante ;
+* faible lumière ;
+* forte compression ;
+* scène presque uniforme ;
+* personnes ;
+* voitures ;
+* objets mobiles.
+
+Nous devons savoir quelles règles futures imposer à l'utilisateur lors de la capture.
+
+---
+
+# 5. GÉORÉFÉRENCEMENT
+
+Décris précisément comment une reconstruction locale peut être reliée à la géographie réelle.
+
+Étudier :
+
+* GPS de départ ;
+* GPS pendant la vidéo ;
+* trajectoire ;
+* altitude ;
+* orientation ;
+* coordonnées locales ;
+* coordonnées globales ;
+* transformation ;
+* précision ;
+* dérive GPS.
+
+Explique également comment deux contributions filmées séparément pourraient être alignées géographiquement.
+
+---
+
+# 6. CONNEXION ENTRE SCÈNES
+
+C'est une exigence fondamentale du projet.
+
+Nous voulons progressivement passer de :
+
+SCÈNE A
+
+à :
+
+SCÈNE A → SCÈNE B → SCÈNE C → SCÈNE D
+
+puis éventuellement :
+
+RUE → QUARTIER → COMMUNE → VILLE.
+
+Explique comment cela pourrait fonctionner techniquement.
+
+Étudier :
+
+* overlap ;
+* points caractéristiques ;
+* coordonnées GPS ;
+* orientation ;
+* caméra ;
+* transformations ;
+* recalage ;
+* précision ;
+* confiance ;
+* fusion.
+
+Indique clairement ce qui sera possible automatiquement et ce qui devra éventuellement être validé.
+
+---
+
+# 7. DIMENSION TEMPORELLE
+
+Explique comment gérer :
+
+Rue X — 2026
+Rue X — 2027
+Rue X — 2028
+
+sans écraser les anciennes scènes.
+
+Définir conceptuellement la différence entre :
+
+* contribution ;
+* capture ;
+* reconstruction ;
+* scène ;
+* version temporelle.
+
+Ne pas modifier la base de données.
+
+---
+
+# 8. SCALABILITÉ
+
+Donne une analyse pour :
+
+100 scènes
+1 000 scènes
+10 000 scènes
+100 000 scènes
+
+Pour chaque niveau, identifier :
+
+* stockage ;
+* calcul ;
+* GPU ;
+* bande passante ;
+* temps de traitement ;
+* coût relatif ;
+* gestion des workers ;
+* difficulté opérationnelle.
+
+Ne donne pas de chiffres inventés.
+
+Si une valeur dépend fortement du matériel ou des paramètres, indique les variables dont elle dépend.
+
+---
+
+# 9. RAILWAY + GPU EXTERNE
+
+Explique pourquoi l'API Railway ne devrait probablement pas effectuer directement la reconstruction 3D.
+
+Décrire l'architecture :
+
+Railway API
+↓
+PostgreSQL
+↓
+Object Storage
+↓
+Processing Job
+↓
+CPU Worker
+↓
+3D Job
+↓
+GPU Worker externe
+
+Explique :
+
+* comment les jobs sont transmis ;
+* comment les fichiers sont récupérés ;
+* comment les résultats sont retournés ;
+* comment gérer les erreurs ;
+* comment gérer les workers indisponibles ;
+* comment éviter de perdre une reconstruction après interruption.
+
+---
+
+# 10. STOCKAGE
+
+Définir les catégories d'artefacts futures :
+
+original video
+keyframes
+camera poses
+point cloud
+mesh
+textures
+Gaussian splat
+LOD
+thumbnail
+metadata
+logs éventuels
+
+Pour chacun :
+
+* conserver ou non ;
+* stockage chaud/froid éventuel ;
+* relation avec la base de données ;
+* nécessité pour une reconstruction future.
+
+---
+
+# 11. WEB ET MOBILE
+
+Analyser le futur viewer.
+
+Comparer les possibilités de diffusion :
+
+* glTF ;
+* 3D Tiles ;
+* Gaussian Splatting web ;
+* WebGL ;
+* WebGPU ;
+* autres technologies pertinentes.
+
+Identifier ce qui serait raisonnablement compatible avec :
+
+* navigateur desktop ;
+* Android ;
+* appareils peu puissants ;
+* connexion Internet faible.
+
+---
+
+# 12. PRIVACY
+
+Analyser le problème des :
+
+* visages ;
+* plaques ;
+* personnes ;
+* espaces privés.
+
+Déterminer où placer idéalement l'anonymisation dans le pipeline.
+
+Par exemple :
+
+VIDÉO
+↓
+DÉTECTION
+↓
+ANONYMISATION
+↓
+RECONSTRUCTION
+
+ou une autre approche.
+
+Expliquer les conséquences techniques.
+
+---
+
+# 13. RISQUES
+
+Lister les principaux risques techniques.
+
+Au minimum :
+
+* vidéos insuffisantes ;
+* mouvement ;
+* GPS imprécis ;
+* objets dynamiques ;
+* scènes très grandes ;
+* coût GPU ;
+* stockage ;
+* fichiers 3D trop lourds ;
+* streaming mobile ;
+* erreurs d'alignement ;
+* scènes incompatibles ;
+* qualité variable des contributions ;
+* traitement interrompu.
+
+Pour chaque risque :
+
+* gravité ;
+* probabilité qualitative ;
+* mitigation.
+
+---
+
+# 14. DÉCISION FINALE
+
+À la fin, confirmer ou corriger la décision :
+
+### SOCLE GÉOMÉTRIQUE
+
+COLMAP / SfM-MVS
+
+### REPRÉSENTATION VISUELLE
+
+3D Gaussian Splatting
+
+### FORMAT WEB / GÉOSPATIAL
+
+glTF / 3D Tiles selon l'échelle
+
+### API
+
+Railway
+
+### BASE
+
+PostgreSQL
+
+### STOCKAGE
+
+Object Storage
+
+### CALCUL
+
+CPU Worker + GPU Worker externe
+
+### NE RF
+
+Expérimentation uniquement
+
+Si tu proposes une modification à cette architecture, explique clairement pourquoi.
+
+---
+
+# 15. PROCHAINE PHASE
+
+Propose précisément ce que devrait être la Phase 7.
+
+Elle doit idéalement permettre de passer à un :
+
+"Prototype réel sur une vidéo contrôlée"
+
+mais sans encore déployer toute l'infrastructure de production.
+
+Décris :
+
+* type de vidéo ;
+* environnement de test ;
+* données nécessaires ;
+* pipeline minimal ;
+* résultat attendu ;
+* critères de réussite ;
+* critères d'échec ;
+* métriques à mesurer.
+
+Le prototype devra permettre de vérifier que notre choix technologique fonctionne réellement avec une vidéo proche des futures contributions BurkinaWatch.
+
+---
+
+# IMPORTANT
+
+À la fin :
+
+* ne modifie aucun fichier ;
+* ne fais aucune installation ;
+* ne lance aucun traitement 3D ;
+* ne crée aucun service ;
+* ne change aucune configuration.
+
+Fournis uniquement le rapport complémentaire.
+
+Puis ARRÊTE-TOI et attends ma validation.
