@@ -1,0 +1,30 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "AfqJ88jKhX73v6dhAorP6"
+uri = "file://experiments/streetview-3d/runs/phase7c-synthetic/synthetic-streetview-phase7c.mp4"
+type = "video"
+title = "Phase 7C — vidéo synthétique contrôlée"
+description = "Séquence générée image par image depuis une scène 3D synthétique statique avec trajectoire caméra connue. Artefact de validation technique uniquement, non représentatif d’une vidéo réelle BurkinaWatch."
+logical_id = "524cfc1a-1619-4872-9ebc-a4a87689d4a9"
+content_hash = "sha256:bc8cff7a7727803e4716027a6fbba560439dd39fac3c2b7b84c92d4fbf08b335"
+size = 394452
+mtime_ms = 1788586683371
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:766d3c29-01ad-41d8-90b6-ccbc39f09e61/524cfc1a-1619-4872-9ebc-a4a87689d4a9/9c12eda3-c839-43e6-a9f4-16b570c9ea97"
+storage_version_token = "1788586711466726"
+content_type = "video/mp4"
+
+[[outputs]]
+id = "cFnl95P8276QDGkiYpbES"
+uri = "file://experiments/streetview-3d/runs/phase7c-synthetic/synthetic-metadata.json"
+type = "unspecified"
+title = "Phase 7C — métadonnées et trajectoire caméra"
+description = "Paramètres de génération, caractéristiques vidéo et trajectoire virtuelle complète associée à la scène synthétique."
+logical_id = "43832d26-1bdb-4dc4-90e5-a98275c48d5e"
+content_hash = "sha256:f3188f603daf94b1e40ccdee4c252fe3883f1f7cf18e6820aa34f84e148ed5b4"
+size = 34767
+mtime_ms = 1788586683378
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:766d3c29-01ad-41d8-90b6-ccbc39f09e61/43832d26-1bdb-4dc4-90e5-a98275c48d5e/96febb47-1355-4ad3-8e4c-5c602fa3b076"
+storage_version_token = "1788586711992239"
+content_type = "application/octet-stream"
