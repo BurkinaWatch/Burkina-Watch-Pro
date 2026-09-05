@@ -1,0 +1,685 @@
+Nous lançons maintenant la PHASE 15 du projet Street View 3D de BurkinaWatch.
+
+CONTEXTE VALIDÉ
+
+La Phase 14 est terminée avec :
+
+GO pour la préparation CPU contrôlée
+
+NO-GO pour la reconstruction 3D et la publication de scènes.
+
+La Phase 14 a effectivement permis :
+
+VIDÉO PRIVÉE
+→ FFprobe
+→ métadonnées réelles
+→ FFmpeg
+→ extraction de keyframes réelles
+→ stockage privé
+→ attente d'un moteur de reconstruction validé.
+
+L'abstraction ReconstructionEngine existe.
+
+Aucune Scene3D fictive n'est créée.
+
+Aucun GLB, 3D Tiles, nuage de points ou splat fictif n'est produit.
+
+La migration 0010 n'a pas été appliquée en production.
+
+Aucun GPU cloud n'est disponible.
+
+Nous voulons maintenant répondre à UNE question :
+
+> EST-IL POSSIBLE D'EXÉCUTER UNE PREMIÈRE RECONSTRUCTION SfM RÉELLE SUR CPU AVEC NOTRE DATASET SYNTHÉTIQUE ?
+
+Cette phase ne doit PAS chercher à industrialiser la reconstruction.
+
+==================================================
+
+1. OBJECTIF UNIQUE
+   ==================================================
+
+Démontrer expérimentalement la chaîne :
+
+IMAGES RÉELLES
+↓
+COLMAP CPU
+↓
+Feature extraction
+↓
+Feature matching
+↓
+Sparse SfM
+↓
+caméras estimées
+↓
+points 3D
+↓
+métriques réelles.
+
+Le résultat doit être :
+
+* SUCCESSFUL REAL CPU SfM
+  ou
+* NO-GO avec cause technique précise.
+
+Aucune simulation.
+
+==================================================
+2. LIRE LES PHASES PRÉCÉDENTES
+==============================
+
+Lire :
+
+experiments/streetview-3d/PHASE_7*
+experiments/streetview-3d/PHASE_8_RESULT.md
+experiments/streetview-3d/PHASE_9_RESULT.md
+experiments/streetview-3d/PHASE_10_RESULT.md
+experiments/streetview-3d/PHASE_11_RESULT.md
+experiments/streetview-3d/PHASE_12_RESULT.md
+experiments/streetview-3d/PHASE_13_RESULT.md
+experiments/streetview-3d/PHASE_14_RESULT.md
+
+Lire également :
+
+experiments/streetview-3d/gpu-lab/
+
+et localiser précisément :
+
+* dataset synthétique ;
+* vidéo synthétique ;
+* keyframes ;
+* manifests ;
+* scripts existants ;
+* résultats précédents.
+
+NE PAS recréer inutilement les artefacts déjà disponibles.
+
+==================================================
+3. AUDIT DE L'ENVIRONNEMENT CPU
+===============================
+
+Avant toute installation :
+
+inspecter l'environnement actuel.
+
+Documenter réellement :
+
+* OS ;
+* architecture ;
+* CPU ;
+* nombre de cœurs ;
+* RAM totale ;
+* RAM disponible ;
+* espace disque ;
+* Node.js ;
+* Python ;
+* FFmpeg ;
+* FFprobe ;
+* Docker si disponible ;
+* COLMAP si disponible.
+
+Tester :
+
+command -v colmap
+colmap -h
+
+si disponible.
+
+Ne pas considérer la simple présence du binaire comme une validation.
+
+==================================================
+4. INSTALLATION DE COLMAP
+=========================
+
+Si COLMAP est déjà disponible et exécutable :
+
+le tester.
+
+Si COLMAP n'est pas disponible :
+
+chercher une méthode propre et reproductible pour l'exécuter en CPU.
+
+Options possibles à évaluer :
+
+* package système ;
+* Docker ;
+* environnement isolé ;
+* autre méthode reproductible.
+
+IMPORTANT :
+
+NE PAS utiliser :
+
+NIXPKGS_ALLOW_INSECURE=1
+
+pour contourner une dépendance vulnérable.
+
+NE PAS désactiver les protections de sécurité.
+
+NE PAS modifier les dépendances système de production.
+
+NE PAS modifier Railway.
+
+NE PAS modifier le déploiement.
+
+NE PAS modifier les secrets.
+
+Si COLMAP ne peut pas être installé proprement :
+
+STOPPER la tentative d'installation et documenter précisément :
+
+* pourquoi ;
+* quelle dépendance bloque ;
+* quelle méthode alternative serait possible ;
+* si un runner CPU séparé serait nécessaire.
+
+Dans ce cas :
+
+NO-GO
+
+pour la reconstruction CPU dans l'environnement actuel.
+
+==================================================
+5. ISOLATION ABSOLUE
+====================
+
+Les tests de cette phase doivent rester dans :
+
+experiments/streetview-3d/
+
+ou dans un répertoire temporaire clairement identifié.
+
+NE PAS utiliser :
+
+* données utilisateur réelles ;
+* vidéos privées de production ;
+* stockage de production ;
+* PostgreSQL de production ;
+* Railway ;
+* API publique ;
+* worker de production.
+
+Le dataset synthétique est la seule donnée autorisée pour le premier test.
+
+==================================================
+6. VÉRIFIER LE DATASET SYNTHÉTIQUE
+==================================
+
+Localiser le dataset créé précédemment.
+
+Vérifier réellement :
+
+* nombre d'images ;
+* résolution ;
+* format ;
+* intégrité ;
+* ordre des images ;
+* absence de fichiers corrompus.
+
+Documenter :
+
+* chemin ;
+* nombre total d'images ;
+* largeur ;
+* hauteur ;
+* taille totale ;
+* format.
+
+Ne pas modifier l'original.
+
+Créer si nécessaire une copie de travail.
+
+==================================================
+7. PREMIER TEST : SfM MINIMAL
+=============================
+
+Commencer avec un petit nombre d'images.
+
+Par exemple :
+
+8 à 12 images maximum.
+
+Le but est d'abord de vérifier que toute la chaîne COLMAP fonctionne.
+
+Pipeline :
+
+IMAGES
+↓
+COLMAP feature extraction
+↓
+COLMAP feature matching
+↓
+COLMAP mapper
+↓
+SPARSE MODEL
+
+Utiliser uniquement le CPU.
+
+NE PAS utiliser CUDA.
+
+NE PAS chercher à activer un GPU inexistant.
+
+==================================================
+8. CONFIGURATION CPU
+====================
+
+Documenter les paramètres réellement utilisés :
+
+* nombre de threads ;
+* caméra model ;
+* feature type ;
+* matching method ;
+* résolution ;
+* options mapper ;
+* options CPU.
+
+Ne pas utiliser des paramètres agressifs qui risquent de consommer toute la RAM.
+
+Si nécessaire, limiter le nombre de threads.
+
+L'objectif est une expérience reproductible, pas la performance maximale.
+
+==================================================
+9. VALIDATION DU SfM
+====================
+
+Une reconstruction ne peut être déclarée réussie que si COLMAP produit réellement un modèle sparse valide.
+
+Vérifier au minimum :
+
+* nombre d'images input ;
+* nombre d'images enregistrées ;
+* nombre de caméras ;
+* nombre de points 3D ;
+* observations ;
+* éventuelle erreur de reprojection si disponible ;
+* temps total ;
+* mémoire approximative utilisée ;
+* statut final de COLMAP.
+
+NE PAS inventer de métriques.
+
+Si 0 caméra ou 0 point 3D :
+
+ce n'est PAS une réussite.
+
+Si seulement quelques images sont enregistrées :
+
+documenter le taux réel et déterminer si cela est acceptable.
+
+==================================================
+10. ANALYSE DU DATASET SYNTHÉTIQUE
+==================================
+
+Attention :
+
+Le dataset synthétique existant a été conçu principalement pour tester le pipeline.
+
+Il ne faut pas conclure qu'un échec sur ce dataset signifie automatiquement que la photogrammétrie CPU est impossible.
+
+Analyser les causes possibles :
+
+* mouvement caméra ;
+* texture ;
+* parallaxe ;
+* résolution ;
+* répétitivité ;
+* nombre d'images ;
+* trajectoire ;
+* qualité des images ;
+* scène trop simple ;
+* scène insuffisamment adaptée au SfM.
+
+Si nécessaire, créer un dataset synthétique amélioré MAIS uniquement si cela est nécessaire pour diagnostiquer le pipeline.
+
+Tout nouveau dataset doit être documenté.
+
+==================================================
+11. DEUXIÈME TEST SI LE PREMIER RÉUSSIT
+=======================================
+
+Si le premier SfM fonctionne :
+
+effectuer un deuxième test légèrement plus important.
+
+Par exemple :
+
+20 à 30 images.
+
+Comparer :
+
+* temps ;
+* RAM ;
+* nombre d'images enregistrées ;
+* points 3D ;
+* qualité ;
+* stabilité.
+
+NE PAS passer à MVS automatiquement.
+
+Cette phase reste centrée sur SfM.
+
+==================================================
+12. TEST AVEC UNE VRAIE VIDÉO
+=============================
+
+NE PAS utiliser automatiquement une vidéo utilisateur.
+
+Si aucune vraie vidéo Street View n'est disponible :
+
+rester sur le dataset synthétique.
+
+Si une vraie vidéo de test publique/non sensible est déjà disponible localement :
+
+elle peut être utilisée uniquement si son origine et son droit d'utilisation sont clairs.
+
+Sinon :
+
+NE PAS en chercher une automatiquement.
+
+La validation sur une vraie vidéo sera une étape séparée.
+
+==================================================
+13. RECONSTRUCTION ENGINE
+=========================
+
+Si et seulement si le test COLMAP CPU réussit réellement :
+
+implémenter ou finaliser l'adaptateur :
+
+CpuReconstructionEngine
+
+en utilisant l'abstraction ReconstructionEngine déjà préparée.
+
+IMPORTANT :
+
+Ne pas connecter automatiquement ce moteur à la production.
+
+Le moteur doit rester expérimental.
+
+Il doit pouvoir être appelé explicitement dans le laboratoire.
+
+Conceptuellement :
+
+ReconstructionEngine
+│
+└── CpuReconstructionEngine
+│
+└── COLMAP CPU
+
+Le futur :
+
+ReconstructionEngine
+│
+├── CpuReconstructionEngine
+│
+└── GpuReconstructionEngine
+(futur)
+
+==================================================
+14. ARTIFACTS
+=============
+
+Conserver uniquement les artefacts utiles au test.
+
+Par exemple :
+
+experiments/streetview-3d/runs/phase15-cpu-sfm/
+
+avec :
+
+input/
+database/
+sparse/
+logs/
+metrics/
+manifest.json
+
+Ne pas placer ces artefacts dans le stockage de production.
+
+Ne pas créer de Scene3D de production.
+
+==================================================
+15. AUCUNE PUBLICATION
+======================
+
+Même si le SfM réussit :
+
+NE PAS :
+
+* publier la scène ;
+* créer une entrée publique streetview_scenes ;
+* exposer le modèle à l'utilisateur ;
+* construire un viewer ;
+* modifier la carte publique ;
+* connecter le résultat à l'API de production.
+
+Le résultat reste expérimental.
+
+==================================================
+16. TESTS DE ROBUSTESSE
+=======================
+
+Tester les erreurs évidentes :
+
+* dossier vide ;
+* image corrompue ;
+* nombre insuffisant d'images ;
+* mauvaise extension ;
+* manque d'espace ;
+* processus interrompu ;
+* timeout si applicable.
+
+Le système doit échouer proprement.
+
+Aucune donnée partiellement produite ne doit être présentée comme une reconstruction valide.
+
+==================================================
+17. MESURE DU COÛT CPU
+======================
+
+Mesurer autant que possible :
+
+* durée ;
+* CPU utilisé ;
+* RAM maximale ou approximative ;
+* espace disque consommé ;
+* nombre d'images ;
+* nombre de points.
+
+Le but est d'établir une première estimation :
+
+PETITE SCÈNE
+→ CPU
+→ temps réel.
+
+Ne pas extrapoler artificiellement à 100 000 contributions.
+
+On fera les extrapolations uniquement à partir des mesures.
+
+==================================================
+18. DÉCISION CPU-FIRST
+======================
+
+À la fin, répondre précisément à :
+
+1. SfM CPU fonctionne-t-il ?
+2. Sur combien d'images ?
+3. Avec quelle consommation ?
+4. Avec quel temps de calcul ?
+5. Quelle qualité de reconstruction ?
+6. Quelles limites ?
+7. Est-ce suffisamment performant pour de petites scènes ?
+8. Quelles étapes nécessiteront probablement un GPU ?
+9. Le CPU peut-il servir de fallback ?
+10. Faut-il continuer CPU-first ?
+
+==================================================
+19. CRITÈRES DE VERDICT
+=======================
+
+GO :
+
+si une vraie reconstruction SfM CPU est produite avec des métriques cohérentes.
+
+GO WITH ADJUSTMENTS :
+
+si le pipeline fonctionne mais nécessite des ajustements importants.
+
+NO-GO :
+
+si COLMAP ne peut pas être exécuté proprement ou si la reconstruction réelle échoue pour une raison bloquante.
+
+IMPORTANT :
+
+Un NO-GO dû uniquement à une limitation de l'environnement Replit ne signifie PAS que le projet Street View est techniquement impossible.
+
+Il signifie :
+
+"Le runner CPU actuel ne permet pas de valider l'expérience."
+
+==================================================
+20. RAPPORT
+===========
+
+Créer :
+
+experiments/streetview-3d/PHASE_15_RESULT.md
+
+Le rapport doit contenir :
+
+# Phase 15 — CPU SfM
+
+## 1. Objectif
+
+## 2. Environnement
+
+* OS
+* CPU
+* RAM
+* disque
+* Python
+* FFmpeg
+* COLMAP
+
+## 3. Dataset
+
+* chemin
+* nombre d'images
+* résolution
+* taille
+
+## 4. Configuration COLMAP
+
+## 5. Test 1
+
+## 6. Résultats Test 1
+
+* images input
+* images enregistrées
+* caméras
+* points 3D
+* observations
+* reprojection error si disponible
+* durée
+* RAM
+
+## 7. Test 2
+
+si réalisé.
+
+## 8. Artefacts
+
+## 9. Problèmes rencontrés
+
+## 10. Analyse
+
+## 11. Limites CPU
+
+## 12. Architecture ReconstructionEngine
+
+## 13. Décision
+
+## 14. Recommandation Phase 16
+
+==================================================
+21. CONTRÔLES FINAUX
+====================
+
+Exécuter :
+
+npm run check
+
+npm run test:streetview
+
+git diff --check
+
+npm run build
+
+Si un test échoue :
+
+le documenter.
+
+Ne pas masquer l'erreur.
+
+==================================================
+22. GIT DIFF
+============
+
+À la fin :
+
+inspecter précisément :
+
+git diff --stat
+git diff --check
+
+Lister les fichiers modifiés.
+
+Aucune modification inutile.
+
+==================================================
+23. RÈGLE ABSOLUE
+=================
+
+Cette phase est une EXPÉRIENCE SCIENTIFIQUE ET TECHNIQUE.
+
+NE PAS SIMULER COLMAP.
+
+NE PAS SIMULER SfM.
+
+NE PAS SIMULER DE POINTS 3D.
+
+NE PAS SIMULER DE CAMÉRAS.
+
+NE PAS INVENTER DE MÉTRIQUES.
+
+NE PAS créer une scène fictive pour obtenir un GO.
+
+NE PAS utiliser de GPU.
+
+NE PAS utiliser de données utilisateur.
+
+NE PAS toucher à Railway.
+
+NE PAS appliquer la migration 0010 en production.
+
+NE PAS déployer.
+
+NE PAS publier.
+
+NE PAS commencer MVS.
+
+NE PAS commencer 3DGS.
+
+NE PAS commencer la fusion de scènes.
+
+NE PAS commencer le viewer.
+
+NE PAS lancer automatiquement la Phase 16.
+
+À la fin, produire uniquement le rapport :
+
+experiments/streetview-3d/PHASE_15_RESULT.md
+
+et attendre la validation humaine.
