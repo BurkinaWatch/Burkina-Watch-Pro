@@ -49,6 +49,10 @@ async function commandExists(command: string): Promise<boolean> {
  * storage, contribution API, or scene contract.
  */
 export class CpuReconstructionEngine implements ReconstructionEngine {
+  constructor(
+    private readonly commandExistsFn: (command: string) => Promise<boolean> = commandExists,
+  ) {}
+
   async getAvailability(): Promise<ReconstructionAvailability> {
     if (process.env.STREETVIEW_CPU_SFM_ENABLED !== "true") {
       return {
@@ -57,7 +61,7 @@ export class CpuReconstructionEngine implements ReconstructionEngine {
       };
     }
 
-    if (!(await commandExists("colmap"))) {
+    if (!(await this.commandExistsFn("colmap"))) {
       return {
         status: "UNAVAILABLE",
         reason: "COLMAP n'est pas installé dans cet environnement CPU.",

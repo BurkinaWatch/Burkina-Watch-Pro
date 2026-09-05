@@ -9,6 +9,25 @@ import {
   retryDelayMs,
 } from "./streetviewProcessing";
 
+export type StreetviewPreparationWaitingState =
+  | "WAITING_FOR_RECONSTRUCTION"
+  | "WAITING_FOR_GPU";
+
+export function resolveStreetviewPreparationWaitingState(
+  availability: { status: "AVAILABLE" | "WAITING_FOR_GPU" | "UNAVAILABLE" },
+): StreetviewPreparationWaitingState {
+  return availability.status === "WAITING_FOR_GPU"
+    ? "WAITING_FOR_GPU"
+    : "WAITING_FOR_RECONSTRUCTION";
+}
+
+export function isStreetviewContributionCpuPrepared(status: string, processedAt: Date | null): boolean {
+  return (
+    ["WAITING_FOR_RECONSTRUCTION", "WAITING_FOR_GPU", "WAITING_FOR_3D"].includes(status) &&
+    Boolean(processedAt)
+  );
+}
+
 const numberFromEnv = (name: string, fallback: number, minimum: number): number => {
   const value = Number(process.env[name]);
   return Number.isFinite(value) && value >= minimum ? value : fallback;
@@ -57,10 +76,7 @@ export class StreetviewWorker {
       const contribution = await storage.getStreetviewContribution(job.contributionId);
       if (!contribution) throw new Error("FILE_NOT_FOUND");
 
-      if (
-        ["WAITING_FOR_RECONSTRUCTION", "WAITING_FOR_GPU", "WAITING_FOR_3D"].includes(contribution.status) &&
-        contribution.processedAt
-      ) {
+      if (isStreetviewContributionCpuPrepared(contribution.status, contribution.processedAt)) {
         await storage.updateStreetviewProcessingJob(job.id, {
           status: "COMPLETED",
           progress: 100,
@@ -112,9 +128,7 @@ export class StreetviewWorker {
         contribution.storageKey,
       );
       const reconstructionAvailability = await cpuReconstructionEngine.getAvailability();
-      const nextStatus = reconstructionAvailability.status === "WAITING_FOR_GPU"
-        ? "WAITING_FOR_GPU"
-        : "WAITING_FOR_RECONSTRUCTION";
+      const nextStatus = resolveStreetviewPreparationWaitingState(reconstructionAvailability);
       const preparationMessage = reconstructionAvailability.status === "WAITING_FOR_GPU"
         ? `${cpuPreparation.message} ${reconstructionAvailability.reason}`
         : cpuPreparation.message;
