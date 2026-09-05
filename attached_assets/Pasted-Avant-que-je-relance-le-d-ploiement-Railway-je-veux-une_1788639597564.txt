@@ -1,0 +1,73 @@
+Avant que je relance le déploiement Railway, je veux une vérification finale et factuelle.
+
+Ne modifie aucun fichier pour le moment.
+
+Le dernier problème Railway était :
+
+sh: 1: vite: not found
+
+La tentative de correction avec :
+
+rm -rf node_modules && NPM_CONFIG_PRODUCTION=false npm ci --include=dev --legacy-peer-deps && npm run build
+
+a ensuite échoué avec :
+
+rm: cannot remove 'node_modules/.vite': Device or resource busy
+
+Nous avons donc décidé de NE PAS supprimer node_modules manuellement et de laisser Railpack/Railway gérer l'installation des dépendances.
+
+Je veux maintenant que tu vérifies uniquement les points suivants :
+
+1. Dans package.json :
+
+   * confirme que vite est présent ;
+   * donne sa version exacte ;
+   * indique s'il est dans dependencies ou devDependencies.
+
+2. Dans package-lock.json :
+
+   * confirme que vite est bien verrouillé ;
+   * vérifie que l'installation est cohérente avec package.json.
+
+3. Vérifie la configuration actuelle de build et détermine si Railpack/Nixpacks installe les devDependencies avant l'exécution de npm run build.
+
+4. Vérifie qu'aucun fichier de configuration du projet ne force :
+   NPM_CONFIG_PRODUCTION=true
+   ou
+   npm install --omit=dev
+   ou toute autre configuration qui supprimerait les devDependencies pendant le BUILD.
+
+5. Vérifie également que la commande de build actuelle reste bien :
+
+npm run build
+
+et que le script build contient bien :
+
+vite build
+
+6. Si possible, reproduis une installation propre SANS supprimer manuellement node_modules du cache Railway, puis vérifie :
+
+npm list vite
+npx vite --version
+npm run build
+
+7. Ne modifie rien pendant cette vérification.
+
+À la fin, réponds sous cette forme :
+
+VITE DANS PACKAGE.JSON : OUI/NON
+VERSION VITE :
+TYPE : dependencies/devDependencies
+VITE DANS PACKAGE-LOCK : OUI/NON
+DEV DEPENDENCIES DISPONIBLES AU BUILD : OUI/NON
+CONFIGURATION QUI LES SUPPRIME : OUI/NON
+npm list vite :
+npx vite --version :
+npm run build :
+CONCLUSION :
+
+Si tout est cohérent, dis-moi explicitement :
+
+« La configuration peut être redéployée sur Railway avec Build Command = npm run build et Start Command = npm run start. »
+
+Si quelque chose est incohérent, NE LE CORRIGE PAS encore. Signale-moi précisément ce qui doit être corrigé.
