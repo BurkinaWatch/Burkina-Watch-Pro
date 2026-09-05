@@ -16,6 +16,7 @@ import {
   insertLocationPointSchema, 
   insertEmergencyContactSchema, 
   insertChatMessageSchema,
+  ouaga3dSceneTiles,
   streetviewScenes,
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
@@ -4133,14 +4134,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const tiles = await db
         .select()
+        .from(ouaga3dSceneTiles)
+        .orderBy(ouaga3dSceneTiles.updatedAt)
+        .limit(200);
+      res.json(
+        tiles.filter((tile) => tile.status === "completed" && Boolean(tile.tileUrl)),
+      );
+    } catch (error) {
+      console.error("Erreur récupération scènes StreetView:", error);
+      res.status(500).json({ message: "Impossible de récupérer les scènes disponibles." });
+    }
+  });
+
+  app.get("/api/streetview/reconstructed-scenes", isAuthenticated, async (_req, res) => {
+    try {
+      const scenes = await db
+        .select()
         .from(streetviewScenes)
         .where(eq(streetviewScenes.publicationStatus, "PUBLISHED"))
         .orderBy(streetviewScenes.createdAt)
         .limit(200);
-      res.json(tiles);
+      res.json(scenes);
     } catch (error) {
-      console.error("Erreur récupération scènes StreetView:", error);
-      res.status(500).json({ message: "Impossible de récupérer les scènes disponibles." });
+      console.error("Erreur récupération scènes reconstruites StreetView:", error);
+      res.status(500).json({ message: "Les scènes reconstruites ne sont pas encore disponibles." });
     }
   });
 

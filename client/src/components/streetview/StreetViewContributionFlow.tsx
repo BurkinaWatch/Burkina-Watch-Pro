@@ -296,7 +296,7 @@ export default function StreetViewContributionFlow() {
     refetchInterval: mode === "home" ? 10000 : false,
   });
   const { data: scenes = [], isLoading: scenesLoading } = useQuery<Scene[]>({
-    queryKey: ["/api/streetview/scenes"],
+    queryKey: ["/api/streetview/reconstructed-scenes"],
     queryFn: getQueryFn({ on401: "throw" }),
     enabled: mode === "explore",
   });
