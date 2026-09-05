@@ -42,3 +42,17 @@ mtime_ms = 1788589302866
 storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:766d3c29-01ad-41d8-90b6-ccbc39f09e61/92051be6-3a3f-4da5-90b9-315187097ceb/b1df69d6-7917-4ded-9dd5-c11e815d4dae"
 storage_version_token = "1788589622061916"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "mnV7C0YjY22924_XH4jX0"
+uri = "file://experiments/railway/RAILWAY_NPM_VITE_BUILD_DIAGNOSTIC_2026-09-05.md"
+type = "text"
+title = "Diagnostic Railway npm/Vite — 5 septembre 2026"
+description = "Rapport complet en lecture seule sur l’absence de Vite dans l’environnement Railway, l’erreur Exit handler never called!, les vérifications locales et le diagnostic temporaire recommandé."
+logical_id = "51824d8a-a774-4992-9d1c-7c35386b3b80"
+content_hash = "sha256:def2cbf7d6025ee8af3cf335f2172fa54d510df36bbae1ebbc38435d91169567"
+size = 10559
+mtime_ms = 1788602770430
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:766d3c29-01ad-41d8-90b6-ccbc39f09e61/51824d8a-a774-4992-9d1c-7c35386b3b80/2078fdbc-cce4-49a7-ba29-7475eb5b49db"
+storage_version_token = "1788602776065052"
+content_type = "text/markdown"
