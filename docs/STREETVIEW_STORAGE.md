@@ -139,7 +139,8 @@ n'y a donc pas de copie applicative à exécuter pour l'environnement de dévelo
 - la reprise après fermeture complète du navigateur n'est pas encore persistée dans
   l'interface ; la session multipart est signée et temporaire ;
 - la validation vidéo vérifie le conteneur et la taille, mais la durée/résolution
-  proviennent encore des métadonnées client jusqu'à l'arrivée d'un worker média ;
+  restent issues des métadonnées client tant qu'un outil média compatible n'est pas
+  disponible dans l'environnement Railway ;
 - la configuration CORS et lifecycle doit être appliquée côté fournisseur ;
 - le vrai worker de traitement 3D reste volontairement hors de cette étape.
 

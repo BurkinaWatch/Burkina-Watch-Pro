@@ -62,7 +62,21 @@ vers le bucket via des URLs présignées, puis Express vérifie l'objet final. L
 filesystem reste réservé au développement. La configuration et le runbook sont
 documentés dans [`docs/STREETVIEW_STORAGE.md`](docs/STREETVIEW_STORAGE.md).
 
-La migration additive est `migrations/0008_streetview_contributions.sql`.
+La préparation asynchrone est découplée de l'API : la finalisation crée un job
+PostgreSQL, puis un worker Railway séparé le verrouille avec
+`FOR UPDATE SKIP LOCKED`. Il valide l'objet, met à jour la progression et
+s'arrête à `WAITING_FOR_3D`; aucun moteur 3D n'est lancé. Construire avec
+`npm run build`, puis exécuter le service worker avec `npm run start:worker`.
+
+Les migrations additives sont `migrations/0008_streetview_contributions.sql` et
+`migrations/0009_streetview_processing_queue.sql`. La Phase 5 s'applique après
+la migration initiale avec :
+
+```bash
+ALLOW_RAILWAY_STREETVIEW_MIGRATION=true \
+  npm run db:railway:apply-streetview-phase5
+```
+
 Après sauvegarde et validation de la cible, elle peut être appliquée avec :
 
 ```bash
