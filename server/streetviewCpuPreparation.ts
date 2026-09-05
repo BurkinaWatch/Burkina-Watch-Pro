@@ -48,6 +48,15 @@ async function runCommand(command: string, args: string[]): Promise<string> {
   return result.stdout;
 }
 
+type RunCommand = (command: string, args: string[]) => Promise<string>;
+
+export type StreetviewCpuPreparationDependencies = {
+  readObject?: (key: string) => Promise<Buffer>;
+  writeBuffer?: (key: string, content: Buffer) => Promise<void>;
+  runCommand?: RunCommand;
+  createTempRoot?: () => Promise<string>;
+};
+
 async function probeVideo(inputPath: string): Promise<{
   probe: ProbeResult;
   stream: VideoStream | undefined;
@@ -75,20 +84,26 @@ function keyframeStorageKey(contributionId: string, fileName: string): string {
 export async function runStreetviewCpuPreparation(
   contributionId: string,
   storageKey: string,
+  dependencies: StreetviewCpuPreparationDependencies = {},
 ): Promise<StreetviewCpuPreparationResult> {
-  const tempRoot = await mkdtemp(path.join(os.tmpdir(), "streetview-cpu-"));
+  const readObject = dependencies.readObject ?? readStreetviewObject;
+  const writeBuffer = dependencies.writeBuffer ?? writeStreetviewBuffer;
+  const executeCommand = dependencies.runCommand ?? runCommand;
+  const createTempRoot = dependencies.createTempRoot ??
+    (() => mkdtemp(path.join(os.tmpdir(), "streetview-cpu-")));
+  const tempRoot = await createTempRoot();
   const inputPath = path.join(tempRoot, "source-video");
   const framesPath = path.join(tempRoot, "frames");
   const artifactKeys: string[] = [];
 
   try {
-    const source = await readStreetviewObject(storageKey);
+    const source = await readObject(storageKey);
     await writeFile(inputPath, source, { flag: "wx" });
 
     let probe: ProbeResult;
     let stream: VideoStream | undefined;
     try {
-      ({ probe, stream } = await probeVideo(inputPath));
+      ({ probe, stream } = await probeVideo(inputPath, executeCommand));
     } catch (error: any) {
       if (error?.code === "ENOENT") {
         return {
@@ -139,7 +154,7 @@ export async function runStreetviewCpuPreparation(
     await mkdir(framesPath, { recursive: true });
 
     try {
-      await runCommand("ffmpeg", [
+      await executeCommand("ffmpeg", [
         "-hide_banner",
         "-loglevel",
         "error",
@@ -172,7 +187,7 @@ export async function runStreetviewCpuPreparation(
     for (const frameFile of frameFiles) {
       const frame = await readFile(path.join(framesPath, frameFile));
       const key = keyframeStorageKey(contributionId, frameFile);
-      await writeStreetviewBuffer(key, frame);
+      await writeBuffer(key, frame);
       artifactKeys.push(key);
     }
 
