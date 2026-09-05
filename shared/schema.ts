@@ -683,6 +683,39 @@ export const streetviewProcessingJobs = pgTable("streetview_processing_jobs", {
   index("streetview_jobs_status_idx").on(table.status, table.availableAt),
 ]);
 
+// A scene row is created only after a real reconstruction artifact exists.
+// Intermediate files remain in the configured object storage, never in PostgreSQL.
+export const streetviewScenes = pgTable("streetview_scenes", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  contributionId: text("contribution_id").notNull().references(() => streetviewContributions.id, { onDelete: "cascade" }),
+  reconstructionEngine: text("reconstruction_engine").notNull(),
+  engineVersion: text("engine_version").notNull(),
+  sourceCaptureId: text("source_capture_id").notNull(),
+  boundingBox: jsonb("bounding_box"),
+  coordinateReference: text("coordinate_reference"),
+  qualityMetrics: jsonb("quality_metrics"),
+  temporalVersion: text("temporal_version"),
+  publicationStatus: text("publication_status").notNull().default("DRAFT"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  publishedAt: timestamp("published_at"),
+}, (table) => [
+  index("streetview_scenes_contribution_idx").on(table.contributionId, table.createdAt),
+  index("streetview_scenes_publication_idx").on(table.publicationStatus, table.createdAt),
+]);
+
+export const streetviewSceneArtifacts = pgTable("streetview_scene_artifacts", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  sceneId: text("scene_id").notNull().references(() => streetviewScenes.id, { onDelete: "cascade" }),
+  kind: text("kind").notNull(),
+  storageKey: text("storage_key").notNull(),
+  contentType: text("content_type"),
+  byteSize: integer("byte_size"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("streetview_scene_artifacts_scene_idx").on(table.sceneId, table.kind),
+]);
+
 export const insertStreetviewContributionSchema = createInsertSchema(streetviewContributions).omit({
   id: true,
   status: true,
@@ -692,6 +725,13 @@ export const insertStreetviewContributionSchema = createInsertSchema(streetviewC
   storageKey: true,
   thumbnailKey: true,
   fileSizeBytes: true,
+  capturedAt: true,
+  locationAccuracyM: true,
+  altitudeM: true,
+  locationSource: true,
+  locationCapturedAt: true,
+  temporalVersion: true,
+  qualityMetrics: true,
   uploadedAt: true,
   processedAt: true,
   createdAt: true,
@@ -720,6 +760,8 @@ export type InsertStreetviewContribution = z.infer<typeof insertStreetviewContri
 export type StreetviewContribution = typeof streetviewContributions.$inferSelect;
 export type InsertStreetviewProcessingJob = z.infer<typeof insertStreetviewProcessingJobSchema>;
 export type StreetviewProcessingJob = typeof streetviewProcessingJobs.$inferSelect;
+export type StreetviewScene = typeof streetviewScenes.$inferSelect;
+export type StreetviewSceneArtifact = typeof streetviewSceneArtifacts.$inferSelect;
 
 // ============================================
 // OUAGA EN 3D - Modèles de données
