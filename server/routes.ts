@@ -40,7 +40,6 @@ import {
   writeStreetviewBuffer,
   writeStreetviewDataUrl,
 } from "./streetviewStorage";
-import { runStreetviewStoredObjectPreparation } from "./streetviewPreparationService";
 import {
   issueStreetviewUploadSession,
   verifyStreetviewUploadSession,
@@ -4463,17 +4462,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         contributionId: contribution.id,
         type: "PREPARE_CONTRIBUTION",
       });
-      setImmediate(() => {
-        runStreetviewStoredObjectPreparation(
-          job.id,
-          contribution.id,
-          session!.storageKey,
-          session!.mimeType,
-        ).catch((error) => {
-          console.error("Erreur job préparation StreetView:", error);
-        });
-      });
-
       return res.status(202).json({
         id: contribution.id,
         status: updated?.status || "UPLOADED",
@@ -4586,17 +4574,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           contributionId: contribution.id,
           type: "PREPARE_CONTRIBUTION",
         });
-        setImmediate(() => {
-          runStreetviewStoredObjectPreparation(
-            job.id,
-            contribution.id,
-            storageKey,
-            mimeType,
-          ).catch((error) => {
-            console.error("Erreur job préparation StreetView:", error);
-          });
-        });
-
         res.status(202).json({
           id: contribution.id,
           status: updated?.status || "UPLOADED",

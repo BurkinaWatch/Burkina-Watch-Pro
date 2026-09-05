@@ -1994,7 +1994,24 @@ L'équipe Burkina Watch
           updated_at = ${now}
       FROM candidate
       WHERE job.id = candidate.id
-      RETURNING job.*;
+      RETURNING
+        job.id AS id,
+        job.contribution_id AS "contributionId",
+        job.type AS type,
+        job.status AS status,
+        job.progress AS progress,
+        job.attempts AS attempts,
+        job.max_attempts AS "maxAttempts",
+        job.error_code AS "errorCode",
+        job.error_message AS "errorMessage",
+        job.available_at AS "availableAt",
+        job.created_at AS "createdAt",
+        job.started_at AS "startedAt",
+        job.completed_at AS "completedAt",
+        job.locked_at AS "lockedAt",
+        job.lease_until AS "leaseUntil",
+        job.locked_by AS "lockedBy",
+        job.updated_at AS "updatedAt";
     `);
     return result.rows[0] as StreetviewProcessingJob | undefined;
   }

@@ -10,8 +10,10 @@
   "packageManager": "npm@10.8.2",
   "scripts": {
     "dev": "NODE_ENV=development npx tsx server/index.ts",
-    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "dev:worker": "NODE_ENV=development npx tsx server/streetviewWorkerMain.ts",
+    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && esbuild server/streetviewWorkerMain.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/streetview-worker.js",
     "start": "NODE_ENV=production node dist/index.js",
+    "start:worker": "NODE_ENV=production node dist/streetview-worker.js",
     "check": "tsc",
     "phase5:gateway:up": "docker compose -f docker-compose.phase5.yml up -d",
     "phase5:gateway:down": "docker compose -f docker-compose.phase5.yml down",
@@ -20,6 +22,7 @@
     "db:railway:preflight": "node scripts/railway-migration-preflight.mjs",
     "db:railway:apply-surveillance": "node scripts/apply-railway-surveillance.mjs",
     "db:railway:apply-streetview": "node scripts/apply-railway-streetview.mjs",
+    "db:railway:apply-streetview-phase5": "node scripts/apply-railway-streetview-phase5.mjs",
     "db:push": "node scripts/db-push-blocked.mjs"
   },
   "dependencies": {

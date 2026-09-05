@@ -90,6 +90,24 @@ function validateVideoMetadata(
   }
 }
 
+export async function inspectStreetviewStoredObject(
+  storageKey: string,
+  mimeType: string,
+): Promise<{
+  fileSizeBytes: number;
+  contentType: string | null;
+  etag: string | null;
+}> {
+  const head = await headStreetviewObject(storageKey);
+  const header = await readStreetviewObjectRange(storageKey, 0, 63);
+  validateVideoMetadata(header, mimeType, head.contentLength);
+  return {
+    fileSizeBytes: head.contentLength,
+    contentType: head.contentType,
+    etag: head.etag,
+  };
+}
+
 export async function runStreetviewPreparation(
   jobId: string,
   contributionId: string,
@@ -111,8 +129,6 @@ export async function runStreetviewStoredObjectPreparation(
   mimeType: string,
 ): Promise<void> {
   await finishPreparation(jobId, contributionId, async () => {
-    const head = await headStreetviewObject(storageKey);
-    const header = await readStreetviewObjectRange(storageKey, 0, 63);
-    validateVideoMetadata(header, mimeType, head.contentLength);
+    await inspectStreetviewStoredObject(storageKey, mimeType);
   });
 }
