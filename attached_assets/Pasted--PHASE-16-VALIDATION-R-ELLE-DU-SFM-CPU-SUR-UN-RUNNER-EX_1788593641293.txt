@@ -1,0 +1,858 @@
+# PHASE 16 — VALIDATION RÉELLE DU SFM CPU SUR UN RUNNER EXTERNE ISOLÉ
+
+## CONTEXTE
+
+Nous avons terminé la Phase 15.
+
+Le verdict de la Phase 15 est :
+
+```text
+NO-GO dans l'environnement CPU actuel
+```
+
+Ce verdict ne signifie PAS que COLMAP/SfM CPU est techniquement impossible.
+
+La cause exacte du blocage est :
+
+```text
+COLMAP absent du runner Replit
+```
+
+L'environnement Replit actuel dispose notamment de :
+
+* Linux x86_64
+* 4 vCPU
+* environ 7.8 GiB RAM
+* aucun GPU NVIDIA
+* FFmpeg 6.1.2
+* FFprobe 6.1.2
+* Docker 27.5.1
+* aucun binaire COLMAP
+* installation Nix COLMAP précédemment bloquée par une dépendance FreeImage vulnérable
+
+Aucun contournement de sécurité ne doit être utilisé.
+
+Nous voulons maintenant répondre à une question très précise :
+
+```text
+Peut-on exécuter une première reconstruction SfM réelle de notre dataset
+synthétique sur CPU dans un environnement externe, isolé et reproductible ?
+```
+
+IMPORTANT :
+
+Cette phase est une EXPÉRIENCE DE LABORATOIRE.
+
+Elle ne doit PAS modifier ou connecter la production BurkinaWatch.
+
+---
+
+# 1. RÈGLE ABSOLUE : NE PAS TOUCHER À LA PRODUCTION
+
+Pendant toute cette phase :
+
+INTERDIT :
+
+* modifier l'application BurkinaWatch ;
+* modifier le frontend Street View ;
+* modifier l'API de production ;
+* modifier PostgreSQL ;
+* appliquer la migration 0010 ;
+* modifier Railway ;
+* modifier les secrets ;
+* modifier les variables de production ;
+* connecter un worker externe à la queue de production ;
+* créer une scène `streetview_scenes` ;
+* publier une scène ;
+* modifier la carte publique ;
+* créer un viewer 3D public ;
+* envoyer des données utilisateur vers le laboratoire ;
+* lancer MVS ;
+* lancer 3DGS ;
+* lancer une fusion de scènes.
+
+Le laboratoire doit fonctionner uniquement avec le dataset synthétique existant.
+
+Si une action risque de toucher la production :
+
+```text
+STOP
+```
+
+et documente le risque au lieu de continuer.
+
+---
+
+# 2. LIRE LES RAPPORTS PRÉCÉDENTS
+
+Avant toute action, lire au minimum :
+
+```text
+experiments/streetview-3d/PHASE_7*
+experiments/streetview-3d/PHASE_8_RESULT.md
+experiments/streetview-3d/PHASE_9_RESULT.md
+experiments/streetview-3d/PHASE_10_RESULT.md
+experiments/streetview-3d/PHASE_11_RESULT.md
+experiments/streetview-3d/PHASE_12_RESULT.md
+experiments/streetview-3d/PHASE_14_RESULT.md
+experiments/streetview-3d/PHASE_15_RESULT.md
+```
+
+Lire également les fichiers présents dans :
+
+```text
+experiments/streetview-3d/gpu-lab/
+```
+
+si disponibles.
+
+Comprendre précisément ce qui existe déjà avant de créer quoi que ce soit.
+
+Ne pas réinventer les artefacts déjà présents.
+
+---
+
+# 3. OBJECTIF TECHNIQUE UNIQUE
+
+Le pipeline à tester est strictement :
+
+```text
+12 JPEG
+   ↓
+COLMAP feature extraction
+   ↓
+COLMAP matching
+   ↓
+COLMAP mapper
+   ↓
+SPARSE MODEL
+```
+
+La phase s'arrête après le SfM sparse.
+
+NE PAS faire :
+
+```text
+dense reconstruction
+MVS
+meshing
+3D Gaussian Splatting
+NeRF
+fusion
+georeferencing
+publication
+```
+
+Ces étapes appartiennent à des phases ultérieures.
+
+---
+
+# 4. ENVIRONNEMENT CPU EXTERNE
+
+Nous voulons utiliser un environnement externe au runner Replit.
+
+L'environnement cible devrait idéalement disposer de :
+
+```text
+4 à 8 vCPU
+16 à 32 GB RAM
+20+ GB espace disque
+Linux x86_64
+Docker disponible si possible
+aucun GPU nécessaire
+```
+
+L'objectif n'est PAS de rechercher la machine la plus puissante.
+
+Nous voulons simplement un environnement suffisamment propre pour valider COLMAP CPU.
+
+Si aucune machine externe n'est automatiquement accessible depuis Replit :
+
+```text
+NE PAS inventer de credentials.
+NE PAS inventer une connexion cloud.
+NE PAS prétendre qu'un serveur a été provisionné.
+```
+
+Dans ce cas :
+
+1. documenter précisément le blocage ;
+2. préparer tous les fichiers nécessaires au laboratoire ;
+3. fournir la procédure manuelle exacte ;
+4. arrêter la phase avec :
+
+```text
+BLOCKED_EXTERNAL_CPU_RUNNER_REQUIRED
+```
+
+---
+
+# 5. PROVIDER
+
+Avant toute dépense, comparer brièvement les solutions réalistes pour un laboratoire CPU temporaire.
+
+Comparer au minimum :
+
+* coût horaire ;
+* nombre de CPU ;
+* RAM ;
+* stockage ;
+* disponibilité ;
+* possibilité Docker ;
+* facilité de destruction ;
+* possibilité de conserver les logs ;
+* absence de GPU obligatoire.
+
+Ne pas inventer de prix.
+
+Si les prix doivent être vérifiés, utiliser les informations actuelles réellement disponibles.
+
+Le laboratoire doit être temporaire.
+
+Ne pas créer de serveur permanent.
+
+Ne pas engager de dépense récurrente.
+
+Si une carte bancaire ou une authentification humaine est nécessaire :
+
+```text
+STOP
+```
+
+et demander à l'utilisateur de réaliser cette étape manuellement.
+
+---
+
+# 6. ENVIRONNEMENT REPRODUCTIBLE
+
+Créer ou compléter :
+
+```text
+experiments/streetview-3d/cpu-lab/
+```
+
+avec au minimum :
+
+```text
+README.md
+Dockerfile
+verify.sh
+versions.env.example
+.gitignore
+```
+
+Si une image Docker COLMAP stable et reproductible peut être utilisée légalement et proprement, privilégier cette solution.
+
+Sinon installer COLMAP dans le runner externe selon une méthode documentée.
+
+NE PAS utiliser :
+
+```text
+NIXPKGS_ALLOW_INSECURE=1
+```
+
+NE PAS désactiver une protection de sécurité.
+
+NE PAS installer arbitrairement des paquets non vérifiés simplement pour faire passer le test.
+
+Documenter :
+
+* OS ;
+* architecture ;
+* CPU ;
+* RAM ;
+* Docker ;
+* version COLMAP ;
+* version CMake si compilation ;
+* version GCC/Clang si nécessaire ;
+* dépendances ;
+* méthode d'installation.
+
+---
+
+# 7. VÉRIFICATION AVANT TEST
+
+Avant de copier le dataset :
+
+exécuter réellement :
+
+```bash
+uname -a
+uname -m
+lscpu
+free -h
+df -h
+docker --version
+colmap -h
+```
+
+et, si disponible :
+
+```bash
+colmap help
+```
+
+ou une commande équivalente permettant d'identifier clairement la version.
+
+Ne jamais écrire une version supposée.
+
+Toutes les versions du rapport doivent provenir de commandes réellement exécutées.
+
+---
+
+# 8. COPIER UNIQUEMENT LE DATASET SYNTHÉTIQUE
+
+Utiliser uniquement :
+
+```text
+experiments/streetview-3d/runs/phase7b-on-synthetic-v2/frames/
+```
+
+Le dataset attendu contient :
+
+```text
+12 JPEG
+640×360
+295617 octets cumulés environ
+```
+
+Vérifier réellement les fichiers.
+
+Ne pas envoyer :
+
+* vidéos utilisateur ;
+* données personnelles ;
+* fichiers de production ;
+* secrets ;
+* credentials ;
+* base de données.
+
+Si le transfert vers le runner externe n'est pas possible automatiquement :
+
+préparer une archive minimale contenant uniquement les 12 JPEG et documenter la procédure de transfert manuel.
+
+---
+
+# 9. TEST SFM N°1
+
+Exécuter un véritable pipeline COLMAP CPU.
+
+Objectif :
+
+```text
+images
+→ feature extraction
+→ matching
+→ mapper
+→ sparse reconstruction
+```
+
+Utiliser une configuration conservatrice adaptée au CPU disponible.
+
+Documenter précisément :
+
+* nombre de threads ;
+* modèle de caméra ;
+* type de features ;
+* type de matching ;
+* paramètres importants ;
+* version COLMAP ;
+* durée de chaque étape.
+
+IMPORTANT :
+
+Il faut réellement exécuter les commandes.
+
+Ne jamais simuler le résultat.
+
+Ne jamais écrire :
+
+```text
+12 images registered
+```
+
+si COLMAP n'a pas réellement produit ce résultat.
+
+---
+
+# 10. FEATURE EXTRACTION
+
+Exécuter réellement COLMAP feature extraction.
+
+Conserver :
+
+* stdout ;
+* stderr ;
+* durée ;
+* erreurs ;
+* nombre de features si disponible ;
+* nombre d'images traitées.
+
+Si cette étape échoue :
+
+```text
+STOP
+```
+
+et documenter :
+
+```text
+FEATURE_EXTRACTION_FAILED
+```
+
+avec l'erreur exacte.
+
+Ne pas passer artificiellement au matching.
+
+---
+
+# 11. MATCHING
+
+Si l'extraction réussit :
+
+exécuter réellement le matching.
+
+Pour 12 images, un matching exhaustif est acceptable pour ce laboratoire.
+
+Mesurer :
+
+* durée ;
+* nombre de paires ;
+* nombre de correspondances si disponible ;
+* erreurs ;
+* consommation mémoire si mesurable.
+
+---
+
+# 12. MAPPER / SPARSE RECONSTRUCTION
+
+Si le matching réussit :
+
+exécuter réellement :
+
+```text
+COLMAP mapper
+```
+
+Objectif :
+
+obtenir un véritable modèle sparse.
+
+Après exécution, vérifier physiquement les fichiers produits.
+
+Selon la sortie COLMAP, inspecter notamment :
+
+```text
+cameras
+images
+points3D
+```
+
+ou leurs équivalents dans la version utilisée.
+
+---
+
+# 13. MÉTRIQUES OBLIGATOIRES
+
+Si un modèle sparse est produit, mesurer réellement :
+
+```text
+images input
+images registered
+registration ratio
+number of cameras
+number of 3D points
+number of observations
+reprojection error
+number of sparse models
+feature extraction time
+matching time
+mapper time
+total SfM time
+peak RAM si mesurable
+CPU utilisé
+```
+
+Si une métrique n'est pas disponible :
+
+```text
+NOT_MEASURED
+```
+
+Ne jamais mettre zéro par défaut.
+
+---
+
+# 14. VALIDATION DU MODÈLE
+
+Un simple code retour `0` ne suffit pas.
+
+Vérifier que le modèle sparse est réellement exploitable.
+
+Contrôler :
+
+* existence des fichiers du modèle ;
+* cohérence cameras/images/points3D ;
+* nombre réel d'images enregistrées ;
+* présence de points 3D ;
+* observations cohérentes ;
+* erreur de reprojection raisonnable ;
+* absence de fichiers vides ou corrompus.
+
+Si possible, utiliser les outils COLMAP pour inspecter le modèle.
+
+Ne pas fabriquer de visualisation si aucun modèle réel n'existe.
+
+---
+
+# 15. TEST SFM N°2
+
+Le test 2 ne doit être réalisé QUE si le test 1 réussit.
+
+Créer un deuxième jeu expérimental de :
+
+```text
+20 à 30 images
+```
+
+à partir de la vidéo synthétique originale si nécessaire.
+
+Conserver le même protocole.
+
+Objectif :
+
+déterminer si le pipeline reste stable lorsque le nombre d'images augmente.
+
+Mesurer les mêmes métriques.
+
+Comparer :
+
+```text
+12 images
+vs
+20–30 images
+```
+
+Ne pas tirer de conclusion statistique excessive avec seulement deux petits tests.
+
+---
+
+# 16. TEST DE ROBUSTESSE MINIMAL
+
+Si le SfM principal fonctionne, tester ensuite séparément :
+
+### Cas A
+
+Dossier vide.
+
+Attendu :
+
+```text
+échec propre
+```
+
+### Cas B
+
+Une image JPEG invalide.
+
+Attendu :
+
+```text
+erreur explicite
+pas de crash silencieux
+```
+
+### Cas C
+
+Interruption du processus si cela peut être testé sans risque.
+
+Attendu :
+
+```text
+processus interrompu proprement
+artefacts partiels identifiables
+```
+
+Ne pas simuler un succès.
+
+---
+
+# 17. STOCKAGE DES ARTEFACTS
+
+Tous les résultats doivent rester dans :
+
+```text
+experiments/streetview-3d/runs/phase16-cpu-sfm/
+```
+
+Prévoir une structure du type :
+
+```text
+phase16-cpu-sfm/
+├── input/
+├── test-01/
+│   ├── database/
+│   ├── sparse/
+│   ├── logs/
+│   └── metrics.json
+├── test-02/
+│   ├── database/
+│   ├── sparse/
+│   ├── logs/
+│   └── metrics.json
+└── report/
+```
+
+Ne pas stocker de données sensibles.
+
+Ne pas connecter ce répertoire au stockage de production.
+
+---
+
+# 18. RECONSTRUCTION ENGINE
+
+Si le premier SfM réel fonctionne :
+
+auditer l'abstraction existante :
+
+```text
+ReconstructionEngine
+CpuReconstructionEngine
+```
+
+Mais ne pas connecter automatiquement le moteur à la production.
+
+La seule évolution acceptable dans cette phase serait éventuellement de préparer un adaptateur expérimental :
+
+```text
+COLMAP CPU
+```
+
+capable de lancer le pipeline en laboratoire.
+
+Il doit rester explicitement :
+
+```text
+EXPERIMENTAL
+```
+
+et ne doit pas être appelé par la queue de production.
+
+La présence du binaire COLMAP ne doit jamais être considérée comme une validation suffisante.
+
+La validation doit reposer sur une exécution réelle.
+
+---
+
+# 19. AUCUNE PUBLICATION
+
+Même si le SfM fonctionne parfaitement :
+
+NE PAS :
+
+* créer une scène publique ;
+* créer un GLB de production ;
+* créer un 3D Tiles de production ;
+* créer un splat public ;
+* ajouter une scène sur la carte ;
+* afficher le résultat aux utilisateurs ;
+* modifier les endpoints publics ;
+* connecter le viewer.
+
+Cette phase valide uniquement :
+
+```text
+COLMAP CPU + SfM sparse
+```
+
+---
+
+# 20. CRITÈRES GO
+
+Le verdict peut être :
+
+```text
+GO
+```
+
+uniquement si :
+
+1. COLMAP est réellement installé ;
+2. COLMAP démarre réellement ;
+3. feature extraction fonctionne ;
+4. matching fonctionne ;
+5. mapper fonctionne ;
+6. un modèle sparse réel est produit ;
+7. des images sont réellement enregistrées ;
+8. des points 3D réels existent ;
+9. les métriques sont mesurées ;
+10. les artefacts sont conservés ;
+11. aucune donnée de production n'a été touchée.
+
+---
+
+# 21. GO WITH ADJUSTMENTS
+
+Utiliser :
+
+```text
+GO_WITH_ADJUSTMENTS
+```
+
+si :
+
+* SfM fonctionne ;
+* mais certains paramètres doivent être améliorés ;
+* ou le dataset synthétique révèle des limites ;
+* ou le temps/RAM impose des ajustements.
+
+Documenter précisément les ajustements nécessaires.
+
+---
+
+# 22. NO-GO
+
+Utiliser :
+
+```text
+NO-GO
+```
+
+si :
+
+* COLMAP ne peut pas être installé proprement ;
+* le runner externe n'est pas disponible ;
+* feature extraction échoue ;
+* matching échoue ;
+* mapper échoue ;
+* aucun modèle sparse exploitable n'est produit.
+
+Mais préciser la cause exacte :
+
+```text
+ENVIRONMENT_BLOCKED
+INSTALLATION_BLOCKED
+FEATURE_EXTRACTION_FAILED
+MATCHING_FAILED
+SFM_FAILED
+DATASET_LIMITATION
+```
+
+Ne jamais conclure :
+
+```text
+CPU SfM impossible
+```
+
+sur la base d'un problème d'environnement.
+
+---
+
+# 23. RAPPORT FINAL
+
+Créer :
+
+```text
+experiments/streetview-3d/PHASE_16_RESULT.md
+```
+
+Le rapport doit contenir :
+
+1. décision ;
+2. objectif ;
+3. environnement ;
+4. fournisseur/runner utilisé ;
+5. coût réel si applicable ;
+6. durée du laboratoire ;
+7. versions exactes ;
+8. méthode d'installation COLMAP ;
+9. dataset ;
+10. Test 1 ;
+11. métriques Test 1 ;
+12. Test 2 si exécuté ;
+13. métriques Test 2 ;
+14. robustesse ;
+15. erreurs exactes ;
+16. artefacts ;
+17. limites ;
+18. analyse ;
+19. impact sur l'architecture ;
+20. recommandation Phase 17.
+
+Si aucun runner externe n'est disponible, le rapport doit clairement indiquer :
+
+```text
+BLOCKED_EXTERNAL_CPU_RUNNER_REQUIRED
+```
+
+et ne doit contenir aucune métrique inventée.
+
+---
+
+# 24. CHECKS REPLIT
+
+Après toute modification locale éventuelle :
+
+```bash
+npm run check
+npm run test:streetview
+npm run build
+git diff --check
+```
+
+Si aucun code applicatif n'a été modifié, le documenter.
+
+---
+
+# 25. GIT
+
+Ne pas committer automatiquement.
+
+Ne pas pousser automatiquement vers GitHub.
+
+À la fin, afficher :
+
+```text
+git status --short
+git diff --stat
+```
+
+et indiquer précisément les fichiers créés ou modifiés.
+
+---
+
+# 26. RÈGLE FINALE
+
+Cette phase ne doit pas devenir une nouvelle boucle d'audit du runner Replit.
+
+Nous savons déjà que :
+
+```text
+COLMAP absent sur Replit
+```
+
+Le but est maintenant de valider un véritable environnement externe.
+
+Si Replit ne dispose d'aucun accès permettant de créer ou utiliser ce runner externe :
+
+```text
+NE PAS refaire les mêmes tests localement.
+NE PAS essayer Nix avec un contournement de sécurité.
+NE PAS prétendre avoir exécuté COLMAP.
+NE PAS inventer de résultats.
+```
+
+Préparer le laboratoire et arrêter proprement.
+
+La Phase 16 doit répondre à une seule question :
+
+```text
+SFM CPU RÉEL : VALIDÉ OU NON DANS UN ENVIRONNEMENT EXTERNE REPRODUCTIBLE ?
+```
+
+Ne lancer aucune Phase 17 automatiquement.
+Attendre la validation humaine après lecture de :
+
+```text
+experiments/streetview-3d/PHASE_16_RESULT.md
+```
