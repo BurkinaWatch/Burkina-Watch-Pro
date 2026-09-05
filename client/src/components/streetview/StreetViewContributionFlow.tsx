@@ -283,6 +283,7 @@ export default function StreetViewContributionFlow() {
   const [quartier, setQuartier] = useState("");
   const [position, setPosition] = useState<[number, number]>(defaultCenter);
   const [hasAutomaticLocation, setHasAutomaticLocation] = useState(false);
+  const [locationAccuracyM, setLocationAccuracyM] = useState<number | null>(null);
 
   const { data: config } = useQuery<StreetviewConfig>({
     queryKey: ["/api/streetview/config"],
@@ -312,6 +313,7 @@ export default function StreetViewContributionFlow() {
       (current) => {
         setPosition([current.coords.latitude, current.coords.longitude]);
         setHasAutomaticLocation(true);
+        setLocationAccuracyM(Number.isFinite(current.coords.accuracy) ? current.coords.accuracy : null);
       },
       () => undefined,
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 },
@@ -397,6 +399,11 @@ export default function StreetViewContributionFlow() {
           width: inspection.width,
           height: inspection.height,
           orientation: inspection.orientation,
+          capturedAt: new Date(selectedFile.lastModified).toISOString(),
+          locationAccuracyM,
+          locationSource: hasAutomaticLocation ? "gps" : "manual",
+          locationCapturedAt: hasAutomaticLocation ? new Date().toISOString() : null,
+          temporalVersion: new Date(selectedFile.lastModified).toISOString(),
           thumbnailData: inspection.thumbnailData,
         }),
       });
@@ -493,7 +500,7 @@ export default function StreetViewContributionFlow() {
       await queryClient.invalidateQueries({ queryKey: ["/api/streetview/contributions"] });
       toast({
         title: "Contribution envoyée",
-        description: "Votre vidéo est validée et attend la future reconstruction 3D.",
+        description: "Votre vidéo est préparée sur CPU et attend un moteur de reconstruction réellement disponible.",
       });
       resetForm();
       setMode("home");
@@ -775,7 +782,11 @@ export default function StreetViewContributionFlow() {
                 <div className="h-64 overflow-hidden rounded-xl border">
                   <MapContainer center={position} zoom={13} className="h-full w-full">
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors' />
-                    <LocationPicker position={position} onChange={(next) => { setPosition(next); setHasAutomaticLocation(false); }} />
+                  <LocationPicker position={position} onChange={(next) => {
+                    setPosition(next);
+                    setHasAutomaticLocation(false);
+                    setLocationAccuracyM(null);
+                  }} />
                   </MapContainer>
                 </div>
                 <p className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -789,8 +800,8 @@ export default function StreetViewContributionFlow() {
               <CardContent className="flex items-start gap-3 p-4">
                 <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                 <p className="text-sm text-muted-foreground">
-                  La contribution sera contrôlée puis placée en attente de reconstruction 3D.
-                  Aucun moteur de reconstruction ne sera exécuté pendant cette phase.
+                  La contribution sera contrôlée et préparée sur CPU. Aucune scène 3D ne sera créée
+                  tant qu’un moteur de reconstruction réel et validé ne sera pas disponible.
                 </p>
               </CardContent>
             </Card>
