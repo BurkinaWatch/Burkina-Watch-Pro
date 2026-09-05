@@ -1,9 +1,11 @@
 
 import { OpenAI } from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "",
-});
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  : null;
 
 export interface ModerationResult {
   isApproved: boolean;
@@ -32,7 +34,7 @@ const SENSITIVE_WORDS = {
 };
 
 async function analyzeWithAI(text: string, language: string = "fr"): Promise<ModerationResult> {
-  if (!process.env.OPENAI_API_KEY) {
+  if (!openai) {
     console.warn("⚠️ OPENAI_API_KEY non configurée, modération de base utilisée");
     return basicModeration(text);
   }

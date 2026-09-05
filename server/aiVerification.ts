@@ -3,9 +3,11 @@ import { OpenAI } from "openai";
 import { storage } from "./storage";
 import type { Signalement } from "@shared/schema";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "",
-});
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  : null;
 
 interface VerificationResult {
   score: number;
@@ -80,7 +82,7 @@ async function analyzeTextCoherence(
   titre: string,
   description: string
 ): Promise<{ score: number; analysis: string }> {
-  if (!process.env.OPENAI_API_KEY) {
+  if (!openai) {
     console.warn("⚠️ OPENAI_API_KEY non configurée, analyse de texte ignorée");
     return { score: 70, analysis: "Analyse non disponible (clé API manquante)" };
   }
@@ -123,7 +125,7 @@ Réponds uniquement en JSON:
 
 // Analyser l'image avec Vision API
 async function analyzeImageQuality(imageBase64: string): Promise<number> {
-  if (!process.env.OPENAI_API_KEY) {
+  if (!openai) {
     return 70; // Score par défaut
   }
 
