@@ -18,6 +18,26 @@ ou 3DGS permettant de le démontrer.
 La vidéo synthétique et son extraction restent valides comme préparation
 reproductible, mais elles ne constituent pas une reconstruction 3D.
 
+### Audit de reprise — 5 septembre 2026
+
+Un nouvel audit local et un préflight de la vidéo synthétique ont été
+effectués avant toute conclusion :
+
+- GPU NVIDIA : absent (`nvidia-smi` indisponible et aucun périphérique GPU
+  détecté) ;
+- CUDA : indisponible ;
+- PyTorch : non installé et aucune disponibilité CUDA Python vérifiable ;
+- COLMAP : absent ;
+- environnement cloud : aucune instance ou intégration de provisioning
+  disponible dans ce workspace ;
+- préflight vidéo : terminé avec succès, mais uniquement au statut
+  `FRAMES_EXTRACTED_SFM_NOT_RUN` ;
+- périmètre : aucun secret, endpoint, base, stockage ou workflow de
+  production n'a été utilisé.
+
+Le préflight ne remplace donc pas le test GPU demandé. Une instance payante ne
+peut pas être créée sans fournisseur, budget et autorisation explicites.
+
 ## 1. Environnement
 
 ### Environnement réellement audité
@@ -282,6 +302,7 @@ experiments/streetview-3d/runner.mjs
 experiments/streetview-3d/config.example.json
 experiments/streetview-3d/runs/phase7c-synthetic/
 experiments/streetview-3d/runs/phase7b-on-synthetic-v2/
+experiments/streetview-3d/runs/phase9-synthetic-preflight/
 ```
 
 Prétraitement reproduisible :
@@ -295,6 +316,10 @@ node experiments/streetview-3d/runner.mjs \
 ```
 
 Cette commande prépare l'entrée et ne prétend pas exécuter COLMAP.
+
+Le run de reprise a produit 12 frames JPEG, `experiment.json` et
+`ffprobe.json`, avec `applicationTouched`, `databaseTouched`,
+`objectStorageTouched` et `productionWorkflowTouched` à `false`.
 
 Les versions GPU, CUDA, PyTorch, COLMAP et 3DGS restent à figer dans un
 environnement externe avant tout vrai run.
