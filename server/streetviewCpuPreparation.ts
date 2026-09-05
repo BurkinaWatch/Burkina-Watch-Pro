@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { execFile } from "node:child_process";
@@ -136,7 +136,7 @@ export async function runStreetviewCpuPreparation(
       300,
       Math.max(1, Math.floor(Number(process.env.STREETVIEW_CPU_MAX_KEYFRAMES) || 120)),
     );
-    await runCommand("mkdir", ["-p", framesPath]);
+    await mkdir(framesPath, { recursive: true });
 
     try {
       await runCommand("ffmpeg", [

@@ -266,6 +266,13 @@ export interface IStorage {
       width: number | null;
       height: number | null;
       orientation: string | null;
+       capturedAt: Date | null;
+       locationAccuracyM: string | null;
+       altitudeM: string | null;
+       locationSource: string | null;
+       locationCapturedAt: Date | null;
+       temporalVersion: string | null;
+       qualityMetrics: Record<string, unknown> | null;
       clientMetadata: Record<string, unknown> | null;
       uploadedAt: Date | null;
       processedAt: Date | null;
