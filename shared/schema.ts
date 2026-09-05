@@ -589,6 +589,9 @@ export const streetviewContributionStatuses = [
   "VALIDATING",
   "QUEUED",
   "PROCESSING",
+  "WAITING_FOR_RECONSTRUCTION",
+  "WAITING_FOR_GPU",
+  // Kept for backwards compatibility with contributions created before Phase 14.
   "WAITING_FOR_3D",
   "UPLOAD_FAILED",
   "VALIDATION_FAILED",
@@ -601,6 +604,19 @@ export type StreetviewJobStatus = typeof streetviewJobStatuses[number];
 
 export const streetviewContributionMediaTypes = ["video/mp4", "video/webm", "video/quicktime"] as const;
 export type StreetviewContributionMediaType = typeof streetviewContributionMediaTypes[number];
+
+export const streetviewScenePublicationStatuses = ["DRAFT", "QUALITY_REVIEW", "PUBLISHED", "REJECTED"] as const;
+export type StreetviewScenePublicationStatus = typeof streetviewScenePublicationStatuses[number];
+
+export const streetviewSceneArtifactKinds = [
+  "source",
+  "keyframes",
+  "sfm",
+  "mvs",
+  "gaussian_splat",
+  "web_export",
+] as const;
+export type StreetviewSceneArtifactKind = typeof streetviewSceneArtifactKinds[number];
 
 // Video metadata is kept out of the binary database payload. The actual video
 // lives in the configured StreetView storage adapter.
@@ -626,6 +642,13 @@ export const streetviewContributions = pgTable("streetview_contributions", {
   width: integer("width"),
   height: integer("height"),
   orientation: text("orientation"),
+  capturedAt: timestamp("captured_at"),
+  locationAccuracyM: decimal("location_accuracy_m", { precision: 10, scale: 2 }),
+  altitudeM: decimal("altitude_m", { precision: 10, scale: 2 }),
+  locationSource: text("location_source"),
+  locationCapturedAt: timestamp("location_captured_at"),
+  temporalVersion: text("temporal_version"),
+  qualityMetrics: jsonb("quality_metrics"),
   clientMetadata: jsonb("client_metadata"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   uploadedAt: timestamp("uploaded_at"),
