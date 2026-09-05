@@ -1,0 +1,160 @@
+Tu dois diagnostiquer et corriger UNIQUEMENT le problème actuel de build Railway concernant Vite.
+
+ERREUR RAILWAY ACTUELLE :
+
+npm run build
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && esbuild server/streetviewWorkerMain.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/streetview-worker.js
+
+sh: 1: vite: not found
+
+OBJECTIF :
+
+Faire en sorte que Railway puisse exécuter :
+
+npm run build
+
+et que la commande :
+
+vite build
+
+soit réellement disponible dans l'environnement de build.
+
+IMPORTANT :
+
+* Ne modifie aucune fonctionnalité métier de BurkinaWatch.
+* Ne modifie pas l'authentification.
+* Ne modifie pas Street View.
+* Ne modifie pas la base de données.
+* Ne modifie pas les routes API.
+* Ne modifie pas le frontend ou le design.
+* Ne modifie pas les variables secrètes sauf si l'analyse démontre qu'elles sont directement responsables de cette erreur.
+* Ne crée pas une nouvelle architecture de déploiement.
+* Ne change pas Railway de stratégie de déploiement sans justification.
+* Ne fais aucune modification spéculative.
+* Commence par auditer l'état actuel du projet.
+
+ÉTAPE 1 — AUDIT
+
+Inspecte précisément :
+
+1. package.json
+2. package-lock.json
+3. scripts npm
+4. dependencies
+5. devDependencies
+6. présence de Vite
+7. version exacte de Vite
+8. présence de esbuild
+9. version exacte de esbuild
+10. cohérence entre package.json et package-lock.json
+11. .npmrc s'il existe
+12. nixpacks.toml s'il existe
+13. railway.toml s'il existe
+14. Dockerfile s'il existe
+15. fichiers de configuration npm/build pertinents
+
+Vérifie en particulier :
+
+* Est-ce que "vite" existe réellement dans package.json ?
+* Est-il dans dependencies ou devDependencies ?
+* Est-il présent dans package-lock.json ?
+* Est-il installé après une installation propre ?
+* Pourquoi Railway arrive à exécuter "npm run build" mais ne trouve pas l'exécutable "vite" ?
+* Est-ce que NODE_ENV=production ou une configuration npm empêche l'installation des devDependencies ?
+* Est-ce qu'un "--omit=dev", "NPM_CONFIG_PRODUCTION=true" ou équivalent est actif pendant le build ?
+* Est-ce que package-lock.json est cohérent avec package.json ?
+
+ÉTAPE 2 — REPRODUCTION LOCALE
+
+Sans modifier le projet au hasard, reproduis le problème avec une installation propre si possible.
+
+Vérifie notamment :
+
+npm ci
+
+puis :
+
+npm list vite
+
+puis :
+
+npx vite --version
+
+puis :
+
+npm run build
+
+Si npm ci échoue, identifie précisément pourquoi avant toute correction.
+
+ÉTAPE 3 — CORRECTION MINIMALE
+
+Applique uniquement la correction nécessaire pour que Vite soit installé pendant le BUILD Railway.
+
+Si Vite est déjà correctement déclaré mais que les devDependencies sont supprimées pendant le build, corrige la configuration de BUILD afin que les devDependencies nécessaires à la compilation soient disponibles.
+
+Si package.json et package-lock.json sont incohérents, corrige proprement le lockfile.
+
+Si Vite est réellement absent du projet, ajoute la version compatible avec la configuration actuelle du projet, sans mettre à jour inutilement les autres dépendances.
+
+Ne fais pas une mise à jour massive des dépendances.
+
+ÉTAPE 4 — VÉRIFICATION
+
+Après correction, vérifie obligatoirement :
+
+npm ci
+
+npm list vite
+
+npx vite --version
+
+npm run build
+
+Le build doit réussir complètement, notamment les trois étapes :
+
+1. vite build
+2. esbuild server/index.ts
+3. esbuild server/streetviewWorkerMain.ts
+
+Vérifie que les fichiers de sortie attendus sont correctement générés dans dist/.
+
+ÉTAPE 5 — RAILWAY
+
+Inspecte également la configuration qui détermine l'installation des dépendances pendant le build Railway.
+
+Le message Railway :
+
+npm warn config production Use `--omit=dev` instead.
+
+est un WARNING et non l'erreur principale.
+
+L'erreur principale actuelle est :
+
+sh: 1: vite: not found
+
+Détermine donc si Railway installe réellement les devDependencies pendant la phase BUILD.
+
+Attention à ne pas simplement déplacer toutes les dépendances de devDependencies vers dependencies sans justification. La solution doit respecter une structure npm propre.
+
+ÉTAPE 6 — RAPPORT FINAL
+
+À la fin, donne-moi clairement :
+
+1. Cause exacte du "vite: not found".
+2. Fichier(s) responsable(s).
+3. Modification(s) effectuée(s).
+4. Pourquoi la modification résout le problème Railway.
+5. Résultat de "npm ci".
+6. Résultat de "npm list vite".
+7. Résultat de "npx vite --version".
+8. Résultat de "npm run build".
+9. Confirmation que les trois étapes du build ont réussi.
+10. Confirmation qu'aucune fonctionnalité BurkinaWatch n'a été modifiée.
+
+NE DIS PAS QUE LE PROBLÈME EST RÉSOLU simplement parce que les fichiers ont été modifiés.
+
+Le problème ne sera considéré comme résolu que si "npm run build" réussit réellement dans un environnement propre et si Vite est effectivement installé et exécutable.
+
+Si tu découvres une autre erreur après avoir corrigé "vite: not found", arrête-toi à cette nouvelle erreur et indique-la précisément au lieu de modifier d'autres parties du projet.
