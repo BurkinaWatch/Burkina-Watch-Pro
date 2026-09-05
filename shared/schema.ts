@@ -588,6 +588,7 @@ export const streetviewContributionStatuses = [
   "UPLOADED",
   "VALIDATING",
   "QUEUED",
+  "PROCESSING",
   "WAITING_FOR_3D",
   "UPLOAD_FAILED",
   "VALIDATION_FAILED",
@@ -643,14 +644,20 @@ export const streetviewProcessingJobs = pgTable("streetview_processing_jobs", {
   status: text("status").notNull().default("QUEUED"),
   progress: integer("progress").notNull().default(0),
   attempts: integer("attempts").notNull().default(0),
+  maxAttempts: integer("max_attempts").notNull().default(3),
   errorCode: text("error_code"),
   errorMessage: text("error_message"),
+  availableAt: timestamp("available_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   startedAt: timestamp("started_at"),
   completedAt: timestamp("completed_at"),
+  lockedAt: timestamp("locked_at"),
+  leaseUntil: timestamp("lease_until"),
+  lockedBy: text("locked_by"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => [
   index("streetview_jobs_contribution_idx").on(table.contributionId, table.createdAt),
-  index("streetview_jobs_status_idx").on(table.status),
+  index("streetview_jobs_status_idx").on(table.status, table.availableAt),
 ]);
 
 export const insertStreetviewContributionSchema = createInsertSchema(streetviewContributions).omit({
@@ -673,11 +680,17 @@ export const insertStreetviewProcessingJobSchema = createInsertSchema(streetview
   status: true,
   progress: true,
   attempts: true,
+  maxAttempts: true,
   errorCode: true,
   errorMessage: true,
+  availableAt: true,
   createdAt: true,
   startedAt: true,
   completedAt: true,
+  lockedAt: true,
+  leaseUntil: true,
+  lockedBy: true,
+  updatedAt: true,
 });
 
 export type InsertStreetviewContribution = z.infer<typeof insertStreetviewContributionSchema>;

@@ -280,12 +280,30 @@ export interface IStorage {
       status: string;
       progress: number;
       attempts: number;
+      maxAttempts: number;
       errorCode: string | null;
       errorMessage: string | null;
+      availableAt: Date;
       startedAt: Date | null;
       completedAt: Date | null;
+      lockedAt: Date | null;
+      leaseUntil: Date | null;
+      lockedBy: string | null;
+      updatedAt: Date;
     }>,
   ): Promise<StreetviewProcessingJob | undefined>;
+  claimNextStreetviewProcessingJob(
+    workerId: string,
+    leaseMs: number,
+    now?: Date,
+  ): Promise<StreetviewProcessingJob | undefined>;
+  recoverAbandonedStreetviewProcessingJobs(now?: Date): Promise<{
+    requeued: string[];
+    failed: string[];
+  }>;
+  getStreetviewProcessingJobsForContribution(
+    contributionId: string,
+  ): Promise<StreetviewProcessingJob[]>;
 
   // --- Metadata methods for sync tracking ---
   getMetadata(key: string): Promise<string | undefined>;
@@ -1923,12 +1941,127 @@ L'équipe Burkina Watch
     id: string,
     updates: Parameters<IStorage["updateStreetviewProcessingJob"]>[1],
   ): Promise<StreetviewProcessingJob | undefined> {
+    if (updates.status) {
+      const [current] = await db
+        .select({ status: streetviewProcessingJobs.status })
+        .from(streetviewProcessingJobs)
+        .where(eq(streetviewProcessingJobs.id, id))
+        .limit(1);
+      if (!current) return undefined;
+      const allowed: Record<string, string[]> = {
+        QUEUED: ["PROCESSING"],
+        PROCESSING: ["QUEUED", "COMPLETED", "FAILED"],
+        COMPLETED: [],
+        FAILED: [],
+      };
+      if (current.status !== updates.status && !allowed[current.status]?.includes(updates.status)) {
+        throw new Error(`Invalid StreetView job transition: ${current.status} -> ${updates.status}`);
+      }
+    }
     const [updated] = await db
       .update(streetviewProcessingJobs)
-      .set(updates)
+      .set({ ...updates, updatedAt: updates.updatedAt || new Date() })
       .where(eq(streetviewProcessingJobs.id, id))
       .returning();
     return updated;
+  }
+
+  async claimNextStreetviewProcessingJob(
+    workerId: string,
+    leaseMs: number,
+    now = new Date(),
+  ): Promise<StreetviewProcessingJob | undefined> {
+    const result = await db.execute(sql`
+      WITH candidate AS (
+        SELECT id
+        FROM streetview_processing_jobs
+        WHERE attempts < max_attempts
+          AND (
+            (status = 'QUEUED' AND available_at <= ${now})
+            OR (status = 'PROCESSING' AND lease_until IS NOT NULL AND lease_until < ${now})
+          )
+        ORDER BY created_at ASC
+        FOR UPDATE SKIP LOCKED
+        LIMIT 1
+      )
+      UPDATE streetview_processing_jobs AS job
+      SET status = 'PROCESSING',
+          attempts = job.attempts + 1,
+          started_at = COALESCE(job.started_at, ${now}),
+          locked_at = ${now},
+          lease_until = ${new Date(now.getTime() + leaseMs)},
+          locked_by = ${workerId},
+          updated_at = ${now}
+      FROM candidate
+      WHERE job.id = candidate.id
+      RETURNING job.*;
+    `);
+    return result.rows[0] as StreetviewProcessingJob | undefined;
+  }
+
+  async recoverAbandonedStreetviewProcessingJobs(now = new Date()): Promise<{
+    requeued: string[];
+    failed: string[];
+  }> {
+    const requeued = await db.execute(sql`
+      UPDATE streetview_processing_jobs
+      SET status = 'QUEUED',
+          available_at = ${now},
+          locked_at = NULL,
+          lease_until = NULL,
+          locked_by = NULL,
+          updated_at = ${now}
+      WHERE status = 'PROCESSING'
+        AND lease_until IS NOT NULL
+        AND lease_until < ${now}
+        AND attempts < max_attempts
+      RETURNING id;
+    `);
+    const failed = await db.execute(sql`
+      UPDATE streetview_processing_jobs
+      SET status = 'FAILED',
+          progress = 100,
+          error_code = 'WORKER_TIMEOUT',
+          error_message = 'Le worker a perdu son bail avant la fin du traitement.',
+          completed_at = ${now},
+          locked_at = NULL,
+          lease_until = NULL,
+          locked_by = NULL,
+          updated_at = ${now}
+      WHERE status = 'PROCESSING'
+        AND lease_until IS NOT NULL
+        AND lease_until < ${now}
+        AND attempts >= max_attempts
+      RETURNING id, contribution_id;
+    `);
+
+    for (const row of failed.rows as Array<{ id: string; contribution_id: string }>) {
+      await db
+        .update(streetviewContributions)
+        .set({
+          status: "PROCESSING_FAILED",
+          progress: 100,
+          statusMessage: "Le traitement a été interrompu après plusieurs tentatives.",
+          errorCode: "WORKER_TIMEOUT",
+          updatedAt: now,
+        })
+        .where(eq(streetviewContributions.id, row.contribution_id));
+    }
+
+    return {
+      requeued: (requeued.rows as Array<{ id: string }>).map((row) => row.id),
+      failed: (failed.rows as Array<{ id: string }>).map((row) => row.id),
+    };
+  }
+
+  async getStreetviewProcessingJobsForContribution(
+    contributionId: string,
+  ): Promise<StreetviewProcessingJob[]> {
+    return db
+      .select()
+      .from(streetviewProcessingJobs)
+      .where(eq(streetviewProcessingJobs.contributionId, contributionId))
+      .orderBy(desc(streetviewProcessingJobs.createdAt));
   }
 
   async incrementTourReportCount(tourId: string): Promise<{ reportCount: number; status: string }> {
