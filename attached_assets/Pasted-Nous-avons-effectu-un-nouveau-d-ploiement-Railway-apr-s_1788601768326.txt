@@ -1,0 +1,276 @@
+Nous avons effectué un nouveau déploiement Railway après avoir changé la Build Command en :
+
+```text
+npm install --legacy-peer-deps --include=dev --no-audit --no-fund && npm run build
+```
+
+Le résultat est toujours :
+
+```text
+npm warn config production Use `--omit=dev` instead.
+
+npm error Exit handler never called!
+
+npm error This is an error with npm itself.
+
+> rest-express@1.0.0 build
+> vite build && esbuild ...
+
+sh: 1: vite: not found
+```
+
+IMPORTANT :
+ne propose pas encore de nouvelle modification permanente.
+
+Nous devons maintenant diagnostiquer précisément le comportement de npm dans l'environnement Railway.
+
+### OBJECTIF
+
+Déterminer pourquoi :
+
+```text
+npm install --include=dev
+```
+
+ne laisse toujours pas `vite` disponible et pourquoi npm affiche :
+
+```text
+Exit handler never called!
+```
+
+alors que `npm run build` est ensuite exécuté.
+
+### 1. Vérifier package.json et package-lock.json
+
+En lecture seule uniquement :
+
+* confirmer que `vite` est bien dans `devDependencies` ;
+* confirmer la version exacte ;
+* confirmer que `vite` apparaît bien dans `package-lock.json` ;
+* vérifier qu'il n'est pas marqué comme extraneous ou absent du lockfile.
+
+NE MODIFIER NI package.json NI package-lock.json.
+
+### 2. Diagnostiquer npm
+
+Dans l'environnement local uniquement, sans installation, relever :
+
+```bash
+node --version
+npm --version
+npm config get production
+npm config get omit
+npm config get include
+npm config get only
+npm config get prefix
+```
+
+Puis expliquer clairement que ces valeurs locales ne prouvent PAS les valeurs Railway.
+
+### 3. Chercher toutes les sources de configuration npm
+
+Rechercher dans le dépôt :
+
+```text
+.npmrc
+npm_config_production
+NPM_CONFIG_PRODUCTION
+npm_config_omit
+NPM_CONFIG_OMIT
+npm_config_include
+NPM_CONFIG_INCLUDE
+production=true
+omit=dev
+include=dev
+NODE_ENV
+```
+
+Mais également vérifier les configurations npm globales/locales disponibles dans l'environnement de développement si elles sont lisibles.
+
+NE RIEN MODIFIER.
+
+### 4. Analyser le nouveau log
+
+Faire une analyse précise de :
+
+```text
+npm warn config production Use `--omit=dev` instead.
+```
+
+et :
+
+```text
+npm error Exit handler never called!
+```
+
+Déterminer si l'erreur npm pourrait expliquer que l'installation soit incomplète.
+
+NE PAS supposer que `vite` est simplement omis par `production=true`.
+
+Nous savons maintenant que la commande contient explicitement :
+
+```text
+--include=dev
+```
+
+Or npm documente que `include=dev` doit empêcher l'omission des devDependencies.
+
+Il faut donc expliquer cette contradiction.
+
+### 5. Examiner le comportement du &&
+
+C'est IMPORTANT.
+
+La commande Railway est :
+
+```bash
+npm install --legacy-peer-deps --include=dev --no-audit --no-fund && npm run build
+```
+
+Si npm échoue réellement avec un exit code non nul, `npm run build` ne devrait normalement pas s'exécuter.
+
+Déterminer si :
+
+* `Exit handler never called!` est réellement fatal ;
+* npm retourne malgré tout un code 0 ;
+* Railway intercepte/modifie le code de sortie ;
+* ou il s'agit d'un comportement particulier de la version npm utilisée.
+
+Ne rien modifier pour tester cela.
+
+### 6. Examiner le npm debug log
+
+Le log Railway indique :
+
+```text
+/root/.npm/_logs/2026-09-05T09_39_06_667Z-debug-0.log
+```
+
+Si ce fichier est accessible depuis l'environnement de diagnostic, l'inspecter.
+
+Chercher notamment :
+
+```text
+verbose stack
+error
+code
+exit
+production
+omit
+include
+vite
+```
+
+Si ce fichier n'est PAS accessible depuis Replit, le signaler clairement.
+
+NE PAS inventer son contenu.
+
+### 7. Vérifier la version Node/npm réellement utilisée par Railway
+
+Le projet contient :
+
+```text
+.nvmrc
+20.20.0
+```
+
+Déterminer si Railway/Railpack utilise effectivement Node 20.20.0 ou une autre version.
+
+Chercher dans les logs/build configuration toute indication de :
+
+```text
+Node version
+npm version
+```
+
+Si la version npm Railway est différente de la version locale 10.8.2, le signaler.
+
+### 8. Examiner spécifiquement le cache
+
+Sans supprimer ni modifier le cache :
+
+déterminer si un cache npm/node_modules peut expliquer :
+
+```text
+vite: not found
+```
+
+et si un cache contenant une installation précédente sans devDependencies pourrait être réutilisé.
+
+Ne désactive pas le cache.
+
+### 9. NE PAS appliquer de correctif
+
+Aucune modification de :
+
+* package.json
+* package-lock.json
+* nixpacks.toml
+* code source
+* Railway
+* variables Railway
+* PostgreSQL
+* migrations
+* Street View
+* worker
+* frontend
+
+Pour cette étape.
+
+### 10. Rapport obligatoire
+
+Donne-moi un rapport avec exactement :
+
+#### A. État des dépendances
+
+* Vite présent dans package.json ?
+* Vite présent dans package-lock ?
+* version Vite ?
+
+#### B. Configuration npm
+
+* production
+* omit
+* include
+* NODE_ENV
+
+#### C. Versionnement
+
+* Node local
+* npm local
+* Node Railway si identifiable
+* npm Railway si identifiable
+
+#### D. `Exit handler never called!`
+
+Expliquer ce que cette erreur signifie dans ce contexte et si elle peut provoquer une installation partielle.
+
+#### E. Pourquoi `vite` est absent
+
+Distinguer clairement entre :
+
+1. devDependencies volontairement omises ;
+2. installation npm interrompue ;
+3. installation partielle ;
+4. cache ;
+5. autre cause.
+
+#### F. Cause racine actuelle
+
+Utiliser :
+
+`ROOT CAUSE CONFIRMED`
+
+`ROOT CAUSE PROBABLE`
+
+ou
+
+`INSUFFICIENT EVIDENCE`
+
+#### G. Correctif recommandé
+
+Proposer le correctif minimal MAIS NE PAS L'APPLIQUER.
+
+Nous voulons d'abord comprendre pourquoi `--include=dev` ne produit pas le résultat attendu.
+
+Aucune modification, aucun commit, aucun push, aucun déploiement.
