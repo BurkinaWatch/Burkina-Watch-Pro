@@ -1,0 +1,6 @@
+.env
+*.local
+artifacts/
+datasets/
+logs/
+outputs/
