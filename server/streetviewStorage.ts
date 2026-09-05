@@ -1,4 +1,3 @@
-import { createHmac } from "node:crypto";
 import { mkdir, writeFile, unlink, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import {
@@ -156,9 +155,15 @@ export async function writeStreetviewBuffer(key: string, content: Buffer): Promi
       Bucket: settings.bucket,
       Key: normalized,
       Body: content,
-      ContentType: content.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]))
+      ContentType: normalized.endsWith(".jpg")
         ? "image/jpeg"
-        : undefined,
+        : normalized.endsWith(".webm")
+          ? "video/webm"
+          : normalized.endsWith(".mov")
+            ? "video/quicktime"
+            : normalized.endsWith(".mp4")
+              ? "video/mp4"
+              : undefined,
     }));
     return;
   }
@@ -355,8 +360,4 @@ export function getStreetviewStorageInfo(): {
 
 export function getStreetviewMultipartPartSizeBytes(): number {
   return getS3Settings().multipartPartSizeBytes;
-}
-
-export function signStreetviewStorageProof(payload: string): string {
-  return createHmac("sha256", getSessionSecret()).update(payload).digest("hex");
 }

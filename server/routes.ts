@@ -35,7 +35,6 @@ import {
   getStreetviewMultipartPartSizeBytes,
   headStreetviewObject,
   readStreetviewObject,
-  readStreetviewObjectRange,
   streetviewStorageKey,
   streetviewThumbnailKey,
   writeStreetviewBuffer,
@@ -4338,6 +4337,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const storageKey = streetviewStorageKey(contribution.id, mimeType);
       const upload = await createStreetviewMultipartUpload(storageKey, mimeType);
+      await storage.updateStreetviewContribution(contribution.id, {
+        status: "UPLOADING",
+        progress: 5,
+        statusMessage: "Upload direct vers le stockage sécurisé",
+        storageKey,
+        mediaType: mimeType,
+        fileSizeBytes: size,
+        errorCode: null,
+        updatedAt: new Date(),
+      });
       const sessionToken = issueStreetviewUploadSession({
         contributionId: contribution.id,
         userId,
@@ -4501,6 +4510,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Session d'upload non autorisée." });
       }
       await abortStreetviewMultipartUpload(session.storageKey, session.uploadId);
+      await storage.updateStreetviewContribution(contribution.id, {
+        status: "UPLOAD_FAILED",
+        progress: 100,
+        statusMessage: "L'upload a été annulé",
+        errorCode: "UPLOAD_ABORTED",
+        updatedAt: new Date(),
+      });
       return res.status(204).end();
     } catch (error) {
       return res.status(400).json({ message: "Impossible d'annuler l'upload." });

@@ -36,10 +36,16 @@ export function issueStreetviewUploadSession(session: Omit<StreetviewUploadSessi
 
 export function verifyStreetviewUploadSession(token: string): StreetviewUploadSession {
   const [payload, providedSignature] = token.split(".");
-  if (!payload || !providedSignature || !crypto.timingSafeEqual(
-    Buffer.from(signature(payload)),
-    Buffer.from(providedSignature),
-  )) {
+  const expectedSignature = payload ? signature(payload) : "";
+  const signaturesMatch = Boolean(
+    providedSignature &&
+    providedSignature.length === expectedSignature.length &&
+    crypto.timingSafeEqual(
+      Buffer.from(expectedSignature),
+      Buffer.from(providedSignature),
+    ),
+  );
+  if (!payload || !signaturesMatch) {
     throw new Error("Invalid StreetView upload session");
   }
   const session = JSON.parse(decode(payload)) as StreetviewUploadSession;

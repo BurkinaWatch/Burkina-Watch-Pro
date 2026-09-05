@@ -789,7 +789,7 @@ export default function StreetViewContributionFlow() {
 
             <div className="flex flex-col-reverse gap-2 pb-6 sm:flex-row sm:justify-end">
               <Button variant="outline" onClick={() => setMode("home")} disabled={isSubmitting}>Annuler</Button>
-              <Button onClick={handleSubmit} disabled={isSubmitting || isInspecting || !inspection || !!fileError} className="gap-2">
+              <Button onClick={handleSubmit} disabled={isSubmitting || isInspecting || !inspection || !!fileError || !config} className="gap-2">
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                 {isSubmitting ? "Envoi en cours..." : "Envoyer la contribution"}
               </Button>
