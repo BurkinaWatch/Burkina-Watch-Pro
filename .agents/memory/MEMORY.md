@@ -6,3 +6,4 @@
 - [Media authorization boundary](media-auth-authorization.md) — MediaMTX administration bearers must never bypass scoped agent publication authorization.
 - [StreetView durable storage](streetview-storage.md) — production media uses private S3-compatible storage with owner-scoped signed multipart sessions.
 - [StreetView processing queue](streetview-processing.md) — PostgreSQL jobs and expiring leases decouple preprocessing from the API and stop before 3D.
+- [StreetView Phase 14 gate](streetview-phase14-gate.md) — CPU preparation is safe to validate separately; the worker requires explicit post-migration activation and no scene exists without a validated adapter.
