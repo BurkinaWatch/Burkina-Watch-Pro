@@ -1,0 +1,459 @@
+# PHASE 7B — PREMIER TEST RÉEL DE RECONSTRUCTION
+
+Le runner expérimental isolé de la Phase 7 est maintenant prêt.
+
+Nous allons effectuer le PREMIER TEST RÉEL sur une vidéo.
+
+## OBJECTIF
+
+Vérifier expérimentalement que notre chaîne :
+
+VIDÉO
+↓
+EXTRACTION DES FRAMES
+↓
+COLMAP / SfM
+↓
+MVS
+↓
+3D Gaussian Splatting
+
+peut produire une représentation 3D exploitable à partir d'une vidéo réelle.
+
+Ce test est une EXPÉRIENCE TECHNIQUE.
+
+Il ne s'agit PAS encore d'une fonctionnalité BurkinaWatch destinée aux utilisateurs.
+
+---
+
+# 1. AVANT DE COMMENCER
+
+Inspecte une dernière fois le runner créé lors de la phase précédente.
+
+Vérifie :
+
+* environnement ;
+* dépendances ;
+* versions ;
+* commandes ;
+* chemins ;
+* espace disque ;
+* disponibilité des outils ;
+* GPU disponible ;
+* VRAM disponible ;
+* possibilité d'exécuter COLMAP ;
+* possibilité d'exécuter le pipeline Gaussian Splatting choisi.
+
+Ne modifie pas inutilement le runner.
+
+Si un prérequis manque, signale-le clairement avant de lancer une étape coûteuse.
+
+---
+
+# 2. VIDÉO DE TEST
+
+Utilise UNIQUEMENT la vidéo réelle fournie pour cette expérimentation.
+
+NE PAS :
+
+* générer une vidéo artificielle ;
+* utiliser une scène préfabriquée ;
+* télécharger une reconstruction existante ;
+* utiliser un résultat de démonstration ;
+* simuler les résultats.
+
+Le résultat doit provenir de cette vidéo.
+
+Avant le traitement, analyser automatiquement :
+
+* format ;
+* codec ;
+* durée ;
+* résolution ;
+* FPS ;
+* taille ;
+* orientation ;
+* présence éventuelle de métadonnées GPS ;
+* autres métadonnées utiles.
+
+Produire un petit rapport d'entrée.
+
+---
+
+# 3. NE PAS MODIFIER BURKINAWATCH
+
+Pendant toute l'expérience :
+
+NE PAS modifier :
+
+* frontend principal ;
+* workflow Street View utilisateur ;
+* API de production ;
+* base de données de production ;
+* authentification ;
+* stockage de production ;
+* déploiement Railway.
+
+Le traitement reste dans le runner expérimental.
+
+---
+
+# 4. EXTRACTION DES FRAMES
+
+Extraire les images à partir de la vidéo.
+
+Tester une fréquence raisonnable adaptée à la reconstruction.
+
+Ne pas extraire aveuglément toutes les frames.
+
+Documenter :
+
+* FPS original ;
+* fréquence d'extraction ;
+* nombre total de frames ;
+* résolution des frames ;
+* taille totale.
+
+Conserver les paramètres exacts utilisés afin de pouvoir reproduire l'expérience.
+
+---
+
+# 5. CONTRÔLE VISUEL DES FRAMES
+
+Avant de lancer une reconstruction lourde, vérifier que les frames sont exploitables.
+
+Rechercher :
+
+* flou ;
+* frames identiques ;
+* mouvement excessif ;
+* exposition problématique ;
+* compression excessive ;
+* manque de recouvrement ;
+* scènes dynamiques.
+
+Si les frames sont manifestement inutilisables, ARRÊTE le pipeline et explique pourquoi.
+
+Ne pas poursuivre simplement pour produire un résultat artificiel.
+
+---
+
+# 6. COLMAP / STRUCTURE FROM MOTION
+
+Lancer réellement COLMAP/SfM.
+
+Mesurer :
+
+* nombre d'images ;
+* nombre d'images correctement reconstruites ;
+* nombre de caméras ;
+* nombre de points 3D ;
+* taux de reconstruction ;
+* temps de traitement ;
+* consommation mémoire ;
+* éventuelles erreurs.
+
+Conserver les artefacts nécessaires pour inspecter le résultat.
+
+---
+
+# 7. ANALYSE DU RÉSULTAT SfM
+
+Avant de poursuivre vers MVS, déterminer si le résultat SfM est suffisamment bon.
+
+Vérifier notamment :
+
+* continuité de la trajectoire ;
+* cohérence des poses ;
+* couverture ;
+* points aberrants ;
+* ruptures ;
+* images non reconstruites.
+
+Si SfM échoue, NE PAS masquer l'échec.
+
+Identifier :
+
+* cause probable ;
+* étape responsable ;
+* paramètres qui pourraient être ajustés ;
+* amélioration possible.
+
+---
+
+# 8. MVS
+
+Si le résultat SfM est suffisamment bon, lancer la reconstruction dense.
+
+Produire si possible :
+
+* dense point cloud ;
+* mesh ;
+* textures.
+
+Mesurer :
+
+* temps ;
+* RAM ;
+* VRAM si applicable ;
+* taille des résultats ;
+* qualité ;
+* erreurs.
+
+---
+
+# 9. GAUSSIAN SPLATTING
+
+Si les données nécessaires sont disponibles, lancer ensuite l'implémentation de 3D Gaussian Splatting sélectionnée lors de la Phase 6.
+
+Documenter précisément :
+
+* implémentation utilisée ;
+* version ;
+* dépôt ou source ;
+* dépendances ;
+* GPU ;
+* VRAM ;
+* paramètres ;
+* nombre d'itérations ;
+* temps de calcul ;
+* taille du résultat ;
+* format de sortie.
+
+IMPORTANT :
+
+Si le pipeline Gaussian Splatting ne fonctionne pas dans l'environnement actuel, NE PAS remplacer le résultat par une autre démonstration.
+
+Explique simplement :
+
+* pourquoi il échoue ;
+* à quel niveau ;
+* ce qui manque ;
+* quelle infrastructure serait nécessaire.
+
+---
+
+# 10. VISUALISATION DU RÉSULTAT
+
+Si un résultat 3D réel est obtenu, fournir un moyen d'inspection.
+
+Cela peut être :
+
+* viewer local ;
+* outil compatible ;
+* export visualisable ;
+* capture d'écran du résultat ;
+* autre moyen technique permettant de vérifier réellement la reconstruction.
+
+Le viewer final BurkinaWatch n'est PAS demandé.
+
+---
+
+# 11. GÉORÉFÉRENCEMENT
+
+Si la vidéo contient des données GPS exploitables, les conserver dans le rapport.
+
+Sinon, ne pas inventer de coordonnées.
+
+Pour cette première expérience, il suffit de démontrer :
+
+* position GPS disponible ou non ;
+* trajectoire disponible ou non ;
+* possibilité future de rattacher la reconstruction à la géographie.
+
+NE PAS prétendre que la scène est précisément géoréférencée si cela n'a pas été démontré.
+
+---
+
+# 12. TEST DE QUALITÉ
+
+Évaluer le résultat selon :
+
+### Géométrie
+
+* cohérence ;
+* trous ;
+* déformations ;
+* échelle ;
+* stabilité.
+
+### Apparence
+
+* textures ;
+* détails ;
+* réalisme ;
+* artefacts.
+
+### Mouvement
+
+* personnes ;
+* véhicules ;
+* végétation ;
+* objets dynamiques.
+
+### Navigation
+
+* possibilité de changer de point de vue ;
+* continuité ;
+* zones manquantes.
+
+---
+
+# 13. MÉTRIQUES
+
+Créer un rapport expérimental contenant au minimum :
+
+## INPUT
+
+* vidéo ;
+* durée ;
+* résolution ;
+* FPS ;
+* taille.
+
+## FRAMES
+
+* fréquence ;
+* nombre ;
+* résolution ;
+* taille.
+
+## SfM
+
+* images ;
+* images reconstruites ;
+* points ;
+* caméras ;
+* temps ;
+* mémoire.
+
+## MVS
+
+* temps ;
+* points ;
+* fichiers ;
+* taille.
+
+## 3DGS
+
+* GPU ;
+* VRAM ;
+* paramètres ;
+* temps ;
+* nombre de Gaussians si disponible ;
+* taille du résultat.
+
+## TOTAL
+
+* durée totale du pipeline ;
+* espace disque ;
+* ressources utilisées.
+
+---
+
+# 14. ANALYSE DES LIMITES
+
+Identifier honnêtement les limites rencontrées.
+
+Par exemple :
+
+* vidéo trop courte ;
+* caméra trop rapide ;
+* flou ;
+* faible overlap ;
+* objets dynamiques ;
+* GPU insuffisant ;
+* mémoire insuffisante ;
+* reconstruction partielle ;
+* scène trop grande ;
+* résultat trop lourd.
+
+---
+
+# 15. NE PAS OPTIMISER PRÉMATURÉMENT
+
+Pour ce premier test, ne cherche pas encore à :
+
+* réduire drastiquement les coûts ;
+* automatiser tout le pipeline ;
+* paralléliser massivement ;
+* créer un système de production ;
+* traiter plusieurs vidéos simultanément.
+
+Nous cherchons d'abord à obtenir une PREMIÈRE PREUVE DE FONCTIONNEMENT.
+
+---
+
+# 16. RAPPORT FINAL
+
+À la fin, réponds clairement à ces questions :
+
+### Question 1
+
+La vidéo permet-elle une reconstruction SfM exploitable ?
+
+### Question 2
+
+La reconstruction dense est-elle exploitable ?
+
+### Question 3
+
+Le Gaussian Splatting fonctionne-t-il ?
+
+### Question 4
+
+Le résultat est-il visuellement et spatialement crédible ?
+
+### Question 5
+
+Quelles sont les principales limitations ?
+
+### Question 6
+
+Quel matériel serait nécessaire pour automatiser cela à grande échelle ?
+
+### Question 7
+
+Notre architecture COLMAP/SfM-MVS + 3DGS reste-t-elle validée ?
+
+---
+
+# 17. DÉCISION
+
+Conclure par l'une des trois décisions :
+
+## GO
+
+Le prototype est suffisamment concluant pour passer à l'étape d'industrialisation.
+
+## GO AVEC AJUSTEMENTS
+
+Le principe fonctionne mais certains paramètres ou composants doivent être corrigés avant l'industrialisation.
+
+## NO-GO
+
+Le pipeline actuel n'est pas suffisamment fiable et l'architecture doit être réévaluée.
+
+Justifier la décision avec les résultats réels.
+
+---
+
+# 18. ARRÊT OBLIGATOIRE
+
+Après le rapport :
+
+NE PAS intégrer le moteur dans BurkinaWatch.
+
+NE PAS activer la fonctionnalité pour les utilisateurs.
+
+NE PAS créer le GPU worker de production.
+
+NE PAS créer le viewer final.
+
+NE PAS lancer de traitement de masse.
+
+NE PAS déployer en production.
+
+ARRÊTE-TOI et attends ma validation.
+
+Cette expérience doit nous fournir une preuve technique réelle avant toute industrialisation.
