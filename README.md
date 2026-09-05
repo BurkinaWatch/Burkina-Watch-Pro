@@ -56,6 +56,12 @@ référence de stockage. L’adaptateur actuel utilise `STREETVIEW_STORAGE_DIR`
 pour le développement ; un volume persistant Railway ou un Object Storage devra
 être configuré avant une utilisation de production.
 
+En production, le stockage objet S3-compatible est obligatoire par défaut. Le
+client demande une session multipart à Express, envoie directement les parties
+vers le bucket via des URLs présignées, puis Express vérifie l'objet final. Le
+filesystem reste réservé au développement. La configuration et le runbook sont
+documentés dans [`docs/STREETVIEW_STORAGE.md`](docs/STREETVIEW_STORAGE.md).
+
 La migration additive est `migrations/0008_streetview_contributions.sql`.
 Après sauvegarde et validation de la cible, elle peut être appliquée avec :
 
