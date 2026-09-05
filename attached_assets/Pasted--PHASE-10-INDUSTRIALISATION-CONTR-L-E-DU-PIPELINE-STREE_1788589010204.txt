@@ -1,0 +1,916 @@
+# PHASE 10 — INDUSTRIALISATION CONTRÔLÉE DU PIPELINE STREET VIEW 3D
+
+## CONTEXTE
+
+Les phases précédentes ont permis de :
+
+* auditer l'ancien module Street View ;
+* réactiver le parcours de contribution ;
+* préparer le stockage et les métadonnées ;
+* préparer l'architecture asynchrone ;
+* définir l'architecture 3D cible ;
+* préparer un environnement expérimental ;
+* tester le pipeline de reconstruction ;
+* expérimenter COLMAP / SfM / MVS / 3D Gaussian Splatting.
+
+La Phase 9 devait permettre de déterminer si une vidéo peut réellement produire une représentation 3D exploitable.
+
+Cette phase commence UNIQUEMENT à partir des résultats réels de :
+
+`experiments/streetview-3d/PHASE_9_RESULT.md`
+
+---
+
+# OBJECTIF
+
+Transformer le prototype validé en une architecture capable de traiter progressivement les futures contributions utilisateurs.
+
+Architecture cible :
+
+USER
+↓
+BURKINAWATCH API
+↓
+UPLOAD SÉCURISÉ
+↓
+OBJECT STORAGE
+↓
+DATABASE
+↓
+PROCESSING JOB
+↓
+QUEUE
+↓
+CPU WORKER
+↓
+PREPROCESSING
+↓
+COLMAP / SfM
+↓
+MVS
+↓
+GPU WORKER
+↓
+3DGS
+↓
+QUALITY CHECK
+↓
+SCENE 3D
+↓
+PUBLICATION FUTURE
+
+IMPORTANT :
+
+Cette phase ne doit PAS encore créer l'explorateur 3D public.
+
+Elle doit construire le moteur de traitement fiable qui permettra de le faire ensuite.
+
+---
+
+# RÈGLE ABSOLUE : PRODUCTION STABLE
+
+Avant toute modification :
+
+inspecter l'architecture actuelle.
+
+Ne pas réécrire inutilement les composants existants.
+
+Ne pas casser :
+
+* authentification ;
+* utilisateurs ;
+* Signalements ;
+* SOS ;
+* carte existante ;
+* autres fonctionnalités BurkinaWatch ;
+* routes existantes ;
+* PostgreSQL ;
+* déploiement Railway ;
+* stockage existant.
+
+Toute modification doit être minimale, isolée et réversible.
+
+---
+
+# ÉTAPE 1 — AUDIT DU RÉSULTAT DE PHASE 9
+
+Lire intégralement :
+
+`experiments/streetview-3d/PHASE_9_RESULT.md`
+
+Puis inspecter les artefacts produits.
+
+Identifier précisément :
+
+* pipeline réellement utilisé ;
+* versions ;
+* commandes ;
+* GPU ;
+* VRAM ;
+* temps ;
+* consommation mémoire ;
+* taille des données ;
+* qualité ;
+* erreurs ;
+* limitations.
+
+NE PAS supposer que le pipeline fonctionne.
+
+Le rapport Phase 9 est la source de décision.
+
+---
+
+# ÉTAPE 2 — DÉCISION GO / NO-GO
+
+Avant de coder, déterminer :
+
+### Si Phase 9 = NO-GO
+
+NE PAS industrialiser le pipeline.
+
+Analyser les blocages et proposer les corrections nécessaires.
+
+### Si Phase 9 = GO WITH ADJUSTMENTS
+
+Implémenter uniquement les ajustements indispensables.
+
+### Si Phase 9 = GO
+
+Continuer vers l'industrialisation.
+
+Cette décision doit être documentée.
+
+---
+
+# ÉTAPE 3 — ARCHITECTURE DES WORKERS
+
+Concevoir une séparation claire :
+
+## API
+
+Responsable de :
+
+* authentification ;
+* contribution ;
+* upload ;
+* métadonnées ;
+* création des jobs ;
+* consultation du statut ;
+* administration.
+
+L'API NE DOIT PAS effectuer de reconstruction 3D lourde.
+
+---
+
+## CPU WORKER
+
+Responsable de :
+
+* récupération du job ;
+* téléchargement/lecture de l'original ;
+* validation ;
+* extraction vidéo ;
+* extraction des métadonnées ;
+* sampling des frames ;
+* prétraitement ;
+* préparation COLMAP ;
+* SfM ;
+* MVS si approprié ;
+* génération des artefacts intermédiaires ;
+* transmission vers le GPU worker.
+
+---
+
+## GPU WORKER
+
+Responsable de :
+
+* réception d'un dataset validé ;
+* entraînement/reconstruction 3DGS ;
+* génération des artefacts 3D ;
+* validation minimale ;
+* stockage du résultat ;
+* retour du statut.
+
+---
+
+# ÉTAPE 4 — MACHINE À ÉTATS
+
+Formaliser les états.
+
+Proposition :
+
+`UPLOADED`
+
+↓
+
+`VALIDATING`
+
+↓
+
+`QUEUED_PREPROCESSING`
+
+↓
+
+`PREPROCESSING`
+
+↓
+
+`QUEUED_SFM`
+
+↓
+
+`SFM_PROCESSING`
+
+↓
+
+`SFM_COMPLETED`
+
+↓
+
+`QUEUED_MVS`
+
+↓
+
+`MVS_PROCESSING`
+
+↓
+
+`MVS_COMPLETED`
+
+↓
+
+`QUEUED_3DGS`
+
+↓
+
+`3DGS_PROCESSING`
+
+↓
+
+`3DGS_COMPLETED`
+
+↓
+
+`QUALITY_CHECK`
+
+↓
+
+`READY_FOR_PUBLICATION`
+
+Puis :
+
+`PUBLISHED`
+
+Prévoir également :
+
+`FAILED`
+
+`RETRY_PENDING`
+
+`CANCELLED`
+
+---
+
+# ÉTAPE 5 — JOBS ATOMICQUES
+
+Chaque étape doit être un job identifiable.
+
+Exemples :
+
+`VIDEO_VALIDATE`
+
+`FRAME_EXTRACTION`
+
+`SFM_RECONSTRUCTION`
+
+`MVS_RECONSTRUCTION`
+
+`GAUSSIAN_SPLATTING`
+
+`QUALITY_CHECK`
+
+Chaque job doit avoir :
+
+* id ;
+* contributionId ;
+* type ;
+* status ;
+* attempts ;
+* maxAttempts ;
+* progress ;
+* priority éventuelle ;
+* workerId ;
+* startedAt ;
+* completedAt ;
+* createdAt ;
+* updatedAt ;
+* errorCode ;
+* errorMessage ;
+* inputArtifact ;
+* outputArtifact.
+
+---
+
+# ÉTAPE 6 — IDempotence
+
+Un job ne doit jamais produire deux fois des artefacts incohérents simplement parce qu'un worker a redémarré.
+
+Implémenter des protections contre :
+
+* double exécution ;
+* timeout ;
+* crash ;
+* restart ;
+* réseau interrompu ;
+* worker mort ;
+* job déjà terminé.
+
+Avant chaque étape :
+
+vérifier l'état actuel.
+
+Exemple :
+
+si `SFM_COMPLETED` existe déjà,
+
+ne pas relancer inutilement SfM.
+
+---
+
+# ÉTAPE 7 — RETRY
+
+Mettre en place :
+
+* nombre maximum de tentatives ;
+* backoff ;
+* distinction erreur temporaire / permanente ;
+* journalisation ;
+* état final FAILED.
+
+Exemples temporaires :
+
+* GPU indisponible ;
+* timeout réseau ;
+* stockage temporairement inaccessible.
+
+Exemples permanents :
+
+* vidéo corrompue ;
+* vidéo trop courte ;
+* qualité insuffisante ;
+* absence de données exploitables ;
+* reconstruction impossible.
+
+---
+
+# ÉTAPE 8 — STOCKAGE DES ARTEFACTS
+
+Structurer proprement les fichiers.
+
+Exemple :
+
+`streetview/{contributionId}/original/`
+
+`streetview/{contributionId}/frames/`
+
+`streetview/{contributionId}/sfm/`
+
+`streetview/{contributionId}/mvs/`
+
+`streetview/{contributionId}/3dgs/`
+
+`streetview/{contributionId}/preview/`
+
+`streetview/{contributionId}/logs/`
+
+La base de données ne doit PAS contenir les fichiers lourds.
+
+Elle contient uniquement :
+
+* références ;
+* métadonnées ;
+* statuts ;
+* métriques ;
+* relations.
+
+---
+
+# ÉTAPE 9 — NETTOYAGE
+
+Définir une politique de rétention.
+
+Exemple :
+
+Original :
+CONSERVÉ.
+
+Résultat 3D :
+CONSERVÉ.
+
+Preview :
+CONSERVÉ.
+
+Frames :
+TEMPORAIRE ou conservés selon politique.
+
+Artefacts MVS :
+TEMPORAIRES.
+
+Logs détaillés :
+RÉTENTION LIMITÉE.
+
+Ne supprimer aucun artefact nécessaire à une reconstruction ou à une future vérification sans règle explicite.
+
+---
+
+# ÉTAPE 10 — GPU WORKER TEMPORAIRE
+
+Le GPU ne doit PAS devenir une machine allumée en permanence sans nécessité.
+
+Étudier une architecture permettant :
+
+* démarrage à la demande ;
+* traitement d'un lot ;
+* arrêt après inactivité ;
+* limitation de concurrence ;
+* contrôle du coût.
+
+Documenter :
+
+* coût par heure ;
+* coût par reconstruction ;
+* temps moyen ;
+* capacité GPU ;
+* nombre de jobs simultanés.
+
+Ne pas activer automatiquement un fournisseur cloud payant sans validation humaine.
+
+---
+
+# ÉTAPE 11 — CONCURRENCE
+
+Définir :
+
+* nombre de jobs CPU simultanés ;
+* nombre de jobs GPU simultanés ;
+* verrouillage ;
+* réservation d'un job ;
+* heartbeat worker ;
+* timeout ;
+* récupération des jobs abandonnés.
+
+Le système doit empêcher :
+
+Worker A → job 123
+
+et simultanément :
+
+Worker B → job 123.
+
+---
+
+# ÉTAPE 12 — OBSERVABILITÉ
+
+Chaque reconstruction doit être traçable.
+
+Conserver :
+
+* contribution ;
+* job ;
+* worker ;
+* durée ;
+* étape ;
+* statut ;
+* taille input ;
+* taille output ;
+* erreurs ;
+* consommation estimée ;
+* timestamps.
+
+Créer des logs structurés.
+
+NE JAMAIS enregistrer :
+
+* tokens ;
+* mots de passe ;
+* secrets ;
+* clés privées ;
+* credentials ;
+* URLs signées complètes si elles contiennent des informations sensibles.
+
+---
+
+# ÉTAPE 13 — QUALITÉ
+
+Avant qu'une scène soit considérée comme publiable :
+
+vérifier automatiquement autant que raisonnablement possible :
+
+* nombre de frames ;
+* images alignées ;
+* qualité SfM ;
+* nombre de points ;
+* couverture ;
+* éventuels trous ;
+* taille du résultat ;
+* présence des artefacts attendus ;
+* intégrité du résultat 3DGS.
+
+Créer un statut :
+
+`QUALITY_PASS`
+
+ou
+
+`QUALITY_REVIEW`
+
+ou
+
+`QUALITY_FAIL`
+
+Ne jamais publier automatiquement une scène manifestement mauvaise.
+
+---
+
+# ÉTAPE 14 — MÉTADONNÉES GÉOSPATIALES
+
+Conserver dès maintenant les données nécessaires au futur géoréférencement :
+
+* latitude ;
+* longitude ;
+* altitude si disponible ;
+* précision GPS ;
+* orientation ;
+* timestamp ;
+* appareil ;
+* trajectoire éventuelle.
+
+IMPORTANT :
+
+Ne PAS prétendre que ces coordonnées constituent déjà le géoréférencement précis de la reconstruction.
+
+À ce stade :
+
+GPS = information de localisation.
+
+La géométrie reconstruite doit encore être alignée correctement dans le système géospatial futur.
+
+---
+
+# ÉTAPE 15 — DIMENSION TEMPORELLE
+
+Préparer dès maintenant la possibilité d'avoir plusieurs captures du même endroit :
+
+Exemple :
+
+Rue X
+→ capture 2026
+→ capture 2027
+→ capture 2028
+
+Ne pas écraser l'ancienne scène.
+
+Chaque reconstruction doit être versionnée.
+
+Prévoir conceptuellement :
+
+`LOCATION`
+
+→ plusieurs
+
+`SCENE_3D`
+
+avec :
+
+* capturedAt ;
+* processedAt ;
+* version ;
+* sourceContributionId ;
+* status.
+
+---
+
+# ÉTAPE 16 — PRÉPARATION À LA FUSION FUTURE
+
+NE PAS encore fusionner les scènes.
+
+Mais l'architecture doit permettre plus tard :
+
+Scene A
++
+Scene B
+→
+Scene AB
+
+Prévoir des identifiants persistants permettant de relier :
+
+* scène ;
+* lieu ;
+* contribution ;
+* capture ;
+* coordonnées ;
+* version temporelle.
+
+---
+
+# ÉTAPE 17 — SÉCURITÉ
+
+Vérifier :
+
+* contrôle d'accès ;
+* permissions utilisateur ;
+* isolation des fichiers ;
+* validation MIME ;
+* validation extension ;
+* taille maximale ;
+* quotas ;
+* chemins sécurisés ;
+* protection contre path traversal ;
+* fichiers malveillants ;
+* nettoyage ;
+* signed URLs ;
+* expiration des URLs ;
+* séparation stockage public / privé.
+
+Un utilisateur ne doit jamais pouvoir accéder aux fichiers privés d'une autre contribution simplement en devinant un identifiant.
+
+---
+
+# ÉTAPE 18 — TESTS
+
+Créer ou compléter des tests pour :
+
+### Job
+
+* création ;
+* queue ;
+* réservation ;
+* traitement ;
+* succès ;
+* échec ;
+* retry ;
+* expiration ;
+* récupération après crash.
+
+### Idempotence
+
+* double lancement ;
+* job déjà terminé ;
+* worker redémarré.
+
+### Storage
+
+* upload ;
+* lecture ;
+* écriture ;
+* fichier absent ;
+* accès interdit.
+
+### Pipeline
+
+* vidéo valide ;
+* vidéo invalide ;
+* SfM réussi ;
+* SfM échoué ;
+* GPU indisponible ;
+* 3DGS échoué ;
+* qualité insuffisante.
+
+### Sécurité
+
+* utilisateur A → contribution B ;
+* accès direct à un artefact privé ;
+* URL expirée ;
+* fichier non autorisé.
+
+---
+
+# ÉTAPE 19 — TEST END-TO-END
+
+Effectuer un seul traitement complet contrôlé.
+
+Pipeline :
+
+VIDEO
+→ UPLOAD
+→ JOB
+→ CPU
+→ SfM
+→ MVS
+→ GPU
+→ 3DGS
+→ QUALITY CHECK
+→ ARTIFACT FINAL
+
+Documenter chaque transition.
+
+Il faut pouvoir répondre :
+
+> Où se trouve actuellement cette reconstruction ?
+
+à n'importe quel moment du processus.
+
+---
+
+# ÉTAPE 20 — TEST DE REPRISE
+
+Simuler au moins :
+
+1. arrêt du CPU worker pendant un job ;
+2. redémarrage ;
+3. récupération du job.
+
+Puis :
+
+1. arrêt du GPU worker ;
+2. redémarrage ;
+3. récupération du job.
+
+Vérifier qu'aucune reconstruction n'est corrompue et qu'aucun job n'est perdu silencieusement.
+
+---
+
+# ÉTAPE 21 — TEST DE CHARGE LIMITÉ
+
+NE PAS faire de test massif.
+
+Tester seulement quelques contributions contrôlées.
+
+Objectif :
+
+détecter :
+
+* blocages ;
+* concurrence ;
+* problèmes de stockage ;
+* fuite mémoire ;
+* jobs bloqués ;
+* problèmes de queue ;
+* coûts inattendus.
+
+---
+
+# ÉTAPE 22 — PRÉPARER LE FUTUR SCENE REGISTRY
+
+Concevoir la structure permettant de gérer :
+
+`LOCATION`
+
+`CAPTURE`
+
+`SCENE_3D`
+
+`SCENE_VERSION`
+
+`SCENE_ARTIFACT`
+
+`PROCESSING_JOB`
+
+`QUALITY_CHECK`
+
+sans encore construire l'explorateur public.
+
+---
+
+# ÉTAPE 23 — DOCUMENTATION
+
+Créer :
+
+`docs/streetview/PHASE_10_ARCHITECTURE.md`
+
+Documenter :
+
+* architecture ;
+* workers ;
+* queue ;
+* états ;
+* stockage ;
+* sécurité ;
+* retry ;
+* idempotence ;
+* GPU ;
+* coûts ;
+* observabilité ;
+* qualité ;
+* temporalité ;
+* préparation fusion.
+
+Créer également si nécessaire :
+
+`docs/streetview/PHASE_10_OPERATIONS.md`
+
+avec les procédures opérationnelles.
+
+---
+
+# ÉTAPE 24 — CONTRÔLE DE PRODUCTION
+
+Avant de terminer :
+
+vérifier explicitement :
+
+* frontend intact ;
+* API existante intacte ;
+* authentification intacte ;
+* PostgreSQL intact ;
+* autres fonctionnalités intactes ;
+* déploiement intact ;
+* aucune clé secrète commitée ;
+* aucun credential dans Git ;
+* aucun worker GPU permanent lancé accidentellement.
+
+Exécuter les contrôles disponibles :
+
+`npm run check`
+
+tests pertinents
+
+et vérifications Git.
+
+---
+
+# RAPPORT FINAL
+
+Créer :
+
+`experiments/streetview-3d/PHASE_10_RESULT.md`
+
+Le rapport doit indiquer :
+
+## 1. Architecture finale
+
+## 2. Composants modifiés
+
+## 3. Composants créés
+
+## 4. Jobs
+
+## 5. Machine à états
+
+## 6. Stockage
+
+## 7. Sécurité
+
+## 8. Retry / idempotence
+
+## 9. Worker CPU
+
+## 10. Worker GPU
+
+## 11. Observabilité
+
+## 12. Tests réalisés
+
+## 13. Test end-to-end
+
+## 14. Test de reprise
+
+## 15. Coût estimatif
+
+## 16. Risques restants
+
+## 17. Impact production
+
+## 18. Recommandation Phase 11
+
+---
+
+# CRITÈRE DE RÉUSSITE
+
+La Phase 10 est réussie si :
+
+1. une contribution peut traverser le pipeline complet ;
+2. chaque étape est traçable ;
+3. un worker peut redémarrer sans casser le job ;
+4. les jobs sont idempotents ;
+5. les fichiers lourds restent dans le stockage approprié ;
+6. le GPU reste séparé de l'API ;
+7. les erreurs sont récupérables ;
+8. les scènes sont versionnables ;
+9. les données géographiques sont conservées ;
+10. aucun résultat fictif n'est généré ;
+11. aucune modification dangereuse de production n'est introduite.
+
+---
+
+# IMPORTANT
+
+NE PAS développer :
+
+* carte 3D publique ;
+* navigation 3D ;
+* fusion de scènes ;
+* géoréférencement définitif ;
+* portail géographique complet ;
+* système de crowdsourcing massif ;
+* marketplace ;
+* fonctionnalités commerciales.
+
+Ces éléments seront traités dans des phases ultérieures.
+
+À la fin de Phase 10 :
+
+**STOP.**
+
+Produire uniquement le rapport et attendre validation avant Phase 11.
