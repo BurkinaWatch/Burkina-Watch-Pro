@@ -1,0 +1,707 @@
+# PHASE 6 — ÉTUDE TECHNIQUE ET SÉLECTION DU MOTEUR DE RECONSTRUCTION 3D
+
+## CONTEXTE
+
+Le module Street View de BurkinaWatch est en cours de reconstruction.
+
+L'objectif n'est PAS de créer un simple lecteur vidéo ou une fausse expérience 3D.
+
+L'objectif à long terme est de permettre aux utilisateurs de contribuer à la reconstruction numérique du Burkina Faso :
+
+* une personne filme une rue ;
+* une autre filme un bâtiment ;
+* une autre filme un marché ;
+* une autre filme un monument ;
+* une autre filme un quartier ;
+* etc.
+
+Les vidéos doivent pouvoir être transformées en véritables représentations spatiales 3D.
+
+Les contributions seront géolocalisées et progressivement assemblées afin de constituer une représentation 3D de plus en plus vaste du territoire burkinabè.
+
+L'architecture doit donc être pensée dès maintenant pour pouvoir évoluer vers :
+
+BURKINA FASO
+→ RÉGIONS
+→ PROVINCES
+→ VILLES
+→ COMMUNES / DISTRICTS
+→ QUARTIERS
+→ RUES / LIEUX
+→ SCÈNES 3D
+
+Une même zone pourra également être capturée à différentes périodes afin de permettre ultérieurement une dimension temporelle.
+
+---
+
+# OBJECTIF DE CETTE PHASE
+
+NE PAS encore implémenter le moteur 3D.
+
+Nous devons d'abord déterminer quelle technologie ou combinaison de technologies est réellement adaptée au projet.
+
+Étudier au minimum les familles technologiques suivantes :
+
+1. Photogrammétrie
+2. NeRF
+3. 3D Gaussian Splatting
+4. Approches hybrides
+5. Solutions / services externes spécialisés
+6. Pipeline GPU auto-hébergé
+7. Toute autre technologie pertinente découverte pendant l'analyse
+
+L'analyse doit être basée sur notre architecture ACTUELLE et non sur une démonstration théorique.
+
+---
+
+# RÈGLE ABSOLUE
+
+NE MODIFIER AUCUN CODE pendant cette phase.
+
+NE PAS :
+
+* installer un moteur 3D ;
+* ajouter des dépendances lourdes ;
+* modifier la base de données ;
+* modifier le worker ;
+* modifier le système de stockage ;
+* créer un GPU worker ;
+* créer un viewer ;
+* lancer une reconstruction réelle ;
+* remplacer une technologie existante ;
+* modifier les routes existantes.
+
+Cette phase est une étude et une décision d'architecture.
+
+---
+
+# 1. AUDITER L'ARCHITECTURE ACTUELLE
+
+Inspecte réellement le dépôt actuel.
+
+Identifie :
+
+* frontend ;
+* backend ;
+* API ;
+* base de données ;
+* système d'authentification ;
+* stockage des vidéos ;
+* stockage des artefacts ;
+* système de jobs ;
+* worker ;
+* déploiement Railway ;
+* éventuels services externes ;
+* système de géolocalisation ;
+* structure actuelle des contributions Street View ;
+* modèle actuel des processing jobs ;
+* mécanismes de progression ;
+* gestion des erreurs ;
+* limites actuelles d'upload ;
+* formats vidéo supportés ;
+* métadonnées vidéo disponibles.
+
+Ne suppose rien.
+
+Utilise uniquement ce qui existe réellement dans le repository.
+
+---
+
+# 2. ANALYSER LES DONNÉES D'ENTRÉE
+
+Détermine précisément quelles données le futur moteur recevra.
+
+Par exemple :
+
+* vidéo MP4 ;
+* résolution ;
+* FPS ;
+* durée ;
+* orientation ;
+* GPS ;
+* timestamp ;
+* éventuelles données EXIF ;
+* trajectoire GPS ;
+* images extraites ;
+* keyframes ;
+* informations caméra ;
+* éventuelles données IMU si disponibles.
+
+Détermine également quelles informations sont indispensables pour une reconstruction de qualité.
+
+---
+
+# 3. COMPARAISON DES TECHNOLOGIES
+
+Construis une comparaison sérieuse entre :
+
+## A. Photogrammétrie
+
+Évaluer :
+
+* qualité géométrique ;
+* textures ;
+* besoin en images ;
+* tolérance au mouvement ;
+* temps de calcul ;
+* besoin GPU ;
+* consommation CPU/RAM ;
+* taille des résultats ;
+* précision spatiale ;
+* difficulté d'automatisation ;
+* qualité sur les rues ;
+* qualité sur les bâtiments ;
+* qualité sur les scènes complexes ;
+* possibilités de géoréférencement ;
+* facilité de visualisation web ;
+* coût à grande échelle.
+
+---
+
+## B. NeRF
+
+Évaluer :
+
+* qualité visuelle ;
+* réalisme ;
+* temps d'entraînement ;
+* coût GPU ;
+* taille des modèles ;
+* temps d'inférence ;
+* difficulté de déploiement ;
+* possibilité de traitement automatisé ;
+* qualité à partir d'une vidéo ;
+* géoréférencement ;
+* compatibilité avec un navigateur ;
+* scalabilité à plusieurs milliers de scènes.
+
+---
+
+## C. 3D Gaussian Splatting
+
+Évaluer :
+
+* qualité visuelle ;
+* réalisme ;
+* vitesse de rendu ;
+* temps de reconstruction ;
+* besoin GPU ;
+* coût ;
+* taille des scènes ;
+* compression ;
+* streaming ;
+* visualisation dans un navigateur ;
+* compatibilité WebGL/WebGPU ou autres technologies web pertinentes ;
+* comportement sur mobile ;
+* géoréférencement ;
+* possibilité de fusionner plusieurs scènes ;
+* possibilité de conserver plusieurs captures temporelles ;
+* automatisation ;
+* scalabilité.
+
+---
+
+## D. SOLUTIONS HYBRIDES
+
+Étudier si la meilleure architecture serait par exemple :
+
+VIDÉO
+↓
+EXTRACTION DES FRAMES
+↓
+ESTIMATION DE TRAJECTOIRE / CAMÉRA
+↓
+RECONSTRUCTION
+↓
+3D GAUSSIAN SPLAT / MESH / AUTRE REPRÉSENTATION
+↓
+OPTIMISATION
+↓
+GÉORÉFÉRENCEMENT
+↓
+STOCKAGE
+↓
+VIEWER WEB
+
+Déterminer si plusieurs technologies doivent être combinées.
+
+---
+
+# 4. PROBLÈME CENTRAL : LA VIDÉO UTILISATEUR
+
+Ne pars pas du principe qu'une vidéo utilisateur sera parfaite.
+
+Elle pourra être :
+
+* filmée en marchant ;
+* filmée depuis une voiture ;
+* tremblante ;
+* trop rapide ;
+* mal éclairée ;
+* avec des personnes ;
+* avec des véhicules ;
+* avec des zones peu texturées ;
+* avec des objets mobiles ;
+* avec des changements de lumière ;
+* avec une mauvaise couverture spatiale.
+
+Détermine quelles conditions minimales une vidéo doit respecter pour produire une reconstruction exploitable.
+
+Propose un futur système de qualité permettant de déterminer automatiquement :
+
+* vidéo acceptable ;
+* vidéo exploitable avec avertissement ;
+* vidéo insuffisante ;
+* vidéo impossible à reconstruire.
+
+Mais NE PAS encore implémenter ce système.
+
+---
+
+# 5. GÉORÉFÉRENCEMENT
+
+C'est un point critique.
+
+Une scène 3D ne doit pas être uniquement un objet visuel placé arbitrairement dans une page.
+
+Elle doit pouvoir être associée à une position géographique réelle.
+
+Étudier :
+
+* coordonnées GPS ;
+* système de coordonnées local ;
+* système de coordonnées global ;
+* orientation ;
+* altitude ;
+* transformation entre coordonnées locales et géographiques ;
+* précision ;
+* dérive GPS ;
+* trajectoire GPS pendant la vidéo.
+
+Déterminer comment une future scène pourrait être placée correctement sur la carte BurkinaWatch.
+
+---
+
+# 6. FUTURE CONNEXION ENTRE LES SCÈNES
+
+C'est un point FONDAMENTAL du projet.
+
+Nous ne voulons pas uniquement avoir :
+
+SCÈNE A    SCÈNE B    SCÈNE C
+
+comme des objets complètement indépendants.
+
+À terme, nous voulons pouvoir obtenir :
+
+SCÈNE A → SCÈNE B → SCÈNE C → SCÈNE D
+
+pour progressivement reconstruire une rue, un quartier, puis une ville.
+
+Étudier donc :
+
+* alignement ;
+* coordonnées ;
+* orientation ;
+* overlap entre captures ;
+* points communs ;
+* transformations spatiales ;
+* détection de scènes voisines ;
+* fusion ;
+* recalage ;
+* gestion des erreurs ;
+* confiance dans les connexions.
+
+Déterminer quelles technologies sont les plus adaptées à cette vision.
+
+NE PAS implémenter la fusion maintenant.
+
+---
+
+# 7. DIMENSION TEMPORELLE
+
+Le système doit pouvoir évoluer vers :
+
+Rue X
+→ capture 2026
+→ capture 2027
+→ capture 2028
+→ etc.
+
+Étudier comment le futur modèle pourrait différencier :
+
+* scène ;
+* capture ;
+* version ;
+* date ;
+* état temporel ;
+* reconstruction.
+
+Ne pas modifier la base de données maintenant.
+
+Faire uniquement une recommandation architecturale.
+
+---
+
+# 8. COÛT ET SCALABILITÉ
+
+Nous devons penser au projet réel.
+
+Imagine successivement :
+
+### Niveau 1
+
+100 scènes
+
+### Niveau 2
+
+1 000 scènes
+
+### Niveau 3
+
+10 000 scènes
+
+### Niveau 4
+
+100 000 scènes
+
+Pour chaque technologie, estimer qualitativement :
+
+* coût GPU ;
+* temps de traitement ;
+* stockage ;
+* bande passante ;
+* coût du viewer ;
+* coût de maintenance ;
+* complexité opérationnelle.
+
+Identifier les goulets d'étranglement.
+
+Déterminer quelles opérations peuvent être :
+
+* CPU ;
+* GPU ;
+* parallélisées ;
+* mises en cache ;
+* différées ;
+* reprises après interruption.
+
+---
+
+# 9. RAILWAY
+
+Analyser la compatibilité de la future architecture avec notre déploiement Railway actuel.
+
+Ne suppose PAS que Railway doit obligatoirement exécuter la reconstruction 3D.
+
+Déterminer plutôt si l'architecture idéale serait :
+
+Railway
+→ API
+→ DB
+→ orchestration des jobs
+
+puis :
+
+Worker média
+→ CPU
+
+et éventuellement :
+
+GPU Worker
+→ reconstruction 3D
+
+Le GPU Worker pourrait éventuellement être situé sur une autre infrastructure si cela est techniquement ou économiquement préférable.
+
+Analyser les avantages et inconvénients.
+
+---
+
+# 10. ARCHITECTURE CIBLE
+
+À partir de l'étude, proposer une architecture cible claire.
+
+Par exemple :
+
+USER
+↓
+BURKINAWATCH
+↓
+UPLOAD
+↓
+OBJECT STORAGE
+↓
+PROCESSING JOB
+↓
+MEDIA WORKER
+↓
+PREPROCESSING
+↓
+3D RECONSTRUCTION JOB
+↓
+GPU WORKER
+↓
+RECONSTRUCTION ENGINE
+↓
+QUALITY CONTROL
+↓
+GEOREFERENCING
+↓
+3D SCENE
+↓
+OBJECT STORAGE
+↓
+3D VIEWER
+↓
+MAP / STREET VIEW EXPLORER
+
+Mais cette architecture doit être corrigée si ton analyse montre qu'une autre approche est meilleure.
+
+---
+
+# 11. ABSTRACTION DU MOTEUR
+
+Le futur code NE DOIT PAS être conçu de façon à dépendre définitivement d'un seul moteur.
+
+Proposer une abstraction conceptuelle du type :
+
+ReconstructionEngine
+
+avec éventuellement des opérations comme :
+
+* validateInput()
+* preprocess()
+* reconstruct()
+* optimize()
+* export()
+* getMetadata()
+* cleanup()
+
+Le nom exact et la structure peuvent être différents si une meilleure architecture existe.
+
+L'objectif est de pouvoir remplacer :
+
+Engine A
+
+par :
+
+Engine B
+
+sans reconstruire toute l'application.
+
+---
+
+# 12. FORMAT DE SORTIE
+
+Étudier quels formats devraient être utilisés pour les futures scènes :
+
+* mesh ;
+* point cloud ;
+* Gaussian Splats ;
+* textures ;
+* métadonnées ;
+* bounding box ;
+* coordonnées ;
+* orientation ;
+* niveaux de détail ;
+* thumbnails ;
+* fichiers optimisés pour streaming.
+
+Déterminer quels formats sont :
+
+* adaptés au web ;
+* adaptés au stockage ;
+* adaptés au traitement ;
+* adaptés au mobile ;
+* adaptés à une future plateforme 3D à grande échelle.
+
+---
+
+# 13. VIEWER
+
+Ne pas développer le viewer maintenant.
+
+Mais déterminer les contraintes futures.
+
+Le viewer devra idéalement permettre :
+
+* navigation dans la scène ;
+* rotation ;
+* déplacement ;
+* zoom ;
+* positionnement géographique ;
+* passage d'une scène à une autre ;
+* chargement progressif ;
+* niveaux de détail ;
+* éventuellement mode plein écran ;
+* fonctionnement desktop ;
+* fonctionnement mobile.
+
+Déterminer quelle technologie de rendu serait compatible avec le moteur recommandé.
+
+---
+
+# 14. PRIVACY ET MODÉRATION
+
+Le futur moteur devra tenir compte du fait que les vidéos pourront contenir :
+
+* visages ;
+* plaques d'immatriculation ;
+* personnes ;
+* espaces privés ;
+* informations sensibles.
+
+Analyser où pourrait être placé un futur pipeline d'anonymisation :
+
+VIDÉO ORIGINALE
+↓
+DÉTECTION
+↓
+BLUR / ANONYMISATION
+↓
+RECONSTRUCTION
+
+Déterminer également si l'anonymisation doit intervenir avant ou après certaines étapes de reconstruction.
+
+NE PAS implémenter maintenant.
+
+---
+
+# 15. RECOMMANDATION FINALE
+
+À la fin de l'analyse, tu dois prendre une position claire.
+
+Ne réponds pas simplement :
+
+« toutes les technologies ont des avantages ».
+
+Je veux une recommandation.
+
+Donne :
+
+### TECHNOLOGIE PRINCIPALE RECOMMANDÉE
+
+[technologie]
+
+### TECHNOLOGIE SECONDAIRE ÉVENTUELLE
+
+[technologie]
+
+### TECHNOLOGIE À ÉVITER POUR CE PROJET
+
+[technologie]
+
+### POURQUOI
+
+Expliquer précisément le choix par rapport à :
+
+* qualité ;
+* vidéo utilisateur ;
+* géolocalisation ;
+* coût ;
+* GPU ;
+* scalabilité ;
+* web ;
+* mobile ;
+* stockage ;
+* temps de traitement ;
+* connexion entre scènes ;
+* dimension temporelle ;
+* maintenance.
+
+---
+
+# 16. PLAN DE MISE EN ŒUVRE FUTUR
+
+Proposer ensuite les futures phases, par exemple :
+
+PHASE 7
+Prototype contrôlé sur une vraie vidéo
+
+PHASE 8
+Premier moteur de reconstruction
+
+PHASE 9
+GPU Worker
+
+PHASE 10
+Pipeline complet vidéo → scène 3D
+
+PHASE 11
+Viewer 3D réel
+
+PHASE 12
+Géoréférencement
+
+PHASE 13
+Connexion entre scènes
+
+PHASE 14
+Explorateur géographique
+
+PHASE 15
+Optimisation / streaming / LOD
+
+PHASE 16
+Montée en charge
+
+Tu peux modifier cette séquence si ton analyse le justifie.
+
+---
+
+# 17. TEST DE RÉALISME
+
+Avant de conclure, pose cette question :
+
+« Est-ce que cette architecture permet réellement, à terme, de transformer les contributions vidéo des utilisateurs en un monde 3D géolocalisé du Burkina Faso ? »
+
+Si la réponse est non ou seulement partiellement :
+
+* explique pourquoi ;
+* identifie les limites ;
+* propose une architecture plus réaliste.
+
+---
+
+# 18. RAPPORT FINAL OBLIGATOIRE
+
+À la fin, fournis un rapport structuré avec :
+
+1. État actuel du repository
+2. Architecture actuelle pertinente
+3. Contraintes identifiées
+4. Comparaison Photogrammétrie / NeRF / 3D Gaussian Splatting / autres
+5. Tableau comparatif
+6. Technologie recommandée
+7. Architecture cible
+8. Pipeline futur
+9. Gestion GPU
+10. Stockage
+11. Géoréférencement
+12. Connexion future des scènes
+13. Dimension temporelle
+14. Privacy
+15. Scalabilité
+16. Coût
+17. Risques
+18. Plan des prochaines phases
+19. Ce qui doit être conservé dans l'architecture actuelle
+20. Ce qui devra éventuellement évoluer
+
+IMPORTANT :
+
+NE MODIFIE AUCUN FICHIER.
+
+NE FAIS AUCUNE MIGRATION.
+
+N'INSTALLE AUCUNE DÉPENDANCE.
+
+N'IMPLÉMENTE AUCUN MOTEUR 3D.
+
+N'ACTIVE AUCUN GPU WORKER.
+
+N'INVENTE AUCUNE PERFORMANCE.
+
+Cette phase doit produire une décision d'architecture suffisamment solide pour que la prochaine étape puisse commencer l'expérimentation sur une vraie vidéo sans compromettre l'architecture de BurkinaWatch.
+
+À la fin, ARRÊTE-TOI et attends ma validation avant toute implémentation.
