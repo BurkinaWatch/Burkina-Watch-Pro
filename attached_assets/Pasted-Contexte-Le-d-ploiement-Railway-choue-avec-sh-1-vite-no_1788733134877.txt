@@ -1,0 +1,36 @@
+Contexte : Le déploiement Railway échoue avec sh: 1: vite: not found malgré un lockfile correct. Le projet utilise le builder Railpack (pas Nixpacks — le fichier nixpacks.toml présent dans le repo est ignoré et n'a aucun effet). La cause probable est que vite et esbuild sont déclarés en devDependencies, ce qui rend l'installation fragile selon la détection automatique de l'environnement par Railpack.
+
+Objectif : Déplacer les outils nécessaires au build (vite, esbuild) vers dependencies, nettoyer la config Nixpacks obsolète, et créer une config Railpack explicite pour fiabiliser le build.
+
+Étapes à exécuter, dans l'ordre :
+
+Affiche le contenu actuel complet de package.json.
+Identifie dans devDependencies les paquets utilisés directement dans le script build (au minimum vite et esbuild), et déplace-les vers dependencies, en conservant exactement leurs versions actuelles (ne change aucune version).
+Supprime node_modules et package-lock.json.
+Relance npm install pour régénérer un lockfile cohérent avec ce nouveau package.json.
+Vérifie que vite et esbuild apparaissent bien dans dependencies du lockfile généré.
+Lance npm run build localement dans le shell Replit et confirme qu'il se termine sans erreur.
+Renomme nixpacks.toml en nixpacks.toml.unused (ne le supprime pas, juste renomme, pour garder une trace) afin qu'il ne prête plus à confusion, puisqu'il n'est pas utilisé par Railpack.
+Crée un fichier railway.json à la racine avec ce contenu exact :
+json
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "RAILPACK",
+    "buildCommand": "npm ci && npm run build"
+  },
+  "deploy": {
+    "startCommand": "npm run start"
+  }
+}
+Ajoute au commit : package.json, package-lock.json, nixpacks.toml.unused, railway.json.
+Committe avec le message : fix: move build tools to dependencies, add explicit railway.json for Railpack.
+Pousse le commit avec git push origin main en shell classique (pas via une intégration tierce), et affiche le résultat complet de la commande, y compris toute erreur d'authentification éventuelle.
+Affiche le SHA du commit poussé avec git rev-parse HEAD après confirmation que le push a réussi.
+
+Contraintes :
+
+Ne modifie aucun fichier source (server/, client/, config Vite, etc.).
+Ne change aucune version de dépendance existante.
+Si git push échoue pour une raison quelconque (authentification, conflit, etc.), arrête-toi et affiche l'erreur complète plutôt que de proposer une solution alternative silencieuse (pas d'"intégration GitHub connectée" en solution de repli).
+Confirme le résultat de chaque étape avant de passer à la suivante.
