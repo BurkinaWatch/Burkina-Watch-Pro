@@ -13,7 +13,7 @@ Railpack can still emit `npm warn config production` while its plan says `npm ci
 
 **Why:** A Railway build with Node 20.20.0/npm 10.8.2 ran `npm ci --include=dev --legacy-peer-deps` for over eight minutes, printed `Exit handler never called!`, and still advanced to a build with no Vite executable. The same tree completed with `npm install --include=dev --legacy-peer-deps` and built successfully, even with production mode enabled.
 
-**How to apply:** Use Railpack's `NODE_NPM_INSTALL` configuration variable to select `npm install --include=dev --legacy-peer-deps`; keep the build command as `npm run build`. Do not add a manual `node_modules` cleanup step because a mounted Vite cache can return `EBUSY`.
+**How to apply:** Use Railpack's `RAILPACK_NODE_NPM_INSTALL` configuration variable to select `npm install --include=dev --legacy-peer-deps`; keep the build command as `npm run build`. Do not add a manual `node_modules` cleanup step because a mounted Vite cache can return `EBUSY`.
 
 Railpack 0.39 also runs `npm i -g corepack@latest` before activating the pinned npm; with Node 20 this can emit an `EBADENGINE` warning for a newer Corepack while still exiting successfully.
 
