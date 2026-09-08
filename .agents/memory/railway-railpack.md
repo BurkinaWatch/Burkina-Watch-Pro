@@ -9,8 +9,8 @@ Railway builds should pin the Node and npm versions in project metadata rather t
 
 **How to apply:** Keep the Node/npm engine and package-manager declarations aligned with the tested local runtime, retain a matching `.nvmrc`, set production mode in the start command rather than globally, and classify every package needed by the production build as a runtime dependency when Railpack omits devDependencies.
 
-Railpack can still emit `npm warn config production` while its plan says `npm ci --include=dev`; explicitly scope `NPM_CONFIG_PRODUCTION=false` to the install command instead of deleting `node_modules`, whose Vite cache may be mounted and return `EBUSY`.
+Railpack can still emit `npm warn config production` while its plan says `npm ci --include=dev`; the warning alone does not prove that devDependencies were omitted because `--include=dev` wins in npm 10.8.2.
 
-**Why:** A manual `rm -rf node_modules` failed on Railway because `node_modules/.vite` was a busy cache mount, while the build continued without the Vite executable.
+**Why:** A Railway build with Node 20.20.0/npm 10.8.2 ran `npm ci --include=dev --legacy-peer-deps` for over eight minutes, printed `Exit handler never called!`, and still advanced to a build with no Vite executable. The same tree completed with `npm install --include=dev --legacy-peer-deps` and built successfully, even with production mode enabled.
 
-**How to apply:** Keep the build command as `npm run build`, and prefix the Railpack/Nixpacks install command with `NPM_CONFIG_PRODUCTION=false`; do not add a manual node_modules cleanup step.
+**How to apply:** Use Railpack's `NODE_NPM_INSTALL` configuration variable to select `npm install --include=dev --legacy-peer-deps`; keep the build command as `npm run build`. Do not add a manual `node_modules` cleanup step because a mounted Vite cache can return `EBUSY`.
