@@ -20,3 +20,9 @@ Railpack 0.39 also runs `npm i -g corepack@latest` before activating the pinned 
 **Why:** The warning is noisy but the build continued with npm 10.8.2; the reproducible failure remained the later `npm ci` step.
 
 **How to apply:** Treat this as a Railpack compatibility warning, not a reason to upgrade the application's Node runtime unless the command begins failing nonzero.
+
+Lockfiles generated inside Replit can contain `resolved` URLs for the private Replit package firewall; those URLs are not portable to Railway.
+
+**Why:** Railway's `npm install` reached a repeatable 502-second timeout while attempting to use 906 internal archive URLs, then reported `Exit handler never called!` and continued with an incomplete `node_modules`. Converting only those hosts to `registry.npmjs.org` made `npm ci`, Vite, esbuild, the production build, and TypeScript checks complete successfully without changing versions or integrity hashes.
+
+**How to apply:** Before diagnosing npm as a package/runtime bug, inspect lockfile `resolved` hosts. Keep public registry URLs in committed lockfiles used by external builders; do not regenerate the dependency tree unnecessarily.
