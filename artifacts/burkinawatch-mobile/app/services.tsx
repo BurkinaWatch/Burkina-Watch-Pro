@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Screen } from '@/components/Screen';
 import { SectionTitle } from '@/components/Brand';
@@ -13,31 +13,88 @@ const serviceGroups = [
   { title: 'Compte & transparence', items: [['Fil d’actualité', '/feed', 'radio'], ['Notifications', '/notifications', 'bell'], ['Guide', '/guide', 'book-open'], ['À propos', '/a-propos', 'info'], ['Fiabilité', '/fiabilite', 'check-circle'], ['Conditions', '/conditions', 'file-text'], ['Confidentialité', '/confidentialite', 'lock'], ['Connexion', '/connexion', 'log-in']] },
 ] as const;
 
+const categoryRoutes: Record<string, string> = {
+  urgences: '/urgences',
+  pharmacies: '/pharmacies',
+  hopitaux: '/hopitaux',
+  stations: '/stations',
+  gares: '/gares',
+  marches: '/marches',
+};
+
+type NativeRoute = '/feed' | '/(tabs)/alertes' | '/connexion';
+
+const nativeRoutes: Record<string, NativeRoute> = {
+  '/feed': '/feed',
+  '/notifications': '/(tabs)/alertes',
+  '/connexion': '/connexion',
+};
+
 export default function ServicesScreen() {
   const colors = useColors();
   const router = useRouter();
   const params = useLocalSearchParams<{ category?: string }>();
+
+  const selectedCategory = Array.isArray(params.category) ? params.category[0] : params.category;
+  const selectedRoute = selectedCategory ? categoryRoutes[selectedCategory] : undefined;
+  const selectedItem = serviceGroups
+    .flatMap((group) => group.items)
+    .find(([, route]) => route === selectedRoute);
+
   async function openFeature(route: string) {
-    if (route === '/urgences') {
-      router.push('/sos');
+    const nativeRoute = nativeRoutes[route];
+    if (nativeRoute) {
+      router.push(nativeRoute);
       return;
     }
+
     const domain = process.env.EXPO_PUBLIC_DOMAIN;
-    if (domain) {
+    if (!domain) {
+      Alert.alert(
+        'Service indisponible',
+        'La route BurkinaWatch n’est pas configurée dans cette version de l’application.',
+      );
+      return;
+    }
+
+    try {
       await Linking.openURL(`https://${domain}${route}`);
-    } else {
-      router.push('/services');
+    } catch {
+      Alert.alert(
+        'Ouverture impossible',
+        'Cette page BurkinaWatch ne peut pas être ouverte pour le moment. Vérifiez votre connexion puis réessayez.',
+      );
     }
   }
+
   return (
     <Screen title="Tous les services" subtitle="L’écosystème BurkinaWatch sur mobile" showBack>
-      {params.category ? <View style={[styles.filter, { backgroundColor: colors.muted }]}><Feather name="filter" size={15} color={colors.primary} /><Text style={[styles.filterText, { color: colors.foreground }]}>Catégorie sélectionnée : {params.category}</Text></View> : null}
+      {selectedItem ? (
+        <View style={[styles.filter, { backgroundColor: colors.muted, borderColor: colors.primary }]}>
+          <Feather name="filter" size={15} color={colors.primary} />
+          <Text style={[styles.filterText, { color: colors.foreground }]}>Catégorie sélectionnée : {selectedItem[0]}</Text>
+        </View>
+      ) : null}
       {serviceGroups.map((group) => (
         <View key={group.title}>
           <SectionTitle eyebrow="BURKINAWATCH" title={group.title} />
           <View style={styles.grid}>
             {group.items.map(([label, route, icon]) => (
-              <Pressable key={route} onPress={() => void openFeature(route)} style={({ pressed }) => [styles.item, { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.75 : 1 }]} testID={`service-link-${route.replace('/', '')}`}>
+              <Pressable
+                key={route}
+                onPress={() => void openFeature(route)}
+                accessibilityRole="button"
+                accessibilityLabel={`Ouvrir ${label}`}
+                style={({ pressed }) => [
+                  styles.item,
+                  {
+                    backgroundColor: route === selectedRoute ? colors.muted : colors.card,
+                    borderColor: route === selectedRoute ? colors.primary : colors.border,
+                    opacity: pressed ? 0.75 : 1,
+                  },
+                ]}
+                testID={`service-link-${route.replace('/', '')}`}
+              >
                 <Feather name={icon as keyof typeof Feather.glyphMap} size={19} color={colors.primary} />
                 <Text style={[styles.label, { color: colors.foreground }]}>{label}</Text>
                 <Feather name="chevron-right" size={15} color={colors.mutedForeground} />
@@ -52,7 +109,7 @@ export default function ServicesScreen() {
 }
 
 const styles = StyleSheet.create({
-  filter: { alignItems: 'center', borderRadius: 11, flexDirection: 'row', gap: 8, padding: 11 },
+  filter: { alignItems: 'center', borderRadius: 11, borderWidth: 1, flexDirection: 'row', gap: 8, padding: 11 },
   filterText: { fontFamily: 'Inter_500Medium', fontSize: 12 },
   grid: { gap: 9 },
   item: { alignItems: 'center', borderRadius: 14, borderWidth: 1, flexDirection: 'row', gap: 11, padding: 14 },
