@@ -98,3 +98,17 @@ mtime_ms = 1788918633697
 storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:766d3c29-01ad-41d8-90b6-ccbc39f09e61/aa213aee-dcd5-4e8f-9722-03ccf91a9fdf/03c68927-201d-44fa-847c-9b19e43ca9f5"
 storage_version_token = "1788918645867729"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "F4bbjIofI359y6GqSOMFp"
+uri = "file://RAPPORT_PHASE_1_2_VALIDATION_RAILWAY_BURKINAWATCH.md"
+type = "text"
+title = "TÉLÉCHARGER — Rapport Phase 1.2 Railway (.md)"
+description = "Rapport final de validation opérationnelle Railway avec statut des accès, variables, PostgreSQL, démarrage, HTTP, StreetView, logs et verdict."
+logical_id = "fb6e7b5f-9851-41a5-8d41-2bc3ebc7a5c4"
+content_hash = "sha256:3bc553a284ef58ec16d2efe56afbd83240ab4d6e3cc5fb1036902b70dd8fa9bb"
+size = 10204
+mtime_ms = 1788920093878
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:766d3c29-01ad-41d8-90b6-ccbc39f09e61/fb6e7b5f-9851-41a5-8d41-2bc3ebc7a5c4/6c92b9d3-d664-4e76-ac09-67217f854073"
+storage_version_token = "1788920102471426"
+content_type = "text/markdown"
