@@ -34,6 +34,15 @@ interface OverpassResponse {
   elements: OSMElement[];
 }
 
+function isOverpassResponse(value: unknown): value is OverpassResponse {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const elements = (value as { elements?: unknown }).elements;
+  return Array.isArray(elements);
+}
+
 function determineRegion(lat: number, lng: number): string {
   if (lat >= 13.8) return "Sahel";
   if (lat >= 13.3 && lng <= -2.0) return "Nord";
@@ -152,7 +161,11 @@ export async function fetchGaresFromOSM(): Promise<Gare[]> {
       return [];
     }
 
-    const data: OverpassResponse = await response.json();
+    const data: unknown = await response.json();
+    if (!isOverpassResponse(data)) {
+      console.error("OSM API returned an invalid response");
+      return [];
+    }
     
     const gares = data.elements
       .map((element, index) => convertOSMToGare(element, index))

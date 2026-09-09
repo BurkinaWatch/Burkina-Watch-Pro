@@ -5,6 +5,15 @@ interface GeocodeResult {
   source: 'google' | 'nominatim' | 'fallback';
 }
 
+interface GoogleGeocodeResponse {
+  status?: string;
+  results?: Array<{ formatted_address?: string }>;
+}
+
+interface NominatimResponse {
+  display_name?: string;
+}
+
 // Simple in-memory cache to avoid repeated API calls
 const geocodeCache = new Map<string, GeocodeResult>();
 
@@ -30,9 +39,14 @@ async function reverseGeocodeGoogle(lat: number | string, lng: number | string):
       return null;
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as GoogleGeocodeResponse;
 
-    if (data.status === 'OK' && data.results && data.results.length > 0) {
+    if (
+      data.status === 'OK' &&
+      data.results &&
+      data.results.length > 0 &&
+      typeof data.results[0].formatted_address === 'string'
+    ) {
       return data.results[0].formatted_address;
     }
 
@@ -61,9 +75,9 @@ async function reverseGeocodeNominatim(lat: number | string, lng: number | strin
       return null;
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as NominatimResponse;
 
-    if (data.display_name) {
+    if (typeof data.display_name === 'string') {
       return data.display_name;
     }
 

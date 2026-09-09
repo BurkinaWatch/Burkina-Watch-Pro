@@ -55,6 +55,19 @@ interface ProviderResult {
   error?: string;
 }
 
+interface MapillaryImagePayload {
+  id: string;
+  geometry?: { coordinates?: unknown };
+  captured_at?: string;
+  compass_angle?: number;
+  thumb_1024_url?: string;
+  thumb_256_url?: string;
+}
+
+interface MapillaryResponse {
+  data?: MapillaryImagePayload[];
+}
+
 function latLngToQuadkey(lat: number, lng: number, zoom: number = 15): string {
   const latRad = lat * Math.PI / 180;
   const n = Math.pow(2, zoom);
@@ -95,17 +108,21 @@ async function fetchMapillaryImages(zone: { lat: number; lng: number }, radius: 
       return [];
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as MapillaryResponse;
     
     if (!data.data || !Array.isArray(data.data)) {
       return [];
     }
 
-    return data.data.map((img: any) => ({
+    return data.data.map((img) => ({
       source: "mapillary",
       sourceAssetId: img.id,
-      latitude: img.geometry?.coordinates?.[1] || zone.lat,
-      longitude: img.geometry?.coordinates?.[0] || zone.lng,
+      latitude: Array.isArray(img.geometry?.coordinates) && typeof img.geometry.coordinates[1] === "number"
+        ? img.geometry.coordinates[1]
+        : zone.lat,
+      longitude: Array.isArray(img.geometry?.coordinates) && typeof img.geometry.coordinates[0] === "number"
+        ? img.geometry.coordinates[0]
+        : zone.lng,
       heading: img.compass_angle,
       captureDate: img.captured_at ? new Date(img.captured_at) : undefined,
       license: "CC-BY-SA",

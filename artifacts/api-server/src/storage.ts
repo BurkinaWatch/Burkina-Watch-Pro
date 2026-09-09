@@ -65,7 +65,6 @@ import {
   updateSignalementSchema,
   updateUserProfileSchema,
   insertLocationPointSchema,
-  insertNotificationSchema,
   onlineSessions,
   surveillanceCameras,
   cameraAgents,
@@ -257,7 +256,7 @@ export interface IStorage {
   ): Promise<AgentMediaSession | undefined>;
 
   // Méthodes pour les notifications
-  createNotification(data: typeof insertNotificationSchema._type): Promise<any | undefined>;
+  createNotification(data: InsertNotification): Promise<Notification | undefined>;
   getUserNotifications(userId: string): Promise<any[]>;
   getUnreadNotificationsCount(userId: string): Promise<number>;
   markNotificationAsRead(notificationId: string): Promise<any | undefined>;
@@ -1498,7 +1497,7 @@ export class DbStorage implements IStorage {
   // NOTIFICATIONS
   // ============================================
 
-  async createNotification(data: typeof insertNotificationSchema._type) {
+  async createNotification(data: InsertNotification): Promise<Notification | undefined> {
     const [notification] = await db.insert(notifications).values(data).returning();
     return notification;
   }

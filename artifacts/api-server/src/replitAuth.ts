@@ -41,10 +41,10 @@ export function getSession() {
 
 export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
-  app.use(getSession());
-  app.use(passport.initialize());
-  app.use(passport.session());
-  app.use(mobileBearerAuthentication);
+  app.use(getSession() as unknown as RequestHandler);
+  app.use(passport.initialize() as unknown as RequestHandler);
+  app.use(passport.session() as unknown as RequestHandler);
+  app.use(mobileBearerAuthentication as unknown as RequestHandler);
 
   passport.serializeUser((user: any, cb) => cb(null, user.id || user.claims?.sub));
   passport.deserializeUser(async (id: string, cb) => {

@@ -1352,7 +1352,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!validationResult.success) {
         const errorMessage = fromZodError(validationResult.error).toString();
         console.log("❌ Erreur validation:", errorMessage);
-        console.log("Erreurs détaillées:", validationResult.error.errors);
+        console.log("Erreurs détaillées:", validationResult.error.issues);
         return res.status(400).json({ error: errorMessage });
       }
 
@@ -4869,7 +4869,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Récupérer un tour avec ses photos
   app.get("/api/virtual-tours/:id", async (req, res) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const tour = await storage.getVirtualTourWithPhotos(id);
       
       if (!tour) {
@@ -4963,7 +4963,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Signaler un tour virtuel
   app.post("/api/virtual-tours/:id/report", signalementMutationLimiter, async (req, res) => {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       
       const result = await storage.incrementTourReportCount(id);
       

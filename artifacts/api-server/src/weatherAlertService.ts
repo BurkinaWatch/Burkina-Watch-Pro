@@ -43,6 +43,29 @@ export interface WeatherData {
   source: string;
 }
 
+interface OpenWeatherAlertPayload {
+  event?: unknown;
+  sender_name?: unknown;
+  start?: unknown;
+  end?: unknown;
+  description?: unknown;
+  tags?: unknown;
+}
+
+interface OpenWeatherCurrentPayload {
+  temp?: unknown;
+  humidity?: unknown;
+  wind_speed?: unknown;
+  weather?: unknown;
+  uvi?: unknown;
+  visibility?: unknown;
+}
+
+interface OpenWeatherPayload {
+  alerts?: unknown;
+  current?: OpenWeatherCurrentPayload;
+}
+
 // Principales villes du Burkina Faso avec leurs coordonnées
 const BURKINA_CITIES = [
   { city: "Ouagadougou", region: "Centre", lat: 12.3714, lon: -1.5197 },
@@ -129,20 +152,56 @@ async function fetchWeatherFromAPI(city: typeof BURKINA_CITIES[0]): Promise<City
       return null;
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as OpenWeatherPayload;
+    const current = data.current;
+    if (
+      !current ||
+      typeof current.temp !== "number" ||
+      typeof current.humidity !== "number" ||
+      typeof current.wind_speed !== "number" ||
+      !Array.isArray(current.weather) ||
+      !current.weather[0] ||
+      typeof current.weather[0] !== "object" ||
+      typeof (current.weather[0] as { main?: unknown }).main !== "string" ||
+      typeof (current.weather[0] as { description?: unknown }).description !== "string" ||
+      typeof (current.weather[0] as { icon?: unknown }).icon !== "string" ||
+      typeof current.uvi !== "number" ||
+      typeof current.visibility !== "number"
+    ) {
+      console.error(`Réponse API météo invalide pour ${city.city}`);
+      return null;
+    }
     
-    const alerts: WeatherAlert[] = (data.alerts || []).map((alert: any) => ({
-      id: generateAlertId(),
-      event: alert.event,
-      sender: alert.sender_name || "Service Météorologique",
-      start: alert.start,
-      end: alert.end,
-      description: alert.description,
-      severity: determineSeverity(alert.event),
-      urgency: "expected",
-      regions: [city.region],
-      tags: alert.tags || [],
-    }));
+    const alerts: WeatherAlert[] = Array.isArray(data.alerts)
+      ? data.alerts
+          .filter((alert): alert is OpenWeatherAlertPayload =>
+            Boolean(alert) && typeof alert === "object",
+          )
+          .filter(
+            (alert) =>
+              typeof alert.event === "string" &&
+              typeof alert.start === "number" &&
+              typeof alert.end === "number" &&
+              typeof alert.description === "string",
+          )
+          .map((alert) => ({
+            id: generateAlertId(),
+            event: alert.event as string,
+            sender:
+              typeof alert.sender_name === "string"
+                ? alert.sender_name
+                : "Service Météorologique",
+            start: alert.start as number,
+            end: alert.end as number,
+            description: alert.description as string,
+            severity: determineSeverity(alert.event as string),
+            urgency: "expected" as const,
+            regions: [city.region],
+            tags: Array.isArray(alert.tags)
+              ? alert.tags.filter((tag): tag is string => typeof tag === "string")
+              : [],
+          }))
+      : [];
 
     return {
       city: city.city,
@@ -150,16 +209,16 @@ async function fetchWeatherFromAPI(city: typeof BURKINA_CITIES[0]): Promise<City
       lat: city.lat,
       lon: city.lon,
       current: {
-        temp: Math.round(data.current.temp),
-        humidity: data.current.humidity,
-        wind_speed: Math.round(data.current.wind_speed * 3.6), // m/s to km/h
+        temp: Math.round(current.temp),
+        humidity: current.humidity,
+        wind_speed: Math.round(current.wind_speed * 3.6), // m/s to km/h
         weather: {
-          main: data.current.weather[0].main,
-          description: data.current.weather[0].description,
-          icon: data.current.weather[0].icon,
+          main: (current.weather[0] as { main: string }).main,
+          description: (current.weather[0] as { description: string }).description,
+          icon: (current.weather[0] as { icon: string }).icon,
         },
-        uvi: data.current.uvi,
-        visibility: Math.round(data.current.visibility / 1000), // m to km
+        uvi: current.uvi,
+        visibility: Math.round(current.visibility / 1000), // m to km
       },
       alerts,
       lastUpdate: new Date().toISOString(),
