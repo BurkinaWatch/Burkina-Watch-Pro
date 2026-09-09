@@ -1,0 +1,24 @@
+kind = "mobile"
+previewPath = "/burkinawatch-mobile/"
+title = "BurkinaWatch Mobile"
+description = "Application mobile native BurkinaWatch pour retrouver les mêmes services de sécurité, d'information et de contribution sur téléphone."
+version = "1.0.0"
+id = "artifacts/burkinawatch-mobile"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/burkinawatch-mobile/" ]
+localPort = 25339
+
+[services.development]
+run = "pnpm --filter @workspace/burkinawatch-mobile run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/burkinawatch-mobile", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/burkinawatch-mobile", "run", "serve" ]
+
+[services.env]
+PORT = "25339"
+BASE_PATH = "/burkinawatch-mobile/"
