@@ -36,12 +36,20 @@ export default function HomeScreen() {
   return (
     <Screen refreshing={signalements.isRefetching} onRefresh={() => { void signalements.refetch(); void stats.refetch(); }}>
       <View style={[styles.hero, { backgroundColor: colors.primary }]}>
+        <View style={[styles.heroAccent, { backgroundColor: colors.secondary }]} />
         <View style={styles.heroCopy}>
           <Text style={[styles.kicker, { color: colors.primaryForeground }]}>LA VIGILANCE CITOYENNE</Text>
-          <Text style={[styles.heroTitle, { color: colors.primaryForeground }]}>Votre Burkina, notre regard.</Text>
+          <Text style={[styles.heroTitle, { color: colors.primaryForeground }]}>Votre Burkina,{'\n'}notre regard.</Text>
+          <View style={styles.slogan} accessibilityLabel="Voir. Agir. Protéger.">
+            <Text style={[styles.sloganWord, { color: colors.destructive }]}>Voir.</Text>
+            <Text style={[styles.sloganWord, { color: colors.secondary }]}>Agir.</Text>
+            <Text style={[styles.sloganWord, { color: colors.primaryForeground }]}>Protéger.</Text>
+          </View>
           <Text style={[styles.heroBody, { color: colors.primaryForeground }]}>Retrouvez les alertes, services et contributions de la communauté.</Text>
         </View>
-        <Feather name="shield" size={58} color={colors.primaryForeground} />
+        <View style={[styles.shield, { borderColor: colors.primaryForeground }]}>
+          <Feather name="shield" size={56} color={colors.primaryForeground} />
+        </View>
       </View>
 
       <View style={styles.actionsGrid}>
@@ -82,11 +90,15 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  hero: { alignItems: 'center', borderRadius: 24, flexDirection: 'row', gap: 16, justifyContent: 'space-between', overflow: 'hidden', padding: 22 },
+  hero: { alignItems: 'center', borderRadius: 24, flexDirection: 'row', gap: 15, justifyContent: 'space-between', minHeight: 184, overflow: 'hidden', padding: 22, paddingLeft: 26, position: 'relative' },
+  heroAccent: { borderRadius: 99, height: 7, left: 0, position: 'absolute', top: 0, width: 72 },
   heroCopy: { flex: 1 },
   kicker: { fontFamily: 'Inter_700Bold', fontSize: 10, letterSpacing: 1.3, opacity: 0.8 },
-  heroTitle: { fontFamily: 'Inter_700Bold', fontSize: 27, letterSpacing: -0.8, lineHeight: 32, marginTop: 8 },
-  heroBody: { fontFamily: 'Inter_400Regular', fontSize: 13, lineHeight: 19, marginTop: 9, opacity: 0.86 },
+  heroTitle: { fontFamily: 'Inter_700Bold', fontSize: 27, letterSpacing: -0.8, lineHeight: 31, marginTop: 8 },
+  slogan: { flexDirection: 'row', gap: 5, marginTop: 10 },
+  sloganWord: { fontFamily: 'Inter_700Bold', fontSize: 13 },
+  heroBody: { fontFamily: 'Inter_400Regular', fontSize: 12, lineHeight: 18, marginTop: 8, opacity: 0.86 },
+  shield: { alignItems: 'center', borderRadius: 99, borderWidth: 2, height: 84, justifyContent: 'center', width: 84 },
   actionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   action: { alignItems: 'center', borderRadius: 15, borderWidth: 1, flexBasis: '47%', flexDirection: 'row', gap: 10, minHeight: 56, paddingHorizontal: 14 },
   actionText: { fontFamily: 'Inter_600SemiBold', fontSize: 13 },
