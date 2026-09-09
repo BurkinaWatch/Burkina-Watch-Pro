@@ -1,0 +1,732 @@
+BURKINAWATCH — PHASE 2.0
+Audit complet Authentification, Sessions, Sécurité Backend et Préparation Mobile
+
+Date : 9 septembre 2026
+
+Tu travailles sur le projet BurkinaWatch.
+
+La Phase 1 / 1.1 / 1.2 concernait la stabilisation et la validation de la production Railway.
+
+Railway Production est maintenant considéré comme résolu par le propriétaire du projet.
+
+Nous passons maintenant à la Phase 2.
+
+⚠️ RÈGLE ABSOLUE
+
+Cette phase est STRICTEMENT UN AUDIT.
+
+AUCUNE MODIFICATION AUTORISÉE
+
+Ne modifie aucun fichier source.
+
+Ne modifie aucune configuration.
+
+Ne modifie aucune variable d'environnement.
+
+Ne modifie aucun secret.
+
+Ne modifie aucune table PostgreSQL.
+
+Ne crée aucune migration.
+
+Ne lance pas :
+
+npm run db:push
+
+Ne lance pas :
+
+drizzle-kit migrate
+
+Ne crée pas __drizzle_migrations.
+
+Ne modifie aucune donnée.
+
+Ne modifie pas le frontend Web.
+
+Ne commence pas Expo.
+
+Ne commence pas React Native.
+
+Ne commence pas EAS.
+
+Ne commence pas l'OTA.
+
+Ne remplace pas le système d'authentification actuel.
+
+Ne change pas Express Session.
+
+Ne change pas Passport.
+
+Ne change pas les cookies.
+
+Ne change pas CORS.
+
+Ne change pas les mécanismes OTP.
+
+Ne change pas les mécanismes de refresh token.
+
+1. OBJECTIF DE LA PHASE
+
+L'objectif est de déterminer précisément si le système d'authentification actuel de BurkinaWatch est :
+
+fonctionnel pour le Web ;
+sécurisé ;
+compatible avec la production Railway ;
+suffisamment propre pour être étendu à une application mobile native ;
+capable de permettre à Web et Mobile d'utiliser le même backend sans créer un deuxième système d'authentification.
+
+Architecture cible :
+
+                         BURKINAWATCH
+                              │
+                 ┌────────────┴────────────┐
+                 │                         │
+              WEB EXISTANT             MOBILE NATIF
+                 │                         │
+           React + Vite              Expo + React Native
+                 │                         │
+                 └────────────┬────────────┘
+                              │
+                         API COMMUNE
+                              │
+                       AUTH COMMUNE
+                              │
+                         EXPRESS
+                              │
+                         POSTGRESQL
+
+Nous ne voulons :
+
+ni deuxième backend ;
+ni deuxième base ;
+ni deuxième logique utilisateur ;
+ni deux systèmes d'identité indépendants.
+2. CARTOGRAPHIE COMPLÈTE DE L'AUTHENTIFICATION
+
+Inspecte l'ensemble du dépôt.
+
+Identifie précisément :
+
+Inscription / création de compte
+création utilisateur ;
+création de profil ;
+vérification téléphone ;
+OTP ;
+email ;
+magic link ;
+autres mécanismes.
+Connexion
+
+Identifie toutes les routes utilisées pour :
+
+login
+logout
+session
+OTP
+magic link
+refresh
+callback
+authentication
+authorization
+
+Pour chaque route, indique :
+
+Méthode HTTP
+Route
+Fichier
+Middleware
+Entrées
+Sortie
+Authentification nécessaire
+3. EXPRESS SESSION
+
+Analyse précisément l'utilisation de :
+
+express-session
+
+Détermine :
+
+où la session est créée ;
+où elle est vérifiée ;
+quel store est utilisé ;
+comment elle est persistée ;
+comment elle expire ;
+comment elle est détruite ;
+comment le logout fonctionne ;
+quels cookies sont utilisés ;
+paramètres httpOnly ;
+secure ;
+sameSite ;
+domain ;
+path ;
+durée de session.
+
+Détermine également si la configuration est compatible avec HTTPS en production Railway.
+
+4. PASSPORT
+
+Inspecte :
+
+Passport
+
+Détermine :
+
+stratégies réellement utilisées ;
+sérialisation utilisateur ;
+désérialisation utilisateur ;
+routes concernées ;
+dépendance réelle ou héritée ;
+éventuelles stratégies inutilisées ;
+risques de configuration.
+
+Ne supprime rien.
+
+5. OTP
+
+Analyse le système OTP.
+
+Détermine :
+
+génération ;
+durée de validité ;
+stockage ;
+hashage éventuel ;
+nombre de tentatives ;
+expiration ;
+invalidation après utilisation ;
+protection contre le brute force ;
+rate limiting ;
+comportement après plusieurs demandes ;
+possibilité de réutilisation d'un OTP ;
+risques liés aux logs.
+
+Vérifie également qu'aucun OTP ou secret sensible n'est écrit accidentellement dans les logs de production.
+
+6. REFRESH TOKEN
+
+C'est une partie CRITIQUE.
+
+Cartographie complètement :
+
+access token
+refresh token
+REFRESH_TOKEN_SALT
+rotation
+expiration
+revocation
+logout
+reuse detection
+storage
+hash
+database
+cookies
+headers
+
+Détermine précisément :
+
+Où le refresh token est créé.
+Où il est stocké.
+Comment il est vérifié.
+Comment il est renouvelé.
+Comment il est révoqué.
+Comment une ancienne valeur devient invalide.
+Que se passe-t-il lorsqu'un refresh token volé est réutilisé.
+Quelle est la durée de vie.
+Quel est le rôle exact de :
+REFRESH_TOKEN_SALT
+
+Ne révèle jamais sa valeur.
+
+7. SESSION VS TOKEN
+
+Détermine clairement si le projet utilise actuellement :
+
+Cookie Session
+
+ou :
+
+Access Token
++
+Refresh Token
+
+ou :
+
+Cookie Session
++
+Refresh Token
+
+ou une combinaison.
+
+Dessine le flux réel actuel.
+
+Exemple :
+
+WEB
+ ↓
+POST /auth/...
+ ↓
+OTP
+ ↓
+session
+ ↓
+HttpOnly Cookie
+ ↓
+API
+
+Puis, si des refresh tokens existent :
+
+Login
+ ↓
+Access Token
+ +
+Refresh Token
+ ↓
+API
+ ↓
+Refresh
+ ↓
+Rotation
+
+Ne suppose rien. Base-toi uniquement sur le code.
+
+8. CORS
+
+Analyse complètement :
+
+CORS
+
+Détermine :
+
+origine(s) autorisées ;
+utilisation de * ;
+credentials ;
+cookies cross-origin ;
+méthodes ;
+headers ;
+préflight ;
+comportement production ;
+comportement développement ;
+risque lié à une origine trop permissive.
+
+Vérifie notamment :
+
+CORS_ORIGINS
+
+sans jamais afficher de secret.
+
+Détermine si la configuration actuelle permettra à :
+
+Web BurkinaWatch
+
+et :
+
+Mobile BurkinaWatch
+
+de communiquer correctement avec le même backend.
+
+9. CSRF
+
+Analyse les protections CSRF existantes.
+
+Détermine :
+
+middleware utilisé ;
+routes protégées ;
+routes non protégées ;
+méthode de transmission du token ;
+compatibilité avec les cookies ;
+risques éventuels.
+
+Fais particulièrement attention aux endpoints :
+
+POST
+PUT
+PATCH
+DELETE
+
+qui modifient des données.
+
+10. AUTORISATION
+
+L'authentification ne suffit pas.
+
+Analyse également l'autorisation.
+
+Identifie les rôles :
+
+user
+admin
+moderator
+agent
+...
+
+ou tout autre rôle réellement présent.
+
+Cartographie :
+
+Utilisateur
+ ↓
+authentifié ?
+ ↓
+rôle ?
+ ↓
+permission ?
+ ↓
+ressource autorisée ?
+
+Cherche notamment les risques de :
+
+IDOR ;
+accès à une ressource appartenant à un autre utilisateur ;
+modification d'un objet par simple changement d'ID ;
+endpoint admin accessible à un utilisateur standard ;
+absence de contrôle côté serveur ;
+confiance excessive dans le frontend.
+11. MIDDLEWARES DE SÉCURITÉ
+
+Inspecte :
+
+Helmet
+Rate Limit
+CORS
+CSRF
+Cookie
+Session
+Authentication
+Authorization
+Input validation
+
+Identifie :
+
+ce qui existe ;
+ce qui manque ;
+ce qui est correctement appliqué ;
+ce qui est appliqué seulement à certaines routes.
+12. VALIDATION DES ENTRÉES
+
+Analyse les routes sensibles.
+
+Vérifie l'utilisation éventuelle de :
+
+Zod
+Drizzle validation
+schema validation
+manual validation
+
+Recherche notamment les endpoints permettant :
+
+création utilisateur ;
+modification profil ;
+signalement ;
+SOS ;
+médias ;
+commentaires ;
+messages ;
+administration ;
+notifications ;
+StreetView ;
+surveillance.
+
+L'objectif est de détecter les routes où le backend fait trop confiance aux données reçues du client.
+
+13. FICHIERS ET MÉDIAS
+
+Analyse les uploads liés à l'authentification ou aux utilisateurs.
+
+Détermine :
+
+contrôle de taille ;
+type MIME ;
+extension ;
+nom de fichier ;
+stockage ;
+URL publique/privée ;
+contrôle d'accès ;
+risque de traversée de chemin ;
+risque de fichier arbitraire ;
+exposition de fichiers privés.
+
+Ne modifie rien.
+
+14. SECRETS
+
+Fais un audit des noms de variables et de leur utilisation.
+
+Recherche notamment :
+
+SESSION_SECRET
+REFRESH_TOKEN_SALT
+MASTER_ENCRYPTION_KEY
+KMS_*
+DATABASE_URL
+RAILWAY_DATABASE_URL
+
+Vérifie :
+
+utilisation côté serveur ;
+absence dans le frontend ;
+absence dans les bundles Vite ;
+absence dans Git ;
+absence dans les logs ;
+absence dans les réponses API.
+
+⚠️
+
+NE JAMAIS AFFICHER LES VALEURS.
+
+15. EXPOSITION DES VARIABLES AU FRONTEND
+
+Analyse :
+
+VITE_*
+import.meta.env
+process.env
+
+Détermine précisément quelles variables sont accessibles au navigateur.
+
+Vérifie qu'aucun :
+
+secret
+password
+private key
+database credential
+API secret
+KMS credential
+S3 secret
+
+n'est exposé au frontend.
+
+16. AUTHENTIFICATION MOBILE — AUDIT DE COMPATIBILITÉ
+
+Nous ne développons PAS encore le mobile.
+
+Nous voulons seulement savoir si le backend actuel peut accueillir une application Expo native.
+
+Analyse les contraintes :
+
+Web
+Cookies
+HttpOnly
+CSRF
+SameSite
+Session
+Mobile
+Access Token
+Refresh Token
+SecureStore
+Bearer Authorization
+
+Détermine si le backend actuel peut supporter proprement :
+
+Authorization: Bearer <access_token>
+
+sans casser le Web.
+
+17. ARCHITECTURE D'AUTHENTIFICATION CIBLE
+
+À partir du code actuel, propose une architecture cible minimale permettant :
+
+WEB
+  ↓
+Cookie / Session actuelle
+
+MOBILE
+  ↓
+Access Token
++
+Refresh Token sécurisé
+
+          ↓
+
+     MÊME BACKEND
+          ↓
+     MÊME USER ID
+          ↓
+     MÊME POSTGRESQL
+
+⚠️
+
+Cette section est une proposition uniquement.
+
+Ne l'implémente pas.
+
+18. RECHERCHE DES RISQUES
+
+Cherche explicitement :
+
+Critical
+High
+Medium
+Low
+
+Pour chaque problème :
+
+Niveau :
+Fichier :
+Ligne :
+Fonction :
+Problème :
+Impact :
+Cause :
+Correction recommandée :
+Risque de régression Web :
+Impact Mobile :
+19. TESTS
+
+Exécute uniquement les tests qui ne modifient ni code ni base.
+
+Tu peux utiliser :
+
+npm run check
+
+et les tests existants appropriés.
+
+Tu peux inspecter :
+
+routes ;
+middleware ;
+configuration ;
+flux d'authentification ;
+tests unitaires ;
+tests d'intégration existants.
+
+Ne crée pas de nouveaux tests modifiant la base.
+
+Si un test nécessite une base de données de test, utilise uniquement l'environnement de test prévu par le projet et ne touche pas la base de production.
+
+20. VÉRIFICATION DU WEB EXISTANT
+
+Nous devons protéger le Web actuel.
+
+Identifie les fonctionnalités Web qui dépendent directement de l'authentification :
+
+profil ;
+signalements ;
+SOS ;
+notifications ;
+administration ;
+etc.
+
+Ne modifie rien.
+
+Indique les dépendances critiques.
+
+21. MATRICE DE COMPATIBILITÉ
+
+Crée cette matrice :
+
+Fonction	Web actuel	Backend	Mobile futur	Risque
+Login				
+OTP				
+Logout				
+Session				
+Refresh token				
+Profil				
+Autorisation				
+CORS				
+CSRF				
+Upload				
+Notifications				
+22. RAPPORT OBLIGATOIRE
+
+Crée :
+
+RAPPORT_PHASE_2_0_AUDIT_AUTH_SECURITE_BURKINAWATCH.md
+
+Le rapport doit contenir exactement :
+
+1. Résumé exécutif
+2. Architecture d'authentification actuelle
+3. Flux Login
+4. Flux OTP
+5. Flux Session
+6. Flux Refresh Token
+7. Logout
+8. CORS
+9. CSRF
+10. Autorisation / rôles
+11. Middleware sécurité
+12. Validation des entrées
+13. Uploads / médias
+14. Gestion des secrets
+15. Exposition frontend
+16. Compatibilité Mobile
+17. Architecture cible recommandée
+18. Vulnérabilités / risques
+19. Tests réalisés
+20. Matrice Web / Backend / Mobile
+21. Corrections recommandées
+23. CLASSIFICATION DES CORRECTIONS
+
+Classe chaque correction dans une des catégories suivantes :
+
+A — URGENT
+
+Problème de sécurité ou production devant être corrigé avant de continuer.
+
+B — IMPORTANT
+
+Correction recommandée avant l'intégration mobile.
+
+C — AMÉLIORATION
+
+Peut être réalisée ultérieurement.
+
+D — NON NÉCESSAIRE
+
+Aucune action nécessaire.
+
+24. VERDICT FINAL
+
+Termine impérativement avec :
+
+AUTH WEB ACTUELLE          = STABLE / À CORRIGER / CRITIQUE
+
+SESSION                   = OK / À CORRIGER
+
+REFRESH TOKEN             = OK / À CORRIGER / NON IMPLÉMENTÉ
+
+CORS                      = OK / À CORRIGER
+
+CSRF                      = OK / À CORRIGER / NON APPLICABLE
+
+AUTORISATION              = OK / À CORRIGER
+
+SECRETS                   = OK / À CORRIGER
+
+BACKEND MOBILE READY      = YES / NO / PARTIAL
+
+RISQUE WEB                = LOW / MEDIUM / HIGH / CRITICAL
+
+PHASE 2.1                 = READY / BLOCKED
+25. RÈGLE DE FIN
+
+Après le rapport, arrête-toi.
+
+Ne corrige rien.
+
+Ne refactorise rien.
+
+Ne commence pas Expo.
+
+Ne commence pas React Native.
+
+Ne crée aucune API mobile.
+
+Ne modifie aucune route.
+
+Ne modifie aucune base.
+
+Ne change aucun secret.
+
+Ne change aucun cookie.
+
+Ne change aucun mécanisme d'authentification.
+
+Attends mon analyse du rapport.
+
+OBJECTIF UNIQUE
+
+Cette Phase 2.0 doit répondre à une seule question :
+
+« Le système d'authentification et de sécurité actuel de BurkinaWatch est-il suffisamment sain pour que nous puissions ensuite construire l'application mobile native sur le même backend sans casser le Web ? »
