@@ -1,0 +1,834 @@
+# AUDIT TECHNIQUE COMPLET — BURKINAWATCH WEB + APPLICATION MOBILE EXPO + OTA
+
+## CONTEXTE
+
+BurkinaWatch possède actuellement une application Web fonctionnelle qui constitue le produit principal et la référence du projet.
+
+Je souhaite faire évoluer l'architecture afin d'obtenir, à terme, une expérience équivalente à celle que nous avons mise en place sur d'autres projets :
+
+* le site Web reste la version principale et ne doit pas être cassé ;
+* une application mobile native iOS/Android utilisant Expo doit utiliser le même backend et les mêmes fonctionnalités métier ;
+* les évolutions compatibles doivent pouvoir être distribuées à l'application mobile via Expo OTA / EAS Update ;
+* les fonctionnalités doivent rester synchronisées entre Web et Mobile ;
+* Railway doit continuer à héberger le backend et les services nécessaires ;
+* le projet doit rester maintenable par une équipe de développeurs expérimentés.
+
+L'objectif n'est PAS de transformer artificiellement le site Web en application React Native.
+
+L'objectif est de déterminer comment construire une architecture propre :
+
+WEB + MOBILE EXPO + BACKEND/API PARTAGÉ + BASE DE DONNÉES PARTAGÉE + OTA.
+
+---
+
+# RÈGLE ABSOLUE POUR CET AUDIT
+
+## NE MODIFIE RIEN.
+
+Pendant cette phase :
+
+* ne modifie aucun fichier ;
+* ne crée aucun fichier ;
+* ne supprime aucun fichier ;
+* ne déplace aucun fichier ;
+* ne renomme aucun fichier ;
+* ne lance aucune migration ;
+* ne modifie aucune variable d'environnement ;
+* ne modifie aucune configuration Railway ;
+* ne modifie aucune configuration Expo/EAS ;
+* ne modifie aucun package.json ;
+* ne modifie aucune dépendance ;
+* ne modifie aucun workflow GitHub ;
+* ne lance aucun déploiement ;
+* ne lance aucun build destiné à modifier la production ;
+* ne change aucune route ;
+* ne change aucune base de données.
+
+L'audit doit être STRICTEMENT EN LECTURE SEULE.
+
+Tu peux lire, analyser et inspecter tous les fichiers nécessaires.
+
+Si une vérification nécessiterait une modification, arrête-toi et indique simplement ce qu'il faudrait vérifier ou modifier dans une phase ultérieure.
+
+---
+
+# OBJECTIF PRINCIPAL
+
+Je veux savoir exactement si l'architecture actuelle de BurkinaWatch permet déjà, totalement ou partiellement, de reproduire ce modèle :
+
+```
+                     BURKINAWATCH
+                          |
+            +-------------+-------------+
+            |                           |
+          WEB                         MOBILE
+            |                           |
+    React/Vite/etc.              Expo / React Native
+            |                           |
+            +-------------+-------------+
+                          |
+                     API / BACKEND
+                          |
+                       Railway
+                          |
+                     PostgreSQL
+```
+
+avec :
+
+* une logique métier commune ;
+* une API commune ;
+* une authentification commune ;
+* une base de données commune ;
+* des fonctionnalités équivalentes ;
+* une stratégie OTA avec Expo/EAS ;
+* sans dupliquer inutilement la logique métier.
+
+---
+
+# 1. CARTOGRAPHIE COMPLÈTE DU PROJET
+
+Inspecte d'abord toute l'arborescence du repository.
+
+Identifie précisément :
+
+* frontend Web ;
+* backend ;
+* API ;
+* routes ;
+* services ;
+* composants ;
+* hooks ;
+* context/providers ;
+* modèles ;
+* schémas ;
+* accès base de données ;
+* authentification ;
+* stockage ;
+* upload média ;
+* notifications ;
+* géolocalisation ;
+* cartes ;
+* WebSockets éventuels ;
+* tâches cron ;
+* workers éventuels ;
+* scripts ;
+* configuration ;
+* Expo ;
+* React Native ;
+* EAS ;
+* OTA ;
+* fichiers spécifiques iOS ;
+* fichiers spécifiques Android.
+
+Je veux une représentation claire de l'architecture actuelle.
+
+Indique notamment :
+
+* framework frontend ;
+* framework backend ;
+* langage(s) ;
+* bundler ;
+* ORM ;
+* base de données ;
+* système d'authentification ;
+* système de stockage ;
+* système de déploiement ;
+* système de build mobile ;
+* système OTA.
+
+---
+
+# 2. IDENTIFIER EXACTEMENT LE FRONTEND WEB
+
+Analyse le frontend Web actuel.
+
+Je veux savoir :
+
+* quelle technologie il utilise ;
+* où se trouve le point d'entrée ;
+* comment les routes sont gérées ;
+* comment l'état global est géré ;
+* comment les appels API sont effectués ;
+* comment l'authentification est gérée ;
+* comment les données sont récupérées ;
+* comment les médias sont gérés ;
+* comment la géolocalisation est gérée ;
+* comment les cartes sont gérées ;
+* comment les notifications sont gérées ;
+* quelles fonctionnalités sont purement Web.
+
+IMPORTANT :
+
+Le frontend Web actuel est considéré comme LA RÉFÉRENCE PRODUIT.
+
+Ne propose aucune refonte visuelle pendant cet audit.
+
+Ne propose pas de remplacer le frontend actuel simplement parce qu'une autre architecture serait plus moderne.
+
+---
+
+# 3. INVENTAIRE DES FONCTIONNALITÉS BURKINAWATCH
+
+Dresse un inventaire complet des fonctionnalités actuellement présentes.
+
+Pour chaque fonctionnalité, indique :
+
+| Fonctionnalité | Web | Mobile actuel | Backend/API | Base de données | Partageable |
+| -------------- | --- | ------------- | ----------- | --------------- | ----------- |
+
+Inspecte notamment, sans te limiter à :
+
+* Signalements ;
+* SOS ;
+* bouton Panic ;
+* localisation en direct ;
+* carte interactive ;
+* pharmacies de garde ;
+* Bulletin Citoyen ;
+* événements ;
+* restaurants ;
+* marchés ;
+* hôtels ;
+* stations ;
+* hôpitaux ;
+* cliniques ;
+* pharmacies ;
+* SONABEL ;
+* ONEA ;
+* comptes utilisateurs ;
+* profils ;
+* authentification ;
+* notifications ;
+* recherche ;
+* géolocalisation ;
+* médias/photos/vidéos ;
+* administration ;
+* modération ;
+* autres fonctionnalités réellement présentes dans le code.
+
+Ne te limite pas à cette liste.
+
+L'inventaire doit être basé sur le CODE RÉEL.
+
+---
+
+# 4. AUDIT DE L'APPLICATION EXPO / MOBILE
+
+Vérifie si une application Expo/React Native existe déjà dans le repository.
+
+Si oui, analyse-la en détail.
+
+Détermine :
+
+* version d'Expo ;
+* version de React Native ;
+* configuration app.json/app.config ;
+* eas.json ;
+* Expo Router ou autre système de navigation ;
+* structure des écrans ;
+* système de navigation ;
+* appels API ;
+* authentification ;
+* stockage local ;
+* SecureStore/AsyncStorage éventuel ;
+* gestion des permissions ;
+* caméra ;
+* géolocalisation ;
+* notifications ;
+* cartes ;
+* médias ;
+* deep links ;
+* universal links ;
+* Android intent links ;
+* OAuth ;
+* WebBrowser ;
+* WebView éventuel ;
+* variables d'environnement ;
+* configuration EAS.
+
+Indique précisément ce qui existe déjà et ce qui manque.
+
+---
+
+# 5. AUDIT OTA / EAS UPDATE
+
+C'est une partie CRITIQUE.
+
+Détermine si le projet utilise actuellement :
+
+* EAS Build ;
+* EAS Update ;
+* expo-updates ;
+* channels ;
+* branches ;
+* runtimeVersion ;
+* update URL ;
+* projectId ;
+* eas.json ;
+* configuration OTA.
+
+Explique précisément le fonctionnement actuel.
+
+Je veux savoir :
+
+1. Comment une mise à jour du code mobile est actuellement construite.
+2. Comment elle pourrait être envoyée via OTA.
+3. Quelles modifications sont compatibles OTA.
+4. Quelles modifications nécessitent obligatoirement un nouveau build App Store / Play Store.
+5. Si le projet possède actuellement une configuration correcte pour cela.
+6. S'il existe un risque de mismatch entre runtime natif et bundle JavaScript.
+7. Comment Web et Mobile pourraient rester synchronisés.
+
+Ne fais aucune modification.
+
+---
+
+# 6. AUDIT DU BACKEND ET DE L'API
+
+Analyse le backend en profondeur.
+
+Identifie :
+
+* framework ;
+* point d'entrée ;
+* routes ;
+* contrôleurs ;
+* services ;
+* middleware ;
+* authentification ;
+* autorisation ;
+* validation ;
+* gestion des erreurs ;
+* upload ;
+* médias ;
+* WebSockets éventuels ;
+* tâches asynchrones ;
+* cron ;
+* CORS ;
+* rate limiting ;
+* sécurité ;
+* API publiques ;
+* API privées.
+
+Détermine si le backend est déjà suffisamment découplé du frontend Web pour servir également l'application mobile.
+
+Réponds clairement :
+
+> Le backend actuel peut-il être utilisé comme backend commun Web + Mobile ?
+
+Réponse obligatoire :
+
+* OUI ;
+* OUI AVEC MODIFICATIONS ;
+* NON.
+
+Puis explique pourquoi.
+
+---
+
+# 7. AUDIT DE LA BASE DE DONNÉES
+
+Analyse :
+
+* système de base de données ;
+* ORM ;
+* schémas ;
+* migrations ;
+* modèles ;
+* relations ;
+* utilisateurs ;
+* sessions ;
+* données géographiques ;
+* signalements ;
+* médias ;
+* événements ;
+* établissements ;
+* notifications.
+
+Détermine si Web et Mobile peuvent utiliser exactement la même base de données via le backend.
+
+IMPORTANT :
+
+L'application mobile ne doit PAS accéder directement à PostgreSQL.
+
+Elle doit passer par l'API/backend.
+
+Signale toute violation éventuelle de cette règle.
+
+---
+
+# 8. AUTHENTIFICATION
+
+Analyse entièrement la chaîne :
+
+WEB/MOBILE
+→ LOGIN
+→ AUTHENTIFICATION
+→ SESSION/TOKEN
+→ API
+→ AUTORISATION
+→ LOGOUT
+
+Détermine si le système actuel est compatible Web + Mobile.
+
+Analyse notamment :
+
+* cookies ;
+* sessions ;
+* JWT ;
+* refresh tokens ;
+* SecureStore ;
+* localStorage ;
+* OAuth ;
+* Google ;
+* Apple ;
+* autres fournisseurs ;
+* deep links ;
+* callback URLs.
+
+Si l'authentification actuelle est adaptée au Web mais pas au mobile natif, explique exactement pourquoi.
+
+---
+
+# 9. CODE PARTAGEABLE WEB + MOBILE
+
+C'est une partie essentielle.
+
+Cherche dans le code les éléments qui pourraient être partagés entre Web et React Native :
+
+* types TypeScript ;
+* interfaces ;
+* modèles ;
+* validation ;
+* logique métier ;
+* hooks ;
+* API clients ;
+* services ;
+* utilitaires ;
+* constantes ;
+* configuration ;
+* gestion d'état ;
+* logique d'authentification.
+
+Classe-les en trois catégories :
+
+### A — Déjà partageable
+
+### B — Partageable après refactorisation légère
+
+### C — À conserver séparé Web/Mobile
+
+Je veux éviter toute duplication inutile.
+
+---
+
+# 10. ARCHITECTURE CIBLE RECOMMANDÉE
+
+Après l'audit seulement, propose l'architecture cible la plus sûre.
+
+Elle doit respecter ce principe :
+
+```
+                     BURKINAWATCH
+                          |
+          +---------------+---------------+
+          |                               |
+         WEB                            MOBILE
+          |                               |
+      Interface                     Expo Native
+          |                               |
+          +---------------+---------------+
+                          |
+                   LOGIQUE PARTAGÉE
+                          |
+                     API CLIENT
+                          |
+                      BACKEND
+                          |
+                     DATABASE
+                          |
+                       RAILWAY
+```
+
+Mais ne force pas cette architecture si le code actuel nécessite une autre solution.
+
+Je veux une recommandation basée sur le repository réel.
+
+---
+
+# 11. STRATÉGIE "UNE FONCTIONNALITÉ = UNE LOGIQUE MÉTIER"
+
+Vérifie dans quelle mesure nous pouvons obtenir :
+
+> Une fonctionnalité métier développée une seule fois, consommée par Web et Mobile.
+
+Exemple :
+
+Signalement :
+
+WEB
+→ API Signalement
+→ Backend
+→ Database
+
+MOBILE
+→ API Signalement
+→ Backend
+→ Database
+
+Le mobile et le Web ne doivent pas avoir chacun leur propre logique métier contradictoire.
+
+Identifie les endroits actuels où cette règle est déjà respectée et ceux où elle ne l'est pas.
+
+---
+
+# 12. COMPATIBILITÉ DES FONCTIONNALITÉS WEB AVEC MOBILE NATIF
+
+Pour chaque fonctionnalité, classe-la :
+
+### 🟢 Facilement compatible avec Expo
+
+### 🟡 Compatible mais nécessite adaptation
+
+### 🔴 Nécessite du code natif spécifique
+
+Exemples à examiner :
+
+* géolocalisation ;
+* caméra ;
+* notifications ;
+* cartes ;
+* upload photo ;
+* upload vidéo ;
+* partage ;
+* appels téléphoniques ;
+* WhatsApp ;
+* navigation ;
+* deep links ;
+* OAuth ;
+* paiement ;
+* background location ;
+* push notifications.
+
+---
+
+# 13. RAILWAY
+
+Inspecte les fichiers/configurations liés à Railway.
+
+Je veux comprendre :
+
+* quels services existent ;
+* quel service sert le backend ;
+* quel service sert le Web ;
+* comment le build fonctionne ;
+* quelles variables d'environnement sont attendues ;
+* comment les ports sont configurés ;
+* comment le healthcheck fonctionne ;
+* comment la base de données est connectée ;
+* s'il existe plusieurs environnements ;
+* comment les previews sont générées ;
+* comment les déploiements sont déclenchés.
+
+Ne modifie absolument rien.
+
+---
+
+# 14. GITHUB / CI/CD
+
+Inspecte les workflows GitHub éventuels.
+
+Détermine si le projet possède :
+
+* GitHub Actions ;
+* build Web ;
+* build backend ;
+* build Expo ;
+* EAS ;
+* déploiement Railway ;
+* OTA ;
+* tests.
+
+Explique le pipeline actuel :
+
+CODE
+→ GitHub
+→ Railway
+→ Web
+
+et éventuellement :
+
+CODE
+→ GitHub
+→ EAS
+→ Mobile
+→ OTA
+
+---
+
+# 15. VARIABLES D'ENVIRONNEMENT ET SECRETS
+
+Dresse uniquement la liste des VARIABLES ATTENDUES dans le code/configuration.
+
+NE RÉVÈLE AUCUNE VALEUR DE SECRET.
+
+Par exemple :
+
+DATABASE_URL=présente
+API_URL=présente
+EXPO_PUBLIC_API_URL=présente
+...
+
+Pour chaque variable, indique :
+
+* Web ;
+* Backend ;
+* Mobile ;
+* Railway ;
+* EAS.
+
+Signale les variables qui risquent de créer une incohérence entre Web et Mobile.
+
+---
+
+# 16. RISQUES DE RÉGRESSION
+
+Identifie les éléments qui pourraient être cassés si nous implémentons l'architecture Web + Expo.
+
+Classe les risques :
+
+### CRITIQUE
+
+### ÉLEVÉ
+
+### MOYEN
+
+### FAIBLE
+
+Pour chaque risque :
+
+* cause ;
+* fichier/module concerné ;
+* conséquence ;
+* solution recommandée.
+
+---
+
+# 17. CE QU'IL NE FAUT SURTOUT PAS FAIRE
+
+Signale explicitement si une approche serait dangereuse.
+
+Je ne veux notamment pas :
+
+* réécrire entièrement BurkinaWatch ;
+* remplacer le frontend actuel inutilement ;
+* créer deux backends ;
+* créer deux bases de données ;
+* dupliquer toute la logique métier ;
+* casser le Web pour créer le Mobile ;
+* transformer toutes les pages Web en React Native sans raison ;
+* mettre PostgreSQL directement dans l'application ;
+* mettre des secrets dans l'application ;
+* utiliser l'OTA pour des modifications nécessitant du code natif ;
+* créer une deuxième architecture parallèle non maintenable.
+
+---
+
+# 18. COMPARAISON AVEC LE MODÈLE QUE JE VEUX
+
+À la fin, compare l'architecture actuelle avec ce modèle :
+
+WEB PRINCIPAL
++
+EXPO MOBILE NATIF
++
+BACKEND COMMUN
++
+DATABASE COMMUNE
++
+LOGIQUE MÉTIER PARTAGÉE
++
+EAS UPDATE / OTA
++
+RAILWAY
+
+Pour chaque élément, indique :
+
+| Élément | État actuel | Compatible ? | Travail nécessaire |
+| ------- | ----------- | ------------ | ------------------ |
+
+---
+
+# 19. PLAN DE MIGRATION PROPOSÉ
+
+Après avoir terminé l'audit, propose un plan de migration en PHASES.
+
+Exemple :
+
+PHASE 0 — Audit
+PHASE 1 — Stabilisation
+PHASE 2 — Extraction du code partagé
+PHASE 3 — API commune
+PHASE 4 — Expo Mobile
+PHASE 5 — Authentification Mobile
+PHASE 6 — Fonctionnalités natives
+PHASE 7 — EAS Build
+PHASE 8 — OTA
+PHASE 9 — Tests
+PHASE 10 — Production
+
+Mais adapte complètement ce plan à l'état réel du repository.
+
+Pour chaque phase :
+
+* objectif ;
+* fichiers concernés ;
+* modifications prévues ;
+* risques ;
+* tests nécessaires ;
+* critère de validation.
+
+---
+
+# 20. TESTS À PRÉVOIR
+
+Propose une matrice de tests Web + Mobile.
+
+Exemples :
+
+| Fonction | Web | iOS | Android | API | OTA |
+| -------- | --- | --- | ------- | --- | --- |
+
+Tester notamment :
+
+* inscription ;
+* connexion ;
+* logout ;
+* signalement ;
+* SOS ;
+* localisation ;
+* carte ;
+* recherche ;
+* notifications ;
+* médias ;
+* profils ;
+* établissements ;
+* administration ;
+* déconnexion ;
+* perte réseau ;
+* reconnexion ;
+* mise à jour OTA.
+
+---
+
+# 21. LIVRABLE FINAL OBLIGATOIRE
+
+À la fin de l'audit, ne modifie rien.
+
+Présente-moi un rapport structuré avec exactement ces sections :
+
+## A. RÉSUMÉ EXÉCUTIF
+
+Explique en langage simple l'état actuel.
+
+## B. ARCHITECTURE ACTUELLE
+
+Diagramme ASCII.
+
+## C. ARCHITECTURE MOBILE ACTUELLE
+
+Diagramme ASCII.
+
+## D. ARCHITECTURE CIBLE RECOMMANDÉE
+
+Diagramme ASCII.
+
+## E. INVENTAIRE DES FONCTIONNALITÉS
+
+Tableau complet.
+
+## F. ÉTAT DU BACKEND
+
+Analyse détaillée.
+
+## G. ÉTAT DE L'APPLICATION EXPO
+
+Analyse détaillée.
+
+## H. ÉTAT EAS / OTA
+
+Analyse détaillée.
+
+## I. CODE PARTAGEABLE
+
+Classifications A/B/C.
+
+## J. AUTHENTIFICATION
+
+Analyse Web + Mobile.
+
+## K. RAILWAY
+
+Analyse du déploiement.
+
+## L. GITHUB / CI-CD
+
+Analyse.
+
+## M. RISQUES
+
+Classés par criticité.
+
+## N. MODIFICATIONS NÉCESSAIRES
+
+Liste précise, fichier par fichier lorsque possible.
+
+## O. PLAN DE MIGRATION
+
+Phases ordonnées.
+
+## P. MATRICE DE TEST
+
+Web / iOS / Android / API / OTA.
+
+## Q. VERDICT FINAL
+
+Réponds clairement aux questions suivantes :
+
+1. Peut-on conserver le BurkinaWatch Web actuel comme version principale ?
+2. Peut-on avoir une application Expo native utilisant le même backend ?
+3. Peut-on avoir les mêmes fonctionnalités Web et Mobile ?
+4. Peut-on partager la logique métier ?
+5. Peut-on utiliser EAS Update / OTA ?
+6. Quelles modifications sont nécessaires ?
+7. Quels éléments nécessitent un nouveau build natif ?
+8. Quel est le risque de casser le Web ?
+9. Quelle est la stratégie la plus sûre ?
+10. Quel doit être le PREMIER changement à effectuer après cet audit ?
+
+---
+
+# RÈGLE FINALE
+
+NE CODE RIEN.
+
+NE CORRIGE RIEN.
+
+NE REFACTORISE RIEN.
+
+NE DÉPLOIE RIEN.
+
+NE SUPPRIME RIEN.
+
+NE MODIFIE RIEN.
+
+Je veux d'abord comprendre précisément l'état réel du projet avant de commencer la moindre modification.
+
+Si tu trouves des problèmes existants, documente-les mais ne les corrige pas.
+
+Si tu trouves des éléments déjà correctement configurés pour Expo/EAS/OTA, conserve-les tels quels et explique comment ils fonctionnent.
+
+Le but de cette phase est d'obtenir une CARTOGRAPHIE TECHNIQUE FIABLE de BurkinaWatch et un PLAN D'ACTION SÛR.
+
+ATTENTION : ne déduis pas l'architecture à partir des noms de fichiers uniquement. Vérifie le code, les imports, les dépendances, les scripts et les configurations réellement utilisés.
