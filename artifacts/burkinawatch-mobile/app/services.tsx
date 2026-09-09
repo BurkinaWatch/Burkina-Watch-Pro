@@ -6,8 +6,6 @@ import { useColors } from '@/hooks/useColors';
 import { Screen } from '@/components/Screen';
 import { SectionTitle } from '@/components/Brand';
 
-const WEB_APP_PATH = '/burkinawatch';
-
 const serviceGroups = [
   { title: 'Sécurité & mobilité', items: [['Urgences', '/urgences', 'phone-call'], ['Stations-service', '/stations', 'truck'], ['Gares routières', '/gares', 'navigation'], ['Suivi en direct', '/tracking-live', 'radio'], ['Surveillance', '/surveillance', 'video'], ['StreetView citoyen', '/streetview', 'camera'], ['Ouaga 3D', '/ouaga3d', 'box']] },
   { title: 'Vie quotidienne', items: [['Pharmacies de garde', '/pharmacies', 'plus-square'], ['Hôpitaux', '/hopitaux', 'heart'], ['Restaurants', '/restaurants', 'coffee'], ['Hôtels', '/hotels', 'home'], ['Banques', '/banques', 'credit-card'], ['Cimetières', '/cimetieres', 'map-pin']] },
@@ -68,7 +66,7 @@ export default function ServicesScreen() {
     }
 
     try {
-      const webUrl = `https://${domain}${WEB_APP_PATH}${route}`;
+      const webUrl = `https://${domain}${route}`;
       if (Platform.OS === 'web') {
         window.location.assign(webUrl);
       } else {
