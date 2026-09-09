@@ -22,6 +22,15 @@ const categoryRoutes: Record<string, string> = {
   marches: '/marches',
 };
 
+const categoryLabels: Record<string, string> = {
+  '/urgences': 'Urgences',
+  '/pharmacies': 'Pharmacies de garde',
+  '/hopitaux': 'Hôpitaux',
+  '/stations': 'Stations-service',
+  '/gares': 'Gares routières',
+  '/marches': 'Marchés',
+};
+
 type NativeRoute = '/feed' | '/(tabs)/alertes' | '/connexion';
 
 const nativeRoutes: Record<string, NativeRoute> = {
@@ -37,9 +46,7 @@ export default function ServicesScreen() {
 
   const selectedCategory = Array.isArray(params.category) ? params.category[0] : params.category;
   const selectedRoute = selectedCategory ? categoryRoutes[selectedCategory] : undefined;
-  const selectedItem = serviceGroups
-    .flatMap((group) => group.items)
-    .find(([, route]) => route === selectedRoute);
+  const selectedLabel = selectedRoute ? categoryLabels[selectedRoute] : undefined;
 
   async function openFeature(route: string) {
     const nativeRoute = nativeRoutes[route];
@@ -69,10 +76,10 @@ export default function ServicesScreen() {
 
   return (
     <Screen title="Tous les services" subtitle="L’écosystème BurkinaWatch sur mobile" showBack>
-      {selectedItem ? (
+      {selectedLabel ? (
         <View style={[styles.filter, { backgroundColor: colors.muted, borderColor: colors.primary }]}>
           <Feather name="filter" size={15} color={colors.primary} />
-          <Text style={[styles.filterText, { color: colors.foreground }]}>Catégorie sélectionnée : {selectedItem[0]}</Text>
+          <Text style={[styles.filterText, { color: colors.foreground }]}>Catégorie sélectionnée : {selectedLabel}</Text>
         </View>
       ) : null}
       {serviceGroups.map((group) => (
