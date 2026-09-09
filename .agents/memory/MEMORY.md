@@ -2,3 +2,4 @@
 - [Build Expo statique](expo-build-port.md) — le script de build mobile suppose localhost:8081; il entre en conflit avec le serveur mockup-sandbox déjà actif.
 - [Compatibilité SecureStore Expo](expo-secure-store-web.md) — le preview Web peut manquer les méthodes natives; garder un fallback conditionnel sans remplacer SecureStore natif.
 - [Installation post-fusion](post-merge-install.md) — ne pas forcer le mode hors ligne; le lockfile peut référencer un paquet absent du cache local.
+- [Assets Expo locaux](expo-local-assets.md) — les images mobiles doivent rester dans le périmètre Metro de l’artefact Expo.
