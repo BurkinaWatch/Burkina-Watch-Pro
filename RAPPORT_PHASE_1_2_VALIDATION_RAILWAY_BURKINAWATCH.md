@@ -1,6 +1,15 @@
 # BURKINAWATCH — PHASE 1.2
 ## Validation finale de la production Railway
 
+> **ARCHIVE HISTORIQUE — 9 septembre 2026**
+>
+> Ce rapport reflète l’état avant l’obtention de l’accès Railway. L’accès est
+> désormais opérationnel, mais le projet accessible est `Sotiss-App` et son
+> service `SOTISS` déploie `BurkinaWatch/SOTISS-Web-App`, pas le workspace
+> `BurkinaWatch/Burkina-Watch-Pro`. Voir
+> `RAPPORT_PHASE_1_2_VALIDATION_RAILWAY_BURKINAWATCH_ACTUALISE.md` pour les
+> résultats actuels.
+
 **Date :** 9 septembre 2026  
 **Périmètre :** validation opérationnelle Railway uniquement  
 **Règle appliquée :** aucune modification du code, de la base, des secrets ou de la chaîne de build
