@@ -1,9 +1,12 @@
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Screen } from '@/components/Screen';
 import { SectionTitle } from '@/components/Brand';
+
+const WEB_APP_PATH = '/burkinawatch';
 
 const serviceGroups = [
   { title: 'Sécurité & mobilité', items: [['Urgences', '/urgences', 'phone-call'], ['Stations-service', '/stations', 'truck'], ['Gares routières', '/gares', 'navigation'], ['Suivi en direct', '/tracking-live', 'radio'], ['Surveillance', '/surveillance', 'video'], ['StreetView citoyen', '/streetview', 'camera'], ['Ouaga 3D', '/ouaga3d', 'box']] },
@@ -55,7 +58,7 @@ export default function ServicesScreen() {
       return;
     }
 
-    const domain = process.env.EXPO_PUBLIC_DOMAIN;
+    const domain = process.env.EXPO_PUBLIC_DOMAIN?.replace(/^https?:\/\//, '').replace(/\/+$/, '');
     if (!domain) {
       Alert.alert(
         'Service indisponible',
@@ -65,7 +68,12 @@ export default function ServicesScreen() {
     }
 
     try {
-      await Linking.openURL(`https://${domain}${route}`);
+      const webUrl = `https://${domain}${WEB_APP_PATH}${route}`;
+      if (Platform.OS === 'web') {
+        window.location.assign(webUrl);
+      } else {
+        await WebBrowser.openBrowserAsync(webUrl);
+      }
     } catch {
       Alert.alert(
         'Ouverture impossible',
