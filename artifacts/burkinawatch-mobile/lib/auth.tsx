@@ -18,6 +18,7 @@ type AuthContextValue = {
   sendCode: (identifier: string, type?: 'email' | 'sms') => Promise<string>;
   signIn: (identifier: string, code: string, type?: 'email' | 'sms') => Promise<void>;
   signOut: () => Promise<void>;
+  revokeAllSessions: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -82,6 +83,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     async signOut() {
       await logoutMobileSession();
+      setUser(null);
+      queryClient.removeQueries({ queryKey: ['mobile-notifications'] });
+    },
+    async revokeAllSessions() {
+      await requestJson<{ success: boolean }>('/auth/mobile/revoke-all', {
+        method: 'POST',
+      });
+      await clearMobileSession();
       setUser(null);
       queryClient.removeQueries({ queryKey: ['mobile-notifications'] });
     },

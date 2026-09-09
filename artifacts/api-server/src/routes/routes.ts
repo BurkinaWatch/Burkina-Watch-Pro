@@ -27,6 +27,7 @@ import {
   issueMobileTokens,
   rotateMobileTokens,
   revokeMobileToken,
+  revokeAllMobileTokensForUser,
 } from "../replitAuth";
 import { csrfProtection, issueCsrfToken } from "../csrfProtection";
 import { getAuthenticatedUserId } from "../authorization";
@@ -895,6 +896,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await revokeMobileToken(refreshToken);
     }
     return res.json({ success: true });
+  });
+
+  app.post("/api/auth/mobile/revoke-all", isAuthenticated, async (req: any, res) => {
+    const userId = getAuthenticatedUserId(req);
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentification requise",
+      });
+    }
+
+    try {
+      const revokedCount = await revokeAllMobileTokensForUser(userId);
+      return res.json({ success: true, revokedCount });
+    } catch (error) {
+      console.error("Mobile session revocation error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Impossible de révoquer les sessions mobiles",
+      });
+    }
   });
 
   app.get("/api/auth/check-sms-availability", async (req, res) => {

@@ -59,6 +59,7 @@ export default function Profil() {
   const [selectedContact, setSelectedContact] = useState<EmergencyContact | null>(null);
   const [lockscreenStyle, setLockscreenStyle] = useState<"light" | "dark">("light");
   const [isGeneratingLockscreen, setIsGeneratingLockscreen] = useState(false);
+  const [isRevokingMobileSessions, setIsRevokingMobileSessions] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const generateLockscreenImage = async () => {
@@ -380,6 +381,26 @@ export default function Profil() {
       window.location.href = "/";
     } catch (error) {
       window.location.href = "/";
+    }
+  };
+
+  const revokeMobileSessions = async () => {
+    setIsRevokingMobileSessions(true);
+    try {
+      const response = await apiRequest("POST", "/api/auth/mobile/revoke-all");
+      const result = (await response.json()) as { revokedCount?: number };
+      toast({
+        title: "Sessions mobiles révoquées",
+        description: `${result.revokedCount ?? 0} session(s) mobile(s) ne pourront plus être renouvelée(s).`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Révocation impossible",
+        description: error?.message || "Vérifiez votre connexion puis réessayez.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRevokingMobileSessions(false);
     }
   };
 
@@ -1423,6 +1444,54 @@ export default function Profil() {
                   data-testid="switch-show-tips"
                 />
               </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-3">
+              <div>
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  Sessions mobiles
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Révoquez tous les appareils mobiles si vous avez perdu votre téléphone.
+                </p>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full text-destructive"
+                    disabled={isRevokingMobileSessions}
+                    data-testid="button-revoke-mobile-sessions"
+                  >
+                    {isRevokingMobileSessions ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Shield className="w-4 h-4 mr-2" />
+                    )}
+                    Révoquer toutes les sessions mobiles
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Révoquer toutes les sessions mobiles ?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tous vos appareils mobiles seront déconnectés. Cette action est utile si vous avez perdu un téléphone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => void revokeMobileSessions()}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Révoquer les sessions
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
 
             <Separator />

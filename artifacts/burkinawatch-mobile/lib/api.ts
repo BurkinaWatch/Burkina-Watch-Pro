@@ -41,7 +41,9 @@ export async function requestJson<T>(
     },
   });
 
-  if (response.status === 401 && allowRefresh && !path.startsWith('/auth/mobile/')) {
+  const isMobileTokenEndpoint =
+    path === '/auth/mobile/token' || path === '/auth/mobile/refresh';
+  if (response.status === 401 && allowRefresh && !isMobileTokenEndpoint) {
     const refreshedToken = await refreshAccessToken();
     if (refreshedToken) return requestJson<T>(path, options, false);
   }

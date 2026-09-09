@@ -149,6 +149,7 @@ export interface IStorage {
   }): Promise<typeof refreshTokens.$inferSelect>;
   getActiveRefreshToken(token: string): Promise<typeof refreshTokens.$inferSelect | undefined>;
   revokeRefreshToken(token: string): Promise<void>;
+  revokeActiveRefreshTokensForUser(userId: string): Promise<number>;
   updateUserProfile(id: string, profile: UpdateUserProfile): Promise<User | undefined>;
 
   // Méthodes pour les signalements
@@ -492,6 +493,22 @@ export class DbStorage implements IStorage {
       .update(refreshTokens)
       .set({ revokedAt: new Date() })
       .where(and(eq(refreshTokens.token, token), isNull(refreshTokens.revokedAt)));
+  }
+
+  async revokeActiveRefreshTokensForUser(userId: string): Promise<number> {
+    const revokedTokens = await db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(
+        and(
+          eq(refreshTokens.userId, userId),
+          isNull(refreshTokens.revokedAt),
+          sql`${refreshTokens.expiresAt} > now()`,
+        ),
+      )
+      .returning({ id: refreshTokens.id });
+
+    return revokedTokens.length;
   }
 
   async upsertUser(userData: any): Promise<User> {

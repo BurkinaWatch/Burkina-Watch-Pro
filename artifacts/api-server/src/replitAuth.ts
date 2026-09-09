@@ -265,6 +265,10 @@ export async function revokeMobileToken(refreshToken: string): Promise<void> {
   await storage.revokeRefreshToken(hashRefreshToken(refreshToken));
 }
 
+export async function revokeAllMobileTokensForUser(userId: string): Promise<number> {
+  return storage.revokeActiveRefreshTokensForUser(userId);
+}
+
 async function mobileBearerAuthentication(
   req: Request,
   _res: Response,
