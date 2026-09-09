@@ -24,3 +24,19 @@ export const RevokeAllMobileSessionsResponse = zod.object({
   "success": zod.boolean(),
   "revokedCount": zod.number().int()
 })
+
+
+/**
+ * @summary List active mobile sessions for the authenticated user
+ */
+export const GetMobileSessionsResponse = zod.object({
+  "sessions": zod.array(zod.object({
+  "id": zod.string().describe('Opaque session identifier, not a credential'),
+  "createdAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date(),
+  "device": zod.string(),
+  "browser": zod.string()
+}))
+})
+
+

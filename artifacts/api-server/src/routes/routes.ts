@@ -919,6 +919,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/auth/mobile/sessions", isAuthenticated, async (req: any, res) => {
+    const userId = getAuthenticatedUserId(req);
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentification requise",
+      });
+    }
+
+    try {
+      const sessions = await storage.getActiveMobileSessions(userId);
+      return res.json({
+        sessions: sessions.map((session) => {
+          const userAgent = (session.userAgent ?? "").toLowerCase();
+          const browser = userAgent.includes("edg/")
+            ? "Microsoft Edge"
+            : userAgent.includes("samsungbrowser")
+              ? "Samsung Internet"
+              : userAgent.includes("opr/")
+                ? "Opera"
+                : userAgent.includes("firefox")
+                  ? "Firefox"
+                  : userAgent.includes("chrome") || userAgent.includes("crios")
+                    ? "Chrome"
+                    : userAgent.includes("safari")
+                      ? "Safari"
+                      : userAgent.includes("okhttp") || userAgent.includes("expo")
+                        ? "Application mobile"
+                        : "Navigateur inconnu";
+          const device = userAgent.includes("ipad")
+            ? "iPad"
+            : userAgent.includes("iphone")
+              ? "iPhone"
+              : userAgent.includes("android")
+                ? "Android"
+                : userAgent.includes("mobile")
+                  ? "Appareil mobile"
+                  : "Ordinateur";
+
+          return {
+            id: session.id,
+            createdAt: session.createdAt,
+            expiresAt: session.expiresAt,
+            device,
+            browser,
+          };
+        }),
+      });
+    } catch (error) {
+      req.log?.error(error, "Mobile session listing error");
+      return res.status(500).json({
+        success: false,
+        message: "Impossible de récupérer les sessions mobiles",
+      });
+    }
+  });
+
   app.get("/api/auth/check-sms-availability", async (req, res) => {
     try {
       const available = await checkTwilioAvailability();

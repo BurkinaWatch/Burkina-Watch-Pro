@@ -5,25 +5,12 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-export interface HealthStatus {
-  status: string;
-}
-
-export interface RevokeMobileSessionsResponse {
-  success: boolean;
-  revokedCount: number;
-}
 
 export interface MobileSession {
   /** Opaque session identifier, not a credential */
   id: string;
-  createdAt: string;
-  expiresAt: string;
+  createdAt: Date;
+  expiresAt: Date;
   device: string;
   browser: string;
 }
-
-export interface MobileSessionsResponse {
-  sessions: MobileSession[];
-}
-

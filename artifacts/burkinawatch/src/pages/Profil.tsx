@@ -41,6 +41,7 @@ import { LevelProgress } from "@/components/LevelProgress";
 import { useTranslation } from "react-i18next";
 import { getLevelInfo } from "@shared/pointsSystem";
 import { useRef } from "react";
+import { getGetMobileSessionsQueryKey, useGetMobileSessions } from "@workspace/api-client-react";
 
 
 export default function Profil() {
@@ -389,6 +390,7 @@ export default function Profil() {
     try {
       const response = await apiRequest("POST", "/api/auth/mobile/revoke-all");
       const result = (await response.json()) as { revokedCount?: number };
+      queryClient.invalidateQueries({ queryKey: getGetMobileSessionsQueryKey() });
       toast({
         title: "Sessions mobiles révoquées",
         description: `${result.revokedCount ?? 0} session(s) mobile(s) ne pourront plus être renouvelée(s).`,
@@ -403,6 +405,17 @@ export default function Profil() {
       setIsRevokingMobileSessions(false);
     }
   };
+
+  const {
+    data: mobileSessionsData,
+    isLoading: mobileSessionsLoading,
+    isError: mobileSessionsError,
+  } = useGetMobileSessions({
+    query: {
+      enabled: isAuthenticated,
+      queryKey: getGetMobileSessionsQueryKey(),
+    },
+  });
 
   const { data: activeSession, isLoading: sessionLoading } = useQuery<TrackingSession>({
     queryKey: ["/api/tracking/session"],
@@ -736,6 +749,7 @@ export default function Profil() {
   };
 
   const { points, badge } = calculateUserStats();
+  const mobileSessions = mobileSessionsData?.sessions ?? [];
 
   // Get current level info for LevelProgress component
   const currentLevelName = (() => {
@@ -1455,8 +1469,47 @@ export default function Profil() {
                   Sessions mobiles
                 </Label>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Révoquez tous les appareils mobiles si vous avez perdu votre téléphone.
+                  Voici les appareils mobiles encore connectés. La révocation globale les déconnectera tous.
                 </p>
+              </div>
+              <div className="space-y-2" data-testid="mobile-sessions-list">
+                {mobileSessionsLoading ? (
+                  <div className="flex items-center gap-2 rounded-lg border p-3 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Chargement des sessions actives…
+                  </div>
+                ) : mobileSessionsError ? (
+                  <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-muted-foreground">
+                    Les sessions actives ne sont pas disponibles pour le moment.
+                  </p>
+                ) : mobileSessions.length === 0 ? (
+                  <p className="rounded-lg border p-3 text-sm text-muted-foreground">
+                    Aucun appareil mobile actif.
+                  </p>
+                ) : (
+                  mobileSessions.map((session) => (
+                    <div
+                      key={session.id}
+                      className="flex items-start gap-3 rounded-lg border p-3"
+                      data-testid={`mobile-session-${session.id}`}
+                    >
+                      <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                      <div className="min-w-0 flex-1 text-sm">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <span className="font-medium">{session.device}</span>
+                          <span className="text-muted-foreground">· {session.browser}</span>
+                          <Badge variant="secondary" className="text-[10px]">Active</Badge>
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Créée le {new Date(session.createdAt).toLocaleString("fr-FR")}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Expire le {new Date(session.expiresAt).toLocaleString("fr-FR")}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
               <AlertDialog>
                 <AlertDialogTrigger asChild>

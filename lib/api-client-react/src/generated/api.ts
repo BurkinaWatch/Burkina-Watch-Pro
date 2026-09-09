@@ -21,6 +21,7 @@ import type {
 
 import type {
   HealthStatus,
+  MobileSessionsResponse,
   RevokeMobileSessionsResponse
 } from './api.schemas';
 
@@ -199,3 +200,81 @@ export const useRevokeAllMobileSessions = <TError = ErrorType<void>,
       > => {
       return useMutation(getRevokeAllMobileSessionsMutationOptions(options));
     }
+
+export const getGetMobileSessionsUrl = () => {
+
+
+
+
+  return `/api/auth/mobile/sessions`
+}
+
+/**
+ * @summary List active mobile sessions for the authenticated user
+ */
+export const getMobileSessions = async ( options?: Parameters<typeof customFetch>[1]): Promise<MobileSessionsResponse> => {
+
+  return customFetch<MobileSessionsResponse>(getGetMobileSessionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMobileSessionsQueryKey = () => {
+    return [
+    `/api/auth/mobile/sessions`
+    ] as const;
+    }
+
+
+export const getGetMobileSessionsQueryOptions = <TData = Awaited<ReturnType<typeof getMobileSessions>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMobileSessions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMobileSessionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMobileSessions>>> = ({ signal }) => getMobileSessions({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMobileSessions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMobileSessionsQueryResult = NonNullable<Awaited<ReturnType<typeof getMobileSessions>>>
+export type GetMobileSessionsQueryError = ErrorType<void>
+
+
+/**
+ * @summary List active mobile sessions for the authenticated user
+ */
+
+export function useGetMobileSessions<TData = Awaited<ReturnType<typeof getMobileSessions>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMobileSessions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMobileSessionsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+

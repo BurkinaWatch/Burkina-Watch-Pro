@@ -7,4 +7,6 @@
  */
 
 export * from './healthStatus';
+export * from './mobileSession';
+export * from './mobileSessionsResponse';
 export * from './revokeMobileSessionsResponse';

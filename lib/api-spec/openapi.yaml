@@ -42,6 +42,22 @@ paths:
                 $ref: "#/components/schemas/RevokeMobileSessionsResponse"
         "401":
           description: Authentication required
+  /auth/mobile/sessions:
+    get:
+      operationId: getMobileSessions
+      tags: [auth]
+      summary: List active mobile sessions for the authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Active mobile session metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MobileSessionsResponse"
+        "401":
+          description: Authentication required
 components:
   securitySchemes:
     bearerAuth:
@@ -65,4 +81,35 @@ components:
       required:
         - success
         - revokedCount
+    MobileSession:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Opaque session identifier, not a credential
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        device:
+          type: string
+        browser:
+          type: string
+      required:
+        - id
+        - createdAt
+        - expiresAt
+        - device
+        - browser
+    MobileSessionsResponse:
+      type: object
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/MobileSession"
+      required:
+        - sessions
 

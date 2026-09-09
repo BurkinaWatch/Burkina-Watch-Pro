@@ -147,6 +147,12 @@ export interface IStorage {
     ipAddress?: string | null;
     userAgent?: string | null;
   }): Promise<typeof refreshTokens.$inferSelect>;
+  getActiveMobileSessions(userId: string): Promise<Array<{
+    id: string;
+    createdAt: Date;
+    expiresAt: Date;
+    userAgent: string | null;
+  }>>;
   getActiveRefreshToken(token: string): Promise<typeof refreshTokens.$inferSelect | undefined>;
   revokeRefreshToken(token: string): Promise<void>;
   revokeActiveRefreshTokensForUser(userId: string): Promise<number>;
@@ -471,6 +477,30 @@ export class DbStorage implements IStorage {
   }): Promise<typeof refreshTokens.$inferSelect> {
     const [refreshToken] = await db.insert(refreshTokens).values(data).returning();
     return refreshToken;
+  }
+
+  async getActiveMobileSessions(userId: string): Promise<Array<{
+    id: string;
+    createdAt: Date;
+    expiresAt: Date;
+    userAgent: string | null;
+  }>> {
+    return db
+      .select({
+        id: refreshTokens.id,
+        createdAt: refreshTokens.createdAt,
+        expiresAt: refreshTokens.expiresAt,
+        userAgent: refreshTokens.userAgent,
+      })
+      .from(refreshTokens)
+      .where(
+        and(
+          eq(refreshTokens.userId, userId),
+          isNull(refreshTokens.revokedAt),
+          sql`${refreshTokens.expiresAt} > now()`,
+        ),
+      )
+      .orderBy(desc(refreshTokens.createdAt));
   }
 
   async getActiveRefreshToken(token: string): Promise<typeof refreshTokens.$inferSelect | undefined> {
