@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { requestJson, Signalement, Stats } from '@/lib/api';
 import { EmptyState, ErrorState, LoadingState, Screen } from '@/components/Screen';
 import { SectionTitle } from '@/components/Brand';
 import { SignalementCard } from '@/components/SignalementCard';
+import heroImage from '@/assets/hero-citizens.png';
 
 const quickActions = [
   { label: 'Signaler', icon: 'plus-circle' as const, route: '/signaler', tone: 'danger' as const },
@@ -35,7 +36,14 @@ export default function HomeScreen() {
 
   return (
     <Screen refreshing={signalements.isRefetching} onRefresh={() => { void signalements.refetch(); void stats.refetch(); }}>
-      <View style={[styles.hero, { backgroundColor: colors.primary }]}>
+      <ImageBackground
+        source={heroImage}
+        resizeMode="cover"
+        imageStyle={styles.heroImage}
+        style={[styles.hero, { backgroundColor: colors.primary }]}
+        accessibilityLabel="Citoyens burkinabè collaborant avec leurs téléphones"
+      >
+        <View style={[styles.heroWash, { backgroundColor: colors.primary }]} />
         <View style={[styles.heroAccent, { backgroundColor: colors.secondary }]} />
         <View style={styles.heroCopy}>
           <Text style={[styles.kicker, { color: colors.primaryForeground }]}>LA VIGILANCE CITOYENNE</Text>
@@ -50,7 +58,7 @@ export default function HomeScreen() {
         <View style={[styles.shield, { borderColor: colors.primaryForeground }]}>
           <Feather name="shield" size={56} color={colors.primaryForeground} />
         </View>
-      </View>
+      </ImageBackground>
 
       <View style={styles.actionsGrid}>
         {quickActions.map((action) => {
@@ -91,6 +99,8 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   hero: { alignItems: 'center', borderRadius: 24, flexDirection: 'row', gap: 15, justifyContent: 'space-between', minHeight: 184, overflow: 'hidden', padding: 22, paddingLeft: 26, position: 'relative' },
+  heroImage: { opacity: 0.22 },
+  heroWash: { bottom: 0, left: 0, opacity: 0.84, position: 'absolute', right: 0, top: 0 },
   heroAccent: { borderRadius: 99, height: 7, left: 0, position: 'absolute', top: 0, width: 72 },
   heroCopy: { flex: 1 },
   kicker: { fontFamily: 'Inter_700Bold', fontSize: 10, letterSpacing: 1.3, opacity: 0.8 },
