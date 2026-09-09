@@ -12,8 +12,8 @@ L’application mobile est un compagnon natif du site BurkinaWatch. Elle conserv
 | `/publier` | Nouveau signalement | Caméra et localisation facultatives; brouillons dans AsyncStorage | Brouillon local conservé |
 | `/sos`, `/sos/publier` | SOS + signaler | Appels natifs `tel:`; caméra/localisation facultatives | Les numéros d’urgence restent visibles |
 | `/notifications` | Onglet Alertes | `GET /api/notifications` avec identité serveur | Message de reconnexion explicite |
-| `/profil` | Onglet Profil | Aucun cookie Web réutilisé | Mode invité |
-| `/connexion` | Connexion | Ouverture de la connexion Web tant que le contrat access/refresh mobile n’existe pas | Aucun jeton inventé |
+| `/profil` | Onglet Profil | `GET /api/auth/user` avec bearer mobile; déconnexion par révocation du refresh token | Mode invité ou identité synchronisée |
+| `/connexion` | Connexion | OTP email puis contrat access/refresh mobile, jetons dans SecureStore | Code invalide ou expiré explicite |
 | `/signalement/:id` | Détail | `GET /api/signalements/:id` | Erreur et bouton de reprise |
 
 ## Catalogue de services
@@ -24,7 +24,10 @@ Les parcours qui dépendent de contrôles Web ou de contrats API non exposés pa
 
 ## Limites contractuelles documentées
 
-- Le backend actuel expose une session cookie Web; l’application native ne la partage pas et ne fabrique pas de JWT.
-- La publication mobile reste un brouillon local jusqu’à l’existence d’un contrat access/refresh et upload documenté.
+- Le Web conserve sa session cookie; le mobile utilise `POST /api/auth/mobile/token`, `POST /api/auth/mobile/refresh` et `POST /api/auth/mobile/logout` sans réutiliser ce cookie.
+- Le mobile reçoit un access token bearer de 15 minutes et un refresh token opaque rotatif de 30 jours. Le serveur ne stocke que le hash du refresh token; chaque rotation révoque le précédent.
+- `Authorization: Bearer <accessToken>` est interprété par la même identité `req.user` que le Web. Les routes protégées continuent donc d’appliquer les contrôles de propriété et de modération côté serveur.
+- Contrat exact: `POST /api/auth/send-otp` reçoit `{ identifier, type: "email" | "sms" }`; `POST /api/auth/mobile/token` reçoit `{ identifier, code, type }` et renvoie `{ accessToken, refreshToken, tokenType: "Bearer", expiresIn, user }`; `POST /api/auth/mobile/refresh` reçoit `{ refreshToken }` et renvoie une nouvelle paire; `POST /api/auth/mobile/logout` reçoit `{ refreshToken }` et révoque cette session.
+- La publication mobile reste un brouillon local jusqu’à l’existence d’un contrat d’upload documenté; l’identité access/refresh est désormais disponible.
 - Les notifications personnelles nécessitent une session compatible mobile; l’écran distingue l’erreur d’authentification d’une absence de notification.
-- Aucune table, route backend, configuration Railway ou donnée existante n’est modifiée par cet artefact.
+- Le contrat d’authentification mobile ne modifie pas les données existantes; il utilise la table `refresh_tokens` déjà prévue par le schéma.

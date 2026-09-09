@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Screen } from '@/components/Screen';
+import { useAuth } from '@/lib/auth';
 
 const items = [
   { label: 'Mes signalements', description: 'Suivre vos contributions citoyennes', icon: 'file-text' as const, route: '/feed' },
@@ -14,6 +15,8 @@ const items = [
 export default function ProfileScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { user, isLoading, isAuthenticated, signOut } = useAuth();
+  const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || 'Sentinelle';
   return (
     <Screen title="Profil" subtitle="Votre espace BurkinaWatch">
       <View style={[styles.profileCard, { backgroundColor: colors.primary }]}>
@@ -21,13 +24,13 @@ export default function ProfileScreen() {
           <Feather name="user" size={25} color={colors.primary} />
         </View>
         <View style={styles.profileCopy}>
-          <Text style={[styles.profileTitle, { color: colors.primaryForeground }]}>Mode invité</Text>
-          <Text style={[styles.profileText, { color: colors.primaryForeground }]}>Connectez-vous pour retrouver votre activité sur tous vos appareils.</Text>
+          <Text style={[styles.profileTitle, { color: colors.primaryForeground }]}>{isLoading ? 'Chargement…' : isAuthenticated ? displayName : 'Mode invité'}</Text>
+          <Text style={[styles.profileText, { color: colors.primaryForeground }]}>{isAuthenticated ? user?.email || 'Compte BurkinaWatch synchronisé' : 'Connectez-vous pour retrouver votre activité sur tous vos appareils.'}</Text>
         </View>
       </View>
-      <Pressable onPress={() => router.push('/connexion')} style={[styles.signIn, { borderColor: colors.primary }]} testID="button-sign-in">
-        <Feather name="log-in" size={18} color={colors.primary} />
-        <Text style={[styles.signInText, { color: colors.primary }]}>Se connecter à BurkinaWatch</Text>
+      <Pressable onPress={() => isAuthenticated ? void signOut() : router.push('/connexion')} style={[styles.signIn, { borderColor: colors.primary }]} testID={isAuthenticated ? 'button-sign-out' : 'button-sign-in'}>
+        <Feather name={isAuthenticated ? 'log-out' : 'log-in'} size={18} color={colors.primary} />
+        <Text style={[styles.signInText, { color: colors.primary }]}>{isAuthenticated ? 'Se déconnecter' : 'Se connecter à BurkinaWatch'}</Text>
       </Pressable>
       <View style={styles.items}>
         {items.map((item) => (
@@ -44,7 +47,7 @@ export default function ProfileScreen() {
         ))}
       </View>
       <Text style={[styles.note, { color: colors.mutedForeground }]}>
-        L’application mobile n’utilise pas les cookies du Web et n’invente pas de jeton d’accès. Le contrat d’authentification mobile sera branché dès qu’il sera exposé par l’API.
+        L’application mobile n’utilise pas les cookies du Web. Les alertes et le profil sont associés à la même identité serveur que la version Web.
       </Text>
     </Screen>
   );

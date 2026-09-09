@@ -6,17 +6,20 @@ import { useColors } from '@/hooks/useColors';
 import { requestJson } from '@/lib/api';
 import { EmptyState, ErrorState, LoadingState, Screen } from '@/components/Screen';
 import { SectionTitle } from '@/components/Brand';
+import { useAuth } from '@/lib/auth';
 
 type NotificationItem = { id: string | number; title?: string; message?: string; createdAt?: string; read?: boolean };
 
 export default function AlertsScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const notifications = useQuery<NotificationItem[]>({
     queryKey: ['mobile-notifications'],
     queryFn: () => requestJson<NotificationItem[]>('/notifications'),
     staleTime: 30_000,
     retry: 0,
+    enabled: isAuthenticated,
   });
 
   return (
@@ -31,8 +34,16 @@ export default function AlertsScreen() {
         </View>
       </View>
       <SectionTitle eyebrow="VOTRE FIL" title="Notifications" />
-      {notifications.isLoading ? <LoadingState label="Synchronisation…" /> : null}
-      {notifications.isError ? (
+      {isAuthLoading || notifications.isLoading ? <LoadingState label="Synchronisation…" /> : null}
+      {!isAuthLoading && !isAuthenticated ? (
+        <View style={styles.errorWrap}>
+          <Text style={[styles.bannerText, { color: colors.mutedForeground }]}>Connectez-vous pour synchroniser les alertes liées à vos signalements.</Text>
+          <Pressable onPress={() => router.push('/connexion')} testID="button-notification-login">
+            <Text style={[styles.loginLink, { color: colors.primary }]}>Se connecter</Text>
+          </Pressable>
+        </View>
+      ) : null}
+      {isAuthenticated && notifications.isError ? (
         <View style={styles.errorWrap}>
           <ErrorState onRetry={() => void notifications.refetch()} />
           <Pressable onPress={() => router.push('/connexion')} testID="button-notification-login">
@@ -40,7 +51,7 @@ export default function AlertsScreen() {
           </Pressable>
         </View>
       ) : null}
-      {!notifications.isLoading && !notifications.isError && !notifications.data?.length ? (
+      {isAuthenticated && !notifications.isLoading && !notifications.isError && !notifications.data?.length ? (
         <EmptyState title="Aucune notification" description="Vous verrez ici les mises à jour de vos signalements et les alertes importantes." icon="bell-off" />
       ) : null}
       {notifications.data?.map((notification) => (

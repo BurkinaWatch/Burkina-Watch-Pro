@@ -1,2 +1,3 @@
 - [Portage legacy full-stack](legacy-artifact-ports.md) — les routes legacy gardent leur préfixe API et leurs imports relatifs doivent suivre le nouvel emplacement.
 - [Build Expo statique](expo-build-port.md) — le script de build mobile suppose localhost:8081; il entre en conflit avec le serveur mockup-sandbox déjà actif.
+- [Compatibilité SecureStore Expo](expo-secure-store-web.md) — le preview Web peut manquer les méthodes natives; garder un fallback conditionnel sans remplacer SecureStore natif.

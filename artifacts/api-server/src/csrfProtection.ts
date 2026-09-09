@@ -92,6 +92,10 @@ export function issueCsrfToken(req: Request, res: Response): void {
 export const csrfProtection: RequestHandler = (req, res, next) => {
   if (SAFE_METHODS.has(req.method)) return next();
 
+  // Bearer-authenticated mobile requests do not use browser cookies, so they
+  // are not exposed to cookie-based CSRF attacks.
+  if (req.get("authorization")?.startsWith("Bearer ")) return next();
+
   const authenticated =
     typeof req.isAuthenticated === "function" && req.isAuthenticated();
   if (!authenticated) return next();

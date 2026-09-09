@@ -21,7 +21,13 @@ import {
 } from "@workspace/db";
 import { fromZodError } from "zod-validation-error";
 import { z } from "zod/v4";
-import { setupAuth, isAuthenticated } from "../replitAuth";
+import {
+  setupAuth,
+  isAuthenticated,
+  issueMobileTokens,
+  rotateMobileTokens,
+  revokeMobileToken,
+} from "../replitAuth";
 import { csrfProtection, issueCsrfToken } from "../csrfProtection";
 import { getAuthenticatedUserId } from "../authorization";
 import { streetviewConfig } from "../streetviewConfig";
@@ -820,6 +826,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Verify OTP error:", error);
       res.status(500).json({ success: false, message: error.message || "Erreur serveur" });
     }
+  });
+
+  // Mobile authentication deliberately does not create a browser session.
+  // The OTP is the same account verification used by the Web flow, while the
+  // response is an access/refresh pair stored by the native client.
+  app.post("/api/auth/mobile/token", authLimiter, async (req: any, res) => {
+    const { identifier, code, type } = req.body;
+
+    if (
+      typeof identifier !== "string" ||
+      typeof code !== "string" ||
+      !["email", "sms"].includes(type)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Identifiant, code et type requis",
+      });
+    }
+
+    try {
+      const result = await verifyOtp(identifier, code, type);
+      if (!result.success || !result.userId) {
+        return res.status(400).json(result);
+      }
+
+      const user = await storage.getUser(result.userId);
+      if (!user || user.isAnonymous) {
+        return res.status(404).json({
+          success: false,
+          message: "Utilisateur non trouvé",
+        });
+      }
+
+      return res.json(await issueMobileTokens(user, req));
+    } catch (error: any) {
+      console.error("Mobile token issue error:", error);
+      return res.status(500).json({
+        success: false,
+        message: error.message || "Erreur serveur",
+      });
+    }
+  });
+
+  app.post("/api/auth/mobile/refresh", async (req: any, res) => {
+    const { refreshToken } = req.body;
+    if (typeof refreshToken !== "string" || refreshToken.length < 40) {
+      return res.status(400).json({
+        success: false,
+        message: "Refresh token requis",
+      });
+    }
+
+    const tokenResponse = await rotateMobileTokens(refreshToken, req);
+    if (!tokenResponse) {
+      return res.status(401).json({
+        success: false,
+        message: "Session mobile expirée",
+      });
+    }
+
+    return res.json(tokenResponse);
+  });
+
+  app.post("/api/auth/mobile/logout", async (req: any, res) => {
+    const { refreshToken } = req.body;
+    if (typeof refreshToken === "string" && refreshToken.length >= 40) {
+      await revokeMobileToken(refreshToken);
+    }
+    return res.json({ success: true });
   });
 
   app.get("/api/auth/check-sms-availability", async (req, res) => {

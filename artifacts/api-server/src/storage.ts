@@ -59,6 +59,7 @@ import {
   streetviewProcessingJobs,
   places,
   otpCodes,
+  refreshTokens,
   insertSignalementSchema,
   insertCommentaireSchema,
   updateSignalementSchema,
@@ -139,6 +140,15 @@ export interface IStorage {
   deleteOtpCode(id: string): Promise<void>;
   deleteExpiredOtpCodes(identifier: string, type: string): Promise<void>;
   incrementOtpAttempts(id: string): Promise<void>;
+  createRefreshToken(data: {
+    userId: string;
+    token: string;
+    expiresAt: Date;
+    ipAddress?: string | null;
+    userAgent?: string | null;
+  }): Promise<typeof refreshTokens.$inferSelect>;
+  getActiveRefreshToken(token: string): Promise<typeof refreshTokens.$inferSelect | undefined>;
+  revokeRefreshToken(token: string): Promise<void>;
   updateUserProfile(id: string, profile: UpdateUserProfile): Promise<User | undefined>;
 
   // Méthodes pour les signalements
@@ -449,6 +459,39 @@ export class DbStorage implements IStorage {
       .update(otpCodes)
       .set({ attempts: sql`${otpCodes.attempts} + 1` })
       .where(eq(otpCodes.id, id));
+  }
+
+  async createRefreshToken(data: {
+    userId: string;
+    token: string;
+    expiresAt: Date;
+    ipAddress?: string | null;
+    userAgent?: string | null;
+  }): Promise<typeof refreshTokens.$inferSelect> {
+    const [refreshToken] = await db.insert(refreshTokens).values(data).returning();
+    return refreshToken;
+  }
+
+  async getActiveRefreshToken(token: string): Promise<typeof refreshTokens.$inferSelect | undefined> {
+    const [refreshToken] = await db
+      .select()
+      .from(refreshTokens)
+      .where(
+        and(
+          eq(refreshTokens.token, token),
+          isNull(refreshTokens.revokedAt),
+          sql`${refreshTokens.expiresAt} > now()`,
+        ),
+      )
+      .limit(1);
+    return refreshToken;
+  }
+
+  async revokeRefreshToken(token: string): Promise<void> {
+    await db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(and(eq(refreshTokens.token, token), isNull(refreshTokens.revokedAt)));
   }
 
   async upsertUser(userData: any): Promise<User> {
