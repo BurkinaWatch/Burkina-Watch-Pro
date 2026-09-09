@@ -1,0 +1,555 @@
+# BURKINAWATCH — PHASE 1 : STABILISATION DE L’INFRASTRUCTURE EXISTANTE
+
+## CONTEXTE
+
+BurkinaWatch est actuellement une application Web existante et fonctionnelle, basée notamment sur :
+
+* React + Vite côté Web
+* Express + TypeScript côté backend
+* PostgreSQL
+* Drizzle ORM
+* Railway pour le déploiement backend/production
+* GitHub comme dépôt de code
+
+À terme, nous allons ajouter une véritable application mobile native Expo/React Native utilisant le même backend/API et les mêmes données PostgreSQL.
+
+**Mais cette phase ne concerne PAS encore la création de l’application mobile.**
+
+L’objectif de cette phase est uniquement de stabiliser et vérifier l’infrastructure actuelle de BurkinaWatch afin de disposer d’une base fiable avant les prochaines phases.
+
+---
+
+# ⚠️ RÈGLE ABSOLUE : NE PAS TOUCHER AU PRODUIT WEB INUTILEMENT
+
+Le BurkinaWatch Web actuel doit rester le produit principal.
+
+Pendant cette phase :
+
+* NE PAS migrer React/Vite vers React Native.
+* NE PAS créer `apps/mobile`.
+* NE PAS installer Expo.
+* NE PAS installer React Native.
+* NE PAS configurer EAS.
+* NE PAS configurer EAS Update.
+* NE PAS modifier le design.
+* NE PAS refaire le frontend.
+* NE PAS refactoriser le frontend.
+* NE PAS supprimer de fonctionnalité existante.
+* NE PAS remplacer l’architecture actuelle par une nouvelle architecture.
+* NE PAS créer un deuxième backend.
+* NE PAS créer une deuxième base PostgreSQL.
+* NE PAS déplacer les données.
+* NE PAS effectuer de migration destructive.
+* NE PAS utiliser `db:push` en production.
+* NE PAS supprimer les migrations existantes.
+* NE PAS recréer la base de données.
+* NE PAS modifier les données métier existantes.
+* NE PAS changer les fonctionnalités utilisateur simplement pour « nettoyer » le code.
+* NE PAS modifier les variables secrètes existantes si cela n’est pas strictement nécessaire.
+* NE PAS exposer de secrets dans le rapport final.
+* NE PAS committer de secrets.
+* NE PAS déployer une nouvelle version en production sans validation explicite si une action de déploiement est nécessaire.
+
+Cette phase doit être **minimale, additive et réversible**.
+
+---
+
+# OBJECTIF PRINCIPAL
+
+Résoudre et documenter les problèmes d’infrastructure actuellement identifiés dans l’audit précédent, notamment :
+
+```text
+Railway
+   ↓
+Backend Node/Express
+   ↓
+PostgreSQL
+```
+
+Le dernier audit a identifié notamment cette erreur de démarrage :
+
+`RAILWAY_DATABASE_URL doit être configuré en production.`
+
+Il faut maintenant déterminer précisément :
+
+1. si cette erreur vient uniquement de la configuration Railway ;
+2. si les variables d’environnement nécessaires sont présentes ;
+3. si l’application démarre correctement avec la configuration attendue ;
+4. si PostgreSQL est correctement accessible ;
+5. si le schéma PostgreSQL correspond bien au code actuel ;
+6. si les migrations Drizzle sont cohérentes ;
+7. si le build de production est reproductible ;
+8. si le serveur écoute correctement sur le port fourni par Railway ;
+9. si le Web actuel peut continuer à fonctionner normalement après stabilisation.
+
+---
+
+# ÉTAPE 1 — INSPECTION AVANT TOUTE MODIFICATION
+
+Commence par inspecter l’état actuel du projet.
+
+Ne modifie encore aucun fichier.
+
+Vérifie notamment :
+
+### Backend
+
+* `server/index.ts`
+* `server/db.ts`
+* `server/databaseConfig.ts`
+* `server/securityConfig.ts`
+* `server/routes.ts`
+* `server/storage.ts`
+* configuration Drizzle
+* scripts npm
+* configuration de production
+
+### Base de données
+
+* `shared/schema.ts`
+* dossier `migrations/`
+* `drizzle.config.ts`
+* scripts de migration
+* éventuelles tables de migration
+* éventuelles références à `DATABASE_URL`
+* éventuelles références à `RAILWAY_DATABASE_URL`
+
+### Build
+
+Vérifie :
+
+* `package.json`
+* `package-lock.json`
+* `tsconfig.json`
+* `vite.config.ts`
+* configuration esbuild
+* script `build`
+* script `start`
+* script `check`
+
+### Railway
+
+Inspecte uniquement ce qui est accessible depuis le dépôt/projet.
+
+Vérifie notamment :
+
+* présence ou absence de `railway.json`
+* présence ou absence de `railway.toml`
+* Dockerfile éventuel
+* Nixpacks/Railpack
+* commande de build
+* commande de démarrage
+* configuration du port
+* `NODE_ENV`
+* healthcheck éventuel
+
+Ne suppose pas qu’une configuration existe : vérifie réellement.
+
+---
+
+# ÉTAPE 2 — INVENTAIRE DES VARIABLES D’ENVIRONNEMENT
+
+Dresse la liste des variables d’environnement utilisées par le code.
+
+IMPORTANT :
+
+Tu dois afficher **uniquement les noms des variables**, jamais leurs valeurs.
+
+Identifie notamment les variables liées à :
+
+* PostgreSQL
+* session
+* authentification
+* chiffrement
+* refresh tokens
+* stockage S3
+* Street View
+* médias
+* IA
+* email
+* notifications
+* services externes
+
+Pour chaque variable, indique :
+
+| Variable | Utilisée par le code | Obligatoire production | Rôle |
+| -------- | -------------------- | ---------------------- | ---- |
+
+Ne révèle aucune valeur secrète.
+
+---
+
+# ÉTAPE 3 — RAILWAY / BASE DE DONNÉES
+
+Vérifie précisément le problème :
+
+`RAILWAY_DATABASE_URL`
+
+Détermine :
+
+* où cette variable est lue ;
+* pourquoi elle est obligatoire ;
+* si le code accepte également `DATABASE_URL` ;
+* s’il existe plusieurs noms concurrents ;
+* si la logique actuelle peut provoquer un crash inutile ;
+* quelle variable Railway doit réellement fournir.
+
+IMPORTANT :
+
+Ne modifie pas immédiatement le code pour contourner le problème.
+
+Si le problème peut être résolu uniquement dans la configuration Railway, privilégie cette solution.
+
+Si une modification du code est réellement nécessaire, explique-la avant de l'effectuer.
+
+---
+
+# ÉTAPE 4 — VÉRIFICATION DU SCHÉMA POSTGRESQL
+
+Objectif :
+
+S’assurer que le code actuel et la structure PostgreSQL sont cohérents.
+
+Analyse :
+
+* `shared/schema.ts`
+* migrations existantes
+* historique des migrations
+* configuration Drizzle
+* tables attendues
+* colonnes importantes
+* index
+* contraintes
+* relations
+
+Cherche particulièrement les risques de :
+
+```text
+Code actuel
+     ≠
+Schema PostgreSQL
+     ≠
+Migrations
+```
+
+Ne lance aucune migration destructive.
+
+Ne supprime aucune migration.
+
+Ne fais pas de `db:push` en production.
+
+Si la base réelle ne peut pas être inspectée depuis Replit, indique clairement ce qui reste à vérifier manuellement dans Railway.
+
+---
+
+# ÉTAPE 5 — BUILD DE PRODUCTION
+
+Vérifie que le build actuel est reproductible.
+
+Utilise uniquement les commandes nécessaires et sûres.
+
+Vérifie au minimum :
+
+```bash
+npm ci --include=dev --legacy-peer-deps
+npm run check
+npm run build
+```
+
+Si une commande échoue :
+
+* ne contourne pas l’erreur artificiellement ;
+* identifie la cause ;
+* corrige uniquement si la correction appartient clairement à cette phase ;
+* documente exactement la modification.
+
+Concernant `package-lock.json`, vérifie qu’il ne contient plus de références internes ou indésirables à l’environnement Replit.
+
+---
+
+# ÉTAPE 6 — DÉMARRAGE PRODUCTION
+
+Vérifie que le build produit bien les fichiers nécessaires au démarrage.
+
+Détermine exactement :
+
+```text
+BUILD
+↓
+dist/
+↓
+commande start
+↓
+Node/Express
+↓
+PORT Railway
+↓
+HTTP
+```
+
+Vérifie notamment que le serveur :
+
+* utilise `NODE_ENV=production` correctement ;
+* écoute sur `0.0.0.0` ;
+* utilise le port fourni par Railway ;
+* ne dépend pas d’un port codé en dur ;
+* ne démarre pas avant que ses dépendances critiques soient disponibles de manière incorrecte.
+
+Ne change pas inutilement le code de démarrage.
+
+---
+
+# ÉTAPE 7 — CORRECTION MINIMALE
+
+Après inspection, corrige uniquement les problèmes qui empêchent réellement la stabilité de l’environnement actuel.
+
+Priorité :
+
+### PRIORITÉ 0
+
+Configuration Railway/PostgreSQL.
+
+### PRIORITÉ 1
+
+Build de production.
+
+### PRIORITÉ 2
+
+Démarrage Node/Express.
+
+### PRIORITÉ 3
+
+Cohérence migration/schéma si un problème concret est démontré.
+
+Ne profite PAS de cette phase pour effectuer :
+
+* refactoring général ;
+* nettoyage massif ;
+* changement d’architecture ;
+* optimisation prématurée ;
+* modification de l’authentification ;
+* modification des routes API ;
+* création de nouveaux endpoints mobiles.
+
+Ces sujets appartiendront aux phases suivantes.
+
+---
+
+# ÉTAPE 8 — PRÉSERVATION DU WEB
+
+Après les corrections, vérifie que les fonctionnalités Web existantes n’ont pas été modifiées intentionnellement.
+
+Vérifie au minimum que :
+
+* le frontend compile ;
+* le backend compile ;
+* les routes principales existent toujours ;
+* l’authentification existante n’a pas été remplacée ;
+* les routes de signalement existent toujours ;
+* les routes SOS existent toujours ;
+* les routes de géolocalisation existent toujours ;
+* les routes médias existent toujours ;
+* les fonctionnalités Street View existent toujours ;
+* les fonctionnalités de surveillance existent toujours.
+
+Ne prétends pas qu’une fonctionnalité fonctionne réellement si elle n’a pas pu être testée.
+
+---
+
+# ÉTAPE 9 — GIT / TRAÇABILITÉ
+
+Avant toute modification :
+
+* vérifie l’état Git ;
+* identifie la branche actuelle ;
+* identifie les éventuelles modifications déjà présentes ;
+* ne supprime aucune modification utilisateur existante.
+
+Après modification :
+
+* donne la liste exacte des fichiers modifiés ;
+* explique pourquoi chaque fichier a été modifié ;
+* indique les commandes exécutées ;
+* indique les tests exécutés ;
+* indique les résultats.
+
+Ne fais pas de commit/push automatique sauf si cela est explicitement demandé.
+
+---
+
+# ⚠️ RÈGLE IMPORTANTE CONCERNANT RAILWAY
+
+Ne considère pas qu’un problème Railway doit automatiquement être résolu par du code.
+
+Si le problème est :
+
+```text
+Variable absente dans Railway
+```
+
+alors la solution peut être :
+
+```text
+Configuration Railway
+```
+
+et non :
+
+```text
+Modification du backend
+```
+
+Ne change donc pas `server/index.ts` ou `server/securityConfig.ts` simplement pour masquer une mauvaise configuration Railway.
+
+---
+
+# CRITÈRE DE FIN DE PHASE
+
+La phase est considérée comme réussie uniquement si nous pouvons établir clairement :
+
+```text
+Git
+ ↓
+npm ci
+ ↓
+npm run check
+ ↓
+npm run build
+ ↓
+Production start
+ ↓
+Railway
+ ↓
+PostgreSQL
+ ↓
+Backend disponible
+```
+
+et que les éventuels problèmes restants sont précisément identifiés.
+
+---
+
+# RAPPORT FINAL OBLIGATOIRE
+
+À la fin, NE PAS commencer la Phase 2.
+
+Arrête-toi et fournis un rapport structuré avec exactement ces sections :
+
+## 1. État initial
+
+Ce qui était réellement présent avant modification.
+
+## 2. Problèmes détectés
+
+Liste complète avec niveau :
+
+* CRITIQUE
+* ÉLEVÉ
+* MOYEN
+* FAIBLE
+
+## 3. Modifications effectuées
+
+Pour chaque modification :
+
+* fichier ;
+* ligne ou zone ;
+* modification ;
+* raison ;
+* impact.
+
+## 4. Variables Railway nécessaires
+
+Uniquement les noms des variables, jamais les valeurs.
+
+## 5. PostgreSQL
+
+État du schéma, migrations et cohérence avec le code.
+
+## 6. Build
+
+Résultat exact de :
+
+```bash
+npm ci --include=dev --legacy-peer-deps
+npm run check
+npm run build
+```
+
+## 7. Production
+
+État du démarrage et du serveur HTTP.
+
+## 8. Tests
+
+Tests effectués et résultats.
+
+## 9. Risques restants
+
+Tout ce qui n’a pas pu être vérifié ou qui nécessite une intervention manuelle.
+
+## 10. Fichiers modifiés
+
+Liste exhaustive.
+
+## 11. Ce qui n’a PAS été modifié
+
+Confirme explicitement que :
+
+* Web frontend conservé ;
+* design conservé ;
+* fonctionnalités conservées ;
+* PWA conservée ;
+* backend conservé ;
+* PostgreSQL conservé ;
+* aucune application Expo créée ;
+* aucun code React Native créé ;
+* aucun EAS configuré ;
+* aucune migration destructive effectuée.
+
+## 12. Verdict
+
+Réponds précisément :
+
+### A.
+
+Le BurkinaWatch Web actuel est-il stable ?
+
+### B.
+
+Le backend peut-il être considéré comme une base fiable pour accueillir ultérieurement une application mobile ?
+
+### C.
+
+PostgreSQL est-il cohérent avec le code et les migrations ?
+
+### D.
+
+Railway est-il prêt pour la prochaine phase ?
+
+### E.
+
+Quels problèmes doivent impérativement être réglés avant la Phase 2 ?
+
+---
+
+# 🚫 IMPORTANT : ARRÊT OBLIGATOIRE
+
+Après ce rapport :
+
+**ARRÊTE-TOI.**
+
+Ne commence pas :
+
+* l’authentification mobile ;
+* les contrats partagés ;
+* Expo ;
+* React Native ;
+* EAS ;
+* OTA ;
+* les nouveaux endpoints ;
+* la migration du frontend.
+
+Nous analyserons ton rapport avant de te donner le Prompt 2.
+
+**Cette phase doit rester strictement limitée à la stabilisation et à la vérification de l’infrastructure BurkinaWatch existante.**
