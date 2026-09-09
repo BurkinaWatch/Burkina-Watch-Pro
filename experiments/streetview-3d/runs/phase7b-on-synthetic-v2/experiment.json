@@ -1,0 +1,49 @@
+{
+  "experiment": "burkinawatch-streetview-3d-phase7",
+  "status": "FRAMES_EXTRACTED_SFM_NOT_RUN",
+  "generatedAt": "2026-09-05T05:39:59.087Z",
+  "isolation": {
+    "directory": "experiments/streetview-3d/runs/phase7b-on-synthetic-v2",
+    "applicationTouched": false,
+    "databaseTouched": false,
+    "objectStorageTouched": false,
+    "productionWorkflowTouched": false
+  },
+  "input": {
+    "path": "/home/runner/workspace/experiments/streetview-3d/runs/phase7c-synthetic/synthetic-streetview-phase7c.mp4",
+    "filename": "synthetic-streetview-phase7c.mp4",
+    "extension": ".mp4",
+    "sizeBytes": 394452,
+    "durationSeconds": 6,
+    "formatName": "mov,mp4,m4a,3gp,3g2,mj2",
+    "codec": "h264",
+    "pixelFormat": "yuv420p",
+    "width": 640,
+    "height": 360,
+    "fps": 24,
+    "hasAudio": false
+  },
+  "extraction": {
+    "sampleFps": 2,
+    "maxWidth": 640,
+    "frameCount": 12,
+    "firstFrame": "frame_000001.jpg",
+    "lastFrame": "frame_000012.jpg",
+    "directory": "frames"
+  },
+  "environment": {
+    "node": "v20.20.0",
+    "platform": "linux",
+    "architecture": "x64",
+    "ffmpeg": "ffmpeg version 6.1.2 Copyright (c) 2000-2024 the FFmpeg developers",
+    "ffprobe": "ffprobe version 6.1.2 Copyright (c) 2007-2024 the FFmpeg developers",
+    "colmapAvailable": false,
+    "colmap": null,
+    "gpu": null,
+    "workingDirectory": "/home/runner/workspace"
+  },
+  "nextStage": {
+    "requested": true,
+    "status": "BLOCKED_COLMAP_NOT_INSTALLED"
+  }
+}
