@@ -70,3 +70,17 @@ mtime_ms = 1788913199456
 storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:766d3c29-01ad-41d8-90b6-ccbc39f09e61/9000e9f1-798e-4fab-816b-bbb4bfd96f0e/367c9f40-dcee-48f0-b90b-6183e46b237a"
 storage_version_token = "1788913572726741"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "ezLRnZPJwp8U-rtPb3iiK"
+uri = "file://RAPPORT_PHASE_1_STABILISATION_BURKINAWATCH.md"
+type = "text"
+title = "TÉLÉCHARGER — Rapport Phase 1 BurkinaWatch (.md)"
+description = "Rapport final de stabilisation, avec résultats du build, contrôle PostgreSQL Railway, blocages de production et verdict."
+logical_id = "1ee82ecc-914b-4f28-a203-95afc2f2d2b9"
+content_hash = "sha256:8020d8acab5586b58bb79cebb1117ca1c015e63bb1a126524482c9dee0b09b6f"
+size = 18732
+mtime_ms = 1788917572177
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:766d3c29-01ad-41d8-90b6-ccbc39f09e61/1ee82ecc-914b-4f28-a203-95afc2f2d2b9/a0c1d49f-53db-4c91-8841-6d6ead659d82"
+storage_version_token = "1788917597951565"
+content_type = "text/markdown"
