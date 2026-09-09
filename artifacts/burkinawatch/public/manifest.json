@@ -1,0 +1,100 @@
+{
+  "name": "Burkina Watch",
+  "short_name": "BurkinaWatch",
+  "description": "Plateforme citoyenne de sécurité et services au Burkina Faso - La patrie ou la mort, nous vaincrons",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#dc2626",
+  "orientation": "portrait-primary",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "64x64",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["safety", "news", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Urgences",
+      "short_name": "Urgences",
+      "url": "/urgences",
+      "icons": [{"src": "/icon-512.png", "sizes": "96x96", "type": "image/png"}]
+    },
+    {
+      "name": "Pharmacies",
+      "short_name": "Pharmacies",
+      "url": "/pharmacies",
+      "icons": [{"src": "/icon-512.png", "sizes": "96x96", "type": "image/png"}]
+    },
+    {
+      "name": "SOS",
+      "short_name": "SOS",
+      "url": "/sos",
+      "icons": [{"src": "/icon-512.png", "sizes": "96x96", "type": "image/png"}]
+    }
+  ]
+}

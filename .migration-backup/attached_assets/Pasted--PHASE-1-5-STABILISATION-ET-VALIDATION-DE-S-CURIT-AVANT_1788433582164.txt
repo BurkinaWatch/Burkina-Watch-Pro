@@ -1,0 +1,502 @@
+# PHASE 1.5 — STABILISATION ET VALIDATION DE SÉCURITÉ AVANT SURVEILLANCE
+
+Tu vas maintenant effectuer une phase de stabilisation technique de Burkina Watch avant toute conception ou implémentation du module « Surveillance ».
+
+## OBJECTIF
+
+L'objectif est de rendre la base actuelle suffisamment saine pour pouvoir ensuite ajouter un système de vidéosurveillance privée sans construire sur des incohérences existantes.
+
+Cette phase est UNIQUEMENT une phase de correction, d'audit et de validation.
+
+## INTERDICTIONS ABSOLUES
+
+NE PAS :
+
+* créer le module Surveillance ;
+* créer un modèle Camera ;
+* créer des routes `/surveillance` ;
+* installer MediaMTX ;
+* installer FFmpeg ;
+* installer/configurer WebRTC ;
+* configurer RTSP ;
+* connecter une caméra réelle ;
+* créer du streaming vidéo ;
+* créer de l'enregistrement vidéo ;
+* créer de l'IA vidéo ;
+* modifier l'architecture générale de Burkina Watch ;
+* remplacer Passport/session ;
+* remplacer PostgreSQL ;
+* remplacer Drizzle ;
+* effectuer un reset de base ;
+* utiliser `db:push` de manière aveugle ;
+* supprimer des tables ;
+* supprimer des données ;
+* effectuer une migration destructive ;
+* modifier directement la production Railway.
+
+NE TOUCHE PAS AUX FONCTIONNALITÉS MÉTIER SI CE N'EST PAS NÉCESSAIRE À LA SÉCURITÉ.
+
+La priorité absolue est :
+
+> NE RIEN CASSER.
+
+---
+
+# 1. AUDIT ET CORRECTION DES ERREURS TYPESCRIPT
+
+Le précédent rapport indique :
+
+> `npm run check` échoue avec 48 erreurs TypeScript existantes.
+
+Commence par exécuter :
+
+```bash
+npm run check
+```
+
+Puis classe les erreurs par catégorie :
+
+1. erreurs liées à l'authentification ;
+2. erreurs liées aux sessions ;
+3. erreurs liées aux permissions/ownership ;
+4. erreurs liées à PostgreSQL/Drizzle ;
+5. erreurs liées au backend ;
+6. erreurs liées au frontend ;
+7. erreurs de typage sans impact fonctionnel évident.
+
+Ne modifie pas automatiquement tout le dépôt.
+
+Pour chaque erreur :
+
+* identifie la cause ;
+* vérifie si elle est réellement préexistante ;
+* corrige uniquement lorsque la correction est sûre ;
+* ne change pas le comportement métier sans nécessité.
+
+Après correction :
+
+```bash
+npm run check
+```
+
+Objectif :
+
+> arriver à zéro erreur TypeScript si cela peut être fait sans modification fonctionnelle risquée.
+
+Si certaines erreurs doivent rester, documente précisément :
+
+* fichier ;
+* ligne ;
+* erreur ;
+* cause ;
+* risque ;
+* raison pour laquelle elle n'est pas corrigée.
+
+---
+
+# 2. RÉCONCILIATION POSTGRESQL + DRIZZLE
+
+Le précédent audit a identifié une incohérence entre :
+
+* les migrations présentes ;
+* le journal Drizzle ;
+* la base PostgreSQL de développement ;
+* la base potentiellement utilisée par Railway.
+
+NE SUPPOSE PAS que ces bases sont identiques.
+
+Commence par déterminer précisément :
+
+```text
+DATABASE_URL
+RAILWAY_DATABASE_URL
+configuration Drizzle
+dossier migrations
+journal des migrations
+schéma Drizzle
+```
+
+NE RÉVÈLE JAMAIS les valeurs des variables d'environnement ou credentials.
+
+Tu peux uniquement indiquer :
+
+```text
+présent
+absent
+différent
+correct
+incohérent
+```
+
+sans afficher les valeurs.
+
+Détermine :
+
+1. quelle base est utilisée localement ;
+2. quelle base serait utilisée par Railway ;
+3. quelles migrations existent réellement ;
+4. quelles migrations sont enregistrées ;
+5. quelles tables existent réellement dans chaque environnement auquel tu as accès ;
+6. si le schéma Drizzle correspond aux migrations ;
+7. si une migration manquante existe ;
+8. si le journal Drizzle est incomplet.
+
+IMPORTANT :
+
+NE FAIS PAS :
+
+```text
+DROP DATABASE
+DROP TABLE
+db:push
+reset
+```
+
+et aucune opération destructive.
+
+Si une migration doit être créée ou réconciliée, prépare-la mais ne l'applique pas automatiquement à une base de production.
+
+À la fin, explique clairement :
+
+```text
+État du schéma :
+Source de vérité :
+Migrations appliquées :
+Migrations manquantes :
+Action recommandée :
+Risque :
+```
+
+---
+
+# 3. AUDIT DES AUTORISATIONS EXISTANTES
+
+Nous avons maintenant les helpers :
+
+```text
+requireAuthenticatedUser()
+requireRole()
+requireResourceOwnership()
+requirePermission()
+getAuthenticatedUserId()
+getAuthenticatedPrincipal()
+```
+
+Ne refactore pas immédiatement tout le dépôt.
+
+Commence par rechercher les routes qui manipulent des ressources appartenant à un utilisateur.
+
+Exemples :
+
+* signalements ;
+* profils ;
+* notifications ;
+* alertes ;
+* tracking ;
+* données privées ;
+* contacts ;
+* ressources administratives ;
+* toute ressource identifiée par un ID.
+
+Pour chaque route sensible, vérifie :
+
+```text
+Utilisateur authentifié ?
+        ↓
+Ressource demandée ?
+        ↓
+Propriétaire vérifié ?
+        ↓
+Permission/rôle vérifié ?
+        ↓
+Accès autorisé ?
+```
+
+Cherche spécifiquement les patterns dangereux :
+
+```text
+GET /resource/:id
+PATCH /resource/:id
+PUT /resource/:id
+DELETE /resource/:id
+POST avec resourceId
+```
+
+où l'ID est utilisé directement sans vérification du propriétaire.
+
+Cherche également les risques d'IDOR :
+
+```text
+userId
+ownerId
+createdBy
+reportId
+alertId
+trackingId
+notificationId
+```
+
+NE SUPPOSE PAS qu'un ID suffit à autoriser l'accès.
+
+Pour chaque problème trouvé :
+
+* corrige uniquement si la correction est claire et non destructive ;
+* utilise les helpers centralisés ;
+* conserve les comportements métier existants ;
+* ne fais pas une refonte globale.
+
+Ajoute au minimum des tests d'isolation pour démontrer :
+
+```text
+Utilisateur A ne peut pas lire la ressource privée de B.
+Utilisateur A ne peut pas modifier la ressource privée de B.
+Utilisateur A ne peut pas supprimer la ressource privée de B.
+```
+
+---
+
+# 4. PROTECTION CSRF
+
+Audite toutes les mutations utilisant l'authentification par cookie/session.
+
+Identifie :
+
+```text
+POST
+PUT
+PATCH
+DELETE
+```
+
+et vérifie si une protection CSRF appropriée existe.
+
+Conçois une solution compatible avec l'architecture actuelle.
+
+IMPORTANT :
+
+NE PAS remplacer le système d'authentification.
+
+NE PAS casser :
+
+* login ;
+* OTP ;
+* magic links ;
+* sessions ;
+* Passport ;
+* mobile ;
+* API existante.
+
+La solution doit être compatible avec le frontend actuel.
+
+Ajoute des tests démontrant :
+
+```text
+requête légitime → acceptée
+requête sans protection CSRF → refusée lorsque nécessaire
+token CSRF invalide → refusé
+token CSRF valide → accepté
+```
+
+Si certaines routes doivent être exemptées pour des raisons techniques, documente-les précisément et explique pourquoi.
+
+---
+
+# 5. ROTATION DES SECRETS EXPOSÉS
+
+Le précédent audit indique que certains credentials ont pu être présents dans l'historique Git ou dans une configuration antérieure.
+
+Tu dois identifier :
+
+* les secrets potentiellement exposés ;
+* leur emplacement ;
+* leur type ;
+* s'ils sont encore utilisés.
+
+IMPORTANT :
+
+NE JAMAIS afficher les valeurs.
+
+Utilise uniquement des formulations comme :
+
+```text
+DATABASE credential : exposé historiquement → rotation recommandée
+REFRESH_TOKEN_SALT : exposé historiquement → rotation recommandée
+```
+
+Pour les secrets qui doivent être remplacés :
+
+* prépare la procédure ;
+* vérifie quelles variables doivent exister dans Replit/Railway ;
+* configure uniquement ce qui peut être fait sans exposer la valeur ;
+* ne committe jamais de secret ;
+* ne mets jamais de secret dans `.replit`, `Dockerfile`, `ARG`, `ENV` versionné ou code source.
+
+Le `REFRESH_TOKEN_SALT` doit devenir une valeur stable provenant du gestionnaire de secrets.
+
+Après rotation, vérifie que les anciens secrets ne sont plus utilisés.
+
+NE PAS afficher les nouveaux secrets dans le rapport.
+
+---
+
+# 6. VÉRIFICATION DU CHIFFREMENT
+
+Le rapport précédent indique :
+
+```text
+@google-cloud/kms
+```
+
+est déclaré mais absent de l'installation locale.
+
+Analyse cette situation.
+
+Détermine :
+
+* pourquoi la dépendance est déclarée ;
+* quel code l'utilise ;
+* si elle est nécessaire en production ;
+* si elle est nécessaire uniquement dans certains environnements ;
+* si son absence est un problème réel ou uniquement un problème de test local.
+
+NE SUPPRIME PAS la dépendance automatiquement.
+
+NE REMPLACE PAS le système de chiffrement.
+
+Si une installation est nécessaire pour les tests, indique précisément la commande à exécuter et pourquoi.
+
+---
+
+# 7. TESTS DE NON-RÉGRESSION
+
+Après les corrections, exécute au minimum :
+
+```bash
+npm run check
+npm run build
+node --import tsx --test server/__tests__/phase1Security.test.ts
+```
+
+Puis lance les tests existants pertinents.
+
+Vérifie notamment :
+
+* démarrage ;
+* authentification ;
+* OTP ;
+* sessions ;
+* page d'accueil ;
+* API publiques ;
+* API protégées ;
+* signalements ;
+* permissions ;
+* ownership.
+
+Aucun changement ne doit introduire de régression connue.
+
+---
+
+# 8. AUDIT FINAL SPÉCIFIQUE À LA FUTURE SURVEILLANCE
+
+Sans créer Surveillance, vérifie que l'architecture actuelle permettra ultérieurement de respecter ces principes :
+
+```text
+Compte utilisateur
+      ↓
+Caméra appartenant à cet utilisateur
+      ↓
+Permission explicite
+      ↓
+Session vidéo temporaire
+      ↓
+Media Gateway séparée
+      ↓
+Flux vidéo
+```
+
+Le backend Express ne devra PAS devenir le transporteur du flux vidéo.
+
+Les credentials caméra ne devront jamais être exposés au frontend.
+
+Les URLs RTSP ne devront jamais être envoyées au navigateur.
+
+Aucune caméra ne devra être directement exposée sur Internet simplement pour permettre la connexion.
+
+Cette phase ne doit cependant créer aucun composant vidéo.
+
+---
+
+# 9. RAPPORT FINAL OBLIGATOIRE
+
+À la fin, fournis un rapport structuré :
+
+## A. Corrections effectuées
+
+## B. Erreurs TypeScript avant/après
+
+```text
+Avant :
+Après :
+```
+
+## C. État PostgreSQL / Drizzle
+
+## D. Routes avec problèmes d'autorisation
+
+Pour chaque problème :
+
+```text
+Route :
+Risque :
+Correction :
+Test :
+```
+
+## E. État CSRF
+
+## F. Secrets exposés historiquement
+
+Sans jamais afficher les valeurs.
+
+## G. État du chiffrement/KMS
+
+## H. Tests exécutés
+
+Avec les résultats exacts.
+
+## I. Régressions éventuelles
+
+## J. Risques encore ouverts
+
+Classés :
+
+```text
+CRITIQUE
+ÉLEVÉ
+MOYEN
+FAIBLE
+```
+
+## K. Verdict
+
+Termine obligatoirement par l'une des trois conclusions :
+
+```text
+READY FOR SURVEILLANCE
+```
+
+ou
+
+```text
+NOT READY — corrections nécessaires
+```
+
+ou
+
+```text
+READY WITH CONDITIONS
+```
+
+Ne commence aucune phase Surveillance après ce rapport.
+
+ATTENDS MA VALIDATION EXPLICITE.

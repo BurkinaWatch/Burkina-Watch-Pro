@@ -1,0 +1,210 @@
+À partir de ton audit précédent, nous allons maintenant définir l'architecture cible de Street View.
+
+IMPORTANT :
+
+Ne supprime pas l'existant.
+Ne réécris pas toute l'application.
+Ne modifie pas encore les fonctionnalités qui ne concernent pas Street View.
+
+OBJECTIF PRODUIT :
+
+Street View doit devenir une plateforme collaborative de reconstruction 3D progressive du Burkina Faso.
+
+Le principe fondamental est :
+
+UN UTILISATEUR → UNE CAPTATION → UNE SCÈNE 3D → UNE CONTRIBUTION GÉOLOCALISÉE → UN ESPACE 3D COLLECTIF.
+
+Une contribution peut provenir d'une vidéo ou, lorsque cela sera supporté, d'une série de photos.
+
+La contribution doit conserver au minimum :
+
+* userId
+* titre
+* description
+* latitude
+* longitude
+* altitude si disponible
+* ville
+* quartier si disponible
+* fichier source
+* type de source
+* durée
+* date de captation
+* statut de traitement
+* statut de publication
+* qualité
+* scène 3D générée
+* miniature
+* métadonnées techniques
+* date de création
+
+ARCHITECTURE À CONCEVOIR :
+
+1. CAPTURE
+
+L'utilisateur peut sélectionner ou enregistrer une vidéo.
+
+2. UPLOAD
+
+Le fichier original doit être envoyé vers le stockage approprié.
+
+3. VALIDATION
+
+Avant traitement :
+
+* vérifier le type de fichier ;
+* vérifier la taille ;
+* vérifier la durée ;
+* vérifier que le fichier n'est pas corrompu ;
+* générer éventuellement une miniature ;
+* récupérer les métadonnées disponibles.
+
+4. GÉOLOCALISATION
+
+La contribution doit pouvoir être géolocalisée :
+
+* automatiquement lorsque les métadonnées GPS existent ;
+* ou manuellement par sélection sur la carte.
+
+5. PROCESSING JOB
+
+La reconstruction 3D ne doit PAS bloquer la requête HTTP principale.
+
+Utiliser un système de job asynchrone compatible avec l'architecture actuelle.
+
+Prévoir des statuts :
+
+UPLOADED
+VALIDATING
+QUEUED
+PROCESSING
+RECONSTRUCTING
+QUALITY_CHECK
+READY
+PUBLISHED
+FAILED
+
+6. RECONSTRUCTION 3D
+
+Ne crée surtout pas un faux modèle 3D à partir d'une vidéo.
+
+L'architecture doit être conçue pour accueillir un véritable moteur de reconstruction spatiale.
+
+L'architecture doit rester provider-agnostic afin de pouvoir utiliser ultérieurement :
+
+* photogrammétrie ;
+* NeRF ;
+* 3D Gaussian Splatting ;
+* ou un autre moteur de reconstruction spatiale adapté.
+
+Ne choisissez pas arbitrairement un fournisseur externe sans me présenter d'abord les implications techniques et financières.
+
+7. STOCKAGE
+
+Séparer clairement :
+
+* fichier vidéo original ;
+* images extraites ;
+* miniature ;
+* artefacts de traitement ;
+* scène 3D finale ;
+* métadonnées.
+
+8. VISUALISATION
+
+Le frontend doit permettre de visualiser une scène 3D dans un navigateur moderne.
+
+Prévoir une architecture permettant de charger progressivement les scènes afin de ne pas charger inutilement tout le Burkina Faso.
+
+9. CARTE
+
+Chaque scène doit avoir une position géographique.
+
+Prévoir la possibilité d'afficher les contributions sur une carte.
+
+10. MONDE 3D COLLABORATIF
+
+Prévoir dès maintenant dans le modèle de données la notion de :
+
+COUNTRY
+→ REGION
+→ PROVINCE
+→ CITY
+→ DISTRICT
+→ AREA
+→ SCENE
+
+Mais ne construis pas immédiatement toute cette hiérarchie dans l'interface.
+
+Elle doit surtout être prévue dans l'architecture.
+
+11. FUTUR RACCORDEMENT DES SCÈNES
+
+Deux scènes proches géographiquement pourront éventuellement être reliées.
+
+Ne développe pas encore cet algorithme.
+
+Prépare simplement l'architecture pour permettre ultérieurement :
+
+SCENE A
+↕
+SCENE B
+↕
+SCENE C
+
+12. ADMINISTRATION
+
+Prévoir pour l'administration :
+
+* validation ;
+* suppression ;
+* dépublication ;
+* contrôle qualité ;
+* visualisation des erreurs ;
+* suivi des traitements.
+
+13. PERFORMANCE
+
+L'architecture doit être conçue pour pouvoir passer progressivement de :
+
+10 scènes
+→ 100
+→ 1 000
+→ 10 000
+→ 100 000+
+
+sans charger toutes les scènes simultanément.
+
+14. SÉCURITÉ
+
+Prévoir :
+
+* validation stricte des uploads ;
+* contrôle des types MIME ;
+* limites de taille ;
+* authentification ;
+* autorisation ;
+* protection contre les uploads malveillants ;
+* URLs signées pour les fichiers privés lorsque nécessaire ;
+* nettoyage des fichiers temporaires ;
+* rate limiting ;
+* contrôle des jobs.
+
+IMPORTANT :
+
+À cette étape, ne construis pas encore le moteur de reconstruction 3D.
+
+Produis d'abord :
+
+A. architecture technique
+B. modèle de données
+C. API nécessaires
+D. flux frontend/backend
+E. système de jobs
+F. stockage
+G. visualisation
+H. stratégie de montée en charge
+I. points qui nécessiteront un service externe
+J. estimation de la complexité de chaque partie
+
+Puis attends ma validation avant d'implémenter.

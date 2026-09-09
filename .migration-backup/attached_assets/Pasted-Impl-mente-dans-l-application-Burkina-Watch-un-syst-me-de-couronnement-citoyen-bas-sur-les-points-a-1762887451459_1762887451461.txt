@@ -1,0 +1,80 @@
+Implémente dans l’application Burkina Watch un système de couronnement citoyen basé sur les points accumulés par les utilisateurs.
+Ce système doit récompenser l’engagement citoyen à travers trois niveaux patriotiques inspirés du contexte national burkinabè : Sentinelle de la Paix, VDP de la Paix, et FDS de la Paix.
+
+L’objectif est de motiver les utilisateurs à participer activement à la plateforme en leur attribuant des titres honorifiques et visibles sur leur profil.
+
+🏅 Niveaux, Titres et Conditions de Déblocage
+
+Sentinelle de la Paix 🇧🇫
+
+Se débloque à 5 points minimum
+
+Description : “Tu fais partie de ceux qui veillent sur la communauté. Tes premiers pas vers la paix et la vigilance citoyenne commencent ici.”
+
+Couleur du badge : Vert émeraude
+
+VDP de la Paix ✊ (Volontaire pour la Défense de la Patrie)
+
+Se débloque à 100 points
+
+Description : “Tu agis activement pour ton peuple. Tu défends la paix et la solidarité au sein du Faso.”
+
+Couleur du badge : Jaune or
+
+FDS de la Paix 🛡️ (Force de Défense et de Sécurité)
+
+Se débloque à 225 points
+
+Description : “Tu incarnes la bravoure et la vigilance. Le Burkina compte sur ton sens du devoir et de la justice.”
+
+Couleur du badge : Rouge intense
+
+⚙️ Spécifications techniques à implémenter
+
+Chaque utilisateur a un champ userPoints et userLevel dans la base de données (ex. Firebase ou Supabase).
+
+Les points sont gagnés ainsi :
+
++5 points par publication (photo/vidéo)
+
++2 points par partage validé par d’autres utilisateurs
+
++10 points par signalement vérifié par les modérateurs
+
+Le système doit :
+
+Calculer automatiquement le niveau du profil après chaque action.
+
+Mettre à jour en temps réel le badge et le titre sur le tableau de bord.
+
+Afficher une notification animée (couronnement) lorsqu’un utilisateur monte de niveau.
+
+Afficher la progression vers le prochain titre avec une barre ou cercle de progression.
+
+🖥️ Interface utilisateur (Frontend)
+
+Dans le profil de chaque utilisateur, afficher :
+
+Son titre patriotique actuel
+
+Le badge de couleur correspondant
+
+Le score total de points
+
+La barre de progression vers le prochain niveau
+
+Utiliser des couleurs Rouge, Jaune, Vert avec une présentation moderne et institutionnelle.
+
+Prévoir un écran “Classement national” (Leaderboard) pour afficher les utilisateurs les mieux classés.
+
+Ajouter un effet de couronnement visuel et sonore :
+
+Animation de confettis aux couleurs nationales
+
+Court son de balafon ou tambourin lors du changement de niveau
+
+🌍 Multilingue
+
+Tous les textes doivent être traduisibles (Français, Anglais, Mooré, Dioula, Fulfuldé).
+
+Le changement de langue doit affecter toutes les pages et tous les textes, pas seulement le titre ou le slogan.

@@ -1,0 +1,306 @@
+Nous avons un échec de déploiement Railway avec exactement cette séquence :
+
+```text
+npm warn config production Use `--omit=dev` instead.
+
+npm error Exit handler never called!
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && esbuild server/streetviewWorkerMain.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/streetview-worker.js
+
+sh: 1: vite: not found
+```
+
+Je veux UNIQUEMENT un diagnostic en lecture seule.
+
+NE MODIFIE AUCUN FICHIER.
+NE FAIS AUCUN COMMIT.
+NE MODIFIE PAS RAILWAY.
+NE MODIFIE PAS LES VARIABLES D'ENVIRONNEMENT.
+NE MODIFIE PAS LA BASE DE DONNÉES.
+NE MODIFIE PAS LES MIGRATIONS.
+NE MODIFIE PAS LE CODE STREET VIEW.
+NE MODIFIE PAS LE WORKER.
+NE LANCE PAS db:push.
+NE LANCE PAS de déploiement.
+
+Objectif : déterminer avec précision pourquoi `vite` n'est pas disponible au moment de `npm run build`.
+
+## 1. Examiner package.json
+
+Montre et analyse :
+
+* `scripts`
+* `dependencies`
+* `devDependencies`
+* présence exacte de `vite`
+* version de `vite`
+* présence de `esbuild`
+* version de `esbuild`
+* présence de TypeScript
+* présence de tous les outils nécessaires au script `build`
+
+Détermine explicitement :
+
+`vite` est-il dans `dependencies` ou `devDependencies` ?
+
+Ne déplace rien.
+
+## 2. Examiner package-lock.json
+
+Vérifie :
+
+* existence de package-lock.json
+* version du lockfile
+* présence de `vite`
+* version verrouillée de `vite`
+* cohérence entre package.json et package-lock.json
+* éventuels problèmes de lockfile
+* éventuelles dépendances manquantes ou incohérentes
+
+Ne régénère pas le lockfile.
+
+## 3. Examiner .npmrc et toute configuration npm du dépôt
+
+Recherche notamment :
+
+* `production=true`
+* `production=false`
+* `omit=dev`
+* `include=dev`
+* `only=production`
+* `only=prod`
+* toute autre configuration npm pouvant empêcher l'installation des devDependencies
+
+Ne modifie rien.
+
+## 4. Examiner les fichiers Railway
+
+Recherche et analyse uniquement en lecture :
+
+* railway.json
+* railway.toml
+* Dockerfile
+* fichiers de configuration Nixpacks
+* package.json utilisé comme configuration de build
+* scripts de build
+* autres fichiers pouvant influencer `npm install`
+
+Détermine exactement quelle commande Railway/Nixpacks/Docker exécute pour installer les dépendances et quelle commande il exécute pour le build.
+
+## 5. Rechercher la configuration production
+
+Recherche dans le dépôt les occurrences pertinentes de :
+
+* NODE_ENV
+* NPM_CONFIG_PRODUCTION
+* NPM_CONFIG_OMIT
+* npm_config_production
+* npm_config_omit
+* production
+* omit=dev
+
+Le but est de déterminer si le projet lui-même force l'installation en mode production.
+
+Ne modifie rien.
+
+## 6. Examiner le script de build
+
+Analyse précisément :
+
+```text
+vite build &&
+esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist &&
+esbuild server/streetviewWorkerMain.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/streetview-worker.js
+```
+
+Détermine :
+
+* quelle commande échoue réellement
+* si `vite` est censé être disponible dans `node_modules/.bin`
+* si le worker Street View a une quelconque responsabilité dans l'erreur actuelle
+
+Ne modifie pas le script.
+
+## 7. Reproduire localement sans modifier le projet
+
+Si possible, fais uniquement des vérifications non destructives permettant de déterminer :
+
+```bash
+npm config get production
+npm config get omit
+npm config get include
+npm config get only
+```
+
+et vérifie également :
+
+```bash
+test -x node_modules/.bin/vite
+```
+
+ainsi que :
+
+```bash
+npm ls vite --depth=0
+```
+
+Si `node_modules` n'est pas représentatif ou si l'environnement local diffère de Railway, indique-le clairement.
+
+Ne supprime pas node_modules.
+Ne lance pas npm install pour modifier l'environnement.
+Ne régénère aucun fichier.
+
+## 8. Examiner le "Exit handler never called!"
+
+Analyse séparément cette erreur :
+
+```text
+npm error Exit handler never called!
+```
+
+Détermine si elle semble être :
+
+A. la cause principale ;
+
+B. une conséquence d'un problème d'installation ;
+
+C. un problème npm indépendant ;
+
+D. impossible à déterminer avec les informations disponibles.
+
+Ne prétends pas connaître la cause exacte sans preuve.
+
+Recherche également les indices dans les logs locaux disponibles, sans envoyer aucune donnée externe.
+
+## 9. Vérifier particulièrement cette hypothèse
+
+Hypothèse principale à tester :
+
+Railway exécute npm dans un contexte production qui omet les devDependencies, alors que `vite` est déclaré dans devDependencies.
+
+Confirme ou réfute cette hypothèse avec les fichiers réels du projet.
+
+## 10. Vérifier une éventuelle incohérence Railway
+
+Je veux savoir si le build actuel est conceptuellement correct :
+
+```text
+npm install
+        ↓
+npm run build
+        ↓
+vite build
+```
+
+alors que npm pourrait installer uniquement les dépendances production.
+
+Si c'est le problème, explique exactement où se trouve la configuration responsable.
+
+## 11. Rapport obligatoire
+
+Crée uniquement :
+
+```text
+experiments/railway/RAILWAY_BUILD_DIAGNOSIS_2026-09-05.md
+```
+
+Ce fichier doit contenir :
+
+# Railway Build Diagnosis — 2026-09-05
+
+## Verdict
+
+Une conclusion claire.
+
+## Cause principale
+
+Une seule cause principale si elle est démontrée.
+
+## Causes secondaires
+
+Uniquement celles réellement observées.
+
+## Evidence
+
+Citations des fichiers/configurations concernés avec chemins et lignes.
+
+## package.json
+
+État de dependencies/devDependencies.
+
+## package-lock.json
+
+État et cohérence.
+
+## npm configuration
+
+Configuration production/omit.
+
+## Railway/Nixpacks/Docker
+
+Configuration de build détectée.
+
+## Build chain
+
+Explication exacte de la chaîne.
+
+## `vite: not found`
+
+Explication technique.
+
+## `Exit handler never called`
+
+Analyse séparée.
+
+## Recommended fix
+
+Décrire le correctif recommandé MAIS NE PAS L'APPLIQUER.
+
+## Risk assessment
+
+Indiquer si le correctif risque de toucher :
+
+* production
+* PostgreSQL
+* migrations
+* Street View
+* worker
+* secrets
+* runtime
+
+## Final verdict
+
+Utiliser exactement l'un de :
+
+* ROOT CAUSE CONFIRMED
+* ROOT CAUSE PROBABLE
+* INSUFFICIENT EVIDENCE
+
+À la fin, donne également les commandes exactes que je pourrai utiliser dans une prochaine étape pour appliquer le correctif, mais ne les exécute pas.
+
+## 12. Vérifications finales
+
+Après le diagnostic uniquement :
+
+```bash
+npm run check
+git diff --check
+```
+
+Si ces commandes peuvent être exécutées sans modifier les fichiers, exécute-les et rapporte le résultat.
+
+Enfin, donne-moi dans ta réponse :
+
+1. cause exacte/probable ;
+2. fichier responsable ;
+3. ligne responsable ;
+4. correctif recommandé ;
+5. risque du correctif ;
+6. confirmation qu'aucun fichier de production, aucune migration et aucune base de données n'ont été modifiés.
+
+IMPORTANT :
+Tu dois t'arrêter après ce diagnostic.
+N'applique aucun correctif.
+N'effectue aucun déploiement.
+N'effectue aucune modification.

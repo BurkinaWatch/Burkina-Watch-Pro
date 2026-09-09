@@ -1,0 +1,604 @@
+# PHASE 9 — PREMIER TEST RÉEL DE RECONSTRUCTION 3D SUR GPU CLOUD
+
+## CONTEXTE
+
+La Phase 8 est terminée avec le statut :
+
+`NO-GO — première reconstruction impossible dans l’environnement actuel`
+
+La cause est maintenant clairement identifiée :
+
+* FFmpeg/FFprobe disponibles ;
+* aucun GPU NVIDIA ;
+* COLMAP absent ;
+* aucune stack 3DGS disponible ;
+* tentative d'installation système bloquée par une dépendance vulnérable ;
+* aucune reconstruction n'a été lancée ;
+* la production BurkinaWatch n'a pas été modifiée.
+
+La recommandation validée est :
+
+**GPU cloud temporaire et isolé pour le premier test réel.**
+
+Les expérimentations précédentes sont disponibles notamment dans :
+
+`experiments/streetview-3d/runs/phase7c-synthetic/`
+
+et
+
+`experiments/streetview-3d/runs/phase7b-on-synthetic-v2/`
+
+---
+
+# OBJECTIF DE CETTE PHASE
+
+L'objectif est maintenant de réaliser le **premier test technique réel de reconstruction 3D**, dans un environnement GPU temporaire et totalement séparé de BurkinaWatch production.
+
+Le pipeline expérimental cible est :
+
+VIDEO
+→ extraction des frames
+→ prétraitement
+→ COLMAP / SfM
+→ estimation des poses caméra
+→ reconstruction sparse
+→ MVS / dense reconstruction si possible
+→ préparation des données
+→ 3D Gaussian Splatting
+→ génération d'un véritable résultat 3D
+→ inspection/validation du résultat
+
+Cette phase doit permettre de répondre à une question simple :
+
+> **Sommes-nous techniquement capables de transformer une vidéo en une représentation 3D exploitable avec notre architecture cible ?**
+
+---
+
+# RÈGLE ABSOLUE : AUCUNE MODIFICATION DE PRODUCTION
+
+NE PAS modifier :
+
+* frontend BurkinaWatch ;
+* API ;
+* routes StreetView ;
+* PostgreSQL ;
+* schéma de production ;
+* stockage de production ;
+* authentification ;
+* système utilisateur ;
+* Railway production ;
+* déploiement ;
+* domaine ;
+* workflow actuel de contribution ;
+* viewer public.
+
+NE PAS connecter le prototype GPU directement à la production.
+
+NE PAS créer de worker GPU permanent.
+
+NE PAS ajouter une facturation GPU permanente.
+
+NE PAS lancer de traitement massif.
+
+Cette phase est exclusivement expérimentale.
+
+---
+
+# ÉTAPE 1 — AUDITER L'ENVIRONNEMENT EXPÉRIMENTAL EXISTANT
+
+Commence par inspecter :
+
+`experiments/streetview-3d/`
+
+et les résultats des phases précédentes.
+
+Vérifie :
+
+* scripts existants ;
+* documentation ;
+* vidéos ;
+* frames ;
+* métadonnées ;
+* configuration ;
+* scripts FFmpeg ;
+* éventuelles dépendances ;
+* résultats de Phase 7C ;
+* éventuels manifests ;
+* conventions de nommage ;
+* structure des runs.
+
+Ne recrée pas inutilement ce qui existe déjà.
+
+---
+
+# ÉTAPE 2 — DÉFINIR L'ENVIRONNEMENT GPU
+
+Avant de lancer COLMAP ou 3DGS, définir précisément les besoins matériels.
+
+Comparer au minimum :
+
+1. GPU NVIDIA avec environ 16 GB VRAM ;
+2. GPU NVIDIA avec environ 24 GB VRAM ;
+3. GPU NVIDIA avec davantage de VRAM si nécessaire.
+
+Évaluer :
+
+* type de GPU ;
+* VRAM ;
+* CUDA ;
+* durée de démarrage ;
+* coût horaire estimatif ;
+* stockage temporaire ;
+* accès SSH ou équivalent ;
+* possibilité d'utiliser Docker ;
+* compatibilité COLMAP ;
+* compatibilité 3DGS ;
+* possibilité d'installer les dépendances ;
+* possibilité de détruire complètement l'environnement après expérimentation.
+
+Ne pas choisir un fournisseur uniquement parce qu'il est connu.
+
+Choisir l'environnement qui présente le meilleur compromis :
+
+**compatibilité + simplicité + coût + reproductibilité.**
+
+Si plusieurs solutions sont possibles, présenter le comparatif avant de lancer une instance coûteuse.
+
+---
+
+# ÉTAPE 3 — ENVIRONNEMENT REPRODUCTIBLE
+
+Le prototype doit être reproductible.
+
+Créer, si pertinent :
+
+* Dockerfile ;
+* requirements ;
+* scripts d'installation ;
+* script de vérification ;
+* configuration versionnée ;
+* documentation des versions.
+
+Figer autant que possible :
+
+* OS ;
+* CUDA ;
+* Python ;
+* PyTorch ;
+* COLMAP ;
+* dépendances principales ;
+* implémentation 3DGS.
+
+L'objectif est de pouvoir recréer exactement ou presque exactement l'environnement plus tard.
+
+Ne pas dépendre d'une installation manuelle opaque.
+
+---
+
+# ÉTAPE 4 — TEST GPU
+
+Avant tout traitement :
+
+vérifier réellement :
+
+* GPU détecté ;
+* modèle GPU ;
+* VRAM ;
+* CUDA ;
+* driver ;
+* PyTorch CUDA ;
+* disponibilité GPU depuis Python ;
+* éventuelle accélération CUDA de COLMAP.
+
+Produire un petit rapport technique.
+
+Exemple d'informations attendues :
+
+GPU :
+VRAM :
+CUDA :
+Driver :
+PyTorch :
+CUDA disponible :
+COLMAP :
+Python :
+
+---
+
+# ÉTAPE 5 — INSTALLER ET VALIDER COLMAP
+
+Installer une version stable et reproductible de COLMAP.
+
+Vérifier :
+
+`colmap --help`
+
+puis la version exacte.
+
+Tester au minimum les commandes nécessaires au pipeline :
+
+* feature extraction ;
+* feature matching ;
+* mapper ;
+* image undistortion ;
+* dense reconstruction si compatible avec l'environnement.
+
+Ne pas considérer COLMAP comme fonctionnel uniquement parce que la commande `colmap` existe.
+
+Réaliser un véritable petit test.
+
+---
+
+# ÉTAPE 6 — UTILISER D'ABORD LA VIDÉO SYNTHÉTIQUE EXISTANTE
+
+Utiliser en priorité le dataset déjà généré pendant Phase 7C.
+
+IMPORTANT :
+
+La vidéo synthétique sert à valider :
+
+* extraction ;
+* pipeline ;
+* poses ;
+* reconstruction ;
+* compatibilité COLMAP ;
+* compatibilité 3DGS ;
+* consommation GPU ;
+* production des artefacts.
+
+Elle NE DOIT PAS être utilisée pour conclure que le système fonctionne correctement sur une vraie vidéo de rue.
+
+Cette distinction doit être explicitement conservée dans le rapport.
+
+---
+
+# ÉTAPE 7 — EXTRACTION DES FRAMES
+
+À partir de la vidéo synthétique :
+
+* extraire les frames ;
+* conserver les métadonnées ;
+* tester plusieurs stratégies de sampling si nécessaire ;
+* éviter les frames excessivement similaires ;
+* documenter le nombre de frames ;
+* documenter la résolution ;
+* documenter le FPS source ;
+* documenter le FPS/sampling utilisé.
+
+Produire un manifeste expérimental.
+
+---
+
+# ÉTAPE 8 — PREMIÈRE RECONSTRUCTION COLMAP / SfM
+
+Lancer le pipeline SfM.
+
+Mesurer notamment :
+
+* nombre de frames ;
+* nombre de features détectées ;
+* nombre de correspondances ;
+* nombre d'images effectivement alignées ;
+* nombre de caméras estimées ;
+* nombre de points 3D ;
+* temps de calcul ;
+* RAM utilisée ;
+* VRAM utilisée si disponible ;
+* erreurs éventuelles.
+
+Le résultat doit être inspecté.
+
+NE PAS passer automatiquement à l'étape suivante si le SfM est mauvais.
+
+---
+
+# ÉTAPE 9 — CRITÈRES DE VALIDATION SfM
+
+Déterminer objectivement si le SfM est exploitable.
+
+Documenter :
+
+* taux d'images enregistrées ;
+* stabilité des poses ;
+* cohérence de la trajectoire caméra ;
+* densité du nuage sparse ;
+* éventuelles dérives ;
+* éventuels problèmes de calibration ;
+* éventuels trous ou ruptures.
+
+Classer le résultat :
+
+### PASS
+
+SfM suffisamment cohérent pour continuer.
+
+### PASS WITH WARNINGS
+
+Résultat exploitable mais avec problèmes à documenter.
+
+### FAIL
+
+Résultat insuffisant pour poursuivre vers une reconstruction fiable.
+
+Si FAIL :
+
+**arrêter ici et analyser la cause.**
+
+Ne pas masquer l'échec.
+
+---
+
+# ÉTAPE 10 — MVS / RECONSTRUCTION DENSE
+
+Uniquement si le SfM est suffisamment bon :
+
+lancer la reconstruction dense.
+
+Mesurer :
+
+* temps ;
+* RAM ;
+* VRAM ;
+* taille des données ;
+* densité ;
+* qualité ;
+* artefacts ;
+* stabilité.
+
+Documenter les limites rencontrées.
+
+---
+
+# ÉTAPE 11 — 3D GAUSSIAN SPLATTING
+
+Tester ensuite une implémentation 3D Gaussian Splatting réellement compatible avec le pipeline obtenu.
+
+NE PAS simuler un résultat 3D.
+
+NE PAS transformer simplement la vidéo en une scène 2.5D.
+
+Il faut produire une véritable représentation 3D issue des données reconstruites.
+
+Documenter :
+
+* implémentation utilisée ;
+* version ;
+* dépendances ;
+* paramètres ;
+* temps d'entraînement ;
+* GPU ;
+* VRAM ;
+* nombre d'itérations ;
+* taille du modèle ;
+* qualité visuelle ;
+* stabilité.
+
+---
+
+# ÉTAPE 12 — VALIDATION DU RÉSULTAT 3D
+
+Le résultat doit être réellement inspectable.
+
+Vérifier :
+
+* géométrie ;
+* cohérence spatiale ;
+* textures/aspect visuel ;
+* trous ;
+* artefacts ;
+* zones floues ;
+* surfaces mal reconstruites ;
+* cohérence des différents angles de vue ;
+* possibilité de se déplacer autour de la scène.
+
+Si un viewer expérimental simple est nécessaire uniquement pour inspecter le résultat localement, il est autorisé.
+
+Mais :
+
+**NE PAS intégrer ce viewer dans BurkinaWatch.**
+
+---
+
+# ÉTAPE 13 — TEST DE ROBUSTESSE
+
+Si le premier test réussit, effectuer au moins quelques variantes :
+
+* sampling différent ;
+* résolution différente ;
+* nombre de frames différent.
+
+Objectif :
+
+déterminer si le résultat dépend excessivement d'un paramétrage particulier.
+
+Ne pas multiplier inutilement les expériences coûteuses.
+
+---
+
+# ÉTAPE 14 — MESURER LE COÛT
+
+Mesurer réellement :
+
+* durée d'utilisation GPU ;
+* stockage temporaire ;
+* taille des données ;
+* temps CPU ;
+* temps GPU ;
+* temps total ;
+* coût estimatif de la reconstruction d'une vidéo.
+
+Puis produire une première extrapolation prudente :
+
+* 1 vidéo ;
+* 10 vidéos ;
+* 100 vidéos ;
+* 1 000 vidéos.
+
+Ne pas extrapoler à partir d'une seule mesure sans signaler l'incertitude.
+
+---
+
+# ÉTAPE 15 — ANALYSER LA FAISABILITÉ POUR BURKINAWATCH
+
+À partir de ce test, déterminer :
+
+### Technique
+
+Le pipeline :
+
+`vidéo → SfM → MVS → 3DGS`
+
+est-il réellement fonctionnel ?
+
+### Qualité
+
+La qualité est-elle suffisante pour une future représentation de rue ?
+
+### Performance
+
+Le temps de traitement est-il acceptable ?
+
+### Coût
+
+Le coût potentiel est-il compatible avec une plateforme collaborative ?
+
+### Scalabilité
+
+Quelle architecture serait nécessaire pour :
+
+* 100 contributions ;
+* 1 000 ;
+* 10 000 ;
+* 100 000 ?
+
+### Infrastructure
+
+Quelle séparation recommander entre :
+
+* API ;
+* stockage ;
+* workers CPU ;
+* workers GPU ;
+* orchestration ;
+* base de données ?
+
+---
+
+# ÉTAPE 16 — NE PAS ENCORE FAIRE
+
+Cette phase ne doit PAS implémenter :
+
+* fusion automatique de scènes ;
+* géoréférencement définitif ;
+* cartographie 3D publique ;
+* connexion des scènes entre elles ;
+* navigation Burkina Faso → région → province → ville → quartier ;
+* traitement automatique des contributions utilisateurs ;
+* worker GPU permanent ;
+* facturation ;
+* modération automatisée complète ;
+* viewer public ;
+* intégration mobile ;
+* publication publique.
+
+Ces éléments viendront après validation scientifique et technique du pipeline.
+
+---
+
+# RAPPORT FINAL OBLIGATOIRE
+
+Créer :
+
+`experiments/streetview-3d/PHASE_9_RESULT.md`
+
+Le rapport doit contenir :
+
+## 1. Environnement
+
+GPU, VRAM, CUDA, Python, COLMAP, PyTorch, 3DGS.
+
+## 2. Dataset
+
+Vidéo utilisée, durée, résolution, nombre de frames.
+
+## 3. SfM
+
+Résultats détaillés.
+
+## 4. MVS
+
+Résultats détaillés.
+
+## 5. 3DGS
+
+Résultats détaillés.
+
+## 6. Temps de calcul
+
+Mesures réelles.
+
+## 7. Ressources
+
+CPU, RAM, GPU, VRAM, stockage.
+
+## 8. Coût
+
+Coût réel ou estimé.
+
+## 9. Qualité
+
+Forces et défauts du résultat.
+
+## 10. Limites
+
+Tout problème rencontré.
+
+## 11. Reproductibilité
+
+Versions et commandes principales.
+
+## 12. Verdict
+
+Utiliser exactement l'un des statuts :
+
+`GO`
+
+`GO WITH ADJUSTMENTS`
+
+`NO-GO`
+
+avec justification technique.
+
+## 13. Recommandation Phase 10
+
+Proposer précisément l'étape suivante en fonction des résultats.
+
+---
+
+# RÈGLE DE TRANSPARENCE
+
+Ne jamais écrire qu'une reconstruction a réussi si :
+
+* seul le fichier existe ;
+* seule une commande s'est terminée ;
+* un viewer affiche quelque chose sans véritable reconstruction ;
+* une scène artificielle a été générée ;
+* la vidéo a simplement été transformée en frames ;
+* un résultat 3D a été simulé.
+
+Une réussite doit correspondre à un véritable résultat issu du pipeline de reconstruction.
+
+---
+
+# ARRÊT OBLIGATOIRE
+
+À la fin de cette phase :
+
+1. produire le rapport ;
+2. conserver les artefacts expérimentaux utiles ;
+3. détruire l'instance GPU temporaire si elle n'est plus nécessaire ;
+4. vérifier qu'aucune modification de production n'a été effectuée ;
+5. exécuter les contrôles de repository appropriés ;
+6. NE PAS commencer la Phase 10 automatiquement.
+
+Attendre validation humaine avant toute industrialisation.

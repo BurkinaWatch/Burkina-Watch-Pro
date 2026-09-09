@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "BurkinaWatch"
+description = "The existing BurkinaWatch civic safety and community information website, preserving its current navigation, reporting, alerts, maps, news, authentication, and protected user flows for Burkina Faso users."
+version = "1.0.0"
+id = "artifacts/burkinawatch"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20727
+
+[services.development]
+run = "pnpm --filter @workspace/burkinawatch run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/burkinawatch", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/burkinawatch/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20727"
+BASE_PATH = "/"

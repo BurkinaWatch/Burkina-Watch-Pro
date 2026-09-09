@@ -1,0 +1,696 @@
+# DIAGNOSTIC RAILWAY — npm / Vite / ENVIRONNEMENT DE BUILD
+
+## MODE STRICTEMENT LECTURE SEULE — AUCUNE MODIFICATION
+
+Tu dois effectuer un diagnostic technique ciblé du problème actuel de déploiement Railway.
+
+IMPORTANT :
+
+* Ne modifie aucun fichier.
+* Ne modifie pas package.json.
+* Ne modifie pas package-lock.json.
+* Ne modifie pas nixpacks.toml.
+* Ne modifie pas le code source.
+* Ne modifie pas la base de données.
+* Ne lance aucune migration.
+* Ne lance pas db:push.
+* Ne supprime aucun fichier.
+* Ne supprime aucun cache.
+* Ne change aucune variable Railway.
+* Ne fais aucun commit Git.
+* Ne pousse rien vers GitHub.
+* Ne tente aucun correctif.
+* Ne déplace aucune dépendance entre dependencies et devDependencies.
+* Ne change pas la commande Build Railway.
+
+L'objectif est UNIQUEMENT de déterminer pourquoi `vite` est absent au moment du build Railway malgré :
+
+```bash
+npm install --legacy-peer-deps --include=dev --no-audit --no-fund
+```
+
+et malgré la présence de Vite dans `devDependencies`.
+
+---
+
+# 1. CONTEXTE DU PROBLÈME
+
+Le dernier déploiement Railway utilise :
+
+```bash
+npm install --legacy-peer-deps --include=dev --no-audit --no-fund && npm run build
+```
+
+Le log Railway montre :
+
+```text
+npm warn config production Use `--omit=dev` instead.
+
+npm error Exit handler never called!
+npm error This is an error with npm itself.
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && esbuild server/streetviewWorkerMain.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/streetview-worker.js
+
+sh: 1: vite: not found
+```
+
+Le projet contient pourtant :
+
+```text
+vite: ^5.4.20
+```
+
+dans `devDependencies`, et le lockfile contient bien Vite 5.4.20.
+
+Le workspace local utilise :
+
+```text
+Node v20.20.0
+npm 10.8.2
+```
+
+Le projet contient :
+
+```text
+.nvmrc = 20.20.0
+packageManager = npm@10.8.2
+```
+
+Le diagnostic local précédent ne permet pas de connaître les versions réellement utilisées par Railway.
+
+---
+
+# 2. OBJECTIF PRINCIPAL
+
+Déterminer avec le maximum de précision lequel des scénarios suivants explique le problème :
+
+A. Railway utilise une configuration npm production qui omet encore les devDependencies.
+
+B. `--include=dev` est bien reçu mais npm rencontre une erreur interne et termine une installation partielle.
+
+C. npm retourne un code de sortie inattendu malgré `Exit handler never called!`.
+
+D. Railway/Railpack exécute l'installation et le build dans des phases distinctes.
+
+E. Un wrapper/build system ignore ou masque le code de sortie de npm.
+
+F. Une différence de version Node/npm entre le workspace et Railway provoque le problème.
+
+G. Un cache Railway conserve un état incomplet de `node_modules`.
+
+H. Une autre cause identifiable dans l'environnement Railway.
+
+Ne choisis pas une hypothèse sans preuve.
+
+---
+
+# 3. PREMIÈRE ÉTAPE — AUDIT LOCAL SANS MODIFICATION
+
+Avant tout diagnostic Railway, vérifie une dernière fois localement :
+
+```bash
+node --version
+npm --version
+npm config get production
+npm config get omit
+npm config get include
+npm config get only
+npm config get prefix
+npm config get cache
+```
+
+Puis :
+
+```bash
+npm ls vite --depth=0
+test -x node_modules/.bin/vite && echo "VITE_BINARY_PRESENT" || echo "VITE_BINARY_ABSENT"
+```
+
+Ne réinstalle rien.
+
+Ne supprime pas `node_modules`.
+
+Ne modifie rien.
+
+---
+
+# 4. VÉRIFICATION DES CONFIGURATIONS DU PROJET
+
+Recherche en lecture seule toutes les sources pouvant influencer npm :
+
+```text
+.npmrc
+.nvmrc
+package.json
+package-lock.json
+nixpacks.toml
+railway.json
+railway.toml
+nixpacks.json
+Dockerfile
+.replit
+```
+
+Recherche également dans les fichiers de configuration les termes :
+
+```text
+NODE_ENV
+NPM_CONFIG_PRODUCTION
+NPM_CONFIG_OMIT
+NPM_CONFIG_INCLUDE
+NPM_CONFIG_ONLY
+npm_config_production
+npm_config_omit
+npm_config_include
+npm_config_only
+production
+omit
+include
+```
+
+IMPORTANT :
+
+Ne modifie aucun de ces fichiers.
+
+Présente uniquement les occurrences trouvées.
+
+---
+
+# 5. DIAGNOSTIC À EXÉCUTER DANS L'ENVIRONNEMENT RAILWAY
+
+Comme Replit n'a pas accès au fichier de log npm privé de Railway, nous devons obtenir les informations depuis Railway.
+
+Prépare un diagnostic temporaire qui puisse être exécuté dans le shell/build environment Railway.
+
+Le diagnostic doit afficher exactement :
+
+```bash
+echo "===== ENVIRONMENT ====="
+echo "NODE_ENV=$NODE_ENV"
+
+echo "===== VERSIONS ====="
+node --version
+npm --version
+
+echo "===== NPM CONFIG ====="
+npm config get production
+npm config get omit
+npm config get include
+npm config get only
+npm config get prefix
+npm config get cache
+
+echo "===== NPM ENVIRONMENT VARIABLES ====="
+env | sort | grep -Ei '^(NODE|NPM_CONFIG|npm_config)' || true
+
+echo "===== PROJECT ====="
+pwd
+ls -la
+
+echo "===== PACKAGE ====="
+node -p "require('./package.json').packageManager || 'packageManager not defined'"
+node -p "require('./package.json').engines || 'engines not defined'"
+node -p "require('./package.json').devDependencies?.vite || 'vite not in devDependencies'"
+
+echo "===== LOCKFILE ====="
+node -p "require('./package-lock.json').lockfileVersion"
+
+echo "===== BEFORE INSTALL ====="
+if [ -x node_modules/.bin/vite ]; then
+  echo "VITE_PRESENT_BEFORE_INSTALL"
+else
+  echo "VITE_ABSENT_BEFORE_INSTALL"
+fi
+```
+
+IMPORTANT :
+
+Cette étape doit seulement afficher les informations.
+
+Ne supprime pas `node_modules`.
+
+Ne nettoie pas le cache.
+
+Ne lance pas encore `npm install`.
+
+---
+
+# 6. TEST CONTRÔLÉ DE L'INSTALLATION
+
+Si et seulement si le diagnostic précédent peut être exécuté dans l'environnement Railway, exécute ensuite séparément :
+
+```bash
+echo "===== INSTALL START ====="
+
+npm install --legacy-peer-deps --include=dev --no-audit --no-fund
+
+INSTALL_EXIT=$?
+
+echo "===== INSTALL EXIT CODE ====="
+echo "INSTALL_EXIT=$INSTALL_EXIT"
+
+echo "===== AFTER INSTALL ====="
+
+if [ -x node_modules/.bin/vite ]; then
+  echo "VITE_PRESENT_AFTER_INSTALL"
+  node_modules/.bin/vite --version
+else
+  echo "VITE_ABSENT_AFTER_INSTALL"
+fi
+
+echo "===== NODE_MODULES CHECK ====="
+
+if [ -d node_modules ]; then
+  echo "NODE_MODULES_PRESENT"
+else
+  echo "NODE_MODULES_ABSENT"
+fi
+
+echo "===== VITE PACKAGE CHECK ====="
+
+if [ -d node_modules/vite ]; then
+  echo "VITE_PACKAGE_PRESENT"
+else
+  echo "VITE_PACKAGE_ABSENT"
+fi
+
+echo "===== END ====="
+
+exit $INSTALL_EXIT
+```
+
+IMPORTANT :
+
+Le but est de déterminer le véritable :
+
+```text
+INSTALL_EXIT
+```
+
+Ne lance pas `npm run build` dans cette étape.
+
+---
+
+# 7. TESTER SPÉCIFIQUEMENT LE COMPORTEMENT DE `&&`
+
+Nous devons déterminer si Railway respecte réellement :
+
+```bash
+command1 && command2
+```
+
+Prépare un test sans modifier le projet :
+
+```bash
+echo "TEST_START"
+
+false && echo "THIS_SHOULD_NOT_APPEAR"
+
+echo "TEST_END"
+```
+
+Puis explique le résultat.
+
+Ensuite, si possible, teste :
+
+```bash
+bash -c 'false && echo BUILD_SHOULD_NOT_RUN'
+echo "SHELL_EXIT=$?"
+```
+
+Ne modifie aucune configuration.
+
+---
+
+# 8. DIAGNOSTIC DU DEBUG LOG NPM
+
+Le log Railway indique :
+
+```text
+/root/.npm/_logs/2026-09-05T09_39_06_667Z-debug-0.log
+```
+
+Si et seulement si ce fichier est accessible depuis l'environnement dans lequel le diagnostic est exécuté, inspecte-le en lecture seule.
+
+Utilise uniquement des commandes de lecture, par exemple :
+
+```bash
+ls -lah /root/.npm/_logs/ || true
+```
+
+et, si le fichier existe :
+
+```bash
+tail -n 200 /root/.npm/_logs/2026-09-05T09_39_06_667Z-debug-0.log
+```
+
+Recherche également les informations importantes :
+
+```text
+verbose
+error
+ERR!
+exit
+code
+stack
+npm
+vite
+idealTree
+reify
+postinstall
+prepare
+rollback
+```
+
+NE SUPPRIME PAS LE LOG.
+
+NE MODIFIE PAS LE LOG.
+
+Si le fichier n'est pas accessible, indique simplement :
+
+```text
+RAILWAY_NPM_DEBUG_LOG_INACCESSIBLE
+```
+
+Ne prétends pas l'avoir analysé.
+
+---
+
+# 9. VERSION NODE / NPM
+
+Détermine précisément les versions réellement utilisées par Railway.
+
+Nous devons obtenir :
+
+```text
+Node = ?
+npm = ?
+```
+
+Compare-les avec :
+
+```text
+Projet :
+Node 20.20.0
+npm 10.8.2
+```
+
+Si Railway utilise une autre version, indique :
+
+```text
+VERSION_MISMATCH
+```
+
+et donne les versions exactes.
+
+Ne change pas les versions.
+
+---
+
+# 10. CACHE
+
+Nous devons déterminer si un cache peut être impliqué.
+
+NE SUPPRIME PAS LE CACHE.
+
+NE VIDE PAS LE CACHE.
+
+Détermine seulement :
+
+* si Railway/Railpack utilise un cache npm ;
+* si `node_modules` est réutilisé ;
+* si le builder utilise un cache persistant ;
+* si les dépendances sont installées dans une nouvelle couche ou une couche existante.
+
+Si tu ne peux pas le déterminer, écris :
+
+```text
+CACHE_STATE_UNKNOWN
+```
+
+Ne fais aucune supposition.
+
+---
+
+# 11. DISTINGUER INSTALLATION INCOMPLÈTE ET DEVDEPENDENCIES OMITTED
+
+Nous devons répondre précisément à cette question :
+
+Après `npm install --include=dev`, Vite est-il absent parce que :
+
+```text
+A. npm n'a jamais correctement terminé l'installation
+```
+
+ou :
+
+```text
+B. npm a terminé mais a volontairement omis les devDependencies
+```
+
+ou :
+
+```text
+C. une autre opération a supprimé ou remplacé node_modules
+```
+
+ou :
+
+```text
+D. autre cause
+```
+
+Utilise les observations du test :
+
+```text
+INSTALL_EXIT
+VITE_PRESENT_AFTER_INSTALL
+VITE_PACKAGE_PRESENT
+npm config
+NODE_ENV
+versions
+debug log
+```
+
+Ne conclus que sur la base des preuves.
+
+---
+
+# 12. ATTENTION À `Exit handler never called!`
+
+Analyse précisément le message :
+
+```text
+npm error Exit handler never called!
+```
+
+Nous voulons savoir :
+
+1. À quel moment npm l'affiche.
+2. Si npm termine avec `0` ou un autre code.
+3. Si l'installation est complète ou partielle.
+4. Si le message est connu pour la version npm utilisée.
+5. Si le debug log révèle une erreur antérieure expliquant le problème.
+6. Si un package précis déclenche le problème.
+
+Ne te contente pas de dire :
+
+```text
+npm a eu un problème.
+```
+
+Nous cherchons le mécanisme exact.
+
+---
+
+# 13. NE PAS FAIRE DE FAUX CORRECTIFS
+
+Pendant ce diagnostic, NE PROPOSE PAS comme solution immédiate :
+
+```text
+déplacer vite dans dependencies
+```
+
+Ne propose pas non plus :
+
+```text
+supprimer package-lock.json
+```
+
+```text
+supprimer node_modules
+```
+
+```text
+npm install --force
+```
+
+```text
+npm install --legacy-peer-deps --force
+```
+
+```text
+db:push
+```
+
+```text
+modifier PostgreSQL
+```
+
+```text
+modifier Street View
+```
+
+```text
+modifier le frontend
+```
+
+```text
+changer NODE_ENV globalement
+```
+
+```text
+désactiver la sécurité
+```
+
+```text
+ignorer l'erreur npm
+```
+
+Ces actions ne doivent pas être utilisées comme contournement avant d'avoir identifié la cause.
+
+---
+
+# 14. RAPPORT FINAL OBLIGATOIRE
+
+À la fin, produis un rapport structuré exactement ainsi :
+
+## A. Dépendances
+
+* Vite présent dans package.json : OUI/NON
+* Vite présent dans package-lock.json : OUI/NON
+* Vite présent après npm install Railway : OUI/NON
+* `node_modules/.bin/vite` présent : OUI/NON
+
+## B. Environnement Railway
+
+```text
+Node :
+npm :
+NODE_ENV :
+npm production :
+npm omit :
+npm include :
+npm only :
+```
+
+## C. Variables de configuration pertinentes
+
+Liste uniquement les variables réellement présentes et pertinentes.
+
+## D. Installation npm
+
+```text
+Commande :
+Code de sortie :
+Installation complète : OUI/NON/INCONNU
+Exit handler never called : OUI/NON
+```
+
+## E. Debug log
+
+```text
+Accessible : OUI/NON
+Erreur racine identifiée : OUI/NON
+```
+
+Si accessible, donne les lignes importantes et explique-les.
+
+## F. Cache
+
+```text
+Cache utilisé :
+État :
+Preuve :
+```
+
+## G. Pourquoi Vite est absent
+
+Choisis une seule catégorie si les preuves permettent de le faire :
+
+```text
+1. devDependencies omises
+2. npm installation interrompue
+3. installation partielle
+4. cache incohérent
+5. différence Node/npm
+6. wrapper Railway/Railpack
+7. autre
+8. indéterminé
+```
+
+Puis explique précisément pourquoi.
+
+## H. Cause racine
+
+Donne :
+
+```text
+CAUSE RACINE : ...
+NIVEAU DE CONFIANCE : FAIBLE / MOYEN / ÉLEVÉ
+```
+
+## I. Correctif recommandé
+
+Très important :
+
+À ce stade, donne seulement le correctif recommandé.
+
+NE L'APPLIQUE PAS.
+
+Indique :
+
+* fichier/configuration à modifier éventuellement ;
+* commande Railway éventuellement ;
+* raison ;
+* risques éventuels ;
+* impact sur le reste de BurkinaWatch.
+
+## J. Changements effectués
+
+Cette section doit impérativement dire :
+
+```text
+AUCUNE MODIFICATION EFFECTUÉE
+```
+
+si aucun changement n'a été effectué.
+
+---
+
+# 15. RÈGLE ABSOLUE
+
+Le but de cette mission n'est PAS de réparer immédiatement Railway.
+
+Le but est de répondre avec des preuves à cette question :
+
+> Pourquoi `vite` est-il absent dans l'environnement Railway alors que Vite est correctement déclaré dans `devDependencies` et que la commande utilise explicitement `--include=dev` ?
+
+Ne modifie rien tant que cette question n'est pas suffisamment établie.
+
+Si une information n'est pas accessible, écris clairement :
+
+```text
+INACCESSIBLE
+```
+
+ou :
+
+```text
+INDETERMINÉ
+```
+
+Ne l'invente pas.
+
+À la fin, attends mes instructions avant toute correction.

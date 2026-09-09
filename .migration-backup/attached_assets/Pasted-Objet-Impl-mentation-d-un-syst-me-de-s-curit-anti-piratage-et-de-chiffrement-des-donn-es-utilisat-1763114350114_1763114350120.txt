@@ -1,0 +1,105 @@
+Objet : Implémentation d’un système de sécurité anti-piratage et de chiffrement des données utilisateurs pour l’application BurkinaWatch.
+
+Contexte :
+BurkinaWatch est une application citoyenne qui gère des signalements (photos/vidéos), des données sensibles (localisations, descriptions, possibles informations personnelles). L’objectif est de mettre en place une sécurité robuste pour protéger les utilisateurs, empêcher les intrusions et chiffrer les données sensibles, tout en restant performant et conforme aux bonnes pratiques.
+
+Livrables attendus :
+1. Code backend (Node.js / Express) mis à jour avec middlewares de sécurité, chiffrement/déchiffrement des données sensibles, gestion des clés et routines de rotation.
+2. Configuration d’infrastructure (ex. variables d’environnement / secrets Replit ou provider KMS) et exemples de `.env.example`.
+3. Scripts de migration pour chiffrer les données existantes (migration safe).
+4. Tests automatiques de sécurité basiques (scans dépendances, tests d’intégration pour chiffrement).
+5. Documentation technique (README_security.md) et checklist de déploiement sécurisé.
+
+Exigences techniques précises :
+A. Chiffrement en transit
+ - Forcer HTTPS/TLS partout (frontend → backend → storage). Si Replit sert le frontend, s’assurer que le domaine Replit utilise HTTPS.
+ - Configurer HSTS, CSP, X-Frame-Options, X-XSS-Protection via `helmet()` dans Express.
+
+B. Authentification & sessions
+ - Auth JWT avec tokens courts (access token 15 min) et refresh tokens stockés côté serveur (ou HttpOnly secure cookie).  
+ - Hashage des mots de passe avec **Argon2** (ou bcrypt avec cost élevé) ; ne conserver jamais de mot de passe en clair.  
+ - Protection contre bruteforce : rate-limiting (express-rate-limit) sur endpoints auth et OTP, lockout temporaire après N tentatives.  
+ - Activer 2FA OTP SMS/Email (optionnel) pour comptes sensibles (admins/institutions).
+
+C. Chiffrement au repos (données sensibles)
+ - Implémenter **field-level encryption** pour les champs sensibles dans la base : `phone_number`, `email`, `deviceId`, `reporter_identity`, `location_exact` (si souhait de protéger précision), tout PII.
+ - Utiliser un **envelope encryption** (clé de données symétrique AES-256-GCM par enregistrement chiffré ; la clé de données est elle-même chiffrée avec une **master key** gérée par KMS).
+ - Si usage Firebase, configurer **Cloud KMS** (ou sinon AWS KMS) pour stocker la master key ; sinon, stocker la clé maître dans Replit secrets pour MVP mais prévoir migration vers KMS.
+ - Stockage des médias (photos/vidéos) : stocker sur S3 / Firebase Storage avec chiffrement côté serveur (SSE-S3 ou SSE-KMS) et générer **signed URLs** à durée limitée pour les téléchargements.
+
+D. Gestion des clés (KMS & rotation)
+ - Prévoir un gestionnaire de clés (KMS : Google Cloud KMS, AWS KMS ou HashiCorp Vault).  
+ - Implémenter rotation automatique ou documentation / script pour rotation manuelle.  
+ - Ne jamais hardcoder les clés ; utiliser Replit secrets (pour prototypage) puis migrer vers KMS.  
+ - Audit des accès aux clés (logs).  
+
+E. Middleware de sécurité & durcissement
+ - Express middlewares : `helmet`, `cors` (policy whitelist), `express-rate-limit`, `hpp` (HTTP parameter pollution), `xss-clean` (ou sanitation libs).
+ - Validation stricte des inputs (JOI / zod) côté serveur.
+ - Sanitize/tamper-proof uploads : vérifier type MIME, scanner fichiers (virus/malware) si possible, limiter taille max.
+ - Content Security Policy (CSP) strict pour frontend.
+
+F. Logs & audit trail
+ - Journaliser les actions sensibles (création/suppression reports, changement de statut, accès admin) dans une collection `audit_logs` chiffrée partiellement (keep PII encrypted).
+ - Conserver logs d’accès et erreurs (Sentry) et définir rétention + processus de réponse incidents.
+
+G. Protection contre attaques courantes
+ - CSRF tokens si cookies sont utilisés.  
+ - Prévention XSS via output encoding + sanitation.  
+ - Paramétrer CORS réduit aux domaines autorisés.  
+ - WAF / Recommandation : utiliser un WAF (Cloudflare / provider) en front.
+
+H. Backup & récupération
+ - Chiffrement des backups exports (AES-256) et stockage dans bucket avec contrôle d’accès.  
+ - Tester recovery trimestriel.
+
+I. Tests & CI
+ - Intégrer tools SCA (npm audit, snyk or dependabot).  
+ - Tests automatisés pour chiffrement/déchiffrement (round-trip), permissions DB, rotation clé.  
+ - Script de migration pour transformer données en clair en données chiffrées (avec étapes idempotentes, logs, rollback).
+
+J. Plan de migration (existantes données non chiffrées)
+ - Étapes :  
+   1) Bloquer modifications sur champs sensibles pendant migration (maintenance mode).  
+   2) Pour chaque document : générer dataKey (AES-256), chiffrer la valeur, chiffrer dataKey avec master key (KMS), stocker `{encryptedValue, encryptedKey, iv, alg, tag}`.  
+   3) Valider checksum, marquer doc comme `encrypted: true`.  
+   4) Sauvegarde complète avant migration.  
+ - Fournir script Node.js `migrate_encrypt.js` exécutable en batch.
+
+K. UI / UX autour de protection
+ - Indiquer clairement dans le profil que l’utilisateur peut choisir anonymat et quels champs seront chiffrés.  
+ - Page “Sécurité & Confidentialité” dans app qui explique la conservation, chiffrement et procédure d’accès.
+
+Spécifications de code (à générer)
+ - Fournis un middleware Express `securityHardening.js` qui active helmet, cors strict, rate-limit, body-parser size limit, sanitize input.  
+ - Fournis un module `encryptionService.js` encapsulant :  
+   - `generateDataKey()` (utilise KMS or local AES key fallback),  
+   - `encryptField(plainText)` → returns `{cipherText, encryptedKey, iv, tag, alg}`,  
+   - `decryptField(record)` → returns plainText.  
+ - Fournis endpoint `/admin/rotate-key` (protected, audité) qui réalise rotation master key (provisoire : workflow documenté).  
+ - Fournis sample of `.env.example` lists : `MASTER_KEY_ID`, `KMS_PROVIDER`, `KMS_CREDENTIALS`, `JWT_SECRET`, `REFRESH_TOKEN_SECRET`, `SENTRY_DSN`.
+
+Checklist d’acceptation (tests manuels à passer)
+ 1. TLS enforced (no http access).  
+ 2. Passwords hashed (Argon2) ; login fails on wrong password.  
+ 3. Token expiry flows (refresh tokens invalidation) fonctionnels.  
+ 4. Tout PII stocké est chiffré (inspect DB).  
+ 5. Upload media accessible uniquement via signed URLs (timeout 5–15 min).  
+ 6. Rate-limiting sur endpoints critiques.  
+ 7. `audit_logs` contient les événements sensibles.  
+ 8. Script migration exécuté sur une instance de test et validé (restauration valide).  
+
+Livrables & actions Replit AI à produire :
+ - Créer / modifier les fichiers Node.js/Express: `securityHardening.js`, `encryptionService.js`, `migrate_encrypt.js`.  
+ - Mettre à jour l’API auth pour Argon2 hashing and JWT + refresh tokens.  
+ - Mettre à jour les routes `POST /reports` pour appeler `/api/moderate` puis chiffrer champs sensibles avant write.  
+ - Ajouter exemple `.env.example` et instructions pour stocker secrets dans Replit secrets (ou KMS).  
+ - Écrire `README_security.md` expliquant architecture de chiffrement, rotation, migration et procédures d’urgence.  
+ - Générer tests unitaires Mocha/Jest pour `encryptionService` (encrypt/decrypt round-trip).
+
+Contraintes / remarques :
+ - Si KMS n’est pas disponible au stade MVP, implémenter fallback “Envelope encryption local” avec master key dans Replit secrets et ajouter TODO pour migration vers KMS.  
+ - Prévoir latence minimale : chiffrement fields en CPU non-bloquant (utiliser workers si nécessaire).  
+ - Respecter anonymat utilisateur : si le reporter choisit anonymat, ne pas conserver d’identifiants liant l’upload au compte (conserver un hash d’intégrité si nécessaire).
+
+Fin du prompt.

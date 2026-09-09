@@ -1,0 +1,295 @@
+{
+  "message": "test -f node_modules/jspdf/package.json || npm install --no-save --package-lock=false --include=dev --legacy-peer-deps --no-audit --no-fund jspdf@4.2.1 && test -f node_modules/jspdf/package.json && node node_modules/vite/bin/vite.js build && node node_modules/esbuild/bin/esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && node node_modules/esbuild/bin/esbuild server/streetviewWorkerMain.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/streetview-worker.js",
+  "timestamp": "2026-09-05T12:38:22.601154361Z",
+  "severity": "error",
+  "children": [
+    {
+      "message": "npm warn config production Use `--omit=dev` instead.\n",
+      "timestamp": "2026-09-05T12:38:24.829686826Z"
+    },
+    {
+      "message": "npm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me\n",
+      "timestamp": "2026-09-05T12:39:42.573055115Z"
+    },
+    {
+      "message": "npm warn deprecated recharts@2.15.4: 1.x and 2.x branches are no longer active. Bump to Recharts v3 to receive latest features and bugfixes. See https://github.com/recharts/recharts/wiki/3.0-migration-guide\n",
+      "timestamp": "2026-09-05T12:39:43.747367716Z"
+    },
+    {
+      "message": "\nadded 25 packages, removed 132 packages, and changed 438 packages in 1m\n",
+      "timestamp": "2026-09-05T12:39:46.358065911Z"
+    },
+    {
+      "message": "\u001b[36mvite v5.4.21 \u001b[32mbuilding for production...\u001b[36m\u001b[39m\n",
+      "timestamp": "2026-09-05T12:39:46.673898424Z"
+    },
+    {
+      "message": "transforming...\n",
+      "timestamp": "2026-09-05T12:39:46.722008989Z"
+    },
+    {
+      "message": "\nA PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.\n",
+      "timestamp": "2026-09-05T12:39:48.510598857Z"
+    },
+    {
+      "message": "\u001b[32m✓\u001b[39m 3642 modules transformed.\n",
+      "timestamp": "2026-09-05T12:39:56.228073275Z"
+    },
+    {
+      "message": "rendering chunks...\n",
+      "timestamp": "2026-09-05T12:39:56.961192973Z"
+    },
+    {
+      "message": "\u001b[1m\u001b[33m[plugin:vite:reporter]\u001b[39m\u001b[22m \u001b[33m[plugin vite:reporter] \n(!) /app/client/src/lib/notificationSound.ts is dynamically imported by /app/client/src/App.tsx but also statically imported by /app/client/src/components/EmergencyPanel.tsx, /app/client/src/components/Header.tsx, /app/client/src/components/ui/toaster.tsx, dynamic import will not move module into another chunk.\n\u001b[39m\n",
+      "timestamp": "2026-09-05T12:39:57.250697884Z"
+    },
+    {
+      "message": "\u001b[1m\u001b[33m[plugin:vite:reporter]\u001b[39m\u001b[22m \u001b[33m[plugin vite:reporter] \n(!) /app/client/src/lib/offlineStorage.ts is dynamically imported by /app/client/src/components/OfflineIndicator.tsx but also statically imported by /app/client/src/hooks/useOfflineCache.ts, /app/client/src/lib/syncService.ts, /app/client/src/pages/Publier.tsx, dynamic import will not move module into another chunk.\n\u001b[39m\n",
+      "timestamp": "2026-09-05T12:39:57.251193047Z"
+    },
+    {
+      "message": "computing gzip size...\n",
+      "timestamp": "2026-09-05T12:39:57.316330559Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[32mindex.html                                                                       \u001b[39m\u001b[1m\u001b[2m    2.54 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.87 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[32mwave_money_1768252790323-BSiim6RU.png                                     \u001b[39m\u001b[1m\u001b[2m    5.30 kB\u001b[22m\u001b[1m\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.371775057Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[32morange_money_1768252790323-Croy29kv.jpg                                   \u001b[39m\u001b[1m\u001b[2m    6.56 kB\u001b[22m\u001b[1m\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.371939043Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[32mmoov_money_1768252790322-DQthqHve.jpg                                     \u001b[39m\u001b[1m\u001b[2m   50.29 kB\u001b[22m\u001b[1m\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[32mlogo-burkinawatch-Br1pRLri.png                                            \u001b[39m\u001b[1m\u001b[2m   50.89 kB\u001b[22m\u001b[1m\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372005974Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[32mCitizens_collaborating_with_smartphones_in_Burkina_68dc35a5-DZACi9Zo.png  \u001b[39m\u001b[1m\u001b[2m1,734.15 kB\u001b[22m\u001b[1m\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372014467Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[35mCarte-3yaWYNWa.css                                                        \u001b[39m\u001b[1m\u001b[2m    1.20 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.37 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[35mleaflet-Dgihpmma.css                                                      \u001b[39m\u001b[1m\u001b[2m   15.04 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   6.38 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[35mindex-Bgy3_Ww2.css                                                        \u001b[39m\u001b[1m\u001b[2m  169.93 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:  24.65 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372144972Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mauthUtils-CcDzk6i0.js                                                     \u001b[39m\u001b[1m\u001b[2m    0.08 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.10 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mCitizens_collaborating_with_smartphones_in_Burkina_68dc35a5-DNbU6yg6.js   \u001b[39m\u001b[1m\u001b[2m    0.11 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.12 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mindex-D17hSi50.js                                                         \u001b[39m\u001b[1m\u001b[2m    0.15 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.15 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mskeleton-B1rA3HZC.js                                                      \u001b[39m\u001b[1m\u001b[2m    0.17 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.16 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mfilter-CoRzY7X2.js                                                        \u001b[39m\u001b[1m\u001b[2m    0.33 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.26 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372222709Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36marrow-left-CEieaGIw.js                                                    \u001b[39m\u001b[1m\u001b[2m    0.33 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.26 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36msearch-UW-i_Agf.js                                                        \u001b[39m\u001b[1m\u001b[2m    0.34 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.27 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mcircle-stop-D-ImXIx1.js                                                   \u001b[39m\u001b[1m\u001b[2m    0.36 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.28 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372263521Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mcredit-card-Bvqb0AWf.js                                                   \u001b[39m\u001b[1m\u001b[2m    0.38 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.29 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372270471Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mstar-CQV_GENf.js                                                          \u001b[39m\u001b[1m\u001b[2m    0.38 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.29 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mpill-DQzAdNWu.js                                                          \u001b[39m\u001b[1m\u001b[2m    0.38 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.28 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mmail-FPCDWHvh.js                                                          \u001b[39m\u001b[1m\u001b[2m    0.38 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.30 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mflag-C3XOz4co.js                                                          \u001b[39m\u001b[1m\u001b[2m    0.39 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.30 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mbriefcase-ykiG2hR9.js                                                     \u001b[39m\u001b[1m\u001b[2m    0.39 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.30 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.37238987Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mcopy-DmyFhWrd.js                                                          \u001b[39m\u001b[1m\u001b[2m    0.40 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.31 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mcircle-help-UvfcLoPX.js                                                   \u001b[39m\u001b[1m\u001b[2m    0.40 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.30 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mactivity-PNxgpq9M.js                                                      \u001b[39m\u001b[1m\u001b[2m    0.40 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.30 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372432314Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mglobe-iNU_DXDE.js                                                         \u001b[39m\u001b[1m\u001b[2m    0.41 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.29 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mvideo-qdmqfR2g.js                                                         \u001b[39m\u001b[1m\u001b[2m    0.42 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.32 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372447737Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mexternal-link-Bw_vF6Xy.js                                                 \u001b[39m\u001b[1m\u001b[2m    0.42 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.30 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36meye-DJwwOwqx.js                                                           \u001b[39m\u001b[1m\u001b[2m    0.42 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.30 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372451572Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mupload-BojlCZTp.js                                                        \u001b[39m\u001b[1m\u001b[2m    0.43 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.32 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mOuaga3D-D8Pe-yO5.js                                                       \u001b[39m\u001b[1m\u001b[2m    0.44 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.32 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.37249008Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mmic-ipNNHP7k.js                                                           \u001b[39m\u001b[1m\u001b[2m    0.44 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.32 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36maward-Dp0cmxWU.js                                                         \u001b[39m\u001b[1m\u001b[2m    0.44 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.33 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372497441Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mpencil-Dgve4t7R.js                                                        \u001b[39m\u001b[1m\u001b[2m    0.45 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.32 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mflame-DNDe4Gui.js                                                         \u001b[39m\u001b[1m\u001b[2m    0.45 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.33 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36msend-CBfy2kZy.js                                                          \u001b[39m\u001b[1m\u001b[2m    0.46 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.33 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mthumbs-up-CzaDNtp2.js                                                     \u001b[39m\u001b[1m\u001b[2m    0.47 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.34 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.37256318Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36musers-DGs8lErz.js                                                         \u001b[39m\u001b[1m\u001b[2m    0.47 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.32 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mshield-check-H2mTl7pt.js                                                  \u001b[39m\u001b[1m\u001b[2m    0.49 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.35 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mtextarea-e9CanW-T.js                                                      \u001b[39m\u001b[1m\u001b[2m    0.50 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.32 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mlocate-C-h9NH32.js                                                        \u001b[39m\u001b[1m\u001b[2m    0.52 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.31 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mshare-2-CgISR6no.js                                                       \u001b[39m\u001b[1m\u001b[2m    0.52 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.33 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mshield-alert-mpFkow6U.js                                                  \u001b[39m\u001b[1m\u001b[2m    0.52 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.36 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372591493Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mtrash-2-DW9wD6-h.js                                                       \u001b[39m\u001b[1m\u001b[2m    0.53 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.35 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.3725963Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36msnowflake-Dwtmg2WU.js                                                     \u001b[39m\u001b[1m\u001b[2m    0.53 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.34 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372600115Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mcrown-CmKe4P-g.js                                                         \u001b[39m\u001b[1m\u001b[2m    0.53 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.36 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mdroplets-Cp0Gw7gb.js                                                      \u001b[39m\u001b[1m\u001b[2m    0.54 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.39 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mMarker-sX4Ze5mc.js                                                        \u001b[39m\u001b[1m\u001b[2m    0.55 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.31 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mcloud-sun-BMK3XwZd.js                                                     \u001b[39m\u001b[1m\u001b[2m    0.56 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.36 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372639785Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mphone-VvCyWaMN.js                                                         \u001b[39m\u001b[1m\u001b[2m    0.56 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.36 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mcar-BMCymsEH.js                                                           \u001b[39m\u001b[1m\u001b[2m    0.57 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.39 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372658994Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36minput-DPDBjWm_.js                                                         \u001b[39m\u001b[1m\u001b[2m    0.58 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.35 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mmic-off-CSHmdgHa.js                                                       \u001b[39m\u001b[1m\u001b[2m    0.59 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.38 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372673255Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36meye-off-DK98vkHY.js                                                       \u001b[39m\u001b[1m\u001b[2m    0.60 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.38 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mlabel-BA1xyLSa.js                                                         \u001b[39m\u001b[1m\u001b[2m    0.62 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.43 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372690952Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mPopup-DFLXrd6d.js                                                         \u001b[39m\u001b[1m\u001b[2m    0.62 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.37 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mnot-found-DWEVw6Vc.js                                                     \u001b[39m\u001b[1m\u001b[2m    0.63 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.36 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372706205Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mimage-off-TiOX2W6t.js                                                     \u001b[39m\u001b[1m\u001b[2m    0.64 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.40 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mbuilding-BikPuFhn.js                                                      \u001b[39m\u001b[1m\u001b[2m    0.71 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.37 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372739995Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mcard-DTOGTkhz.js                                                          \u001b[39m\u001b[1m\u001b[2m    1.03 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.38 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mWeather-qMjsk6l0.js                                                       \u001b[39m\u001b[1m\u001b[2m    1.39 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.73 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372745283Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mLevelBadge-BlrlqTZt.js                                                    \u001b[39m\u001b[1m\u001b[2m    1.57 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.77 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mdialog-BOmXAGRJ.js                                                        \u001b[39m\u001b[1m\u001b[2m    2.14 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.83 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mprogress-CzA3pM7h.js                                                      \u001b[39m\u001b[1m\u001b[2m    2.16 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.07 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mModerationDialog-1ycKiYw0.js                                              \u001b[39m\u001b[1m\u001b[2m    2.21 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   0.92 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372781968Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mLocationValidator-wmAB-h13.js                                             \u001b[39m\u001b[1m\u001b[2m    2.46 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.04 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36museMutation-jqE6lrsz.js                                                   \u001b[39m\u001b[1m\u001b[2m    3.22 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.31 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372805434Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mVoiceSearchInput-D_-USKEP.js                                              \u001b[39m\u001b[1m\u001b[2m    3.23 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.52 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mtabs-BTBuFPim.js                                                          \u001b[39m\u001b[1m\u001b[2m    3.35 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.44 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mLeaderboard-CMDeURvI.js                                                   \u001b[39m\u001b[1m\u001b[2m    3.41 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.50 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36malert-dialog-OIwIPEpN.js                                                  \u001b[39m\u001b[1m\u001b[2m    3.73 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.25 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372839465Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mswitch-D4iP9ShU.js                                                        \u001b[39m\u001b[1m\u001b[2m    4.18 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.80 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mProfilPublic-DwyhpwwJ.js                                                  \u001b[39m\u001b[1m\u001b[2m    4.48 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.75 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372853305Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mFeed-CfNeJPkA.js                                                          \u001b[39m\u001b[1m\u001b[2m    4.56 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.81 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mHotels-D_XU0w0B.js                                                        \u001b[39m\u001b[1m\u001b[2m    4.59 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.48 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mSignalementDetail-BzB2Xl_J.js                                             \u001b[39m\u001b[1m\u001b[2m    4.63 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.65 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mPageStatCard-CpiE7ovD.js                                                  \u001b[39m\u001b[1m\u001b[2m    4.82 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.62 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mEmergencyPanel-YKuqhMPQ.js                                                \u001b[39m\u001b[1m\u001b[2m    5.05 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   2.35 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mLanding-CzCiMqfb.js                                                       \u001b[39m\u001b[1m\u001b[2m    5.25 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.65 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372964202Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mRestaurants-C_90nSit.js                                                   \u001b[39m\u001b[1m\u001b[2m    5.31 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.81 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mSOS-gGMWW5fW.js                                                           \u001b[39m\u001b[1m\u001b[2m    5.72 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.71 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372976931Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mNotifications-QxWsRBLg.js                                                 \u001b[39m\u001b[1m\u001b[2m    6.01 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.96 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mradio-group-Cr5nQKWG.js                                                   \u001b[39m\u001b[1m\u001b[2m    6.08 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   2.42 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.372999695Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mTrackingLive-Bh_sJih0.js                                                  \u001b[39m\u001b[1m\u001b[2m    6.49 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   2.50 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mSignalementCard-CpfYqcV_.js                                               \u001b[39m\u001b[1m\u001b[2m    6.73 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   2.45 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373011142Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mContribuer-CNk9q0KU.js                                                    \u001b[39m\u001b[1m\u001b[2m    6.88 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   1.90 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mregions-DnQjP_Gh.js                                                       \u001b[39m\u001b[1m\u001b[2m    7.07 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   2.43 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373037572Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mSignalementStatusControl-BxEEBM4-.js                                      \u001b[39m\u001b[1m\u001b[2m    7.32 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   2.73 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mLiveTrack-Bn5Z672Q.js                                                     \u001b[39m\u001b[1m\u001b[2m    7.35 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   2.61 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.37304306Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mEditSignalementDialog-DAxv35eW.js                                         \u001b[39m\u001b[1m\u001b[2m    7.60 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   2.32 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.37305616Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mCine-uqCAMWk9.js                                                          \u001b[39m\u001b[1m\u001b[2m    7.99 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   2.51 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373059965Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mBulletin-DiZcCHlT.js                                                      \u001b[39m\u001b[1m\u001b[2m    9.23 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   3.34 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mChatBot-BkrVLJao.js                                                       \u001b[39m\u001b[1m\u001b[2m    9.32 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   3.65 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373077792Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mFiabilite-BVD4bAl1.js                                                     \u001b[39m\u001b[1m\u001b[2m   10.75 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   2.63 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mSOSPublier-CQftp3ot.js                                                    \u001b[39m\u001b[1m\u001b[2m   11.37 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   4.13 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mEvents-DwqdVlv_.js                                                        \u001b[39m\u001b[1m\u001b[2m   11.99 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   4.18 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mUniversites-BDRFEYT8.js                                                   \u001b[39m\u001b[1m\u001b[2m   12.14 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   4.46 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mConditions-DfAe4t4q.js                                                    \u001b[39m\u001b[1m\u001b[2m   13.61 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   3.37 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mscroll-area-DTzwEWMk.js                                                   \u001b[39m\u001b[1m\u001b[2m   13.63 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   4.29 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373141778Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mHopitaux-DwVCaPx0.js                                                      \u001b[39m\u001b[1m\u001b[2m   13.72 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   3.80 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373147417Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mCimetieres-Cj3_bdP4.js                                                    \u001b[39m\u001b[1m\u001b[2m   14.65 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   4.57 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mMairiesPrefectures-Ck9msJvU.js                                            \u001b[39m\u001b[1m\u001b[2m   15.33 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   4.54 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373164933Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mStations-OiZJW6r4.js                                                      \u001b[39m\u001b[1m\u001b[2m   15.43 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   5.05 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mfr-Dac6_s0H.js                                                            \u001b[39m\u001b[1m\u001b[2m   15.49 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   4.88 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373192144Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mMarches-DWkBeq9g.js                                                       \u001b[39m\u001b[1m\u001b[2m   15.99 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   4.82 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mLieuxDeCulte-jzBLmKZe.js                                                  \u001b[39m\u001b[1m\u001b[2m   16.51 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   5.04 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373200667Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mPharmaciesDuFaso-CavTezFp.js                                              \u001b[39m\u001b[1m\u001b[2m   16.53 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   5.30 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mConfidentialite-jur_Y3X4.js                                               \u001b[39m\u001b[1m\u001b[2m   16.64 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   3.96 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373233005Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mConnexion-COPCfO1g.js                                                     \u001b[39m\u001b[1m\u001b[2m   16.82 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   6.33 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mSonabelOnea-DHIHWVEP.js                                                   \u001b[39m\u001b[1m\u001b[2m   18.11 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   5.31 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373238744Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mPlacesListPage-QDJDjZal.js                                                \u001b[39m\u001b[1m\u001b[2m   18.47 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   5.97 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mSurveillance-jMm9Yg9F.js                                                  \u001b[39m\u001b[1m\u001b[2m   18.67 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   5.90 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.37325593Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mPublier-BGKKfRs4.js                                                       \u001b[39m\u001b[1m\u001b[2m   20.00 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   7.02 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mMinisteres-D9ZUuZcb.js                                                    \u001b[39m\u001b[1m\u001b[2m   20.32 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   4.66 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373279675Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mAPropos-Coc_KxlJ.js                                                       \u001b[39m\u001b[1m\u001b[2m   21.00 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   4.73 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mStreetView-C4J8avZy.js                                                    \u001b[39m\u001b[1m\u001b[2m   21.99 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   7.29 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mUrgences-hi6Obz-n.js                                                      \u001b[39m\u001b[1m\u001b[2m   22.00 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   7.51 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mBoutiques-DcmcMBA6.js                                                     \u001b[39m\u001b[1m\u001b[2m   22.04 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   7.15 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.37332284Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mGuide-CUE5b2nD.js                                                         \u001b[39m\u001b[1m\u001b[2m   22.75 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   6.52 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mselect-CoLtRAjT.js                                                        \u001b[39m\u001b[1m\u001b[2m   22.90 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   7.88 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mBoutiquesMarchés-BDNRVbMq.js                                              \u001b[39m\u001b[1m\u001b[2m   25.64 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   5.16 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373335459Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mBanques-M9Lw4yEr.js                                                       \u001b[39m\u001b[1m\u001b[2m   26.58 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   6.49 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mpurify.es-BnINGy_Y.js                                                     \u001b[39m\u001b[1m\u001b[2m   28.93 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:  11.14 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373370481Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mTelephonie-DySXOxR-.js                                                    \u001b[39m\u001b[1m\u001b[2m   29.53 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   7.49 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mStationsService-Cg96dVtG.js                                               \u001b[39m\u001b[1m\u001b[2m   39.93 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   7.66 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373382029Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mGares-Qy7y1MSt.js                                                         \u001b[39m\u001b[1m\u001b[2m   50.31 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:   9.97 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.37338931Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mProfil-DqSki_U3.js                                                        \u001b[39m\u001b[1m\u001b[2m   54.29 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:  16.02 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373394898Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mCarte-CzsW7u-B.js                                                         \u001b[39m\u001b[1m\u001b[2m   76.47 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:  23.90 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mHome-D8iMoZkt.js                                                          \u001b[39m\u001b[1m\u001b[2m   77.78 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:  23.41 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373411082Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mWeatherAlerts-C_Jp597B.js                                                 \u001b[39m\u001b[1m\u001b[2m  147.54 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:  46.27 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mindex.es-CuW8YVN3.js                                                      \u001b[39m\u001b[1m\u001b[2m  150.85 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:  51.62 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373424963Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mleaflet-CVUKr1sG.js                                                       \u001b[39m\u001b[1m\u001b[2m  153.79 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:  44.92 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mschema-D-1-Wjga.js                                                        \u001b[39m\u001b[1m\u001b[2m  160.96 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:  43.59 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mhtml2canvas.esm-CBrSDip1.js                                               \u001b[39m\u001b[1m\u001b[2m  201.42 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:  48.03 kB\u001b[22m\n\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mjspdf.es.min-C0r7d8qv.js                                                  \u001b[39m\u001b[1m\u001b[2m  390.44 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip: 128.77 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.37346953Z"
+    },
+    {
+      "message": "\u001b[2m../dist/public/\u001b[22m\u001b[2massets/\u001b[22m\u001b[36mindex-BfOm6a2N.js                                                         \u001b[39m\u001b[1m\u001b[33m  551.72 kB\u001b[39m\u001b[22m\u001b[2m │ gzip: 172.73 kB\u001b[22m\n",
+      "timestamp": "2026-09-05T12:39:57.373522369Z"
+    },
+    {
+      "message": "\u001b[33m\n(!) Some chunks are larger than 500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.\u001b[39m\n",
+      "timestamp": "2026-09-05T12:39:57.373578824Z"
+    },
+    {
+      "message": "\u001b[32m✓ built in 10.68s\u001b[39m\n",
+      "timestamp": "2026-09-05T12:39:57.374033015Z"
+    },
+    {
+      "message": "/app/node_modules/esbuild/bin/esbuild:1\nELF\u0002\u0001\u0001\n^\n\nSyntaxError: Invalid or unexpected token\n    at wrapSafe (node:internal/modules/cjs/loader:1464:18)\n    at Module._compile (node:internal/modules/cjs/loader:1495:20)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)\n    at Module.load (node:internal/modules/cjs/loader:1266:32)\n    at Module._load (node:internal/modules/cjs/loader:1091:12)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)\n    at node:internal/main/run_main_module:28:49\n\nNode.js v20.20.0\n",
+      "timestamp": "2026-09-05T12:39:57.671700013Z"
+    }
+  ]
+}

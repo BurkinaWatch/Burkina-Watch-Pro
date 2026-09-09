@@ -1,0 +1,261 @@
+Titre du projet :
+Burkina Watch – Application Nationale de Veille Citoyenne et d’Alerte Sociale
+
+🌍 Contexte et objectif
+
+Développe une application mobile complète (Android + iOS) et web responsive appelée Burkina Watch, destinée au Burkina Faso.
+Langue : Français uniquement.
+
+L’objectif est de créer un outil citoyen qui permet :
+
+De signaler anonymement des faits anormaux (accidents, agressions, corruption, problèmes sociaux ou environnementaux).
+
+De demander ou offrir de l’aide via une fonction SOS.
+
+De visualiser en temps réel tous les signalements sur une carte interactive.
+
+De permettre aux institutions publiques (Police, Mairie, Action Sociale, etc.) d’agir via un espace professionnel sécurisé.
+
+L’application doit être sérieuse, professionnelle, fiable et simple à utiliser, même avec une faible connexion Internet.
+
+🧱 FONCTIONNALITÉS PRINCIPALES À CODER
+1. Authentification
+
+Inscription / Connexion via e-mail, numéro ou Google.
+
+Option “Continuer en tant qu’invité” (mode anonyme).
+
+Vérification SMS via Firebase Auth (ou équivalent).
+
+2. Publication de signalement
+
+Capture photo / vidéo depuis la caméra.
+
+Champs à remplir :
+
+Titre
+
+Description
+
+Catégorie (Sécurité, Santé, Environnement, Corruption, Infrastructure…)
+
+Localisation automatique (géolocalisation GPS, modifiable).
+
+Case à cocher : “Publier anonymement”.
+
+Vérification IA automatique pour filtrer contenu inapproprié.
+
+Envoi vers la base de données avec date, auteur (ou “anonyme”), et coordonnées GPS.
+
+3. Carte interactive
+
+Affichage des signalements sur carte (Google Maps ou OpenStreetMap).
+
+Points colorés selon catégorie :
+
+🔴 Urgence
+
+🟢 Sécurité
+
+🟡 Santé
+
+🟣 Environnement
+
+⚫ Corruption
+
+Filtres dynamiques (catégorie, date, distance).
+
+Clic sur un point → ouvre la fiche détaillée du signalement (photo, titre, description, date, statut).
+
+4. Section SOS
+
+Page spéciale “🚨 SOS – Assistance & Urgences”.
+
+3 sous-onglets :
+
+“Personnes recherchées”
+
+“Demandes d’aide”
+
+“Urgences signalées”
+
+Bouton flottant “🔴 Lancer un SOS”.
+
+Formulaire rapide :
+
+Description de l’urgence
+
+Photo / vidéo
+
+Localisation
+
+Niveau d’urgence (faible, moyen, critique)
+
+Possibilité de partager directement sur WhatsApp ou SMS.
+
+Les SOS apparaissent en rouge clignotant sur la carte.
+
+5. Fil d’actualité
+
+Liste verticale des signalements récents.
+
+Chaque carte contient :
+
+Photo
+
+Titre
+
+Catégorie
+
+Localisation
+
+Date
+
+Boutons ❤️ (aimer), 💬 (commenter), 🔁 (partager), ⚠️ (signaler).
+
+Filtrage par “Récents / Populaires / SOS”.
+
+6. Espace Institutions
+
+Accès réservé par identifiant spécial (admin).
+
+Tableau de bord :
+
+Statistiques globales (signalements, zones, types).
+
+Liste des signalements en attente / traités / résolus.
+
+Boutons : “Répondre”, “Classer”, “Résolu”.
+
+Export PDF ou CSV des rapports.
+
+7. Notifications
+
+Notification push pour :
+
+Nouveau signalement dans la zone.
+
+SOS proche.
+
+Changement d’état d’un signalement (pris en charge / résolu).
+
+8. Profil utilisateur
+
+Affichage nom, photo, ou “Utilisateur anonyme”.
+
+Historique de ses publications.
+
+Paramètres :
+
+Mode clair/sombre
+
+Notifications
+
+Langue (français par défaut)
+
+9. Sécurité et modération
+
+IA de modération pour bloquer les contenus violents, diffamatoires ou illégaux.
+
+Système de “signalement d’abus”.
+
+Données chiffrées.
+
+Option “anonymiser” les publications sensibles.
+
+🧠 STRUCTURE TECHNIQUE
+Élément	Technologie recommandée
+Frontend mobile	React Native (Expo)
+Frontend web	React + TailwindCSS
+Backend	Node.js + Express (API REST)
+Base de données	Firebase Firestore ou MongoDB Atlas
+Auth & Sécurité	Firebase Auth (avec OTP)
+Stockage média	Firebase Storage ou AWS S3
+Notifications push	Firebase Cloud Messaging
+Modération IA	OpenAI Vision ou Replit Moderation
+Cartographie	Google Maps API ou OpenStreetMap
+Admin Dashboard	React Web (interface dédiée)
+🎨 IDENTITÉ VISUELLE
+
+Couleurs :
+
+Rouge : #E30613
+
+Jaune : #FFD100
+
+Vert : #007A33
+
+Blanc : #FFFFFF
+
+Style :
+
+Interface claire, sobre, institutionnelle.
+
+Icônes minimalistes, arrondis doux, boutons contrastés.
+
+Logo :
+
+Carte du Burkina avec un œil stylisé au centre.
+
+Slogan : “Voir. Agir. Protéger.”
+
+🧩 STRUCTURE DU PROJET
+/frontend
+  /screens
+    Accueil.js
+    Carte.js
+    Publier.js
+    SOS.js
+    FilActualite.js
+    Profil.js
+    AdminDashboard.js
+  /components
+    Button.js
+    CardSignalement.js
+    Header.js
+    NavBar.js
+  /assets
+    logo.png
+/backend
+  app.js
+  routes/
+  models/
+  controllers/
+  config/
+  middlewares/
+database/
+README.md
+
+🔐 Règles et bonnes pratiques
+
+Interface 100 % en français, y compris les messages d’erreur et de succès.
+
+Optimisation pour faible connectivité (upload compressé, cache local).
+
+Dark mode disponible.
+
+Utiliser Autolayout et responsive design pour l’adaptation mobile.
+
+Code clair, commenté, et modulable.
+
+🎯 Sortie attendue
+
+Créer une application fonctionnelle (frontend + backend + base de données) avec :
+
+Carte interactive
+
+Formulaire de signalement
+
+Section SOS
+
+Espace admin institutionnel
+
+Notifications push
+
+Authentification et anonymat
+
+Interface 100 % française
+
+Modération automatique
+
+Le code doit être structuré, maintenable, documenté, et prêt à être compilé sur Android et iOS.

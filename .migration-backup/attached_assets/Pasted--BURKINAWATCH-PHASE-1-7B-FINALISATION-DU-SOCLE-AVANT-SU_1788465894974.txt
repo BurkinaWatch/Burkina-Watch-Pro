@@ -1,0 +1,714 @@
+# BURKINAWATCH — PHASE 1.7B
+
+## FINALISATION DU SOCLE AVANT SURVEILLANCE
+
+Tu poursuis la Phase 1.7 de BurkinaWatch.
+
+Le rapport Phase 1.7 a conclu :
+
+```text
+NOT READY
+```
+
+Cette phase 1.7B doit uniquement résoudre les blocages restants.
+
+## OBJECTIF
+
+Obtenir un état :
+
+```text
+READY WITH CONDITIONS
+```
+
+ou, si tout est correctement validé :
+
+```text
+READY
+```
+
+avant d'autoriser une future Phase 2 dédiée à Surveillance.
+
+---
+
+# RÈGLES ABSOLUES
+
+NE PAS :
+
+* développer Surveillance ;
+* créer Camera ;
+* créer RTSP ;
+* créer ONVIF ;
+* créer WebRTC ;
+* installer MediaMTX ;
+* installer FFmpeg ;
+* installer TURN ;
+* créer du streaming ;
+* créer de l'enregistrement vidéo ;
+* créer de l'IA vidéo ;
+* modifier les données métier ;
+* supprimer une table ;
+* recréer une table existante ;
+* réinitialiser PostgreSQL ;
+* exécuter `db:push`;
+* exécuter `db:push --force`;
+* rejouer automatiquement les anciennes migrations ;
+* utiliser `DROP TABLE`;
+* utiliser `TRUNCATE`;
+* forcer une installation npm vulnérable ;
+* contourner une politique de sécurité npm ;
+* mettre Node.js à jour uniquement pour contourner le problème KMS.
+
+NE DEMANDE JAMAIS à l'utilisateur de fournir un secret.
+
+NE JAMAIS afficher de secret dans le rapport.
+
+---
+
+# 1. RAILWAY EST LA BASE UNIQUE DE PRODUCTION
+
+Conserver la décision :
+
+```text
+Railway PostgreSQL = production
+```
+
+Backend :
+
+```text
+Production → Railway PostgreSQL
+```
+
+Drizzle :
+
+```text
+Production → Railway PostgreSQL
+```
+
+Le fallback `DATABASE_URL` peut continuer à exister uniquement pour le développement local.
+
+Ne modifie pas les données Railway.
+
+---
+
+# 2. REFRESH_TOKEN_SALT
+
+Le rapport indique :
+
+```text
+REFRESH_TOKEN_SALT = NON CONFIGURÉ
+```
+
+Le code exige désormais ce secret en production.
+
+Vérifie uniquement que le code est correct.
+
+NE CRÉE PAS une valeur dans le dépôt.
+
+NE GÉNÈRE PAS de secret dans le code.
+
+NE L'AFFICHE PAS.
+
+La valeur doit être ajoutée manuellement par l'administrateur dans le gestionnaire de secrets Railway.
+
+Si elle est absente de l'environnement actuel, indique simplement :
+
+```text
+ACTION ADMINISTRATEUR REQUISE :
+Configurer REFRESH_TOKEN_SALT dans Railway.
+```
+
+Ne bloque pas le travail du code uniquement parce que l'utilisateur doit encore renseigner manuellement le secret.
+
+---
+
+# 3. CHIFFREMENT : CHOIX DE PRODUCTION
+
+Le rapport indique :
+
+```text
+@google-cloud/kms@5.2.1
+```
+
+bloqué par la politique de sécurité npm.
+
+IMPORTANT :
+
+NE contourne PAS cette protection.
+
+NE force PAS l'installation.
+
+NE désactive PAS les protections npm.
+
+NE passe PAS Node.js 20 vers Node.js 22 uniquement pour résoudre cela.
+
+NE remplace PAS une dépendance par une version arbitraire.
+
+## Solution de cette phase
+
+Le système doit pouvoir fonctionner de manière sécurisée avec :
+
+```text
+MASTER_ENCRYPTION_KEY
+```
+
+comme clé maître stable lorsque KMS n'est pas activé.
+
+Vérifie que le code fonctionne ainsi :
+
+```text
+KMS_ENABLED=false
++
+MASTER_ENCRYPTION_KEY configurée dans Railway
+```
+
+La clé réelle doit rester uniquement dans les secrets Railway.
+
+Ne l'affiche jamais.
+
+Ne l'ajoute jamais au dépôt.
+
+---
+
+# 4. COMPORTEMENT KMS
+
+Le code doit avoir un comportement clair :
+
+### KMS activé
+
+Si :
+
+```text
+KMS_ENABLED=true
+```
+
+alors toutes les variables KMS obligatoires doivent être présentes.
+
+Sinon :
+
+```text
+FAIL FAST
+```
+
+avec un message ne contenant aucun secret.
+
+### KMS désactivé
+
+Si :
+
+```text
+KMS_ENABLED=false
+```
+
+alors :
+
+```text
+MASTER_ENCRYPTION_KEY
+```
+
+doit être obligatoire en production.
+
+Si elle est absente :
+
+```text
+FAIL FAST
+```
+
+Ne jamais générer automatiquement une clé aléatoire au démarrage.
+
+---
+
+# 5. TEST AES-256-GCM SANS KMS
+
+Le test de chiffrement doit être capable de tester le mécanisme local sans dépendre de Google KMS.
+
+Créer/exécuter un test isolé qui vérifie :
+
+```text
+MASTER_ENCRYPTION_KEY
+        ↓
+AES-256-GCM
+        ↓
+encrypt
+        ↓
+ciphertext
+        ↓
+decrypt
+        ↓
+plaintext original
+```
+
+Puis tester :
+
+```text
+ciphertext modifié → échec
+auth tag modifiée → échec
+mauvaise clé → échec
+```
+
+Le test ne doit afficher aucune clé.
+
+Objectif :
+
+```text
+AES-256-GCM LOCAL TEST = PASS
+```
+
+Si le test reste impossible, explique précisément pourquoi.
+
+---
+
+# 6. KMS
+
+Concernant `@google-cloud/kms` :
+
+Ne force aucune installation vulnérable.
+
+Ne contourne aucune politique npm.
+
+Ne change pas Node.js.
+
+Si KMS reste indisponible :
+
+```text
+KMS = NON OPÉRATIONNEL
+```
+
+mais :
+
+```text
+MASTER_ENCRYPTION_KEY FALLBACK = OPÉRATIONNEL
+```
+
+doit pouvoir être validé.
+
+Le rapport devra distinguer clairement :
+
+```text
+Chiffrement applicatif opérationnel
+```
+
+et :
+
+```text
+KMS non encore opérationnel
+```
+
+KMS pourra être traité dans une phase ultérieure dédiée si nécessaire.
+
+---
+
+# 7. SECRETS HISTORIQUES
+
+Effectue uniquement un audit permettant d'identifier si des credentials sensibles ont historiquement été commités.
+
+NE montre aucune valeur.
+
+NE recopie aucun secret.
+
+Produis seulement :
+
+```text
+Secret historique détecté : OUI/NON
+Type : PostgreSQL/OAuth/API/etc.
+Action : rotation requise / aucune action
+```
+
+IMPORTANT :
+
+Le code ne doit pas tenter automatiquement de révoquer des credentials externes.
+
+La rotation des credentials externes est une ACTION ADMINISTRATEUR.
+
+---
+
+# 8. BASELINE DRIZZLE — PRÉPARATION CONTRÔLÉE
+
+Le problème historique est :
+
+```text
+__drizzle_migrations absent
+0000 présent dans le dépôt
+0001 présent
+0002 présent
+0003 présent
+```
+
+La base Railway existante est la référence.
+
+NE REJOUE PAS :
+
+```text
+0000
+0001
+0002
+0003
+```
+
+automatiquement.
+
+NE SUPPRIME PAS ces fichiers historiques.
+
+NE LES EXÉCUTE PAS sur Railway.
+
+## Objectif
+
+Créer une stratégie de baseline qui représente l'état ACTUEL de Railway.
+
+Cette baseline doit être :
+
+```text
+forward-only
+non destructive
+```
+
+Elle ne doit pas recréer les 29 tables existantes.
+
+Elle ne doit pas supprimer de données.
+
+Elle ne doit pas faire de `DROP`.
+
+Elle ne doit pas faire de `TRUNCATE`.
+
+Elle ne doit pas faire de `db:push`.
+
+Si une baseline peut être créée proprement sans toucher à Railway, prépare-la.
+
+Sinon, arrête-toi avant toute opération risquée et explique exactement ce qui manque.
+
+---
+
+# 9. MIGRATION 0004
+
+Le fichier :
+
+```text
+migrations/0004_runtime_alignment_draft.sql
+```
+
+existe actuellement.
+
+Inspecte-le.
+
+Il doit uniquement préparer :
+
+* les 9 indexes manquants ;
+* le default `gen_random_uuid()` de `online_sessions.id`.
+
+Vérifie qu'il ne contient aucune opération destructive.
+
+Ne l'applique PAS automatiquement sur Railway.
+
+Avant toute application future, il faudra valider :
+
+1. structure actuelle ;
+2. syntaxe SQL ;
+3. impact ;
+4. existence éventuelle des indexes ;
+5. compatibilité PostgreSQL ;
+6. absence de verrouillage problématique ;
+7. absence de perte de données.
+
+Pour cette phase, la migration peut rester non appliquée.
+
+---
+
+# 10. VALIDATION DES 9 INDEXES
+
+Vérifie les 9 indexes :
+
+```text
+commentaires_signalement_id_idx
+commentaires_user_id_idx
+notifications_user_id_read_idx
+notifications_user_id_created_at_idx
+online_sessions_user_id_idx
+signalements_user_id_idx
+signalements_created_at_idx
+signalements_statut_idx
+tracking_sessions_user_id_active_idx
+```
+
+Vérifie qu'ils correspondent toujours exactement au schéma actuel.
+
+Ne les crée pas directement sur Railway pendant cette phase.
+
+Prépare la migration pour une future application contrôlée.
+
+---
+
+# 11. ONLINE_SESSIONS UUID
+
+Vérifie :
+
+```text
+online_sessions.id
+```
+
+et le besoin :
+
+```sql
+DEFAULT gen_random_uuid()
+```
+
+Vérifie que cette correction est :
+
+* non destructive ;
+* compatible avec les lignes existantes ;
+* compatible avec le code ;
+* compatible avec PostgreSQL Railway.
+
+Prépare uniquement la migration.
+
+Ne l'applique pas automatiquement.
+
+---
+
+# 12. VÉRIFICATION DES SCRIPTS
+
+Confirme que les scripts suivants ne peuvent plus effectuer automatiquement une opération destructive :
+
+```text
+setup.sh
+setup_new.sh
+install_new.bat
+```
+
+et que :
+
+```text
+npm run db:push
+```
+
+reste désactivé ou protégé.
+
+Le workflow recommandé doit être :
+
+```text
+schema change
+     ↓
+migration générée
+     ↓
+review humain
+     ↓
+validation
+     ↓
+application contrôlée
+```
+
+et non :
+
+```text
+code change
+     ↓
+db:push --force
+```
+
+---
+
+# 13. TESTS
+
+Exécute :
+
+```text
+npm run check
+```
+
+Puis :
+
+```text
+npm run build
+```
+
+Puis les tests de sécurité existants.
+
+Puis le test AES-256-GCM local.
+
+Puis :
+
+```text
+git diff --check
+```
+
+Ne considère pas le projet validé uniquement parce que le build passe.
+
+---
+
+# 14. CONTRÔLE FINAL
+
+Vérifie que :
+
+```text
+Railway PostgreSQL
+        ↑
+        │
+Backend
+        │
+        └── Drizzle
+```
+
+utilisent bien la même base en production.
+
+Vérifie :
+
+```text
+29 tables
+29 primary keys
+22 foreign keys
+6 unique constraints
+```
+
+et les 9 indexes toujours identifiés comme manquants.
+
+Vérifie également :
+
+```text
+Aucune donnée métier supprimée
+Aucune table supprimée
+Aucune migration destructive exécutée
+Aucun db:push exécuté
+Aucun db:push --force exécuté
+```
+
+---
+
+# 15. SURVEILLANCE
+
+Confirme une dernière fois qu'aucun code suivant n'a été ajouté :
+
+```text
+Camera
+RTSP
+ONVIF
+WebRTC
+MediaMTX
+FFmpeg
+TURN
+streaming
+recording
+video AI
+```
+
+---
+
+# 16. RAPPORT FINAL
+
+Retourne exactement :
+
+## A. Railway PostgreSQL
+
+```text
+Production DB = Railway PostgreSQL
+Backend = Railway
+Drizzle = Railway
+```
+
+## B. Secrets
+
+Tableau :
+
+```text
+SESSION_SECRET
+REFRESH_TOKEN_SALT
+MASTER_ENCRYPTION_KEY
+KMS
+```
+
+sans afficher les valeurs.
+
+Pour chaque élément :
+
+```text
+OK
+ACTION ADMIN
+BLOQUÉ
+```
+
+## C. Chiffrement
+
+Indique :
+
+```text
+AES-256-GCM local : PASS/FAIL
+KMS : OPÉRATIONNEL/NON OPÉRATIONNEL
+```
+
+## D. Drizzle
+
+Indique :
+
+```text
+Baseline préparée : OUI/NON
+Baseline appliquée à Railway : OUI/NON
+```
+
+La réponse doit être :
+
+```text
+NON
+```
+
+si aucune application n'a été faite.
+
+## E. Migration corrective
+
+Indique :
+
+```text
+0004 préparée : OUI/NON
+0004 validée : OUI/NON
+0004 appliquée : OUI/NON
+```
+
+## F. Tests
+
+Donne :
+
+```text
+npm run check
+npm run build
+security tests
+AES-256-GCM tests
+git diff --check
+```
+
+## G. Secrets historiques
+
+Indique uniquement si une rotation administrateur reste nécessaire.
+
+## H. Surveillance
+
+```text
+Aucun développement Surveillance effectué.
+```
+
+## I. Verdict
+
+Choisir :
+
+```text
+READY
+```
+
+uniquement si tous les blocages sont réellement résolus.
+
+Sinon :
+
+```text
+READY WITH CONDITIONS
+```
+
+si seuls des éléments administratifs externes restent à effectuer, par exemple la configuration manuelle de secrets Railway.
+
+Sinon :
+
+```text
+NOT READY
+```
+
+Si une opération présente un risque pour les données Railway, ARRÊTE-TOI.
+
+NE PRENDS AUCUNE INITIATIVE DESTRUCTIVE.
+
+Après ce rapport, ARRÊTE-TOI.
+
+N'entame aucune Phase 2 Surveillance sans validation humaine explicite.

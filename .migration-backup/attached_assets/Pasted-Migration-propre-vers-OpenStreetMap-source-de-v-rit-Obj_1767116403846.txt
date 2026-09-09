@@ -1,0 +1,147 @@
+Migration propre vers OpenStreetMap (source de vérité)
+
+Objectif :
+Faire d’OpenStreetMap (OSM) la source principale et fiable des données de lieux (pharmacies, stations-service, restaurants, marchés, boutiques) dans BurkinaWatch, tout en conservant Google Maps uniquement pour l’itinéraire.
+
+1️⃣ Clarifier les rôles des services cartographiques
+
+OpenStreetMap (Overpass API) :
+
+Source officielle des données de lieux
+
+Récupération : nom, type, coordonnées GPS, adresse
+
+Leaflet :
+
+Affichage des cartes
+
+Google Maps :
+
+Navigation uniquement (ouvrir l’itinéraire externe)
+
+Aucune donnée Google ne doit être stockée en base
+
+Mapillary :
+
+Contexte visuel terrain (street view citoyen)
+
+2️⃣ Base de données — adaptation sans casse
+
+Dans PostgreSQL (Drizzle ORM), ajouter ou compléter les champs suivants pour chaque lieu :
+
+source (enum : 'OSM', 'COMMUNAUTE', 'OFFICIEL')
+
+confidence_score (float, par défaut 0.5)
+
+verified (boolean)
+
+last_updated (timestamp)
+
+Aucune suppression de données existantes.
+Les nouvelles données doivent progressivement remplacer les anciennes.
+
+3️⃣ Récupération des lieux via OpenStreetMap
+
+Créer un service backend services/osmService.ts :
+
+Utiliser Overpass API
+
+Requêter par :
+
+type de lieu (pharmacy, fuel, restaurant, marketplace, shop)
+
+zone administrative (Burkina Faso / régions)
+
+Mapper les résultats vers le modèle interne de BurkinaWatch
+
+Marquer toutes les entrées comme :
+
+source = 'OSM'
+
+confidence_score = 0.6
+
+4️⃣ Migration progressive des données existantes
+
+Pour chaque lieu existant :
+
+Comparer coordonnées / nom avec OSM
+
+Si correspondance trouvée :
+
+Mettre à jour les infos depuis OSM
+
+Augmenter confidence_score
+
+Sinon :
+
+Conserver l’entrée avec statut “À vérifier”
+
+Aucune interruption du service pendant la migration.
+
+5️⃣ Interface utilisateur — transparence & confiance
+
+Sur chaque fiche de lieu :
+
+Afficher :
+
+Badge source : OSM / Officiel / Communauté
+
+Badge état : Vérifié / À vérifier
+
+Ajouter deux actions :
+
+“Confirmer l’information”
+
+“Signaler une erreur”
+
+Règles :
+
+3 confirmations → verified = true, confidence_score ≥ 0.8
+
+2 signalements → verified = false, statut “À vérifier”
+
+6️⃣ Google Maps — usage autorisé uniquement
+
+Supprimer toute récupération de données depuis Google Maps API
+
+Conserver uniquement :
+
+Bouton “S’y rendre”
+
+Lien externe vers Google Maps avec coordonnées GPS
+
+Aucune donnée Google ne doit être stockée, ni analysée, ni modifiée.
+
+7️⃣ Mode offline & cache
+
+Les données OSM récupérées doivent être :
+
+stockées en base
+
+synchronisées avec IndexedDB (TanStack Query)
+
+L’application doit fonctionner même sans connexion
+
+8️⃣ Qualité, sécurité et conformité
+
+Logger les erreurs Overpass API
+
+Implémenter un fallback sur les données existantes
+
+Documenter la politique de données cartographiques
+
+Ne jamais exposer les clés API côté client
+
+🎯 Résultat attendu
+
+Données plus fiables et vérifiables
+
+Zéro dépendance critique à Google
+
+Respect des conditions légales
+
+Crédibilité renforcée pour un usage institutionnel
+
+Aucune régression fonctionnelle
+
+Implémente cette migration proprement, sans casser l’existant, avec un code clair, commenté et évolutif.

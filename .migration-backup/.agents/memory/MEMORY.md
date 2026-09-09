@@ -1,0 +1,10 @@
+- [Database and KMS readiness](phase15-database-kms.md) — runtime and development databases can diverge; migration provenance and KMS installation need explicit validation before sensitive features.
+- [Railway Railpack runtime pinning](railway-railpack.md) — pin Node/npm in package metadata because Railpack may ignore the Nixpacks runtime selection.
+- [Encryption bootstrap](encryption-bootstrap.md) — the encryption singleton validates its key at import time; tests and workflows must provide it before loading server modules.
+- [Phase 5 media gateway](phase5-media-gateway.md) — MediaMTX 1.12.x uses singular origin configuration; FFmpeg should publish to its RTSP listener in this environment.
+- [Phase 6 real-camera guardrails](phase6-real-camera.md) — real RTSP support stays gated to non-production, with explicit private-network access and opaque MediaMTX paths.
+- [Media authorization boundary](media-auth-authorization.md) — MediaMTX administration bearers must never bypass scoped agent publication authorization.
+- [StreetView durable storage](streetview-storage.md) — production media uses private S3-compatible storage with owner-scoped signed multipart sessions.
+- [StreetView processing queue](streetview-processing.md) — PostgreSQL jobs and expiring leases decouple preprocessing from the API and stop before 3D.
+- [StreetView Phase 14 gate](streetview-phase14-gate.md) — CPU preparation is safe to validate separately; the worker requires explicit post-migration activation and no scene exists without a validated adapter.
+- [Railway preview schema validation](railway-preview-schema.md) — the app may use Railway while the built-in database tool targets another database; validate migrations without assuming those schemas match.

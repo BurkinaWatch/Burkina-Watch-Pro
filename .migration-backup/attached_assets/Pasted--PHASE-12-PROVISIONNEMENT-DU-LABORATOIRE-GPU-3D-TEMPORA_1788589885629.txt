@@ -1,0 +1,524 @@
+# PHASE 12 — PROVISIONNEMENT DU LABORATOIRE GPU 3D TEMPORAIRE
+
+## CONTEXTE
+
+Les Phases 8 à 11 ont établi le même constat :
+
+`NO-GO`
+
+non pas à cause d'un échec scientifique du pipeline 3D, mais parce qu'aucun environnement GPU cloud n'a encore été provisionné.
+
+Le pipeline actuel de BurkinaWatch reste volontairement limité à :
+
+`validation vidéo → préparation → WAITING_FOR_3D`
+
+Aucune reconstruction 3D réelle n'a encore été exécutée.
+
+Les artefacts disponibles comprennent notamment :
+
+`experiments/streetview-3d/runner.mjs`
+
+`experiments/streetview-3d/generate-controlled-scene.mjs`
+
+`experiments/streetview-3d/config.example.json`
+
+`experiments/streetview-3d/runs/phase7c-synthetic/`
+
+`experiments/streetview-3d/runs/phase7b-on-synthetic-v2/`
+
+`experiments/streetview-3d/PHASE_8_RESULT.md`
+
+`experiments/streetview-3d/PHASE_9_RESULT.md`
+
+`experiments/streetview-3d/PHASE_10_RESULT.md`
+
+`experiments/streetview-3d/PHASE_11_RESULT.md`
+
+---
+
+# OBJECTIF UNIQUE DE LA PHASE
+
+Cette phase doit préparer et, si les moyens d'accès sont disponibles, provisionner :
+
+**UN LABORATOIRE GPU CLOUD TEMPORAIRE ET ISOLÉ**
+
+Ce laboratoire sera utilisé ultérieurement pour :
+
+`VIDEO → FRAMES → COLMAP/SfM → MVS → 3DGS`
+
+Cette phase ne doit PAS encore réaliser la reconstruction complète.
+
+---
+
+# RÈGLE ABSOLUE
+
+NE PAS modifier :
+
+* frontend ;
+* backend ;
+* API ;
+* PostgreSQL ;
+* Street View ;
+* queue ;
+* worker CPU ;
+* stockage production ;
+* Railway ;
+* authentification ;
+* domaine ;
+* déploiement.
+
+NE PAS connecter le laboratoire directement à la base de données de production.
+
+NE PAS connecter automatiquement le laboratoire au workflow utilisateur.
+
+NE PAS traiter de données utilisateur réelles.
+
+NE PAS créer de worker GPU permanent.
+
+NE PAS lancer de traitement 3D coûteux sans validation explicite.
+
+---
+
+# ÉTAPE 1 — AUDITER LES PRÉREQUIS
+
+Lire :
+
+`experiments/streetview-3d/PHASE_11_RESULT.md`
+
+Vérifier également :
+
+* scripts existants ;
+* configuration ;
+* dataset synthétique ;
+* documentation ;
+* éventuels Dockerfiles ;
+* éventuels scripts d'installation.
+
+Ne rien recréer inutilement.
+
+---
+
+# ÉTAPE 2 — CHOISIR LE TYPE DE GPU
+
+Pour le premier laboratoire, viser prioritairement :
+
+**GPU NVIDIA avec environ 24 Go de VRAM.**
+
+Pourquoi :
+
+* marge suffisante pour les premiers essais ;
+* meilleure sécurité contre les erreurs OOM ;
+* permet de tester des datasets raisonnables ;
+* évite de partir immédiatement sur un GPU très coûteux.
+
+Un GPU de 16 Go peut être conservé comme solution économique secondaire si les tests montrent qu'il suffit.
+
+Ne pas louer un GPU très haut de gamme sans justification.
+
+---
+
+# ÉTAPE 3 — COMPARER LES FOURNISSEURS
+
+Avant tout lancement payant, comparer plusieurs fournisseurs GPU cloud actuellement disponibles.
+
+Pour chacun documenter :
+
+* GPU proposé ;
+* VRAM ;
+* CPU ;
+* RAM ;
+* stockage ;
+* prix horaire ;
+* facturation minimale éventuelle ;
+* disponibilité ;
+* accès SSH/terminal ;
+* Docker ;
+* persistance ;
+* possibilité de destruction immédiate ;
+* compatibilité CUDA ;
+* possibilité d'installation COLMAP ;
+* compatibilité PyTorch ;
+* compatibilité 3DGS.
+
+Ne pas inventer les prix.
+
+Si l'environnement actuel ne permet pas de vérifier les prix en direct, indiquer clairement que le prix doit être vérifié avant provisionnement.
+
+---
+
+# ÉTAPE 4 — NE PAS ENGAGER DE DÉPENSE SANS CONTRÔLE
+
+Avant de lancer une instance payante :
+
+présenter clairement :
+
+```text
+FOURNISSEUR :
+GPU :
+VRAM :
+PRIX APPROXIMATIF :
+STOCKAGE :
+DURÉE ESTIMÉE :
+COÛT MAXIMUM DU TEST :
+```
+
+Le laboratoire doit être configuré pour pouvoir être détruit immédiatement.
+
+Ne jamais laisser tourner une instance GPU inutilement.
+
+---
+
+# ÉTAPE 5 — PROVISIONNEMENT
+
+Si les credentials nécessaires sont déjà disponibles dans l'environnement de travail et que le provisionnement peut être effectué sans risque :
+
+provisionner UNE SEULE instance temporaire.
+
+Sinon :
+
+NE PAS inventer de credentials.
+
+NE PAS demander à l'utilisateur de coller :
+
+* mot de passe ;
+* clé privée ;
+* token secret ;
+* secret API dans le chat.
+
+Dans ce cas, fournir simplement la procédure exacte que l'utilisateur devra effectuer côté fournisseur.
+
+---
+
+# ÉTAPE 6 — CONFIGURATION MINIMALE
+
+Une fois l'instance disponible :
+
+installer/configurer :
+
+* Linux ;
+* NVIDIA driver ;
+* CUDA ;
+* Python ;
+* PyTorch CUDA ;
+* FFmpeg ;
+* COLMAP.
+
+Puis vérifier :
+
+```text
+nvidia-smi
+```
+
+et :
+
+```text
+python
+```
+
+avec un test CUDA.
+
+Documenter précisément les versions.
+
+---
+
+# ÉTAPE 7 — ENVIRONNEMENT REPRODUCTIBLE
+
+Créer si nécessaire :
+
+`experiments/streetview-3d/gpu-lab/`
+
+avec :
+
+* Dockerfile ;
+* scripts ;
+* configuration ;
+* README ;
+* versions ;
+* commandes de validation.
+
+L'objectif est de pouvoir recréer le laboratoire sans refaire manuellement toute l'installation.
+
+Structure indicative :
+
+```text
+gpu-lab/
+├── Dockerfile
+├── README.md
+├── install.sh
+├── verify.sh
+├── versions.env
+└── configs/
+```
+
+Adapter cette structure à l'architecture réellement utilisée.
+
+---
+
+# ÉTAPE 8 — TEST GPU
+
+Avant COLMAP :
+
+tester :
+
+* détection GPU ;
+* VRAM ;
+* CUDA ;
+* PyTorch CUDA.
+
+Le test doit démontrer que Python peut réellement exécuter un calcul CUDA.
+
+---
+
+# ÉTAPE 9 — INSTALLER COLMAP
+
+Installer une version reproductible.
+
+Vérifier :
+
+```text
+colmap --help
+```
+
+puis la version.
+
+Effectuer uniquement un test minimal.
+
+NE PAS encore lancer la reconstruction complète.
+
+---
+
+# ÉTAPE 10 — TEST COLMAP SUR QUELQUES FRAMES
+
+Prendre seulement quelques frames du dataset synthétique.
+
+Tester :
+
+* feature extraction ;
+* matching ;
+* première reconstruction SfM.
+
+Objectif :
+
+prouver que COLMAP fonctionne réellement dans le laboratoire.
+
+Ne pas lancer MVS ou 3DGS à ce stade.
+
+---
+
+# ÉTAPE 11 — VÉRIFICATION
+
+La Phase 12 est considérée comme techniquement débloquée uniquement si les éléments suivants sont vrais :
+
+### GPU
+
+GPU NVIDIA détecté.
+
+### CUDA
+
+CUDA fonctionnel.
+
+### PyTorch
+
+PyTorch voit le GPU.
+
+### COLMAP
+
+COLMAP fonctionne.
+
+### Dataset
+
+Les frames synthétiques sont accessibles.
+
+### SfM
+
+Un premier test SfM fonctionne.
+
+---
+
+# ÉTAPE 12 — NE PAS ENCORE LANCER 3DGS
+
+Même si COLMAP fonctionne :
+
+NE PAS encore lancer :
+
+* MVS complet ;
+* 3DGS complet ;
+* entraînement long ;
+* traitement vidéo réelle ;
+* traitement utilisateur.
+
+Cela sera l'objet de la phase suivante.
+
+---
+
+# ÉTAPE 13 — STOCKAGE
+
+Le dataset expérimental peut être copié vers le laboratoire.
+
+Mais :
+
+NE PAS copier la totalité du stockage BurkinaWatch.
+
+NE PAS utiliser les fichiers utilisateurs.
+
+Utiliser uniquement :
+
+* vidéo synthétique ;
+* frames synthétiques ;
+* artefacts expérimentaux nécessaires.
+
+---
+
+# ÉTAPE 14 — RÉSEAU
+
+Le laboratoire GPU n'a pas besoin d'être exposé publiquement.
+
+Éviter :
+
+* endpoint public ;
+* API publique ;
+* port inutilement exposé ;
+* connexion directe depuis le navigateur.
+
+Privilégier :
+
+* SSH ;
+* réseau privé ;
+* Docker ;
+* stockage contrôlé.
+
+---
+
+# ÉTAPE 15 — SÉCURITÉ
+
+Ne jamais enregistrer dans Git :
+
+* credentials cloud ;
+* clés privées ;
+* tokens ;
+* secrets ;
+* fichiers `.env` contenant des secrets.
+
+Utiliser des variables d'environnement ou le gestionnaire de secrets approprié.
+
+---
+
+# ÉTAPE 16 — TEST DE COÛT
+
+Une fois l'environnement installé :
+
+mesurer approximativement :
+
+* durée de démarrage ;
+* temps d'installation ;
+* temps du test COLMAP ;
+* stockage utilisé.
+
+Ne pas lancer une reconstruction longue uniquement pour mesurer le coût.
+
+---
+
+# ÉTAPE 17 — ARRÊT CONTRÔLÉ
+
+À la fin du test :
+
+si aucune étape suivante n'est lancée immédiatement :
+
+**arrêter ou détruire l'instance GPU.**
+
+Documenter :
+
+* coût approximatif ;
+* durée d'utilisation ;
+* procédure d'arrêt ;
+* procédure de redémarrage.
+
+---
+
+# ÉTAPE 18 — RAPPORT
+
+Créer :
+
+`experiments/streetview-3d/PHASE_12_RESULT.md`
+
+Contenu obligatoire :
+
+## 1. Fournisseur
+
+## 2. GPU
+
+## 3. VRAM
+
+## 4. CPU
+
+## 5. RAM
+
+## 6. CUDA
+
+## 7. Python
+
+## 8. PyTorch
+
+## 9. COLMAP
+
+## 10. Docker
+
+## 11. Test GPU
+
+## 12. Test COLMAP
+
+## 13. Premier SfM
+
+## 14. Dataset utilisé
+
+## 15. Temps
+
+## 16. Coût
+
+## 17. Problèmes
+
+## 18. Sécurité
+
+## 19. Procédure de reproduction
+
+## 20. Procédure d'arrêt
+
+## 21. Verdict
+
+Utiliser :
+
+`GO`
+
+si le laboratoire est réellement prêt.
+
+`GO WITH ADJUSTMENTS`
+
+si des corrections mineures sont nécessaires.
+
+`NO-GO`
+
+si le laboratoire n'a toujours pas pu être rendu opérationnel.
+
+---
+
+# IMPORTANT
+
+Un simple serveur GPU créé mais non testé n'est PAS un `GO`.
+
+Le `GO` exige au minimum :
+
+`GPU → CUDA → PyTorch → COLMAP → premier SfM`
+
+fonctionnels.
+
+---
+
+# FIN DE PHASE
+
+STOP après le rapport.
+
+Ne pas commencer automatiquement la reconstruction MVS/3DGS.
+
+Ne pas modifier BurkinaWatch production.
+
+Attendre validation humaine pour la Phase 13.

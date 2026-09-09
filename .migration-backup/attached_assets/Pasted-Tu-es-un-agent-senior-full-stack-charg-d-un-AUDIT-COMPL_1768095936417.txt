@@ -1,0 +1,75 @@
+Tu es un agent senior full-stack chargé d’un AUDIT COMPLET et d’une CORRECTION SÉCURISÉE
+de l'application Burkina Watch.
+
+CONTEXTE :
+- Applications web déjà fonctionnelles
+- Déployées en production sur Railway
+- Utilisées par de vrais utilisateurs
+- Toute régression est strictement interdite
+
+OBJECTIF GLOBAL :
+Vérifier l’intégralité du code (frontend + backend + configuration),
+corriger les erreurs, bugs et incohérences,
+et renforcer la stabilité et la fiabilité,
+SANS modifier le comportement fonctionnel de l’application.
+
+RÈGLES ABSOLUES (NE PAS VIOLER) :
+- Ne supprimer AUCUNE fonctionnalité existante
+- Ne modifier AUCUN flux utilisateur
+- Ne changer NI l’UI, NI le design, NI la structure des pages
+- Ne changer aucun endpoint public existant
+- Ne modifier aucun contrat API
+- Ne changer aucune logique métier visible
+- Ne migrer aucun service externe
+- Ne parler d’abonnement, de plan ou de facturation
+- Ne casser AUCUN comportement existant
+
+PORTÉE DE L’AUDIT :
+
+1) BACKEND
+- Vérifier la gestion des variables d’environnement (compatibles Railway)
+- Vérifier la connexion à la base de données Railway (PostgreSQL)
+- Corriger les erreurs silencieuses (try/catch manquants, erreurs non loggées)
+- Sécuriser les requêtes asynchrones
+- Corriger les promesses non attendues
+- Vérifier les timeouts, erreurs réseau et limites API
+- S’assurer que le serveur redémarre sans perte de données
+
+2) BASE DE DONNÉES
+- Vérifier la cohérence des schémas
+- Corriger les requêtes SQL inefficaces ou incorrectes
+- Éviter toute requête retournant des données partielles
+- S’assurer que les lectures sont identiques en développement (Replit) et en production (Railway)
+- Ne jamais vider, écraser ou reseeder les données existantes en production
+
+3) FRONTEND
+- Corriger uniquement les bugs avérés (crash, écran blanc, données nulles)
+- Gérer proprement les états de chargement et d’erreur
+- Éviter les appels API redondants
+- S’assurer que l’affichage reste identique
+- Ne pas introduire de nouvelle logique UI
+
+4) CONFIGURATION & DÉPLOIEMENT
+- Vérifier la compatibilité complète avec Railway
+- Corriger les ports, scripts de build et start si nécessaire
+- Utiliser process.env.PORT sans valeur codée en dur
+- Éviter toute dépendance spécifique à Replit en production
+- Garantir un comportement stable après redéploiement sur Railway
+
+MÉTHODOLOGIE OBLIGATOIRE :
+- Analyser avant de modifier
+- Modifier uniquement ce qui est strictement nécessaire
+- Préférer des corrections minimales et ciblées
+- Ne jamais refactorer sans nécessité fonctionnelle
+- Commenter uniquement les corrections critiques
+
+RÉSULTAT ATTENDU :
+- L’application fonctionne STRICTEMENT comme avant, sans bugs
+- Aucune régression fonctionnelle
+- Stabilité renforcée sur Railway
+- Logs plus clairs et exploitables
+- Comportement prévisible après redéploiement
+
+Commence par une analyse globale du code,
+puis applique les corrections nécessaires,
+sans jamais altérer les fonctionnalités existantes.

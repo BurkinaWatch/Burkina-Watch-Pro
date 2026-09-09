@@ -1,0 +1,308 @@
+Nous avons une nouvelle preuve importante dans le dernier déploiement Railway.
+
+Le dépôt contient maintenant :
+
+```toml
+[phases.install]
+cmds = ["npm ci --include=dev"]
+```
+
+MAIS le log Railway montre toujours :
+
+```text
+npm install --legacy-peer-deps --no-audit --no-fund && npm run build
+```
+
+et immédiatement avant le build :
+
+```text
+npm warn config production Use `--omit=dev` instead.
+```
+
+puis :
+
+```text
+vite: not found
+```
+
+Nous devons maintenant déterminer POURQUOI Railway n'utilise pas la commande d'installation définie dans `nixpacks.toml`.
+
+## OBJECTIF
+
+Faire un AUDIT STRICTEMENT EN LECTURE SEULE du pipeline de build Railway/Nixpacks/Railpack.
+
+NE MODIFIE AUCUN FICHIER.
+
+NE FAIS AUCUN COMMIT.
+
+NE FAIS AUCUN PUSH.
+
+NE LANCE AUCUN DEPLOIEMENT.
+
+NE MODIFIE AUCUNE VARIABLE RAILWAY.
+
+NE TOUCHE PAS À LA BASE DE DONNÉES.
+
+NE TOUCHE PAS À STREET VIEW.
+
+NE TOUCHE PAS AU WORKER.
+
+## 1. Inspecter nixpacks.toml
+
+Lire intégralement le fichier actuel.
+
+Déterminer :
+
+* toutes les phases définies ;
+* `[phases.setup]` ;
+* `[phases.install]` ;
+* `[phases.build]` ;
+* `[start]` ;
+* les éventuels `dependsOn` ;
+* les éventuels `variables` ;
+* les éventuels paramètres susceptibles d'être écrasés par le provider.
+
+Confirmer exactement quelle commande d'installation le fichier demande.
+
+## 2. Chercher TOUTES les configurations de build du dépôt
+
+Chercher sans modifier :
+
+* `railway.json`
+* `railway.toml`
+* `nixpacks.toml`
+* `nixpacks.json`
+* `Dockerfile`
+* `docker-compose.yml`
+* `docker-compose.yaml`
+* `package.json`
+* `.npmrc`
+* `.nvmrc`
+* fichiers de configuration Railway/Nixpacks/Railpack éventuels
+* scripts shell de build
+* fichiers CI/CD
+
+Chercher notamment :
+
+`npm install`
+
+`npm ci`
+
+`npm run build`
+
+`NIXPACKS_INSTALL_CMD`
+
+`NIXPACKS_BUILD_CMD`
+
+`NIXPACKS_CONFIG_FILE`
+
+`buildCommand`
+
+`installCommand`
+
+`NODE_ENV`
+
+`NPM_CONFIG_PRODUCTION`
+
+`NPM_CONFIG_OMIT`
+
+`npm_config_production`
+
+`npm_config_omit`
+
+`production=true`
+
+`omit=dev`
+
+## 3. Identifier le système de build réellement utilisé
+
+C'est maintenant CRITIQUE.
+
+Déterminer si Railway utilise réellement :
+
+* Nixpacks ;
+* Railpack ;
+* Dockerfile ;
+* une configuration Railway spécifique ;
+* ou une autre méthode.
+
+Chercher les indices dans le dépôt et dans les fichiers de configuration.
+
+Si le dépôt contient `nixpacks.toml`, déterminer si cette configuration est effectivement susceptible d'être prise en compte par le pipeline actuel.
+
+NE PAS supposer que Nixpacks est utilisé simplement parce que `nixpacks.toml` existe.
+
+## 4. Expliquer la contradiction
+
+Nous avons :
+
+Configuration du dépôt :
+
+```text
+npm ci --include=dev
+```
+
+mais Railway exécute :
+
+```text
+npm install --legacy-peer-deps --no-audit --no-fund
+```
+
+Je veux une explication technique précise de cette contradiction.
+
+Répondre notamment :
+
+* quelle configuration produit `npm install --legacy-peer-deps --no-audit --no-fund` ?
+* est-ce une commande générée automatiquement ?
+* par quel système ?
+* pourquoi notre `[phases.install]` n'est-il apparemment pas utilisé ?
+* existe-t-il une configuration de priorité supérieure ?
+* un fichier ou paramètre Railway peut-il remplacer `nixpacks.toml` ?
+
+## 5. Vérifier le contexte npm sans installation
+
+Si possible, uniquement en lecture et sans modifier l'environnement, inspecter :
+
+```bash
+npm config get production
+npm config get omit
+npm config get include
+npm config get only
+npm config get prefix
+npm --version
+node --version
+```
+
+Ne lance PAS `npm install`.
+Ne lance PAS `npm ci`.
+
+Si l'environnement local n'est pas représentatif de Railway, le signaler clairement.
+
+## 6. Examiner précisément NODE_ENV
+
+Rechercher où `NODE_ENV=production` est défini.
+
+Faire la distinction entre :
+
+* variable du runtime ;
+* variable de build ;
+* variable Nixpacks ;
+* variable Docker ;
+* variable Railway ;
+* variable npm.
+
+IMPORTANT :
+
+NE PAS proposer de remplacer globalement `NODE_ENV=production` par `development`.
+
+Nous voulons comprendre le problème, pas dégrader le mode production.
+
+## 7. Examiner le comportement npm
+
+Nous savons que npm utilise `production` comme alias d'omission des `devDependencies`, et que `--include=dev` est censé réinclure les dépendances dev.
+
+Déterminer donc si le problème est :
+
+A. la commande `npm ci --include=dev` n'est jamais exécutée ;
+
+B. elle est exécutée mais remplacée par une autre commande ;
+
+C. elle est exécutée mais les `devDependencies` sont ensuite supprimées ;
+
+D. Railway utilise un autre système de build ;
+
+E. une configuration d'environnement supérieure impose le mode production ;
+
+F. problème de cache ;
+
+G. autre.
+
+Ne choisir une cause que si les fichiers fournissent des preuves.
+
+## 8. Examiner le cache
+
+Déterminer si Nixpacks/Railway utilise un cache `node_modules` ou npm susceptible de conserver une installation précédente sans devDependencies.
+
+Ne supprime rien.
+
+Ne désactive pas le cache.
+
+Informe-moi seulement si le cache pourrait expliquer le comportement.
+
+## 9. Examiner la commande exacte du build
+
+Documenter la séquence réelle observée :
+
+```text
+[commande d'installation réellement exécutée]
+        ↓
+[configuration npm]
+        ↓
+[npm install/ci]
+        ↓
+[npm run build]
+        ↓
+[vite build]
+        ↓
+vite: not found
+```
+
+Puis comparer avec la séquence attendue :
+
+```text
+npm ci --include=dev
+        ↓
+vite disponible
+        ↓
+npm run build
+        ↓
+vite build
+        ↓
+esbuild server/index.ts
+        ↓
+esbuild server/streetviewWorkerMain.ts
+```
+
+## 10. IMPORTANT : ne pas corriger maintenant
+
+Ne modifie rien.
+
+Je veux d'abord savoir EXACTEMENT pourquoi Railway ignore apparemment :
+
+```toml
+[phases.install]
+cmds = ["npm ci --include=dev"]
+```
+
+et utilise à la place :
+
+```text
+npm install --legacy-peer-deps --no-audit --no-fund
+```
+
+## RAPPORT FINAL
+
+Donne-moi :
+
+1. système de build réellement utilisé ;
+2. commande d'installation réellement générée ;
+3. origine de cette commande ;
+4. raison pour laquelle `nixpacks.toml` n'est apparemment pas appliqué ;
+5. toutes les configurations qui peuvent prendre priorité ;
+6. rôle exact de `NODE_ENV=production` ;
+7. rôle exact du warning npm ;
+8. rôle éventuel du cache ;
+9. cause racine actuelle avec niveau de confiance ;
+10. correction minimale recommandée ;
+11. fichiers qui devraient être modifiés pour cette correction ;
+12. ce qui NE doit absolument PAS être modifié.
+
+Terminer avec l'un des verdicts suivants :
+
+`ROOT CAUSE CONFIRMED`
+
+`ROOT CAUSE PROBABLE`
+
+`INSUFFICIENT EVIDENCE`
+
+Encore une fois : AUDIT UNIQUEMENT. AUCUNE MODIFICATION.

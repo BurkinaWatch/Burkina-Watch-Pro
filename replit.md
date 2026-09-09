@@ -1,52 +1,45 @@
-# Project Overview: Burkina Secure (Faso Secure)
+# [Project name]
 
-Burkina Secure is a comprehensive security and emergency assistance platform for Burkina Faso. Its primary purpose is to provide citizens with critical information and tools during emergencies and for daily life, enhancing safety and preparedness across the nation. The platform integrates various data sources to offer real-time updates and essential services, aiming to become a vital public utility.
+_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
 
-## Overview
-The project aims to empower citizens of Burkina Faso with a robust, mobile-first platform for safety and information. Key capabilities include:
-- **Emergency Management**: SOS alerts, emergency contact management, and lockscreen integration for critical information.
-- **Location-Based Services**: Real-time tracking and display of essential services like pharmacies, hospitals, police stations, government institutions, utilities (SONABEL, ONEA), mobile agencies, religious places, and cemeteries, leveraging OpenStreetMap data.
-- **Information Dissemination**: Official news ticker for government communications, regional weather monitoring, and a user-generated incident reporting system (Signalements).
-- **Offline Capability**: Ensures access to critical information even in low-bandwidth environments through IndexedDB caching.
-- **Community-Driven Data Validation**: A system for users to confirm or report the accuracy of location data for various points of interest.
-- **AI Integration**: Utilizes AI for intelligent features, such as generating cinema schedules.
-- **Comprehensive Directories**: Extensive databases of Mairies & Prefectures, Ministeres, Agences Telephonie Mobile, SONABEL & ONEA agencies, Lieux de Culte (churches & mosques), Cimetieres, and educational institutions.
-- **Transport Information**: Detailed schedules and company information for inter-city and international transport routes.
-- **Pharmacy Guard System**: Weekly rotation system covering 5 cities (Ouagadougou, Bobo-Dioulasso, Koudougou, Ouahigouya, Fada N'Gourma) with variable group counts per city (4 groups for Ouaga/Bobo, 3 groups for smaller cities). Rotation runs Saturday noon to Saturday noon. Data sourced from Orange BF, infossante.net, UbiPharm, and MAADO.
+## Run & Operate
 
-## User Preferences
-- **Language**: French (UI default).
-- **Style**: Modern, mobile-first design using Shadcn/Tailwind.
-- **Naming**: Consistent use of `data-testid` for testing.
+- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm run typecheck` — full typecheck across all packages
+- `pnpm run build` — typecheck + build all packages
+- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
+- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
+- Required env: `DATABASE_URL` — Postgres connection string
 
-## System Architecture
-The platform follows a modern full-stack architecture designed for scalability, performance, and a rich user experience.
--   **Frontend**: Developed with React (Vite) for a fast and interactive user interface, styled with Tailwind CSS and UI components from Shadcn UI, emphasizing a mobile-first design approach.
--   **Backend**: Built using Express.js with TypeScript, providing a robust and type-safe API layer.
--   **Database**: PostgreSQL is used as the primary data store, managed with Drizzle ORM for efficient data interaction.
--   **AI Integration**: Leverages Groq (llama-3.3-70b-versatile) for advanced AI capabilities, including dynamic content generation.
--   **Data Synchronization**: Extensive use of OpenStreetMap (OSM) via the Overpass API for sourcing and displaying points of interest, with local caching and auto-sync mechanisms.
--   **Authentication**: Implements a hybrid OTP (One-Time Password) system for passwordless authentication via email, supporting secure user access for interactive features.
--   **Offline Mode**: Features IndexedDB caching with automatic synchronization to ensure application functionality in areas with limited internet connectivity.
--   **Image Processing**: Includes a canvas-based image blur editor for user-uploaded content, allowing privacy-conscious sharing of incident reports.
--   **Performance Optimizations**: Incorporates lazy loading for all pages using React.lazy() and Suspense, significantly reducing bundle size and improving initial load times.
--   **UI/UX Decisions**:
-    -   Consistent use of Shadcn UI components and Tailwind CSS for a unified and modern aesthetic.
-    -   Dynamic page titles and Open Graph/SEO meta tags for improved discoverability and social sharing.
-    -   Color-coding is applied to map markers and directory entries for easy visual identification of different types of institutions or services (e.g., religious sites, utility companies, government bodies).
-    -   Implementation of "PlaceCard" components for displaying detailed information about various locations, including contact details, services, and community validation status.
--   **System Design Choices**:
-    -   Centralized `regions.ts` file as the source of truth for administrative divisions following Burkina Faso's 17-region reform.
-    -   Service-oriented architecture for backend functionalities (e.g., `newsService.ts`, `cineService.ts`, `overpassService.ts`).
-    -   Comprehensive static data management for critical directories (e.g., `mairiesPrefecturesData.ts`, `ministeresData.ts`) alongside dynamic OSM integration.
-    -   Community-driven location validation system to enhance data accuracy across all place cards.
+## Stack
 
-## External Dependencies
--   **OpenStreetMap (OSM)**: Primary source for geographical data and points of interest, accessed via Overpass API.
--   **Groq**: AI service provider, specifically using the `llama-3.3-70b-versatile` model for intelligent features.
--   **Nodemailer**: Used for sending email OTPs for authentication.
--   **PostgreSQL**: Relational database for storing application data.
--   **Vite**: Frontend build tool.
--   **Tailwind CSS**: Utility-first CSS framework for styling.
--   **Shadcn UI**: React UI component library.
--   **Présidence du Faso, SIG (Service d'Information du Gouvernement), AIB (Agence d'Information du Burkina)**: Official sources for the news ticker.
+- pnpm workspaces, Node.js 24, TypeScript 5.9
+- API: Express 5
+- DB: PostgreSQL + Drizzle ORM
+- Validation: Zod (`zod/v4`), `drizzle-zod`
+- API codegen: Orval (from OpenAPI spec)
+- Build: esbuild (CJS bundle)
+
+## Where things live
+
+_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+
+## Architecture decisions
+
+_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+
+## Product
+
+_Describe the high-level user-facing capabilities of this app once they exist._
+
+## User preferences
+
+_Populate as you build — explicit user instructions worth remembering across sessions._
+
+## Gotchas
+
+_Populate as you build — sharp edges, "always run X before Y" rules._
+
+## Pointers
+
+- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details

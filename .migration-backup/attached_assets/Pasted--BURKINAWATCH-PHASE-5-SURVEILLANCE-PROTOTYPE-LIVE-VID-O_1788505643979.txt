@@ -1,0 +1,1079 @@
+# BURKINAWATCH — PHASE 5
+
+## SURVEILLANCE — PROTOTYPE LIVE VIDÉO CONTRÔLÉ
+
+### RTSP → VIDEO GATEWAY → WEBRTC → BURKINAWATCH
+
+Tu travailles sur **BurkinaWatch**.
+
+Les phases précédentes ont préparé :
+
+* la sécurité générale ;
+* l'authentification ;
+* l'autorisation ;
+* la protection IDOR ;
+* la protection SSRF ;
+* le chiffrement AES-256-GCM ;
+* la gestion des caméras ;
+* l'architecture du Video Gateway ;
+* la séparation entre Control Plane et Media Plane.
+
+Cette phase consiste à réaliser un **premier prototype fonctionnel du live vidéo**, mais uniquement dans un environnement contrôlé.
+
+---
+
+# 1. OBJECTIF
+
+Faire fonctionner cette chaîne :
+
+```text
+SOURCE VIDÉO DE TEST
+       │
+       │ RTSP
+       ▼
+VIDEO GATEWAY
+       │
+       │ WebRTC
+       ▼
+BURKINAWATCH
+       │
+       ▼
+NAVIGATEUR
+       │
+       ▼
+LIVE VIDÉO
+```
+
+Le résultat attendu est simple :
+
+> Un utilisateur authentifié peut ouvrir une caméra de test et voir réellement un flux vidéo live dans l'interface BurkinaWatch.
+
+---
+
+# 2. ⚠️ RÈGLES ABSOLUES
+
+Cette phase doit rester un **prototype contrôlé**.
+
+NE PAS :
+
+* connecter une caméra réelle de production ;
+* demander une IP publique de caméra ;
+* ouvrir le port 554 d'une caméra sur Internet ;
+* exposer RTSP directement à Internet ;
+* mettre un mot de passe réel dans Git ;
+* mettre des credentials dans le frontend ;
+* mettre des credentials dans les logs ;
+* créer un flux public ;
+* permettre l'accès à une caméra d'un autre utilisateur ;
+* mettre les flux vidéo dans PostgreSQL ;
+* utiliser Express comme proxy vidéo ;
+* enregistrer les vidéos ;
+* créer du stockage vidéo ;
+* ajouter l'IA ;
+* ajouter la reconnaissance faciale ;
+* ajouter la détection intelligente ;
+* créer des alertes ;
+* désactiver CSP/CORS pour contourner un problème ;
+* désactiver SSRF ;
+* désactiver HTTPS pour contourner WebRTC.
+
+---
+
+# 3. SOURCE VIDÉO DE TEST
+
+Avant de toucher au réseau réel, utiliser une source vidéo de test.
+
+Solutions possibles :
+
+### Option A
+
+MediaMTX avec source de test.
+
+### Option B
+
+FFmpeg générant un flux RTSP local.
+
+### Option C
+
+Un fichier vidéo transformé en flux RTSP local.
+
+Choisis la solution la plus simple et reproductible.
+
+Le flux doit être :
+
+* fictif ;
+* local ;
+* non public ;
+* sans credentials réels.
+
+---
+
+# 4. MEDIA GATEWAY
+
+Si l'audit précédent a confirmé que MediaMTX est le meilleur choix, utiliser MediaMTX.
+
+Sinon, utiliser le gateway recommandé dans le rapport précédent.
+
+Ne change pas de technologie sans justification.
+
+Architecture :
+
+```text
+Test Source
+    ↓
+RTSP
+    ↓
+MediaMTX
+    ↓
+WebRTC
+    ↓
+Browser
+```
+
+---
+
+# 5. DÉPLOIEMENT
+
+NE PAS déployer immédiatement en production.
+
+Créer d'abord un environnement local/dev ou préproduction.
+
+Si Docker est utilisé :
+
+```text
+BurkinaWatch Backend
+MediaMTX
+Test RTSP Source
+```
+
+doivent pouvoir fonctionner séparément.
+
+Le gateway vidéo ne doit pas dépendre du démarrage du backend principal pour continuer à fonctionner.
+
+---
+
+# 6. SÉPARATION CONTROL PLANE / MEDIA PLANE
+
+Maintenir strictement :
+
+### Control Plane
+
+```text
+Express
+```
+
+responsable de :
+
+* utilisateur ;
+* authentification ;
+* caméra ;
+* permissions ;
+* tokens ;
+* configuration ;
+* contrôle.
+
+### Media Plane
+
+```text
+Media Gateway
+```
+
+responsable de :
+
+* RTSP ;
+* WebRTC ;
+* flux vidéo ;
+* connexion à la source vidéo.
+
+Le backend Express ne doit pas transporter les paquets vidéo.
+
+---
+
+# 7. INTÉGRATION MEDIA GATEWAY
+
+Créer une abstraction propre.
+
+Par exemple :
+
+```text
+VideoGateway
+```
+
+avec des opérations conceptuelles :
+
+```text
+registerStream()
+removeStream()
+getStreamStatus()
+createViewerAccess()
+revokeViewerAccess()
+```
+
+Adapte les noms à l'architecture réelle.
+
+Ne couple pas tout le backend directement à MediaMTX.
+
+L'objectif est de pouvoir remplacer MediaMTX plus tard sans réécrire tout BurkinaWatch.
+
+---
+
+# 8. CONFIGURATION
+
+Toutes les informations de connexion au gateway doivent être fournies par variables d'environnement.
+
+Par exemple :
+
+```text
+VIDEO_GATEWAY_URL
+VIDEO_GATEWAY_API_URL
+VIDEO_GATEWAY_API_TOKEN
+VIDEO_GATEWAY_PUBLIC_ORIGIN
+```
+
+Utilise uniquement les variables réellement nécessaires.
+
+Ne crée pas de secret inutile.
+
+Les secrets doivent rester côté serveur.
+
+---
+
+# 9. PAS DE SECRET DANS LE FRONTEND
+
+Le navigateur ne doit jamais recevoir :
+
+```text
+VIDEO_GATEWAY_API_TOKEN
+```
+
+ni :
+
+```text
+MediaMTX admin credentials
+```
+
+ni :
+
+```text
+camera password
+```
+
+ni :
+
+```text
+MASTER_ENCRYPTION_KEY
+```
+
+ni :
+
+```text
+database credentials
+```
+
+---
+
+# 10. CRÉATION DU FLUX
+
+Lorsqu'une caméra est activée :
+
+```text
+BurkinaWatch
+      ↓
+VideoGateway.registerStream()
+      ↓
+MediaMTX
+      ↓
+RTSP source
+```
+
+Le système doit utiliser `cameraId` comme référence logique.
+
+Ne pas envoyer une URL RTSP contenant un mot de passe au frontend.
+
+---
+
+# 11. CREDENTIALS RTSP
+
+Si le flux de test utilise un credential :
+
+le credential doit rester :
+
+```text
+Backend / Gateway
+```
+
+et ne doit jamais apparaître dans :
+
+```text
+Frontend
+API response
+URL publique
+logs
+browser console
+```
+
+Si nécessaire, utiliser le système de chiffrement existant pour les credentials stockés.
+
+---
+
+# 12. LIVE ENDPOINT
+
+Préparer une route protégée permettant de demander l'accès au live.
+
+Exemple :
+
+```text
+GET /api/surveillance/cameras/:id/live
+```
+
+ou une route adaptée à l'architecture existante.
+
+Cette route doit :
+
+1. authentifier ;
+2. vérifier ownership ;
+3. vérifier caméra active ;
+4. demander une autorisation temporaire au gateway ;
+5. retourner uniquement les informations nécessaires au navigateur.
+
+---
+
+# 13. TOKEN TEMPORAIRE
+
+Le navigateur doit obtenir une autorisation temporaire.
+
+Le token doit être :
+
+* limité dans le temps ;
+* lié à `userId` ;
+* lié à `cameraId` ;
+* non prédictible ;
+* inutilisable pour une autre caméra.
+
+Ne pas créer un token permanent.
+
+---
+
+# 14. WEBRTC
+
+Implémenter la lecture WebRTC uniquement si la chaîne Media Gateway fonctionne correctement.
+
+Le frontend doit :
+
+1. demander le live au backend ;
+2. recevoir l'autorisation temporaire ;
+3. initialiser WebRTC ;
+4. établir la connexion ;
+5. afficher la vidéo.
+
+Ne pas utiliser :
+
+```text
+<video src="rtsp://...">
+```
+
+Le navigateur ne doit jamais recevoir directement l'URL RTSP.
+
+---
+
+# 15. HTML VIDEO
+
+Utiliser un élément vidéo approprié :
+
+```text
+<video>
+```
+
+avec :
+
+* autoplay si nécessaire ;
+* muted si nécessaire ;
+* playsInline sur mobile ;
+* gestion des erreurs ;
+* état de connexion.
+
+Ne pas contourner les politiques autoplay du navigateur.
+
+---
+
+# 16. ÉTATS UI
+
+Le lecteur doit gérer :
+
+```text
+idle
+connecting
+live
+offline
+error
+disconnected
+```
+
+Exemple :
+
+```text
+Connexion à la caméra...
+```
+
+puis :
+
+```text
+● EN DIRECT
+```
+
+ou :
+
+```text
+Caméra hors ligne
+```
+
+---
+
+# 17. PAS DE FAUX LIVE
+
+NE PAS afficher :
+
+```text
+● EN DIRECT
+```
+
+si aucune vraie connexion WebRTC n'existe.
+
+Le statut UI doit refléter l'état réel de la connexion.
+
+---
+
+# 18. CAMÉRA DE TEST
+
+Créer une caméra de test explicitement identifiée comme telle.
+
+Exemple :
+
+```text
+TEST — CAMERA DEVELOPMENT
+```
+
+Elle ne doit pas apparaître comme une vraie caméra utilisateur.
+
+Ne crée pas de données de production fictives.
+
+---
+
+# 19. OWNERSHIP
+
+Tester obligatoirement :
+
+```text
+Utilisateur A
+    ↓
+Caméra test A
+    ↓
+Live
+    ↓
+PASS
+```
+
+et :
+
+```text
+Utilisateur B
+    ↓
+Caméra test A
+    ↓
+REFUS
+```
+
+Tester également :
+
+```text
+Token caméra A
+      ↓
+caméra B
+      ↓
+REFUS
+```
+
+---
+
+# 20. RÉVOCATION
+
+Lorsque :
+
+* caméra désactivée ;
+* caméra supprimée ;
+* session utilisateur terminée ;
+* token expiré ;
+
+le système doit empêcher l'accès futur au flux.
+
+Ne laisse pas un flux continuer indéfiniment à cause d'une ancienne autorisation.
+
+---
+
+# 21. MULTI-UTILISATEUR
+
+Tester :
+
+```text
+User A → Camera A
+User B → Camera B
+```
+
+Les deux doivent pouvoir fonctionner indépendamment.
+
+Puis :
+
+```text
+User A → Camera B
+```
+
+doit être refusé.
+
+---
+
+# 22. TEST DE CONCURRENCE
+
+Tester plusieurs viewers sur une même caméra :
+
+```text
+User A
+User A
+User A
+```
+
+Déterminer :
+
+* si le gateway supporte plusieurs viewers ;
+* si un nouveau flux RTSP est créé inutilement ;
+* si le flux source est partagé ;
+* consommation CPU/réseau.
+
+Ne pas optimiser prématurément.
+
+Mesurer d'abord.
+
+---
+
+# 23. CODECS
+
+Tester le codec de la source.
+
+Priorité :
+
+```text
+H.264
+```
+
+Déterminer si le navigateur reçoit le flux directement ou si une conversion est nécessaire.
+
+Si transcoding nécessaire :
+
+indiquer :
+
+* CPU ;
+* latence ;
+* mémoire ;
+* coût ;
+* limites.
+
+Ne pas mettre en place une architecture lourde sans justification.
+
+---
+
+# 24. LATENCE
+
+Mesurer approximativement la latence :
+
+```text
+Source
+   ↓
+RTSP
+   ↓
+Gateway
+   ↓
+WebRTC
+   ↓
+Browser
+```
+
+Le but du MVP est un live à faible latence.
+
+Documenter le résultat obtenu.
+
+---
+
+# 25. CAMÉRA OFFLINE
+
+Simuler :
+
+```text
+RTSP source arrêtée
+```
+
+Le système doit afficher :
+
+```text
+Caméra hors ligne
+```
+
+ou un état équivalent.
+
+Le backend principal doit rester opérationnel.
+
+---
+
+# 26. RECONNEXION
+
+Redémarrer la source.
+
+Le gateway doit pouvoir récupérer le flux.
+
+Le frontend doit pouvoir retrouver le live sans créer une avalanche de tentatives.
+
+Utiliser un backoff raisonnable.
+
+---
+
+# 27. WEBRTC / ICE
+
+Tester :
+
+* ICE connection state ;
+* connection state ;
+* signaling ;
+* fermeture propre ;
+* reconnexion.
+
+Ne pas exposer les informations ICE sensibles dans les logs.
+
+---
+
+# 28. STUN
+
+Déterminer si une connexion directe suffit dans l'environnement de test.
+
+Ne pas ajouter TURN uniquement parce que WebRTC existe.
+
+Si STUN est nécessaire :
+
+documenter pourquoi.
+
+---
+
+# 29. TURN
+
+Ne pas déployer TURN en production dans cette phase.
+
+Déterminer seulement si le MVP en aura besoin après les tests réseau.
+
+---
+
+# 30. CSP
+
+Adapter la CSP uniquement si nécessaire.
+
+Autoriser uniquement les origines nécessaires au WebRTC/gateway.
+
+INTERDIT :
+
+```text
+*
+```
+
+comme solution de contournement.
+
+---
+
+# 31. CORS
+
+Configurer précisément les origins.
+
+Ne pas utiliser :
+
+```text
+Access-Control-Allow-Origin: *
+```
+
+pour un système authentifié.
+
+---
+
+# 32. LOGGING
+
+Vérifier que les logs ne contiennent jamais :
+
+```text
+RTSP password
+camera password
+RTSP URL with credentials
+gateway token
+viewer token
+API token
+ICE credentials
+MASTER_ENCRYPTION_KEY
+```
+
+---
+
+# 33. SSRF
+
+Le système ne doit pas permettre :
+
+```text
+Utilisateur
+   ↓
+camera host arbitraire
+   ↓
+scanner réseau interne
+```
+
+Le flux doit être associé à une caméra enregistrée et contrôlée.
+
+Ne pas transformer le gateway en proxy réseau généraliste.
+
+---
+
+# 34. BROWSER SECURITY
+
+Vérifier :
+
+* HTTPS ;
+* secure context ;
+* CSP ;
+* CORS ;
+* autoplay ;
+* mixed content ;
+* permissions.
+
+Ne pas désactiver les protections du navigateur.
+
+---
+
+# 35. MOBILE
+
+Tester au minimum le comportement dans :
+
+* navigateur desktop ;
+* navigateur Android si disponible.
+
+Documenter les limitations iOS/Expo si elles nécessitent un travail ultérieur.
+
+Ne réécris pas l'application mobile dans cette phase.
+
+---
+
+# 36. PERFORMANCE
+
+Mesurer approximativement :
+
+* CPU gateway ;
+* mémoire gateway ;
+* bitrate ;
+* latence ;
+* nombre de connexions ;
+* consommation backend.
+
+Pour :
+
+```text
+1 caméra
+1 viewer
+```
+
+puis éventuellement :
+
+```text
+1 caméra
+3 viewers
+```
+
+---
+
+# 37. PRODUCTION
+
+NE PAS passer automatiquement en production.
+
+À la fin, fournir une recommandation claire :
+
+```text
+LOCAL ONLY
+```
+
+ou :
+
+```text
+READY FOR STAGING
+```
+
+ou :
+
+```text
+READY FOR PRODUCTION
+```
+
+Le dernier choix doit être exceptionnel et justifié.
+
+---
+
+# 38. TESTS DE SÉCURITÉ OBLIGATOIRES
+
+Tester :
+
+### Authentication
+
+```text
+anonymous → live
+```
+
+→ REFUS
+
+### Ownership
+
+```text
+A → A
+```
+
+→ PASS
+
+```text
+A → B
+```
+
+→ REFUS
+
+### Token
+
+```text
+valid token → PASS
+expired token → REFUS
+camera A token → camera B → REFUS
+```
+
+### Credentials
+
+```text
+API response → aucun password
+browser → aucun password
+logs → aucun password
+```
+
+### Gateway
+
+```text
+gateway offline → erreur contrôlée
+```
+
+### SSRF
+
+```text
+destination interdite → REFUS
+```
+
+---
+
+# 39. TESTS FONCTIONNELS
+
+Minimum :
+
+```text
+create camera
+register stream
+start live
+receive WebRTC
+display video
+stop live
+camera offline
+camera reconnect
+delete camera
+```
+
+---
+
+# 40. TESTS DE RÉGRESSION
+
+Exécuter les tests existants de BurkinaWatch.
+
+Vérifier particulièrement :
+
+* authentication ;
+* signalements ;
+* notifications ;
+* SOS ;
+* carte ;
+* utilisateurs ;
+* admin ;
+* permissions.
+
+La fonctionnalité Surveillance ne doit pas casser les fonctionnalités existantes.
+
+---
+
+# 41. COMMANDES
+
+Exécuter :
+
+```bash
+npm run check
+npm run build
+git diff --check
+```
+
+Puis tous les tests pertinents.
+
+Si le projet possède des tests spécifiques :
+
+les exécuter.
+
+---
+
+# 42. RAPPORT FINAL
+
+Le rapport doit être très précis.
+
+## A. Architecture finale du prototype
+
+Présenter :
+
+```text
+RTSP Test Source
+      ↓
+Video Gateway
+      ↓
+WebRTC
+      ↓
+BurkinaWatch
+      ↓
+Browser
+```
+
+## B. Video Gateway
+
+Indiquer :
+
+* technologie ;
+* version ;
+* configuration ;
+* mode de déploiement.
+
+## C. RTSP
+
+Indiquer :
+
+* source utilisée ;
+* codec ;
+* résolution ;
+* bitrate ;
+* FPS.
+
+## D. WebRTC
+
+Indiquer :
+
+* signaling ;
+* ICE ;
+* STUN ;
+* TURN ;
+* état de connexion.
+
+## E. Backend
+
+Lister les endpoints ajoutés.
+
+## F. Security
+
+Décrire :
+
+* authentication ;
+* ownership ;
+* tokens ;
+* SSRF ;
+* credentials ;
+* logs ;
+* CORS ;
+* CSP.
+
+## G. Frontend
+
+Décrire :
+
+* lecteur ;
+* états ;
+* erreurs ;
+* reconnexion.
+
+## H. Database
+
+Indiquer les modifications éventuelles.
+
+## I. Infrastructure
+
+Indiquer exactement :
+
+```text
+Media Gateway deployed: YES/NO
+Production: YES/NO
+Staging: YES/NO
+```
+
+## J. Performance
+
+Indiquer les mesures obtenues.
+
+## K. Tests
+
+Présenter :
+
+```text
+npm run check       PASS/FAIL
+npm run build       PASS/FAIL
+git diff --check    PASS/FAIL
+security tests      PASS/FAIL
+video tests         PASS/FAIL
+regression tests    PASS/FAIL
+```
+
+## L. Problèmes rencontrés
+
+Liste complète.
+
+## M. Risques restants
+
+Liste complète.
+
+## N. Prochaine étape
+
+Proposer uniquement la prochaine phase logique.
+
+## O. Verdict
+
+Choisir :
+
+**READY FOR PHASE 6**
+
+ou
+
+**READY WITH CONDITIONS**
+
+ou
+
+**NOT READY**
+
+---
+
+# 43. RÈGLE FINALE
+
+Lorsque le prototype fonctionne :
+
+**ARRÊTE-TOI.**
+
+Ne connecte pas automatiquement une vraie caméra.
+
+Ne déploie pas automatiquement en production.
+
+Ne demande pas de port RTSP public.
+
+Ne commence pas l'enregistrement.
+
+Ne commence pas l'IA.
+
+Ne passe pas directement à la Phase 6 sans validation du rapport.

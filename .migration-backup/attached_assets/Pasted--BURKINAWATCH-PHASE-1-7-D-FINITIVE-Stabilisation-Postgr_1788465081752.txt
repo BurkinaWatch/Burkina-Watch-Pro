@@ -1,0 +1,851 @@
+# BURKINAWATCH — PHASE 1.7 DÉFINITIVE
+
+## Stabilisation PostgreSQL Railway + migrations + secrets + chiffrement
+
+### AVANT TOUT DÉVELOPPEMENT DE LA FONCTION SURVEILLANCE
+
+Tu travailles sur le projet BurkinaWatch.
+
+Cette phase est une phase de **REMÉDIATION ET STABILISATION**, pas une phase de développement fonctionnel.
+
+## OBJECTIF PRINCIPAL
+
+La décision d'architecture est maintenant définitive :
+
+> **RAILWAY POSTGRESQL EST LA SEULE BASE DE DONNÉES DE PRODUCTION DE BURKINAWATCH.**
+
+Il ne faut plus maintenir une ambiguïté entre plusieurs bases PostgreSQL.
+
+Architecture cible :
+
+```text
+BURKINAWATCH
+     │
+     ├── Frontend React/Vite
+     │
+     ├── Backend Node.js / Express / TypeScript
+     │
+     ├── Drizzle ORM
+     │
+     └── PostgreSQL RAILWAY
+              │
+              └── SOURCE DE VÉRITÉ PRODUCTION
+```
+
+Replit sert au développement et au déploiement du code.
+
+Railway héberge la base PostgreSQL de production.
+
+L'application de production ET Drizzle doivent travailler avec la même base Railway.
+
+---
+
+# ⚠️ RÈGLES ABSOLUES
+
+Avant toute modification :
+
+1. NE SUPPRIME AUCUNE TABLE.
+2. NE SUPPRIME AUCUNE DONNÉE.
+3. NE RECRÉE PAS LA BASE.
+4. NE RÉINITIALISE PAS PostgreSQL.
+5. N'UTILISE PAS `db:push --force`.
+6. N'utilise jamais `DROP TABLE` sur la base de production.
+7. Ne rejoue pas aveuglément les anciennes migrations.
+8. Ne modifie pas directement les données métier existantes.
+9. Ne demande jamais à l'utilisateur de te fournir un mot de passe, token, secret ou credential.
+10. N'affiche jamais de valeur secrète complète dans les logs ou le rapport.
+11. Ne commit aucun secret dans Git.
+12. Ne mets aucun secret dans `.replit`, `Dockerfile`, `docker-compose`, code source ou fichier versionné.
+13. Ne crée encore AUCUNE fonctionnalité Surveillance.
+14. Ne crée encore AUCUNE caméra IP.
+15. Ne crée encore AUCUN modèle Camera.
+16. Ne crée encore AUCUN RTSP.
+17. Ne crée encore AUCUN WebRTC.
+18. Ne crée encore AUCUN MediaMTX.
+19. Ne crée encore AUCUN FFmpeg.
+20. Ne crée encore AUCUN TURN.
+21. Ne crée encore AUCUN système d'enregistrement vidéo.
+
+Cette phase doit uniquement rendre le socle suffisamment propre et sûr pour que la phase Surveillance puisse commencer ensuite.
+
+---
+
+# ÉTAPE 1 — AUDIT COMPLET AVANT MODIFICATION
+
+Inspecte d'abord le dépôt sans modifier la base.
+
+Analyse au minimum :
+
+* `package.json`
+* `package-lock.json`
+* `.replit`
+* `Dockerfile`
+* `docker-compose*` s'ils existent
+* `drizzle.config.*`
+* `shared/schema.ts`
+* `server/`
+* `migrations/`
+* `drizzle/`
+* scripts npm
+* scripts shell/batch
+* fichiers de configuration
+* variables d'environnement utilisées par le backend
+* configuration Railway présente dans le projet
+
+Identifie précisément :
+
+### Base runtime
+
+Détermine comment le backend sélectionne actuellement sa base.
+
+Si tu trouves :
+
+```text
+RAILWAY_DATABASE_URL || DATABASE_URL
+```
+
+ou une logique équivalente, documente-la.
+
+### Base Drizzle
+
+Détermine exactement quelle variable Drizzle utilise.
+
+Il faut identifier si Drizzle utilise :
+
+```text
+DATABASE_URL
+```
+
+ou :
+
+```text
+RAILWAY_DATABASE_URL
+```
+
+ou une autre variable.
+
+NE MODIFIE PAS ENCORE.
+
+Produis d'abord un diagnostic.
+
+---
+
+# ÉTAPE 2 — RAILWAY POSTGRESQL = SOURCE DE VÉRITÉ
+
+La base PostgreSQL Railway existante est la base de production de référence.
+
+Le code doit être aligné sur cette décision.
+
+Objectif :
+
+```text
+Backend production
+       ↓
+PostgreSQL Railway
+
+Drizzle
+       ↓
+PostgreSQL Railway
+```
+
+Il ne doit pas exister de situation dans laquelle :
+
+```text
+Backend → DB A
+Drizzle → DB B
+```
+
+### IMPORTANT
+
+Tu dois corriger la configuration pour que le backend et Drizzle utilisent une configuration cohérente.
+
+Privilégie une variable standard :
+
+```text
+DATABASE_URL
+```
+
+pour la connexion PostgreSQL de production.
+
+Si Railway fournit déjà une variable spécifique ou une référence interne, utilise-la de manière sécurisée via la configuration d'environnement Railway, mais évite de conserver une logique ambiguë avec deux bases concurrentes.
+
+NE COPIE JAMAIS la valeur réelle de la DATABASE_URL dans le code.
+
+NE L'AFFICHE JAMAIS.
+
+NE LA COMMIT PAS.
+
+---
+
+# ÉTAPE 3 — NE PAS TOUCHER AUX DONNÉES EXISTANTES
+
+Avant toute migration, vérifie la structure réelle de la base Railway.
+
+L'objectif est uniquement de comparer :
+
+```text
+shared/schema.ts
+       VS
+PostgreSQL Railway
+```
+
+Vérifie :
+
+* tables
+* colonnes
+* types
+* nullable
+* primary keys
+* foreign keys
+* unique constraints
+* indexes
+* defaults
+* enum éventuels
+
+Ne fais aucune modification destructive.
+
+---
+
+# ÉTAPE 4 — MIGRATIONS DRIZZLE
+
+Le dépôt contient actuellement plusieurs fichiers de migration historiques.
+
+Inspecte leur contenu et leur ordre.
+
+Ne suppose PAS que leur historique reflète exactement l'état réel de Railway.
+
+En particulier, si :
+
+```text
+0000_...
+0001_...
+0002_...
+0003_...
+```
+
+existent mais que `__drizzle_migrations` n'est pas présent ou ne correspond pas à cet historique, NE LES REJOUE PAS AUTOMATIQUEMENT.
+
+Le but est de construire une stratégie de migration fiable à partir de l'état actuel de Railway.
+
+### RÈGLE
+
+La base Railway existante contient déjà des données importantes.
+
+Donc :
+
+> **L'état réel de Railway doit être préservé.**
+
+Si nécessaire, prépare une baseline Drizzle contrôlée correspondant à l'état actuel, sans recréer les tables existantes.
+
+Ne lance aucune commande destructive.
+
+Ne lance jamais :
+
+```text
+drizzle-kit push --force
+```
+
+ou :
+
+```text
+db:push --force
+```
+
+ou toute commande équivalente sur production.
+
+---
+
+# ÉTAPE 5 — SCRIPTS DANGEREUX
+
+Inspecte :
+
+```text
+setup.sh
+setup_new.sh
+install_new.bat
+```
+
+et tous les autres scripts d'installation/déploiement.
+
+Recherche :
+
+```text
+db:push
+db:push --force
+drizzle-kit push
+DROP TABLE
+DROP SCHEMA
+TRUNCATE
+RESET
+```
+
+Si un script peut modifier ou détruire la base automatiquement, neutralise ce comportement.
+
+Le déploiement normal ne doit jamais lancer automatiquement une commande destructive sur PostgreSQL.
+
+Remplace si nécessaire par un processus explicite et contrôlé.
+
+---
+
+# ÉTAPE 6 — CORRECTION DES INDEX MANQUANTS
+
+L'audit précédent a identifié plusieurs indexes attendus mais absents.
+
+Prépare une migration NON DESTRUCTIVE pour les indexes suivants, après avoir vérifié leur pertinence exacte par rapport au schéma actuel :
+
+```text
+commentaires_signalement_id_idx
+commentaires_user_id_idx
+notifications_user_id_read_idx
+notifications_user_id_created_at_idx
+online_sessions_user_id_idx
+signalements_user_id_idx
+signalements_created_at_idx
+signalements_statut_idx
+tracking_sessions_user_id_active_idx
+```
+
+Utilise des opérations non destructives.
+
+Privilégie :
+
+```sql
+CREATE INDEX IF NOT EXISTS ...
+```
+
+lorsque cela est compatible avec la stratégie Drizzle retenue.
+
+### IMPORTANT
+
+Prépare et valide la migration.
+
+N'applique pas automatiquement une modification risquée sur production si l'état du schéma n'est pas suffisamment vérifié.
+
+---
+
+# ÉTAPE 7 — ONLINE_SESSIONS
+
+Vérifie la table :
+
+```text
+online_sessions
+```
+
+L'audit précédent a identifié que :
+
+```text
+id
+```
+
+devrait avoir un :
+
+```text
+DEFAULT gen_random_uuid()
+```
+
+mais que ce default semble absent de la base actuelle.
+
+Vérifie :
+
+1. le schéma TypeScript ;
+2. la structure réelle PostgreSQL ;
+3. les données existantes ;
+4. les contraintes ;
+5. les usages du champ dans le code.
+
+Si la correction est sûre et non destructive, prépare une migration contrôlée.
+
+Ne modifie pas les valeurs existantes.
+
+---
+
+# ÉTAPE 8 — REFRESH_TOKEN_SALT
+
+Le système de hash des refresh tokens doit utiliser un secret stable.
+
+Il est INTERDIT d'avoir un fallback du type :
+
+```text
+random secret generated at startup
+```
+
+en production.
+
+La configuration production doit exiger :
+
+```text
+REFRESH_TOKEN_SALT
+```
+
+avec une valeur stable et suffisamment robuste.
+
+Si elle est absente en production :
+
+> le backend doit refuser de démarrer.
+
+NE JAMAIS afficher la valeur dans le rapport.
+
+NE JAMAIS demander à l'utilisateur de la mettre dans le code.
+
+Elle doit être configurée dans le gestionnaire de secrets Railway/Replit approprié.
+
+---
+
+# ÉTAPE 9 — MASTER_ENCRYPTION_KEY
+
+Inspecte :
+
+```text
+server/encryptionService.ts
+```
+
+Vérifie le fonctionnement du chiffrement AES-256-GCM.
+
+Le système doit disposer d'une clé maître stable lorsqu'il utilise le fallback local.
+
+Vérifie :
+
+```text
+MASTER_ENCRYPTION_KEY
+```
+
+Elle doit être :
+
+* stable ;
+* secrète ;
+* suffisamment longue ;
+* compatible avec le format attendu par le code ;
+* absente du Git ;
+* absente des logs.
+
+Si la clé n'est pas correctement configurée en production, le système ne doit pas prétendre que le chiffrement est opérationnel.
+
+---
+
+# ÉTAPE 10 — GOOGLE CLOUD KMS
+
+Inspecte la configuration KMS.
+
+Vérifie :
+
+```text
+KMS_ENABLED
+KMS_PROJECT_ID
+KMS_KEY_RING_ID
+KMS_CRYPTO_KEY_ID
+```
+
+et le package :
+
+```text
+@google-cloud/kms
+```
+
+Le projet utilise Node.js 20.
+
+NE PAS passer automatiquement à Node.js 22.
+
+NE PAS installer la dernière version du package si elle impose une version Node incompatible.
+
+Respecte la version compatible déjà identifiée dans le projet/package-lock.
+
+Si une installation du package est nécessaire, utilise une version compatible avec Node 20 et cohérente avec le lockfile.
+
+Ne modifie pas inutilement la version Node du projet.
+
+---
+
+# ÉTAPE 11 — TEST DU CHIFFREMENT
+
+Une fois la dépendance disponible et la configuration correcte :
+
+crée ou exécute un test qui vérifie :
+
+```text
+plaintext
+   ↓
+encrypt
+   ↓
+ciphertext
+   ↓
+decrypt
+   ↓
+plaintext original
+```
+
+Puis vérifie que :
+
+1. une modification du ciphertext échoue ;
+2. une mauvaise clé échoue ;
+3. une mauvaise auth tag échoue ;
+4. aucun secret n'est affiché dans les logs.
+
+Le test doit démontrer que AES-256-GCM fonctionne réellement.
+
+---
+
+# ÉTAPE 12 — SECRETS ET HISTORIQUE GIT
+
+Effectue une recherche de secrets dans le dépôt actuel.
+
+Recherche notamment :
+
+```text
+DATABASE_URL
+RAILWAY_DATABASE_URL
+SESSION_SECRET
+REFRESH_TOKEN_SALT
+MASTER_ENCRYPTION_KEY
+CLIENT_SECRET
+CLIENT_ID
+GROQ
+RESEND
+GMAIL
+VAPID
+OAuth
+API_KEY
+PASSWORD
+TOKEN
+SECRET
+PRIVATE_KEY
+```
+
+Vérifie également :
+
+* `.gitignore`
+* `.env`
+* `.env.*`
+* `.replit`
+* Dockerfile
+* fichiers de configuration
+* scripts
+* Git history si accessible localement
+
+### IMPORTANT
+
+Ne révèle aucune valeur secrète dans le rapport.
+
+Si un secret historique a été commité :
+
+1. signale son existence ;
+2. recommande sa rotation ;
+3. ne l'affiche jamais ;
+4. ne le copie nulle part.
+
+Les secrets doivent vivre uniquement dans les gestionnaires de secrets/environnement appropriés.
+
+---
+
+# ÉTAPE 13 — SESSION_SECRET
+
+Vérifie que le système impose déjà :
+
+```text
+SESSION_SECRET
+```
+
+en production.
+
+La production doit refuser de démarrer si :
+
+* le secret est absent ;
+* il est trop court ;
+* il utilise une valeur par défaut dangereuse.
+
+Ne mets jamais une valeur de secours secrète dans le code.
+
+---
+
+# ÉTAPE 14 — BUILD ET TYPESCRIPT
+
+Exécute :
+
+```text
+npm run check
+```
+
+puis :
+
+```text
+npm run build
+```
+
+Corrige les erreurs liées à cette phase.
+
+Ne transforme pas cette phase en refactor massif.
+
+Ne casse pas les fonctionnalités existantes.
+
+Le build doit rester fonctionnel.
+
+---
+
+# ÉTAPE 15 — TESTS DE SÉCURITÉ
+
+Réexécute les tests de sécurité existants.
+
+Vérifie notamment :
+
+* authentification ;
+* ownership ;
+* IDOR ;
+* CSRF ;
+* permissions ;
+* session isolation ;
+* logs ;
+* SSRF ;
+* OTP ;
+* API sensibles.
+
+Si des tests existent déjà pour ces éléments, ne les supprime pas.
+
+---
+
+# ÉTAPE 16 — VÉRIFICATION DE LA BASE RAILWAY
+
+À la fin de la phase, confirme de manière non sensible :
+
+```text
+Production DB provider: Railway PostgreSQL
+Backend DB: Railway PostgreSQL
+Drizzle DB: Railway PostgreSQL
+```
+
+Vérifie également :
+
+* nombre de tables ;
+* contraintes ;
+* indexes ;
+* defaults ;
+* absence de destruction ;
+* absence de perte de données.
+
+NE FOURNIS PAS :
+
+* mot de passe ;
+* DATABASE_URL complète ;
+* tokens ;
+* clés ;
+* secrets.
+
+Tu peux afficher uniquement les informations structurelles nécessaires.
+
+---
+
+# ÉTAPE 17 — VÉRIFICATION DES DONNÉES
+
+Compare avant/après les éléments structurels importants.
+
+Il faut pouvoir confirmer :
+
+```text
+Aucune table supprimée
+Aucune donnée métier supprimée
+Aucune migration destructive exécutée
+Aucun reset de base exécuté
+```
+
+Si tu ne peux pas garantir l'un de ces points :
+
+> ARRÊTE-TOI ET SIGNALE LE PROBLÈME.
+
+Ne tente pas de le masquer.
+
+---
+
+# ÉTAPE 18 — NE PAS COMMENCER SURVEILLANCE
+
+À cette étape, tu ne dois créer aucun code pour :
+
+* caméra IP ;
+* RTSP ;
+* ONVIF ;
+* WebRTC ;
+* MediaMTX ;
+* FFmpeg ;
+* TURN ;
+* streaming ;
+* recording ;
+* caméra ;
+* surveillance ;
+* détection vidéo ;
+* AI vidéo.
+
+La fonctionnalité Surveillance commencera dans une phase séparée.
+
+---
+
+# ÉTAPE 19 — GIT DIFF
+
+Exécute :
+
+```text
+git diff --check
+```
+
+Inspecte le diff final.
+
+Vérifie :
+
+* aucun secret ;
+* aucune modification inutile ;
+* aucun fichier temporaire ;
+* aucune migration destructive ;
+* aucune suppression inattendue ;
+* aucun code Surveillance.
+
+---
+
+# ÉTAPE 20 — RAPPORT FINAL OBLIGATOIRE
+
+À la fin, produis un rapport clair avec exactement ces sections :
+
+## 1. Décision base de données
+
+Confirme :
+
+```text
+Railway PostgreSQL = base de production officielle
+```
+
+## 2. Configuration Backend
+
+Indique quelle variable est utilisée sans afficher sa valeur.
+
+## 3. Configuration Drizzle
+
+Indique quelle variable est utilisée sans afficher sa valeur.
+
+## 4. Cohérence Backend / Drizzle
+
+Indique clairement :
+
+```text
+COHÉRENT
+```
+
+ou :
+
+```text
+NON COHÉRENT
+```
+
+## 5. État PostgreSQL
+
+Donne :
+
+* nombre de tables ;
+* indexes ;
+* foreign keys ;
+* contraintes ;
+* defaults importants.
+
+## 6. Migrations
+
+Explique précisément :
+
+* historique trouvé ;
+* problème éventuel ;
+* stratégie retenue ;
+* migration créée ;
+* migration appliquée ou non.
+
+## 7. Sécurité des secrets
+
+Indique :
+
+* SESSION_SECRET ;
+* REFRESH_TOKEN_SALT ;
+* MASTER_ENCRYPTION_KEY ;
+* KMS ;
+* secrets historiques éventuels.
+
+Ne montre aucune valeur.
+
+## 8. Chiffrement
+
+Indique si le test AES-256-GCM a réussi.
+
+## 9. Tests
+
+Donne les résultats de :
+
+```text
+npm run check
+npm run build
+tests sécurité
+tests chiffrement
+git diff --check
+```
+
+## 10. Scripts dangereux
+
+Indique si :
+
+```text
+db:push
+db:push --force
+DROP TABLE
+TRUNCATE
+```
+
+peuvent encore être exécutés automatiquement.
+
+## 11. Surveillance
+
+Confirme :
+
+```text
+Aucun développement Surveillance effectué pendant Phase 1.7.
+```
+
+## 12. Risques restants
+
+Classe :
+
+```text
+CRITIQUE
+ÉLEVÉ
+MOYEN
+FAIBLE
+```
+
+## 13. Verdict final
+
+Choisis une seule valeur :
+
+```text
+READY
+```
+
+ou :
+
+```text
+READY WITH CONDITIONS
+```
+
+ou :
+
+```text
+NOT READY
+```
+
+### RÈGLE FINALE
+
+Si un point critique reste incertain, le verdict DOIT être :
+
+```text
+NOT READY
+```
+
+Ne considère pas le projet prêt simplement parce que `npm run build` réussit.
+
+La priorité absolue est :
+
+> **préserver les données Railway, sécuriser PostgreSQL, aligner Drizzle avec Railway, stabiliser les secrets et établir une base fiable avant de développer Surveillance.**
+
+Après le rapport final, ARRÊTE-TOI.
+
+N'enchaîne PAS automatiquement sur une Phase 1.8.
+
+Attends une validation explicite avant toute nouvelle modification.

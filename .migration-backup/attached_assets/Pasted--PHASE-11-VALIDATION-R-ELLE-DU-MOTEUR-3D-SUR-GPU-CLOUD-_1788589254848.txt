@@ -1,0 +1,653 @@
+# PHASE 11 — VALIDATION RÉELLE DU MOTEUR 3D SUR GPU CLOUD
+
+## CONTEXTE
+
+La Phase 10 est terminée avec :
+
+`NO-GO — industrialisation 3D suspendue`
+
+Cette décision est volontaire.
+
+L'architecture applicative Street View fonctionne actuellement jusqu'à :
+
+`validation vidéo → préparation → WAITING_FOR_3D`
+
+La chaîne suivante n'est PAS encore opérationnelle :
+
+`COLMAP / SfM → MVS → 3DGS`
+
+La cause principale est l'absence d'un environnement GPU réel ayant permis d'exécuter et de valider cette chaîne.
+
+La Phase 11 ne doit donc PAS industrialiser le système.
+
+Elle doit uniquement résoudre et valider le problème suivant :
+
+> **Obtenir une reconstruction 3D réelle dans un environnement GPU cloud temporaire et reproductible.**
+
+---
+
+# OBJECTIF UNIQUE
+
+Obtenir une preuve expérimentale complète :
+
+`VIDÉO`
+↓
+`FRAMES`
+↓
+`COLMAP / SfM`
+↓
+`MVS`
+↓
+`3D GAUSSIAN SPLATTING`
+↓
+`VÉRITABLE ARTEFACT 3D`
+
+Cette preuve doit être reproductible et documentée.
+
+---
+
+# RÈGLE ABSOLUE
+
+NE PAS modifier :
+
+* BurkinaWatch production ;
+* frontend ;
+* API ;
+* PostgreSQL ;
+* StreetView ;
+* queue actuelle ;
+* worker CPU ;
+* stockage production ;
+* Railway ;
+* authentification ;
+* domaine ;
+* déploiement.
+
+NE PAS créer de worker GPU permanent.
+
+NE PAS connecter le GPU cloud à la base de données de production.
+
+NE PAS envoyer automatiquement les données utilisateurs vers un fournisseur GPU.
+
+NE PAS lancer de traitement massif.
+
+Cette phase est un laboratoire totalement isolé.
+
+---
+
+# ÉTAPE 1 — LIRE LES RÉSULTATS DES PHASES 8, 9 ET 10
+
+Inspecter :
+
+`experiments/streetview-3d/PHASE_8_RESULT.md`
+
+`experiments/streetview-3d/PHASE_9_RESULT.md`
+
+`experiments/streetview-3d/PHASE_10_RESULT.md`
+
+Inspecter également :
+
+`experiments/streetview-3d/`
+
+et les datasets synthétiques disponibles.
+
+Construire un résumé :
+
+* ce qui fonctionne ;
+* ce qui ne fonctionne pas ;
+* ce qui a été réellement testé ;
+* ce qui n'a jamais été testé ;
+* dépendances nécessaires ;
+* ressources nécessaires ;
+* artefacts disponibles.
+
+NE PAS supposer qu'une étape fonctionne simplement parce qu'un script existe.
+
+---
+
+# ÉTAPE 2 — CHOISIR L'ENVIRONNEMENT GPU
+
+Avant de lancer une machine payante, comparer plusieurs solutions GPU cloud temporaires.
+
+Évaluer au minimum :
+
+* disponibilité GPU ;
+* VRAM ;
+* CUDA ;
+* compatibilité PyTorch ;
+* compatibilité COLMAP ;
+* compatibilité 3DGS ;
+* coût horaire ;
+* stockage ;
+* vitesse de démarrage ;
+* possibilité d'utiliser Docker ;
+* accès terminal ;
+* possibilité d'installer des dépendances ;
+* possibilité de supprimer l'instance immédiatement.
+
+Priorité :
+
+1. simplicité ;
+2. compatibilité ;
+3. reproductibilité ;
+4. coût ;
+5. performance.
+
+Ne pas choisir uniquement le GPU le moins cher.
+
+---
+
+# ÉTAPE 3 — DIMENSIONNEMENT
+
+Déterminer la configuration minimale réellement nécessaire.
+
+Comparer notamment :
+
+### Configuration A
+
+GPU avec environ 16 GB VRAM.
+
+### Configuration B
+
+GPU avec environ 24 GB VRAM.
+
+### Configuration C
+
+GPU avec davantage de VRAM.
+
+Pour chacune :
+
+* COLMAP compatible ?
+* MVS possible ?
+* 3DGS possible ?
+* résolution maximale raisonnable ?
+* nombre de frames raisonnable ?
+* risque d'OOM ?
+* coût approximatif ?
+
+Ne pas surdimensionner inutilement le premier test.
+
+---
+
+# ÉTAPE 4 — CRÉER UN ENVIRONNEMENT ISOLÉ
+
+Créer un environnement expérimental indépendant.
+
+Il doit contenir :
+
+* Linux compatible ;
+* Python version connue ;
+* CUDA ;
+* PyTorch ;
+* COLMAP ;
+* dépendances 3DGS.
+
+Si Docker est pertinent, privilégier Docker.
+
+Figer les versions autant que possible.
+
+Documenter :
+
+```text
+OS
+GPU
+VRAM
+Driver
+CUDA
+Python
+PyTorch
+COLMAP
+3DGS implementation
+```
+
+---
+
+# ÉTAPE 5 — TESTER LE GPU
+
+Avant tout traitement vidéo :
+
+vérifier :
+
+* `nvidia-smi`
+* CUDA ;
+* PyTorch ;
+* VRAM ;
+* calcul CUDA.
+
+Effectuer un petit test GPU.
+
+Le rapport doit confirmer que le calcul utilise réellement le GPU.
+
+---
+
+# ÉTAPE 6 — TESTER COLMAP INDÉPENDAMMENT
+
+Avant de traiter la vidéo complète :
+
+installer COLMAP.
+
+Vérifier la version.
+
+Effectuer un test minimal sur quelques images.
+
+Tester :
+
+* feature extraction ;
+* feature matching ;
+* sparse reconstruction.
+
+Vérifier que COLMAP produit réellement :
+
+* caméra(s) ;
+* poses ;
+* points 3D.
+
+Si cette étape échoue :
+
+**STOP.**
+
+Ne pas installer inutilement toute la chaîne 3DGS.
+
+---
+
+# ÉTAPE 7 — PREMIER DATASET
+
+Utiliser d'abord :
+
+`experiments/streetview-3d/runs/phase7c-synthetic/`
+
+ou le dataset synthétique le plus propre disponible.
+
+Documenter :
+
+* fichier source ;
+* durée ;
+* résolution ;
+* FPS ;
+* nombre de frames ;
+* sampling.
+
+---
+
+# ÉTAPE 8 — TEST SfM COMPLET
+
+Lancer :
+
+`frames → COLMAP → SfM`
+
+Mesurer :
+
+* temps ;
+* nombre d'images ;
+* images alignées ;
+* taux d'alignement ;
+* nombre de points ;
+* trajectoire caméra ;
+* erreurs ;
+* RAM ;
+* VRAM.
+
+Créer un artefact de diagnostic permettant d'inspecter les poses.
+
+---
+
+# ÉTAPE 9 — VALIDATION AVANT MVS
+
+Ne pas lancer MVS automatiquement.
+
+Déterminer :
+
+### PASS
+
+Les poses sont cohérentes.
+
+### PASS WITH WARNINGS
+
+Résultat exploitable avec limites.
+
+### FAIL
+
+Reconstruction insuffisante.
+
+Si `FAIL` :
+
+arrêter et documenter précisément pourquoi.
+
+---
+
+# ÉTAPE 10 — MVS
+
+Seulement si SfM est validé.
+
+Exécuter la reconstruction dense.
+
+Mesurer :
+
+* temps ;
+* mémoire ;
+* VRAM ;
+* taille ;
+* densité ;
+* qualité ;
+* erreurs.
+
+Conserver les artefacts nécessaires au diagnostic.
+
+---
+
+# ÉTAPE 11 — PREMIER TEST 3DGS
+
+Installer une implémentation 3D Gaussian Splatting compatible avec l'environnement.
+
+Ne pas choisir une implémentation simplement parce qu'elle est populaire.
+
+Vérifier :
+
+* licence ;
+* maintenance ;
+* compatibilité CUDA ;
+* compatibilité PyTorch ;
+* compatibilité avec les données COLMAP ;
+* consommation VRAM ;
+* facilité de reproduction.
+
+Puis lancer un premier entraînement/reconstruction.
+
+---
+
+# ÉTAPE 12 — PREUVE DE RECONSTRUCTION
+
+Le résultat ne doit pas être considéré comme réussi simplement parce que l'entraînement s'est terminé.
+
+Il faut vérifier que le résultat permet réellement de représenter la scène depuis plusieurs points de vue.
+
+Tester plusieurs vues :
+
+* vue proche ;
+* vue latérale ;
+* vue arrière ;
+* vue différente de celles utilisées directement pour l'entraînement.
+
+Chercher :
+
+* géométrie incohérente ;
+* flou ;
+* trous ;
+* artefacts ;
+* surfaces fantômes ;
+* objets déformés ;
+* problèmes de caméra.
+
+---
+
+# ÉTAPE 13 — TEST AVEC UNE VRAIE VIDÉO
+
+IMPORTANT :
+
+La vidéo synthétique ne constitue pas une validation de Street View réel.
+
+Si une vraie vidéo de rue Burkina Faso est disponible dans le projet, effectuer un test isolé avec celle-ci.
+
+Sinon :
+
+**NE PAS inventer de vidéo.**
+
+Documenter que le test réel reste à effectuer.
+
+La vidéo réelle doit idéalement contenir :
+
+* mouvement relativement lent ;
+* chevauchement important entre frames ;
+* bonne luminosité ;
+* peu de flou ;
+* surfaces avec suffisamment de texture ;
+* trajectoire relativement stable.
+
+---
+
+# ÉTAPE 14 — COMPARER SYNTHÉTIQUE ET RÉEL
+
+Si une vidéo réelle est disponible, comparer :
+
+| Critère                      | Synthétique | Réel |
+| ---------------------------- | ----------- | ---- |
+| Alignement                   |             |      |
+| Nombre de frames utilisables |             |      |
+| Points SfM                   |             |      |
+| Qualité caméra               |             |      |
+| MVS                          |             |      |
+| 3DGS                         |             |      |
+| Temps                        |             |      |
+| VRAM                         |             |      |
+| Artefacts                    |             |      |
+
+L'objectif est de détecter l'écart entre laboratoire et conditions terrain.
+
+---
+
+# ÉTAPE 15 — TEST DE RÉSOLUTION
+
+Tester raisonnablement plusieurs résolutions ou stratégies de sampling.
+
+Par exemple :
+
+* résolution élevée ;
+* résolution intermédiaire ;
+* résolution réduite.
+
+Mesurer l'impact sur :
+
+* qualité ;
+* temps ;
+* VRAM ;
+* coût.
+
+Objectif :
+
+déterminer le meilleur compromis pour de futures vidéos utilisateurs.
+
+---
+
+# ÉTAPE 16 — TEST DE DURÉE
+
+Tester plusieurs volumes raisonnables de frames.
+
+Exemple :
+
+* petit dataset ;
+* dataset moyen ;
+* dataset plus important.
+
+Déterminer :
+
+* quand la VRAM devient limitante ;
+* quand le temps devient excessif ;
+* si le pipeline doit découper automatiquement les vidéos longues.
+
+---
+
+# ÉTAPE 17 — DÉTERMINER LES LIMITES
+
+Identifier explicitement :
+
+* durée maximale pratique d'une vidéo ;
+* nombre maximal pratique de frames ;
+* résolution recommandée ;
+* VRAM minimale ;
+* temps moyen ;
+* taille du résultat ;
+* taux d'échec observé.
+
+Ces valeurs seront utilisées ultérieurement pour définir les règles d'upload Street View.
+
+---
+
+# ÉTAPE 18 — CALCUL DU COÛT
+
+Mesurer le coût réel ou aussi précisément que possible.
+
+Calculer :
+
+`coût GPU`
+
+*
+
+`coût stockage temporaire`
+
+*
+
+`coût transfert éventuel`
+
+*
+
+`coût CPU`
+
+=
+
+`coût approximatif par reconstruction`
+
+Puis estimer prudemment :
+
+* 10 contributions ;
+* 100 ;
+* 1 000 ;
+* 10 000.
+
+Signaler clairement toutes les hypothèses.
+
+---
+
+# ÉTAPE 19 — DÉCISION TECHNOLOGIQUE
+
+À partir des résultats, déterminer si la combinaison suivante reste pertinente :
+
+`COLMAP / SfM`
++
+`MVS`
++
+`3DGS`
+
+Comparer brièvement avec les alternatives si le test révèle une faiblesse majeure.
+
+Mais ne pas changer de technologie simplement parce que le premier test présente des problèmes.
+
+Identifier les problèmes :
+
+* problème d'environnement ;
+* problème de données ;
+* problème de sampling ;
+* problème de reconstruction ;
+* problème de 3DGS ;
+* problème de coût.
+
+---
+
+# ÉTAPE 20 — DOCUMENTATION
+
+Créer ou mettre à jour :
+
+`experiments/streetview-3d/PHASE_11_RESULT.md`
+
+Le rapport doit contenir :
+
+## Environnement GPU
+
+## Versions
+
+## Dataset
+
+## Prétraitement
+
+## COLMAP
+
+## SfM
+
+## MVS
+
+## 3DGS
+
+## Qualité
+
+## Temps
+
+## RAM / VRAM
+
+## Stockage
+
+## Coût
+
+## Limites
+
+## Problèmes rencontrés
+
+## Résultats synthétiques
+
+## Résultats réels, si disponibles
+
+## Recommandation technique
+
+## Verdict
+
+Utiliser :
+
+`GO`
+
+ou
+
+`GO WITH ADJUSTMENTS`
+
+ou
+
+`NO-GO`
+
+---
+
+# ÉTAPE 21 — CRITÈRE DE GO
+
+Un `GO` signifie qu'il existe désormais une preuve expérimentale réelle qu'une vidéo peut traverser :
+
+`VIDEO`
+→ `FRAMES`
+→ `SfM`
+→ `MVS`
+→ `3DGS`
+→ `SCÈNE 3D INSPECTABLE`
+
+et que :
+
+* les artefacts existent réellement ;
+* les résultats sont reproductibles ;
+* les limites sont connues ;
+* le coût est mesurable ;
+* le GPU requis est identifié.
+
+Un simple script qui s'exécute n'est PAS suffisant.
+
+---
+
+# CE QUI RESTE INTERDIT
+
+Même si le test réussit, NE PAS encore :
+
+* connecter le GPU à BurkinaWatch ;
+* traiter automatiquement les vidéos utilisateurs ;
+* publier les scènes ;
+* créer la carte 3D ;
+* fusionner les scènes ;
+* faire du géoréférencement définitif ;
+* créer le viewer public ;
+* créer un cluster GPU permanent.
+
+---
+
+# FIN DE PHASE
+
+À la fin :
+
+1. conserver les artefacts nécessaires ;
+2. produire `PHASE_11_RESULT.md` ;
+3. vérifier qu'aucune modification de production n'a été effectuée ;
+4. arrêter/détruire l'environnement GPU temporaire si inutile ;
+5. ne pas commencer automatiquement la phase suivante.
+
+ATTENDRE VALIDATION HUMAINE.

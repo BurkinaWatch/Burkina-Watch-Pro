@@ -1,0 +1,157 @@
+Nous avons maintenant suffisamment de logs Railway pour identifier le problème.
+
+NE MODIFIE PAS RAILWAY POUR LE MOMENT.
+
+Le log Railway du 5 septembre montre :
+
+Node 20.20.0
+npm ci --include=dev --legacy-peer-deps
+npm run build
+
+Mais l'étape npm ci apparaît comme :
+
+cached: true
+
+et immédiatement après :
+
+npm run build
+
+échoue avec :
+
+sh: 1: vite: not found
+
+Nous devons donc maintenant vérifier et corriger l'état réel des dépendances du projet.
+
+OBJECTIF UNIQUE :
+
+Garantir que Vite est réellement installé à partir de package.json/package-lock.json et disponible dans node_modules après une installation propre.
+
+ÉTAPE 1 — AUDIT
+
+Inspecte :
+
+* package.json
+* package-lock.json
+* .nvmrc
+* nixpacks.toml s'il existe
+* tout fichier de configuration npm
+* scripts npm
+
+Vérifie particulièrement :
+
+1. La présence de "vite" dans package.json.
+2. Sa version exacte.
+3. S'il est dans dependencies ou devDependencies.
+4. La présence de cette même dépendance dans package-lock.json.
+5. La cohérence package.json/package-lock.json.
+6. La présence éventuelle de "vite" dans des overrides/resolutions.
+7. Toute configuration qui pourrait empêcher l'installation de Vite.
+
+ÉTAPE 2 — INSTALLATION PROPRE
+
+Dans l'environnement Replit, réalise une installation propre des dépendances.
+
+Tu peux supprimer/recréer le node_modules LOCAL de Replit si nécessaire.
+
+IMPORTANT :
+Cette suppression est autorisée UNIQUEMENT dans l'environnement local/Replit.
+NE PAS ajouter "rm -rf node_modules" au Build Command Railway.
+
+Après installation, vérifie obligatoirement :
+
+npm list vite
+
+npx vite --version
+
+test -x node_modules/.bin/vite && echo "VITE_EXECUTABLE_OK"
+
+Puis :
+
+npm run build
+
+ÉTAPE 3 — SI VITE N'EST PAS INSTALLÉ
+
+Si npm list vite montre que Vite n'est pas installé alors que package.json le déclare :
+
+* ne déplace pas automatiquement Vite de devDependencies vers dependencies ;
+* ne mets pas à jour toutes les dépendances ;
+* identifie d'abord pourquoi npm ci ne l'installe pas ;
+* vérifie package-lock.json ;
+* corrige uniquement l'incohérence responsable.
+
+Si package.json ne contient réellement pas Vite alors que le script build utilise "vite build", ajoute uniquement Vite avec une version compatible avec le projet actuel et régénère proprement package-lock.json.
+
+ÉTAPE 4 — TEST CRITIQUE
+
+Après correction, simule exactement le comportement Railway autant que possible :
+
+1. installation depuis package-lock.json ;
+2. devDependencies activées ;
+3. npm list vite ;
+4. npx vite --version ;
+5. npm run build.
+
+Le résultat attendu est :
+
+Vite installé
+Vite exécutable
+npm run build réussi
+
+Le build doit réussir les trois commandes du script actuel :
+
+vite build
+
+esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+esbuild server/streetviewWorkerMain.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/streetview-worker.js
+
+ÉTAPE 5 — NE PAS TOUCHER AUX FONCTIONNALITÉS
+
+Ne modifie absolument pas :
+
+* fonctionnalités BurkinaWatch
+* routes API
+* authentification
+* base de données
+* Street View
+* frontend
+* cartes
+* SOS
+* signalements
+* paiements
+* OAuth
+* mobile
+* Expo
+* design
+
+Nous travaillons uniquement sur la chaîne de dépendances/build.
+
+ÉTAPE 6 — RAPPORT
+
+À la fin, donne-moi uniquement :
+
+Vite dans package.json :
+Version :
+dependencies/devDependencies :
+Vite dans package-lock :
+npm list vite :
+npx vite --version :
+vite executable :
+npm run build :
+Fichiers modifiés :
+Cause exacte :
+Correction appliquée :
+
+IMPORTANT :
+
+Ne me dis pas "c'est résolu" simplement parce que package.json semble correct.
+
+Je veux une preuve par :
+
+npm list vite
+npx vite --version
+npm run build
+
+Si npm run build réussit localement, indique-le clairement.
+
+Si une erreur persiste, arrête-toi à cette erreur précise et ne fais pas d'autres modifications spéculatives.

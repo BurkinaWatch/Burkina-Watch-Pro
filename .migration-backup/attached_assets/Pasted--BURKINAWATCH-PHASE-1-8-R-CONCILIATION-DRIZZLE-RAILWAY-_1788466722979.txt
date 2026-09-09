@@ -1,0 +1,900 @@
+# BURKINAWATCH — PHASE 1.8
+
+## RÉCONCILIATION DRIZZLE / RAILWAY + MIGRATION 0004 CONTRÔLÉE
+
+Tu poursuis le projet BurkinaWatch après les Phases 1.7 et 1.7B.
+
+Le dernier rapport a conclu :
+
+```text
+READY WITH CONDITIONS
+```
+
+Cette phase a un objectif UNIQUE :
+
+> **Réconcilier proprement Drizzle avec la base PostgreSQL Railway existante, puis appliquer de manière contrôlée la migration corrective 0004 si — et seulement si — toutes les vérifications démontrent qu'elle est sûre.**
+
+Cette phase est critique car Railway PostgreSQL contient déjà les données de production de BurkinaWatch.
+
+---
+
+# 0. DÉCISION ARCHITECTURALE DÉFINITIVE
+
+La décision suivante est NON NÉGOCIABLE :
+
+```text
+Railway PostgreSQL = seule base de données de production
+```
+
+Architecture :
+
+```text
+BURKINAWATCH
+      │
+      ├── Backend Node.js / Express
+      │
+      ├── Drizzle ORM
+      │
+      └── Railway PostgreSQL
+             │
+             └── SOURCE DE VÉRITÉ PRODUCTION
+```
+
+En production :
+
+```text
+Backend  → Railway PostgreSQL
+Drizzle  → Railway PostgreSQL
+```
+
+`DATABASE_URL` peut continuer à servir au développement local.
+
+Aucune autre base ne doit devenir une source de vérité concurrente.
+
+---
+
+# 1. RÈGLES ABSOLUES DE SÉCURITÉ
+
+Pendant toute cette phase :
+
+## INTERDICTIONS
+
+NE PAS :
+
+* supprimer une table ;
+* supprimer une donnée ;
+* recréer une table existante ;
+* réinitialiser PostgreSQL ;
+* utiliser `DROP TABLE` ;
+* utiliser `DROP SCHEMA` ;
+* utiliser `TRUNCATE` ;
+* utiliser `DELETE` sans nécessité absolue ;
+* utiliser `db:push`;
+* utiliser `db:push --force`;
+* utiliser `drizzle-kit push`;
+* utiliser une commande de reset de base ;
+* rejouer automatiquement les migrations historiques 0000 à 0003 ;
+* modifier les données métier ;
+* modifier les valeurs existantes des primary keys ;
+* modifier les valeurs existantes des foreign keys ;
+* modifier les valeurs existantes des UUID ;
+* faire un refactor massif ;
+* commencer Surveillance ;
+* créer Camera ;
+* créer RTSP ;
+* créer ONVIF ;
+* créer WebRTC ;
+* installer MediaMTX ;
+* installer FFmpeg ;
+* installer TURN ;
+* créer de l'enregistrement vidéo ;
+* créer de l'IA vidéo.
+
+NE demande jamais à l'utilisateur de te communiquer :
+
+* DATABASE_URL complète ;
+* mot de passe PostgreSQL ;
+* SESSION_SECRET ;
+* REFRESH_TOKEN_SALT ;
+* MASTER_ENCRYPTION_KEY ;
+* credentials OAuth ;
+* API keys.
+
+Ne révèle aucune valeur secrète dans les logs ou le rapport.
+
+---
+
+# 2. AVANT TOUTE MODIFICATION : SNAPSHOT STRUCTUREL
+
+Avant d'exécuter une quelconque migration sur Railway, réalise un état des lieux structurel de la base.
+
+Documente uniquement les métadonnées nécessaires :
+
+* tables ;
+* colonnes ;
+* types ;
+* nullable ;
+* primary keys ;
+* foreign keys ;
+* unique constraints ;
+* indexes ;
+* defaults ;
+* enums ;
+* extensions nécessaires.
+
+NE DUMP PAS les données métier dans les logs.
+
+NE COPIE PAS les credentials.
+
+NE FOURNIS PAS la DATABASE_URL.
+
+L'objectif est d'obtenir un snapshot structurel permettant de comparer :
+
+```text
+ÉTAT RAILWAY AVANT
+        ↓
+migration 0004
+        ↓
+ÉTAT RAILWAY APRÈS
+```
+
+---
+
+# 3. CONFIRMER LE NOMBRE DE TABLES
+
+L'audit précédent indiquait :
+
+```text
+29 tables attendues
+29 tables présentes
+```
+
+Vérifie à nouveau.
+
+Résultat attendu :
+
+```text
+29 tables
+```
+
+Si le nombre est différent :
+
+> STOP.
+
+Ne lance aucune migration.
+
+Explique exactement la différence.
+
+---
+
+# 4. VÉRIFIER LES DONNÉES AVANT MIGRATION
+
+Sans exposer de données sensibles, collecte des indicateurs permettant de démontrer que la migration n'entraînera aucune perte.
+
+Pour les tables concernées par 0004, vérifie notamment :
+
+```text
+commentaires
+notifications
+online_sessions
+signalements
+tracking_sessions
+```
+
+Vérifie les nombres de lignes avant migration.
+
+Ces nombres serviront de comparaison après migration.
+
+Ne modifie aucune ligne.
+
+---
+
+# 5. ANALYSER LE SCHÉMA DRIZZLE
+
+Inspecte :
+
+```text
+shared/schema.ts
+drizzle.config.*
+package.json
+migrations/
+```
+
+Détermine exactement comment Drizzle génère actuellement les migrations.
+
+Vérifie la configuration :
+
+```text
+schema
+out
+dialect
+dbCredentials
+```
+
+et surtout la variable d'environnement utilisée.
+
+Confirme que la cible de production est :
+
+```text
+Railway PostgreSQL
+```
+
+sans afficher la valeur de connexion.
+
+---
+
+# 6. PROBLÈME HISTORIQUE DRIZZLE
+
+L'état connu est :
+
+```text
+0000_jazzy_shape.sql
+0001_add_medias_column.sql
+0002_add_online_sessions.sql
+0003_fix_online_sessions_id.sql
+```
+
+mais :
+
+```text
+__drizzle_migrations = absent
+```
+
+et `0003` contient historiquement une opération destructive.
+
+NE REJOUE PAS ces migrations.
+
+NE SUPPRIME PAS ces fichiers historiques.
+
+NE tente pas de faire croire qu'ils ont été exécutés.
+
+---
+
+# 7. OBJECTIF DE LA BASELINE
+
+Nous devons maintenant déterminer la manière la plus sûre de faire comprendre à Drizzle :
+
+> « La base Railway actuelle est déjà existante et constitue l'état de référence. »
+
+La baseline doit être compatible avec :
+
+```text
+Railway actuel
++
+shared/schema.ts
++
+future migrations
+```
+
+Elle doit permettre ensuite un workflow :
+
+```text
+modification schema
+      ↓
+migration Drizzle
+      ↓
+review
+      ↓
+application contrôlée
+```
+
+et non :
+
+```text
+schema
+ ↓
+db:push
+ ↓
+production
+```
+
+---
+
+# 8. NE PAS CRÉER UNE FAUSSE BASELINE
+
+IMPORTANT :
+
+Ne crée pas une baseline simplement pour faire disparaître le problème.
+
+Avant de créer quoi que ce soit, vérifie :
+
+1. l'état réel des 29 tables ;
+2. le contenu de `shared/schema.ts` ;
+3. les migrations historiques ;
+4. les indexes ;
+5. les defaults ;
+6. les foreign keys ;
+7. les contraintes uniques ;
+8. les différences entre schéma logique et schéma PostgreSQL.
+
+Si une baseline nécessite une opération destructive ou ambiguë :
+
+> STOP.
+
+Ne l'applique pas.
+
+---
+
+# 9. STRATÉGIE RECOMMANDÉE
+
+Si possible, utilise une stratégie de baseline qui marque l'état actuel comme déjà connu de Drizzle **sans recréer les tables existantes**.
+
+La baseline ne doit pas :
+
+```text
+CREATE TABLE
+DROP TABLE
+ALTER TABLE destructive
+DELETE
+TRUNCATE
+```
+
+sur Railway.
+
+Si la création d'un journal `__drizzle_migrations` est nécessaire, elle doit être faite uniquement selon une méthode Drizzle officiellement compatible et après vérification de son impact.
+
+NE fabrique pas manuellement une structure interne Drizzle au hasard.
+
+Si tu n'es pas certain de la méthode :
+
+> STOP et documente la procédure proposée sans l'exécuter.
+
+---
+
+# 10. MIGRATION 0004
+
+Le fichier actuel est :
+
+```text
+migrations/0004_runtime_alignment_draft.sql
+```
+
+Il prépare :
+
+### Index
+
+```text
+commentaires_signalement_id_idx
+commentaires_user_id_idx
+notifications_user_id_read_idx
+notifications_user_id_created_at_idx
+online_sessions_user_id_idx
+signalements_user_id_idx
+signalements_created_at_idx
+signalements_statut_idx
+tracking_sessions_user_id_active_idx
+```
+
+### Default
+
+```text
+online_sessions.id
+DEFAULT gen_random_uuid()
+```
+
+---
+
+# 11. AUDIT SQL DE 0004
+
+Analyse ligne par ligne la migration 0004.
+
+Elle doit être :
+
+```text
+NON DESTRUCTIVE
+IDEMPOTENTE SI POSSIBLE
+COMPATIBLE POSTGRESQL
+```
+
+Vérifie notamment qu'elle ne contient pas :
+
+```sql
+DROP
+TRUNCATE
+DELETE
+```
+
+ou une opération indirectement destructive.
+
+Vérifie également les noms exacts des colonnes et tables.
+
+---
+
+# 12. VALIDATION DES INDEX
+
+Avant de créer un index, vérifier s'il existe déjà sous un autre nom ou avec une définition équivalente.
+
+Ne crée pas de doublons.
+
+Pour chaque index :
+
+```text
+nom
+table
+colonnes
+unique/non unique
+définition
+```
+
+compare :
+
+```text
+shared/schema.ts
+VS
+PostgreSQL Railway
+```
+
+Si un index attendu n'est plus nécessaire ou si le schéma a changé depuis l'audit précédent :
+
+> ne l'ajoute pas aveuglément.
+
+Documente la différence.
+
+---
+
+# 13. VALIDATION ONLINE_SESSIONS
+
+Vérifie :
+
+```text
+online_sessions.id
+```
+
+et son type.
+
+Vérifie également que :
+
+```sql
+gen_random_uuid()
+```
+
+est disponible dans PostgreSQL Railway.
+
+Avant modification, confirme :
+
+* type UUID ;
+* lignes existantes ;
+* absence de conflit ;
+* compatibilité avec les insertions futures ;
+* compatibilité avec le code.
+
+La correction doit uniquement ajouter le default pour les nouvelles lignes.
+
+Elle ne doit pas modifier les UUID existants.
+
+---
+
+# 14. BACKUP / SNAPSHOT
+
+Avant d'appliquer une migration de production, utilise si possible le mécanisme de backup/snapshot fourni par Railway.
+
+Si un backup automatique ou manuel est disponible :
+
+```text
+Créer/valider un point de restauration
+```
+
+avant migration.
+
+NE SUPPRIME RIEN.
+
+Si aucun mécanisme de backup exploitable n'est disponible :
+
+> NE PAS appliquer automatiquement la migration 0004.
+
+Documente simplement que le backup préalable reste une condition.
+
+---
+
+# 15. PROCÉDURE D'APPLICATION
+
+La migration 0004 ne peut être appliquée à Railway que si toutes les conditions suivantes sont satisfaites :
+
+```text
+[ ] 29 tables confirmées
+[ ] données intactes
+[ ] migration 0004 auditée
+[ ] aucun DROP/TRUNCATE/DELETE
+[ ] indexes vérifiés
+[ ] online_sessions vérifié
+[ ] backup/snapshot disponible ou procédure de restauration confirmée
+[ ] cible = Railway PostgreSQL
+[ ] aucune ambiguïté Backend/Drizzle
+[ ] aucun secret exposé
+```
+
+Si UNE seule condition critique échoue :
+
+> NE PAS APPLIQUER 0004.
+
+---
+
+# 16. APPLICATION DE 0004
+
+Si toutes les conditions sont satisfaites, applique la migration via le mécanisme de migration Drizzle contrôlé approprié.
+
+NE PAS utiliser :
+
+```text
+db:push
+db:push --force
+drizzle-kit push
+```
+
+La migration doit être exécutée comme une migration versionnée.
+
+Avant exécution, affiche uniquement :
+
+```text
+Migration ciblée : 0004
+Cible : Railway PostgreSQL
+Type : non destructive
+```
+
+Après exécution, vérifie immédiatement l'état PostgreSQL.
+
+---
+
+# 17. VÉRIFICATION APRÈS MIGRATION
+
+Après application éventuelle de 0004, vérifie :
+
+### Tables
+
+```text
+29 avant
+29 après
+```
+
+### Données
+
+Les tables concernées doivent conserver leur nombre de lignes.
+
+### Index
+
+Les 9 indexes attendus doivent être présents après migration, sauf si l'audit démontre qu'un index était déjà présent sous une autre forme.
+
+### online_sessions
+
+Vérifier :
+
+```text
+online_sessions.id
+DEFAULT gen_random_uuid()
+```
+
+### Contraintes
+
+Vérifier que les :
+
+```text
+22 foreign keys
+6 unique constraints
+```
+
+sont toujours présentes.
+
+### Primary keys
+
+Vérifier :
+
+```text
+29 primary keys
+```
+
+---
+
+# 18. VÉRIFICATION DRIZZLE APRÈS MIGRATION
+
+Drizzle doit maintenant être capable de connaître l'état de la base.
+
+Vérifie :
+
+```text
+schema
+migration history
+database
+```
+
+et confirme qu'une future modification de `shared/schema.ts` peut produire une migration incrémentale normale.
+
+NE fais pas de `db:push`.
+
+Si la synchronisation Drizzle reste ambiguë :
+
+> STOP.
+
+Ne tente pas de la résoudre par force.
+
+---
+
+# 19. TEST DE NON-RÉGRESSION
+
+Exécute :
+
+```text
+npm run check
+npm run build
+```
+
+Puis les tests de sécurité existants.
+
+Puis :
+
+```text
+git diff --check
+```
+
+Vérifie aussi les endpoints de base :
+
+```text
+/api/stats
+/api/auth/csrf
+/api/auth/user
+```
+
+---
+
+# 20. TESTS FONCTIONNELS APRÈS MIGRATION
+
+Si la migration est effectivement appliquée, vérifie que les fonctionnalités existantes critiques continuent à fonctionner.
+
+Au minimum :
+
+* authentification ;
+* session ;
+* signalements ;
+* commentaires ;
+* notifications ;
+* tracking ;
+* online sessions.
+
+Ne crée aucune nouvelle fonctionnalité.
+
+---
+
+# 21. RÈGLE EN CAS D'ANOMALIE
+
+Si une anomalie apparaît avant, pendant ou après la migration :
+
+```text
+STOP
+```
+
+Ne tente pas une réparation improvisée.
+
+Ne lance pas :
+
+```text
+db:push --force
+DROP
+TRUNCATE
+RESET
+```
+
+Documente :
+
+* l'erreur ;
+* l'état de la base ;
+* l'opération effectuée ;
+* l'opération qui n'a pas été effectuée.
+
+---
+
+# 22. GESTION DES SECRETS
+
+Pendant cette phase :
+
+NE PAS afficher :
+
+```text
+DATABASE_URL
+RAILWAY_DATABASE_URL
+REFRESH_TOKEN_SALT
+MASTER_ENCRYPTION_KEY
+SESSION_SECRET
+OAuth secrets
+API keys
+```
+
+Les logs doivent afficher uniquement :
+
+```text
+variable présente : oui/non
+```
+
+jamais sa valeur.
+
+---
+
+# 23. SURVEILLANCE INTERDITE
+
+Cette phase ne doit créer aucun élément de Surveillance.
+
+À la fin, vérifie qu'aucun nouveau :
+
+```text
+Camera
+RTSP
+ONVIF
+WebRTC
+MediaMTX
+FFmpeg
+TURN
+stream
+recording
+video AI
+```
+
+n'a été introduit.
+
+---
+
+# 24. RAPPORT FINAL OBLIGATOIRE
+
+Produis un rapport avec les sections suivantes.
+
+## A. État avant migration
+
+```text
+Tables :
+Primary keys :
+Foreign keys :
+Unique constraints :
+Indexes :
+online_sessions.id default :
+```
+
+## B. Baseline
+
+Indique :
+
+```text
+Baseline nécessaire : OUI/NON
+Baseline préparée : OUI/NON
+Baseline appliquée : OUI/NON
+Méthode :
+```
+
+Explique clairement ce qui a été fait.
+
+## C. Migration 0004
+
+```text
+Audit SQL : PASS/FAIL
+Application : OUI/NON
+```
+
+Si appliquée :
+
+```text
+Date/heure :
+Cible :
+Résultat :
+```
+
+Ne donne jamais la DATABASE_URL.
+
+## D. État après migration
+
+Comparer :
+
+```text
+AVANT
+VS
+APRÈS
+```
+
+pour :
+
+* tables ;
+* données ;
+* indexes ;
+* contraintes ;
+* defaults.
+
+## E. Drizzle
+
+Indique :
+
+```text
+Backend → Railway : OK/FAIL
+Drizzle → Railway : OK/FAIL
+Migration history : OK/FAIL
+Future migrations : OK/FAIL
+```
+
+## F. Tests
+
+```text
+npm run check :
+npm run build :
+Security tests :
+git diff --check :
+Endpoints :
+Tests fonctionnels :
+```
+
+## G. Sécurité
+
+Confirme :
+
+```text
+Aucune donnée supprimée
+Aucune table supprimée
+Aucun DROP exécuté
+Aucun TRUNCATE exécuté
+Aucun db:push exécuté
+Aucun db:push --force exécuté
+Aucun secret exposé
+```
+
+## H. Surveillance
+
+```text
+Aucun développement Surveillance effectué.
+```
+
+## I. Verdict
+
+Choisir exactement une seule option :
+
+```text
+READY
+```
+
+si Drizzle et Railway sont correctement réconciliés et que 0004 est appliquée et validée.
+
+OU :
+
+```text
+READY WITH CONDITIONS
+```
+
+si le socle est correct mais qu'une action administrative ou une validation humaine reste nécessaire.
+
+OU :
+
+```text
+NOT READY
+```
+
+si la baseline ou la migration reste ambiguë ou dangereuse.
+
+---
+
+# 25. RÈGLE FINALE
+
+La priorité absolue est :
+
+> **préserver la base PostgreSQL Railway et ses données existantes.**
+
+Une base parfaitement synchronisée vaut mieux qu'une migration forcée.
+
+Si tu dois choisir entre :
+
+```text
+faire avancer Drizzle rapidement
+```
+
+et :
+
+```text
+préserver la stabilité de Railway
+```
+
+choisis toujours :
+
+```text
+PRÉSERVER RAILWAY
+```
+
+À la fin de cette phase :
+
+> ARRÊTE-TOI.
+
+Ne commence aucune Phase 2.
+
+Ne développe pas Surveillance.
+
+Attends une validation humaine explicite avant toute nouvelle modification.

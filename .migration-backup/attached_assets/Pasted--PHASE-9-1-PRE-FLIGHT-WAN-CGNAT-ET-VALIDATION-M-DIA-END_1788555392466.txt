@@ -1,0 +1,843 @@
+# PHASE 9.1 — PRE-FLIGHT, WAN/CGNAT ET VALIDATION MÉDIA END-TO-END
+
+## CONTEXTE
+
+La Phase 9 de BurkinaWatch est terminée avec le verdict :
+
+**READY WITH CONDITIONS**
+
+Les conditions restantes sont exactement les suivantes :
+
+1. exécuter le preflight Railway en lecture seule ;
+2. valider le réseau WAN/CGNAT réel ;
+3. compléter les documents de Phase 9 ;
+4. réaliser les tests d'intégration média de bout en bout.
+
+Cette phase 9.1 a pour unique objectif de lever ces conditions.
+
+IMPORTANT :
+
+NE PAS commencer une nouvelle architecture.
+
+NE PAS ajouter de nouvelles fonctionnalités.
+
+NE PAS déployer en production.
+
+NE PAS modifier inutilement l'infrastructure existante.
+
+NE PAS contourner une mesure de sécurité pour faire fonctionner un test.
+
+---
+
+# 1. RÈGLE ABSOLUE : LECTURE SEULE POUR RAILWAY
+
+Commencer par effectuer un preflight Railway entièrement en lecture seule.
+
+NE PAS :
+
+* modifier les variables ;
+* modifier les services ;
+* modifier les domaines ;
+* modifier les ports ;
+* modifier les volumes ;
+* modifier PostgreSQL ;
+* déclencher un déploiement ;
+* redémarrer un service volontairement ;
+* modifier le réseau ;
+* modifier les secrets ;
+* modifier les configurations de production.
+
+Le preflight doit uniquement OBSERVER et RAPPORTER.
+
+Créer :
+
+`docs/PHASE_9_1_RAILWAY_PREFLIGHT.md`
+
+---
+
+# 2. PRE-FLIGHT RAILWAY
+
+Auditer :
+
+## APPLICATION
+
+* service backend ;
+* service frontend si séparé ;
+* build ;
+* start command ;
+* runtime Node.js ;
+* healthcheck ;
+* domaine ;
+* statut du service ;
+* derniers logs utiles.
+
+## VARIABLES D'ENVIRONNEMENT
+
+Vérifier uniquement la PRÉSENCE et la cohérence.
+
+NE JAMAIS afficher les valeurs secrètes.
+
+Contrôler notamment selon ce qui existe réellement :
+
+* DATABASE_URL / RAILWAY_DATABASE_URL ;
+* SESSION_SECRET ;
+* MASTER_ENCRYPTION_KEY ;
+* REFRESH_TOKEN_SALT ;
+* Media Gateway URL ;
+* Media Gateway credentials ;
+* Camera Agent configuration ;
+* STUN/TURN ;
+* autres variables nécessaires.
+
+Afficher par exemple :
+
+`MASTER_ENCRYPTION_KEY = PRESENT`
+
+et jamais :
+
+`MASTER_ENCRYPTION_KEY = <valeur>`
+
+## BASE DE DONNÉES
+
+Vérifier :
+
+* disponibilité ;
+* connexion ;
+* schéma ;
+* migrations ;
+* tables ;
+* contraintes ;
+* index critiques.
+
+NE PAS modifier la base.
+
+NE PAS lancer :
+
+`db:push`
+
+`db:push --force`
+
+`DROP`
+
+reset
+
+ou toute commande destructive.
+
+## RÉSEAU
+
+Identifier :
+
+* URL backend ;
+* URL frontend ;
+* URL Media Gateway si connue ;
+* exposition publique ;
+* HTTPS ;
+* ports ;
+* éventuelles restrictions réseau.
+
+---
+
+# 3. RAPPORT RAILWAY
+
+Le rapport doit clairement distinguer :
+
+### VERIFIED
+
+Information réellement observée.
+
+### NOT VERIFIED
+
+Information impossible à confirmer en lecture seule.
+
+### RISK
+
+Problème potentiel.
+
+### BLOCKER
+
+Problème empêchant la production.
+
+Ne jamais transformer une hypothèse en validation.
+
+---
+
+# 4. VALIDATION WAN / CGNAT
+
+La deuxième condition doit être testée avec un réseau réellement distant.
+
+Architecture à tester :
+
+CAMÉRA IP
+↓
+RÉSEAU DISTANT
+↓
+NAT / CGNAT éventuel
+↓
+CAMERA AGENT
+↓
+CONNEXION SORTANTE SÉCURISÉE
+↓
+MEDIA GATEWAY
+↓
+WEBRTC/WHEP
+↓
+BURKINAWATCH
+
+Le test doit idéalement être réalisé avec :
+
+* réseau mobile ;
+* hotspot ;
+* connexion résidentielle ;
+* ou autre réseau réellement différent de celui du serveur.
+
+Si le réseau utilise un CGNAT, le constater et le documenter.
+
+---
+
+# 5. IMPORTANT : NE PAS EXPOSER LA CAMÉRA
+
+Pour effectuer le test WAN :
+
+NE PAS demander de :
+
+* port forwarding RTSP ;
+* port 554 ouvert sur Internet ;
+* DMZ ;
+* UPnP ;
+* désactivation firewall ;
+* exposition directe de la caméra.
+
+Le principe doit rester :
+
+`CAMÉRA → CAMERA AGENT → CONNEXION SORTANTE`
+
+---
+
+# 6. TEST CAMERA AGENT DISTANT
+
+Vérifier :
+
+### TEST 1
+
+Agent démarre derrière NAT.
+
+Résultat attendu :
+
+`CONNECTED`
+
+### TEST 2
+
+Agent établit sa connexion sortante.
+
+### TEST 3
+
+Agent s'authentifie.
+
+### TEST 4
+
+Agent est associé à la caméra autorisée.
+
+### TEST 5
+
+Agent publie le flux.
+
+### TEST 6
+
+Media Gateway reçoit le flux.
+
+### TEST 7
+
+BurkinaWatch peut autoriser un viewer.
+
+### TEST 8
+
+Le viewer reçoit réellement la vidéo.
+
+---
+
+# 7. TEST CGNAT
+
+Si le réseau est derrière CGNAT :
+
+documenter :
+
+* type de réseau ;
+* IPv4 publique éventuelle ;
+* IPv6 éventuelle ;
+* comportement NAT ;
+* connexion sortante ;
+* possibilité ou impossibilité de connexion entrante ;
+* comportement WebRTC ;
+* nécessité de TURN.
+
+NE PAS conclure qu'un réseau est "compatible CGNAT" simplement parce que l'agent peut joindre le backend.
+
+Il faut également vérifier le chemin média.
+
+---
+
+# 8. TEST WEBRTC / STUN / TURN
+
+Tester le flux dans au moins un navigateur desktop moderne.
+
+Vérifier :
+
+* ICE gathering ;
+* ICE connection ;
+* candidate type si disponible ;
+* connexion directe si possible ;
+* TURN relay si nécessaire ;
+* temps de connexion ;
+* stabilité.
+
+Documenter clairement :
+
+### DIRECT
+
+ou
+
+### STUN
+
+ou
+
+### TURN
+
+Ne pas activer ou imposer TURN sans preuve technique.
+
+Si TURN est nécessaire :
+
+documenter pourquoi.
+
+---
+
+# 9. TEST DE BOUT EN BOUT
+
+C'est le test principal de cette phase.
+
+Réaliser réellement :
+
+`CAMÉRA IP`
+↓
+`CAMERA AGENT`
+↓
+`MEDIA TRANSPORT VALIDÉ PHASE 8.2`
+↓
+`MEDIAMTX / VIDEO GATEWAY`
+↓
+`WEBRTC / WHEP`
+↓
+`BURKINAWATCH`
+↓
+`NAVIGATEUR`
+↓
+`IMAGE VIDÉO RÉELLE`
+
+Le test doit confirmer que la vidéo est réellement visible.
+
+Un :
+
+`HTTP 200`
+
+n'est PAS une preuve suffisante.
+
+Un :
+
+`stream exists`
+
+n'est PAS une preuve suffisante.
+
+Un :
+
+`WebRTC session created`
+
+n'est PAS une preuve suffisante.
+
+Il faut confirmer que le navigateur reçoit effectivement les données média.
+
+---
+
+# 10. MESURES END-TO-END
+
+Mesurer si possible :
+
+* temps entre ouverture du viewer et première image ;
+* stabilité ;
+* latence approximative ;
+* interruptions ;
+* reconnexion ;
+* consommation réseau ;
+* CPU agent ;
+* CPU Media Gateway ;
+* nombre de viewers.
+
+Les mesures n'ont pas besoin d'être extrêmement précises pour cette phase, mais elles doivent être réelles.
+
+---
+
+# 11. TEST COUPURE CAMÉRA
+
+Procédure :
+
+1. caméra online ;
+2. viewer actif ;
+3. couper caméra ;
+4. observer état ;
+5. remettre caméra ;
+6. observer reconnexion.
+
+Vérifier :
+
+`LIVE → OFFLINE → RECONNECTING → LIVE`
+
+ou le comportement réellement implémenté.
+
+Documenter le résultat réel.
+
+---
+
+# 12. TEST COUPURE INTERNET DE L'AGENT
+
+Procédure :
+
+1. agent connecté ;
+2. flux actif ;
+3. couper temporairement la connexion réseau ;
+4. observer ;
+5. restaurer réseau ;
+6. observer reconnexion.
+
+Vérifier :
+
+* backoff ;
+* absence de boucle agressive ;
+* heartbeat ;
+* récupération du stream ;
+* récupération du viewer.
+
+---
+
+# 13. TEST REDÉMARRAGE AGENT
+
+Redémarrer le Camera Agent.
+
+Vérifier :
+
+* reconnexion ;
+* authentification ;
+* récupération de la caméra ;
+* republication du flux ;
+* récupération du viewer.
+
+---
+
+# 14. TEST MEDIA GATEWAY
+
+Si possible en environnement de test contrôlé :
+
+* arrêter Media Gateway ;
+* observer ;
+* relancer ;
+* observer.
+
+NE PAS redémarrer un composant de production sans autorisation explicite.
+
+Si le test ne peut pas être réalisé sans risque :
+
+marquer :
+
+`NOT TESTED — PRODUCTION SAFETY`
+
+et documenter comment il devra être testé en préproduction.
+
+---
+
+# 15. TEST AUTHENTIFICATION
+
+Tester :
+
+### UTILISATEUR NON CONNECTÉ
+
+→ refus.
+
+### UTILISATEUR CONNECTÉ MAIS NON PROPRIÉTAIRE
+
+→ refus.
+
+### PROPRIÉTAIRE
+
+→ accès autorisé.
+
+### AGENT RÉVOQUÉ
+
+→ publication refusée.
+
+### CAMÉRA SUPPRIMÉE
+
+→ publication refusée.
+
+---
+
+# 16. TEST TOKEN VIEWER
+
+Tester :
+
+* token valide ;
+* token expiré ;
+* token falsifié ;
+* token d'un autre utilisateur ;
+* token d'une autre caméra ;
+* token d'un stream différent ;
+* session révoquée.
+
+Tous les accès non autorisés doivent être refusés.
+
+---
+
+# 17. TEST IDOR
+
+Tester explicitement :
+
+Utilisateur A essaye d'accéder à :
+
+* caméra B ;
+* agent B ;
+* stream B ;
+* viewer session B ;
+* token B ;
+* status B.
+
+Tout doit être refusé.
+
+---
+
+# 18. TEST SSRF
+
+Vérifier que les protections SSRF existantes fonctionnent toujours.
+
+Tester des variantes :
+
+* localhost ;
+* loopback ;
+* IP privée ;
+* link-local ;
+* metadata ;
+* IPv6 privée ;
+* redirections ;
+* formats IP alternatifs.
+
+NE PAS désactiver SSRF pour faire fonctionner le test.
+
+---
+
+# 19. MULTI-CAMÉRAS
+
+Si plusieurs caméras de test sont disponibles :
+
+tester :
+
+Camera A → LIVE
+
+Camera B → LIVE
+
+Camera C → OFFLINE
+
+Vérifier l'indépendance des états.
+
+Un flux défaillant ne doit pas casser les autres.
+
+---
+
+# 20. MULTI-VIEWERS
+
+Avec une caméra de test :
+
+* viewer 1 ;
+* viewer 2 ;
+* éventuellement viewer 3.
+
+Vérifier :
+
+* accès autorisé ;
+* stabilité ;
+* consommation ;
+* absence de mélange entre utilisateurs ;
+* limite éventuelle de viewers.
+
+---
+
+# 21. MOBILE
+
+Tester au minimum sur Android si l'application mobile existe déjà.
+
+Vérifier :
+
+* authentification ;
+* accès caméra ;
+* WebRTC ;
+* affichage ;
+* reconnexion ;
+* sortie/rentrée dans l'application.
+
+Ne pas casser le web existant.
+
+---
+
+# 22. DOCUMENTATION PHASE 9
+
+Compléter les documents suivants :
+
+`docs/PHASE_9_ARCHITECTURE.md`
+
+`docs/PHASE_9_DEPLOYMENT.md`
+
+`docs/PHASE_9_SECURITY.md`
+
+`docs/PHASE_9_TROUBLESHOOTING.md`
+
+et créer :
+
+`docs/PHASE_9_1_RAILWAY_PREFLIGHT.md`
+
+`docs/PHASE_9_1_WAN_CGNAT.md`
+
+`docs/PHASE_9_1_E2E_MEDIA_TEST.md`
+
+---
+
+# 23. DOCUMENTATION : NE PAS INVENTER
+
+Chaque affirmation doit être classée :
+
+* VERIFIED ;
+* TESTED ;
+* NOT TESTED ;
+* ASSUMED ;
+* BLOCKED.
+
+Ne jamais écrire :
+
+"compatible CGNAT"
+
+sans test réel.
+
+Ne jamais écrire :
+
+"production ready"
+
+si le test end-to-end n'a pas été réalisé.
+
+---
+
+# 24. TESTS AUTOMATISÉS
+
+Exécuter :
+
+`npm run check`
+
+`npm run build`
+
+`npm test`
+
+`git diff --check`
+
+Exécuter également les tests spécifiques caméra/média déjà présents.
+
+Ne supprimer aucun test existant simplement parce qu'il échoue.
+
+---
+
+# 25. GIT / SÉCURITÉ
+
+Avant de terminer :
+
+`git status`
+
+`git diff --stat`
+
+`git diff --check`
+
+Vérifier :
+
+* aucun secret ;
+* aucune clé ;
+* aucun credential ;
+* aucun RTSP URL sensible ;
+* aucun fichier temporaire ;
+* aucun dump DB.
+
+---
+
+# 26. AUCUNE MODIFICATION DE PRODUCTION
+
+Cette phase est une phase de VALIDATION.
+
+NE PAS :
+
+* déployer ;
+* changer Railway ;
+* changer DNS ;
+* modifier firewall ;
+* modifier Media Gateway de production ;
+* modifier PostgreSQL production ;
+* effectuer une migration DB ;
+* changer les secrets.
+
+Si une modification est absolument nécessaire :
+
+ARRÊTER et la signaler comme condition bloquante.
+
+---
+
+# 27. CRITÈRES DE RÉUSSITE
+
+La Phase 9.1 est considérée comme réussie uniquement si :
+
+### RAILWAY
+
+Preflight réalisé sans modification.
+
+### WAN
+
+Un test réseau distant réel est documenté.
+
+### CGNAT
+
+Le comportement réel est connu ou explicitement marqué non testé.
+
+### MEDIA
+
+La chaîne complète fonctionne réellement.
+
+### WEBRTC
+
+Le viewer reçoit réellement le média.
+
+### SECURITY
+
+Les contrôles d'accès fonctionnent.
+
+### RECONNECT
+
+Les scénarios principaux sont testés.
+
+### DOCUMENTATION
+
+Les documents Phase 9 sont complétés.
+
+---
+
+# 28. RAPPORT FINAL
+
+Créer :
+
+`docs/PHASE_9_1_FINAL_REPORT.md`
+
+Structure :
+
+## 1. Objectif
+
+## 2. État initial
+
+## 3. Railway Preflight
+
+## 4. WAN
+
+## 5. CGNAT
+
+## 6. STUN/TURN
+
+## 7. Camera Agent
+
+## 8. Media Gateway
+
+## 9. WebRTC/WHEP
+
+## 10. Test end-to-end
+
+## 11. Tests de sécurité
+
+## 12. Tests multi-caméras
+
+## 13. Tests multi-viewers
+
+## 14. Tests mobile
+
+## 15. Reconnexion
+
+## 16. Performance
+
+## 17. Documentation complétée
+
+## 18. Problèmes rencontrés
+
+## 19. Risques restants
+
+## 20. Conditions restantes
+
+---
+
+# 29. VERDICT FINAL
+
+Donner obligatoirement l'un des trois verdicts :
+
+## READY FOR PHASE 10
+
+Toutes les conditions de Phase 9 sont levées.
+
+OU
+
+## READY WITH CONDITIONS
+
+Le système fonctionne mais une ou plusieurs conditions non critiques restent.
+
+Lister précisément les conditions.
+
+OU
+
+## NOT READY
+
+Une condition bloquante empêche de poursuivre.
+
+Identifier précisément le blocage.
+
+---
+
+# RÈGLE FINALE
+
+La priorité absolue est la preuve réelle.
+
+Ne pas dire :
+
+"ça devrait fonctionner".
+
+Ne pas dire :
+
+"l'architecture permet".
+
+Ne pas dire :
+
+"MediaMTX est configuré".
+
+Nous voulons savoir :
+
+**EST-CE QUE LA VIDÉO RÉELLE PASSE DE LA CAMÉRA DISTANTE JUSQU'AU NAVIGATEUR D'UN UTILISATEUR AUTORISÉ ?**
+
+Si oui :
+
+documenter la preuve.
+
+Si non :
+
+identifier exactement où la chaîne casse.
+
+À la fin, répondre :
+
+**PHASE 9.1 — TERMINÉE**
+
+puis :
+
+**VERDICT : READY FOR PHASE 10**
+ou
+**VERDICT : READY WITH CONDITIONS**
+ou
+**VERDICT : NOT READY**

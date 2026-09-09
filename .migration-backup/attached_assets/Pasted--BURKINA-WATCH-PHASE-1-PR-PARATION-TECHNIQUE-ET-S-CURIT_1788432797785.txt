@@ -1,0 +1,456 @@
+# BURKINA WATCH — PHASE 1 : PRÉPARATION TECHNIQUE ET SÉCURITÉ AVANT SURVEILLANCE
+
+Tu viens de terminer l'audit préalable du projet Burkina Watch.
+
+Nous allons maintenant préparer le projet pour accueillir ultérieurement le module :
+
+**🛡️ Surveillance**
+
+IMPORTANT :
+
+Cette phase ne doit PAS encore implémenter la vidéosurveillance.
+
+Ne pas installer MediaMTX.
+
+Ne pas installer FFmpeg.
+
+Ne pas installer de serveur vidéo.
+
+Ne connecter aucune caméra réelle.
+
+Ne créer aucun flux RTSP réel.
+
+Ne créer aucun système WebRTC.
+
+Ne créer aucun système d'enregistrement.
+
+L'objectif de cette phase est de corriger les problèmes structurels identifiés pendant ton audit et de préparer une base suffisamment solide pour que le futur module Surveillance puisse être sécurisé.
+
+---
+
+# 1. PRINCIPLE ABSOLU
+
+Ne casse aucune fonctionnalité existante de Burkina Watch.
+
+Ne fais pas de refonte générale.
+
+Ne remplace pas l'architecture actuelle.
+
+Ne change pas le framework.
+
+Ne supprime aucune fonctionnalité existante.
+
+Ne modifie que ce qui est nécessaire pour corriger les problèmes identifiés ou préparer proprement Surveillance.
+
+Avant chaque modification importante, explique ce que tu vas modifier et pourquoi.
+
+---
+
+# 2. MIGRATIONS DATABASE
+
+Ton audit a identifié un risque de divergence entre :
+
+```text
+shared/schema.ts
+migrations/
+migrations/meta/_journal.json
+```
+
+et la base réellement utilisée.
+
+Avant d'ajouter une quelconque table Surveillance :
+
+### Analyse complètement l'historique des migrations.
+
+Détermine :
+
+* quelles migrations existent ;
+* lesquelles sont réellement référencées ;
+* quelles tables existent dans le schéma ;
+* quelles tables sont réellement attendues ;
+* s'il existe des migrations non enregistrées ;
+* s'il existe des différences entre le schéma TypeScript et PostgreSQL.
+
+NE SUPPRIME PAS les migrations existantes.
+
+NE réinitialise PAS la base de production.
+
+NE fais PAS de `DROP DATABASE`.
+
+NE fais PAS de migration destructive automatique.
+
+Si une divergence existe, propose d'abord une stratégie de réconciliation sûre.
+
+---
+
+# 3. SECRETS ET VARIABLES D'ENVIRONNEMENT
+
+Ton audit a identifié des risques concernant les secrets.
+
+Inspecte :
+
+```text
+.env
+.env.example
+.replit
+nixpacks.toml
+package.json
+configuration Railway
+```
+
+Recherche uniquement la présence accidentelle de secrets ou credentials.
+
+IMPORTANT :
+
+Ne copie jamais un secret dans ta réponse.
+
+Ne l'affiche jamais dans les logs.
+
+Si tu trouves une valeur qui semble être un secret réel dans un fichier versionné :
+
+1. signale précisément le fichier et la nature du problème sans révéler la valeur ;
+2. retire la valeur du code/configuration versionnée si cela peut être fait sans casser le projet ;
+3. remplace-la par une variable d'environnement ;
+4. indique qu'une rotation du secret réel devra être effectuée dans le fournisseur concerné.
+
+Ne considère jamais un secret présent dans Git comme sécurisé simplement parce que le dépôt est privé.
+
+---
+
+# 4. SESSION_SECRET
+
+L'audit indique qu'un fallback faible existe actuellement pour le secret de session.
+
+Le système de production ne doit jamais utiliser :
+
+```text
+default_secret_for_dev_only
+```
+
+ou un équivalent prévisible.
+
+Mettre en place une logique sûre :
+
+### développement
+
+Un mécanisme de développement peut exister uniquement si nécessaire.
+
+### production
+
+Si `SESSION_SECRET` manque :
+
+**le serveur doit refuser de démarrer.**
+
+Ne génère pas automatiquement un nouveau secret à chaque démarrage de production car cela invaliderait toutes les sessions.
+
+Documente la variable dans :
+
+```text
+.env.example
+```
+
+sans jamais mettre sa vraie valeur.
+
+---
+
+# 5. AUTHENTIFICATION ET OTP
+
+L'audit indique que les OTP utilisent actuellement `Math.random()` et sont stockés directement dans la base.
+
+Analyse précisément le système actuel.
+
+Prépare une amélioration sécurisée :
+
+* génération cryptographiquement sûre ;
+* expiration courte ;
+* limitation des tentatives ;
+* rate limiting ;
+* invalidation après utilisation ;
+* stockage sous forme de hash lorsque possible ;
+* protection contre le rejeu.
+
+IMPORTANT :
+
+Ne casse pas le parcours d'authentification existant.
+
+Ne remplace pas toute l'authentification par un nouveau système.
+
+Conserve Passport/session si c'est le système réellement utilisé.
+
+Fais uniquement les corrections nécessaires.
+
+---
+
+# 6. AUTORISATION CENTRALISÉE
+
+C'est une priorité absolue pour le futur module Surveillance.
+
+L'audit indique qu'il n'existe pas actuellement de middleware centralisé du type :
+
+```text
+requireRole()
+requirePermission()
+requireOwnership()
+```
+
+Prépare une architecture propre.
+
+Créer, si compatible avec l'architecture actuelle, des helpers/middlewares permettant notamment :
+
+```text
+requireAuthenticatedUser()
+requireRole()
+requireResourceOwnership()
+requirePermission()
+```
+
+Ils doivent être réutilisables.
+
+IMPORTANT :
+
+Ne remplace pas toutes les routes existantes d'un coup.
+
+Commence par créer l'infrastructure.
+
+Puis applique-la uniquement aux nouveaux endpoints ou aux endroits où une correction est clairement nécessaire.
+
+---
+
+# 7. PROTECTION CONTRE IDOR
+
+Prépare une méthode fiable permettant de vérifier :
+
+```text
+Utilisateur connecté
+        ↓
+Ressource demandée
+        ↓
+Ressource appartenant à l'utilisateur
+OU
+permission explicite
+        ↓
+Autorisation
+```
+
+Ne considère jamais qu'un ID de ressource constitue une autorisation.
+
+Cette logique sera obligatoire pour les futures caméras.
+
+---
+
+# 8. PROTECTION SSRF — PRÉPARATION
+
+Le futur module caméra devra potentiellement accepter des informations permettant de contacter une caméra ou un gateway.
+
+Cela crée un risque SSRF.
+
+Prépare une validation réutilisable pour les futures connexions sortantes.
+
+Elle devra pouvoir bloquer ou contrôler :
+
+* loopback ;
+* localhost ;
+* plages privées ;
+* link-local ;
+* metadata endpoints cloud ;
+* adresses réservées ;
+* schémas non autorisés.
+
+IMPORTANT :
+
+Ne branche pas encore cette validation à un système vidéo inexistant.
+
+Prépare seulement une architecture propre et documentée.
+
+---
+
+# 9. LOGGING
+
+Audite les logs existants.
+
+Prépare des règles empêchant l'apparition de :
+
+* passwords ;
+* session secrets ;
+* tokens ;
+* credentials ;
+* URLs contenant username/password ;
+* futurs tokens vidéo ;
+* URLs RTSP privées.
+
+Les erreurs doivent rester utiles aux développeurs sans exposer de secrets.
+
+---
+
+# 10. CONFIGURATION DE BUILD
+
+Ton audit a identifié une possible incohérence :
+
+Le build produit :
+
+```text
+dist/index.js
+```
+
+alors qu'une configuration semble mentionner :
+
+```text
+dist/index.cjs
+```
+
+Analyse précisément :
+
+```text
+package.json
+.replit
+nixpacks.toml
+```
+
+et détermine la commande réellement utilisée en développement et en production.
+
+Corrige cette incohérence si elle existe réellement.
+
+Ne change pas le système de build sans nécessité.
+
+---
+
+# 11. RAILWAY
+
+Ne modifie pas la production Railway directement sans validation.
+
+Analyse la configuration actuelle et indique :
+
+* service utilisé ;
+* commande de build ;
+* commande de démarrage ;
+* variables attendues ;
+* health check ;
+* port ;
+* base PostgreSQL ;
+* éventuelles incohérences.
+
+Ne déploie aucun serveur vidéo.
+
+---
+
+# 12. PWA / CACHE
+
+L'audit indique que le service worker actuel utilise du cache réseau/API.
+
+Prépare l'architecture pour que les futures données vidéo privées ne soient jamais mises en cache de manière dangereuse.
+
+À terme, les éléments suivants devront être exclus des caches persistants ordinaires :
+
+* tokens vidéo ;
+* SDP ;
+* ICE credentials ;
+* manifests privés ;
+* segments vidéo ;
+* URLs signées ;
+* données d'enregistrement privé.
+
+Pour cette phase, analyse simplement le comportement actuel et corrige uniquement les problèmes évidents qui pourraient créer un risque.
+
+---
+
+# 13. CSP
+
+L'audit indique une CSP actuellement restrictive.
+
+Ne l'élargis pas globalement.
+
+Prépare plutôt une stratégie permettant ultérieurement d'autoriser précisément les domaines nécessaires au Video Gateway/WebRTC.
+
+Aucune origine `*` ne doit être ajoutée simplement pour « faire fonctionner » la vidéo.
+
+---
+
+# 14. TESTS
+
+Ajoute ou améliore les tests nécessaires pour les corrections effectuées.
+
+Tester notamment :
+
+### Session
+
+* SESSION_SECRET absent en production → démarrage refusé ;
+* SESSION_SECRET présent → démarrage normal.
+
+### Autorisation
+
+* utilisateur authentifié ;
+* utilisateur non authentifié ;
+* propriétaire ;
+* non-propriétaire ;
+* permission insuffisante.
+
+### OTP
+
+* expiration ;
+* mauvaise tentative ;
+* réutilisation ;
+* limite de tentatives.
+
+### Secrets
+
+Vérifier qu'aucun secret ne se retrouve dans les logs ou réponses API.
+
+---
+
+# 15. CE QUE TU NE DOIS PAS FAIRE
+
+❌ Ne pas installer MediaMTX.
+
+❌ Ne pas installer FFmpeg.
+
+❌ Ne pas créer de serveur vidéo.
+
+❌ Ne pas connecter de caméra.
+
+❌ Ne pas demander d'identifiants de caméra.
+
+❌ Ne pas créer WebRTC.
+
+❌ Ne pas créer d'enregistrement.
+
+❌ Ne pas créer d'IA.
+
+❌ Ne pas refondre Burkina Watch.
+
+❌ Ne pas remplacer Passport/session.
+
+❌ Ne pas réinitialiser PostgreSQL.
+
+❌ Ne pas supprimer les migrations historiques.
+
+❌ Ne pas afficher de secrets dans ton rapport.
+
+---
+
+# 16. RAPPORT FINAL OBLIGATOIRE
+
+À la fin de cette phase, donne-moi :
+
+### A. Corrections effectuées
+
+### B. Fichiers créés
+
+### C. Fichiers modifiés
+
+### D. Migrations réconciliées ou non
+
+### E. Problèmes de sécurité corrigés
+
+### F. Problèmes restant à corriger
+
+### G. Tests exécutés
+
+### H. Résultats des tests
+
+### I. Impact sur Burkina Watch
+
+### J. État de préparation pour le module Surveillance
+
+Ne considère pas la phase terminée si tu as seulement modifié le code sans tester.
+
+À la fin, arrête-toi et attends ma validation avant de commencer la conception ou l'implémentation du module Surveillance.

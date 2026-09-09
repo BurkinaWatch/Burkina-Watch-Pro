@@ -1,0 +1,433 @@
+Nous avons terminé la Phase 12 du projet Street View 3D de BurkinaWatch.
+
+Le verdict de la Phase 12 est :
+
+NO-GO
+
+Cause exacte :
+aucun fournisseur GPU n'a été sélectionné, aucune instance GPU cloud n'a été lancée et l'environnement Replit actuel ne dispose pas de NVIDIA GPU, CUDA, PyTorch CUDA, COLMAP ou 3DGS.
+
+Les fichiers suivants existent déjà :
+
+experiments/streetview-3d/PHASE_12_RESULT.md
+experiments/streetview-3d/gpu-lab/README.md
+experiments/streetview-3d/gpu-lab/verify.sh
+experiments/streetview-3d/gpu-lab/versions.env.example
+experiments/streetview-3d/gpu-lab/.gitignore
+
+Les vérifications locales suivantes sont déjà PASS :
+
+npm run check
+git diff --check
+bash -n experiments/streetview-3d/gpu-lab/verify.sh
+
+NE RECOMMENCE PAS les tests locaux de la Phase 12.
+
+NE MODIFIE PAS l'application BurkinaWatch.
+NE MODIFIE PAS l'API de production.
+NE MODIFIE PAS PostgreSQL.
+NE MODIFIE PAS Railway.
+NE MODIFIE PAS le système de queue.
+NE MODIFIE PAS le worker CPU.
+NE MODIFIE PAS le frontend Street View.
+NE CRÉE PAS encore de viewer 3D.
+NE CRÉE PAS encore de pipeline GPU de production.
+NE SIMULE PAS un GPU.
+NE SIMULE PAS une reconstruction 3D.
+NE CONTOURNE PAS les restrictions de l'environnement Replit pour prétendre disposer d'un GPU.
+
+OBJECTIF UNIQUE DE CETTE PHASE
+
+Préparer et, si les moyens techniques le permettent réellement, lancer un laboratoire GPU cloud TEMPORAIRE permettant d'effectuer la première vraie validation scientifique et technique de :
+
+GPU → CUDA → PyTorch CUDA → COLMAP/SfM
+
+Puis préparer les étapes MVS et 3DGS.
+
+IMPORTANT :
+Cette phase ne doit pas encore industrialiser le pipeline.
+
+==================================================
+
+1. LIRE L'HISTORIQUE DU PROJET
+   ==================================================
+
+Lire au minimum :
+
+experiments/streetview-3d/PHASE_8_RESULT.md
+experiments/streetview-3d/PHASE_9_RESULT.md
+experiments/streetview-3d/PHASE_10_RESULT.md
+experiments/streetview-3d/PHASE_11_RESULT.md
+experiments/streetview-3d/PHASE_12_RESULT.md
+experiments/streetview-3d/gpu-lab/README.md
+
+Comprendre précisément pourquoi les phases précédentes ont été bloquées.
+
+Ne pas repartir de zéro.
+
+==================================================
+2. DÉTERMINER LES BESOINS GPU
+=============================
+
+Définir le profil minimal et recommandé pour notre premier laboratoire.
+
+Documenter notamment :
+
+* GPU NVIDIA obligatoire ou non ;
+* VRAM minimale ;
+* VRAM recommandée ;
+* RAM système ;
+* CPU ;
+* stockage temporaire ;
+* système Linux ;
+* CUDA ;
+* version Python ;
+* PyTorch ;
+* compatibilité COLMAP ;
+* compatibilité 3DGS ;
+* durée approximative nécessaire pour un test.
+
+Pour le premier laboratoire, viser idéalement un GPU avec environ 24 Go de VRAM ou davantage.
+
+Ne pas imposer inutilement un GPU extrêmement coûteux.
+
+==================================================
+3. COMPARER LES FOURNISSEURS GPU CLOUD
+======================================
+
+Si l'environnement dispose d'un accès Web permettant de consulter les tarifs actuels, rechercher les fournisseurs GPU cloud actuellement disponibles.
+
+Sinon, ne pas inventer les prix.
+
+Comparer au minimum plusieurs options crédibles de GPU cloud temporaire.
+
+Pour chaque fournisseur, documenter :
+
+* modèle(s) GPU disponibles ;
+* VRAM ;
+* prix actuel constaté ;
+* mode de facturation ;
+* stockage ;
+* disponibilité ;
+* possibilité de lancer une instance temporaire ;
+* accès SSH ou terminal ;
+* Docker disponible ou non ;
+* facilité d'installation de CUDA ;
+* facilité d'installation de COLMAP ;
+* possibilité d'installer 3DGS ;
+* possibilité de transférer les artefacts ;
+* possibilité de détruire complètement l'instance après le test ;
+* risques de coûts inattendus ;
+* intérêt pour BurkinaWatch.
+
+NE PRÉTENDS PAS QU'UN FOURNISSEUR EST DISPONIBLE SI TU NE PEUX PAS LE VÉRIFIER.
+
+==================================================
+4. NE PAS UTILISER DE CREDENTIALS INVENTÉS
+==========================================
+
+Vérifier si l'environnement possède réellement un moyen d'accéder à un fournisseur GPU.
+
+Si aucun credential, aucune connexion ou aucun outil permettant de créer une instance n'existe :
+
+NE PAS ESSAYER DE DEVINER LES CREDENTIALS.
+
+NE PAS SIMULER LA CRÉATION DE L'INSTANCE.
+
+NE PAS AFFIRMER QU'UNE INSTANCE A ÉTÉ CRÉÉE.
+
+Dans ce cas, produire simplement une procédure manuelle extrêmement claire permettant au propriétaire du projet de :
+
+1. choisir le fournisseur ;
+2. choisir le GPU ;
+3. créer une instance temporaire ;
+4. se connecter ;
+5. exécuter le laboratoire ;
+6. détruire l'instance.
+
+==================================================
+5. PROPOSER UN BUDGET MAXIMAL DE TEST
+=====================================
+
+Avant toute dépense, calculer une estimation prudente du coût du premier laboratoire.
+
+Proposer un scénario :
+
+TEST COURT
+
+avec une durée limitée et un budget maximum clairement identifié.
+
+Ne jamais lancer automatiquement une instance payante si cela nécessite une validation humaine.
+
+Le but est de réaliser une preuve technique à faible coût, pas de créer immédiatement une infrastructure permanente.
+
+==================================================
+6. PRÉPARER LE LABORATOIRE REPRODUCTIBLE
+========================================
+
+Dans :
+
+experiments/streetview-3d/gpu-lab/
+
+préparer uniquement les fichiers nécessaires à la reproductibilité du laboratoire.
+
+Le laboratoire devra permettre de vérifier :
+
+nvidia-smi
+CUDA
+PyTorch CUDA
+FFmpeg
+COLMAP
+
+et plus tard :
+
+3DGS
+
+Le script existant :
+
+experiments/streetview-3d/gpu-lab/verify.sh
+
+doit rester le garde-fou principal.
+
+Il doit produire :
+
+PRECHECK PASS
+
+uniquement lorsqu'il est exécuté sur une vraie machine correctement configurée.
+
+Sinon :
+
+PRECHECK FAIL
+
+Aucune détection artificielle ou valeur simulée.
+
+==================================================
+7. INSTALLATION REPRODUCTIBLE
+=============================
+
+Préparer si nécessaire :
+
+Dockerfile
+README.md
+versions.env.example
+scripts d'installation
+scripts de vérification
+
+L'environnement devra documenter précisément :
+
+OS
+kernel
+GPU
+driver NVIDIA
+CUDA
+Python
+PyTorch
+FFmpeg
+COLMAP
+3DGS
+
+Éviter les versions flottantes lorsque cela peut provoquer des incompatibilités.
+
+==================================================
+8. PREMIER TEST GPU
+===================
+
+Une fois une vraie instance GPU disponible, le premier test doit être extrêmement simple.
+
+Vérifier :
+
+nvidia-smi
+
+puis :
+
+CUDA disponible dans PyTorch
+
+puis :
+
+test d'un calcul GPU simple.
+
+Enregistrer :
+
+* modèle GPU ;
+* VRAM ;
+* driver ;
+* CUDA ;
+* PyTorch ;
+* temps du test ;
+* éventuelles erreurs.
+
+==================================================
+9. TEST COLMAP MINIMAL
+======================
+
+NE PAS commencer directement par MVS ou 3DGS.
+
+Utiliser d'abord le dataset synthétique déjà créé par le projet.
+
+Localiser le dataset et vérifier son intégrité.
+
+Commencer avec un petit nombre d'images.
+
+Objectif :
+
+faire fonctionner réellement COLMAP et obtenir une première reconstruction SfM.
+
+Vérifier :
+
+* extraction/lecture des images ;
+* feature extraction ;
+* feature matching ;
+* sparse reconstruction ;
+* nombre de caméras estimées ;
+* nombre de points 3D ;
+* éventuelles erreurs ;
+* temps de calcul ;
+* utilisation GPU/CPU.
+
+AUCUN résultat ne doit être inventé.
+
+==================================================
+10. CRITÈRE GO
+==============
+
+Cette phase ne peut être déclarée GO que si les éléments suivants sont réellement observés :
+
+[ ] vraie instance NVIDIA GPU
+[ ] nvidia-smi fonctionne
+[ ] CUDA fonctionne
+[ ] PyTorch détecte CUDA
+[ ] COLMAP fonctionne
+[ ] COLMAP traite réellement des images
+[ ] une reconstruction SfM réelle est produite
+[ ] les métriques de reconstruction sont enregistrées
+[ ] les artefacts sont réellement sauvegardés
+
+Si un seul élément critique manque :
+
+NO-GO
+
+avec explication précise.
+
+==================================================
+11. NE PAS ALLER TROP VITE
+==========================
+
+Si le premier SfM échoue :
+
+STOP.
+
+Diagnostiquer uniquement :
+
+GPU
+CUDA
+PyTorch
+COLMAP
+images
+feature extraction
+matching
+camera estimation
+
+Ne pas passer à MVS.
+
+Ne pas passer à 3DGS.
+
+Si SfM réussit :
+
+ne pas encore intégrer le système dans BurkinaWatch.
+
+La prochaine phase pourra alors traiter :
+
+SfM → MVS → 3DGS.
+
+==================================================
+12. DONNÉES RÉELLES
+===================
+
+Ne pas utiliser de données utilisateur BurkinaWatch pendant cette phase.
+
+Commencer avec le dataset synthétique.
+
+Après validation complète du laboratoire synthétique, une vraie vidéo de rue pourra être utilisée dans une phase séparée.
+
+==================================================
+13. FIN DE L'INSTANCE
+=====================
+
+L'instance GPU doit rester TEMPORAIRE.
+
+Après les tests :
+
+* sauvegarder les rapports ;
+* sauvegarder les métriques ;
+* sauvegarder les artefacts nécessaires ;
+* noter le coût réel ;
+* arrêter ou détruire l'instance.
+
+Ne pas laisser tourner une instance GPU payante inutilement.
+
+==================================================
+14. RAPPORT FINAL
+=================
+
+Créer :
+
+experiments/streetview-3d/PHASE_13_RESULT.md
+
+Le rapport doit contenir :
+
+1. Objectif
+2. Fournisseur choisi
+3. GPU
+4. VRAM
+5. Prix
+6. Durée
+7. Coût réel
+8. OS
+9. Driver NVIDIA
+10. CUDA
+11. Python
+12. PyTorch
+13. FFmpeg
+14. COLMAP
+15. 3DGS si testé
+16. Dataset utilisé
+17. Tests réalisés
+18. Résultats SfM
+19. Temps de calcul
+20. Erreurs éventuelles
+21. Artefacts générés
+22. Limites
+23. Recommandation
+24. Verdict final
+
+Le verdict doit être exactement l'un de :
+
+GO
+GO WITH ADJUSTMENTS
+NO-GO
+
+==================================================
+15. RÈGLE ABSOLUE
+=================
+
+Le résultat doit refléter uniquement ce qui a réellement été exécuté.
+
+Pas de simulation.
+Pas de données inventées.
+Pas de prix inventés.
+Pas de GPU virtuel prétendu réel.
+Pas de reconstruction fictive.
+
+Si aucun GPU cloud ne peut être provisionné depuis l'environnement actuel, le verdict doit rester :
+
+NO-GO
+
+et le rapport doit fournir la procédure exacte permettant au propriétaire du projet de lancer manuellement le laboratoire.
+
+IMPORTANT :
+
+Cette phase est une PHASE DE VALIDATION TECHNIQUE.
+
+Elle ne doit entraîner aucune modification de la production BurkinaWatch.
+
+À la fin, arrêter et attendre une validation humaine avant toute Phase 14.

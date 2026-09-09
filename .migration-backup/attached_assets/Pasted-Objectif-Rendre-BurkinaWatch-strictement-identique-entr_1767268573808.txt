@@ -1,0 +1,46 @@
+Objectif :
+Rendre BurkinaWatch strictement identique entre l’environnement de développement (Replit) et l’environnement de production (Railway), en garantissant que les mêmes volumes de données soient affichés partout.
+
+Contraintes importantes :
+- Ne modifier ni le design ni l’interface utilisateur existante.
+- Ne supprimer aucune fonctionnalité actuelle.
+- Ne pas introduire de dépendance à un service payant.
+- Ne pas mentionner de plan, d’abonnement ou de facturation.
+- Préserver le fonctionnement actuel visible sur Replit.
+
+Instructions techniques :
+
+1. Source de données
+- Utiliser OpenStreetMap (Overpass API) uniquement côté serveur.
+- Interdire tout appel direct à Overpass API depuis le frontend.
+- Centraliser la récupération des données dans des services backend dédiés.
+
+2. Base de données (PostgreSQL)
+- Considérer PostgreSQL comme l’unique source de vérité.
+- Stocker systématiquement les lieux (pharmacies, restaurants, boutiques, stations-service, marchés) dans la base.
+- Éviter toute logique conditionnelle dépendant de l’environnement (Replit / Railway).
+
+3. Importation et mise à jour des données
+- Implémenter un import initial robuste par catégorie et par zone géographique.
+- Découper les requêtes Overpass pour éviter les réponses partielles.
+- Mettre en place un système de retry automatique en cas d’échec.
+- Ajouter une mise à jour planifiée quotidienne côté serveur.
+
+4. Lecture des données
+- Modifier toutes les pages pour qu’elles lisent exclusivement depuis PostgreSQL.
+- Garantir que les mêmes requêtes SQL sont utilisées en développement et en production.
+- Éliminer toute dépendance au cache mémoire local.
+
+5. Cohérence et fiabilité
+- Ajouter un système de cache côté serveur basé sur la base de données.
+- Implémenter un fallback garantissant que les données existantes restent affichées si une mise à jour échoue.
+- Empêcher l’affichage de listes partielles ou incomplètes.
+
+6. Transparence utilisateur
+- Afficher la date de dernière mise à jour des données sur chaque page concernée.
+- Ne jamais afficher de données vides si des données existent déjà en base.
+
+Résultat attendu :
+- Les listes affichées sur Replit et Railway sont strictement identiques.
+- Le volume de données reste stable après redémarrage ou déploiement.
+- L’application fonctionne de manière fiable, prédictible et robuste en production.

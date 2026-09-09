@@ -1,0 +1,697 @@
+# BURKINAWATCH — PHASE 1.2
+
+## Validation finale de la production Railway
+
+Tu travailles sur le projet **BurkinaWatch**.
+
+Cette phase est une phase de **validation opérationnelle ciblée** après le rapport de Phase 1.1.
+
+L'objectif unique est de déterminer si la production Railway est réellement opérationnelle.
+
+---
+
+## ⚠️ RÈGLES ABSOLUES
+
+Cette phase est strictement limitée à la validation de la production Railway.
+
+### INTERDICTIONS
+
+Ne fais aucune modification de code source.
+
+Ne modifie aucun fichier applicatif.
+
+Ne modifie pas :
+
+* `client/`
+* `server/`
+* `shared/`
+* `migrations/`
+* `package.json`
+* `package-lock.json`
+* `vite.config.ts`
+* `drizzle.config.ts`
+
+Ne crée aucune migration.
+
+Ne lance pas :
+
+```bash
+npm run db:push
+```
+
+Ne lance pas :
+
+```bash
+drizzle-kit migrate
+```
+
+Ne crée pas :
+
+```text
+__drizzle_migrations
+```
+
+Ne modifie aucune table PostgreSQL.
+
+Ne modifie aucune donnée PostgreSQL.
+
+Ne supprime aucune donnée.
+
+Ne fais aucun changement de schéma.
+
+Ne commence PAS Expo.
+
+Ne commence PAS React Native.
+
+Ne commence PAS EAS.
+
+Ne commence PAS l'OTA.
+
+Ne refactorise PAS le Web.
+
+Ne modifie PAS l'interface utilisateur.
+
+Ne modifie PAS l'authentification dans le code.
+
+Ne change PAS la chaîne de build.
+
+Ne génère aucune nouvelle architecture.
+
+---
+
+# 1. OBJECTIF
+
+Nous devons maintenant déterminer si :
+
+```text
+GitHub
+   ↓
+Railway
+   ↓
+Backend Express
+   ↓
+PostgreSQL
+   ↓
+Web BurkinaWatch
+```
+
+fonctionne réellement en production.
+
+Tu dois travailler avec le **vrai service Railway de production**, pas avec le workflow Replit de développement.
+
+---
+
+# 2. ACCÈS RAILWAY
+
+Commence par déterminer si tu disposes réellement d'un accès au projet Railway.
+
+Identifie :
+
+* projet Railway ;
+* service backend ;
+* environnement Production ;
+* branche GitHub déployée ;
+* dernier déploiement ;
+* domaine public Railway ;
+* méthode de déploiement ;
+* Build Command ;
+* Start Command.
+
+Si tu n'as toujours aucun accès Railway, arrête la phase immédiatement et indique :
+
+```text
+PHASE 1.2 BLOQUÉE — ACCÈS RAILWAY INDISPONIBLE
+```
+
+Ne tente aucune simulation.
+
+Ne prétends pas avoir vérifié Railway.
+
+---
+
+# 3. VARIABLES D'ENVIRONNEMENT
+
+Dans le service Railway Production, vérifie uniquement la présence et la cohérence des variables suivantes.
+
+⚠️ NE JAMAIS AFFICHER LES VALEURS DES SECRETS.
+
+Tu dois uniquement produire :
+
+```text
+PRÉSENTE
+ABSENTE
+NON CONCERNÉE
+NON VÉRIFIABLE
+```
+
+Vérifie :
+
+```text
+NODE_ENV
+PORT
+RAILWAY_DATABASE_URL
+SESSION_SECRET
+REFRESH_TOKEN_SALT
+KMS_ENABLED
+MASTER_ENCRYPTION_KEY
+KMS_PROJECT_ID
+KMS_LOCATION_ID
+KMS_KEY_RING_ID
+KMS_CRYPTO_KEY_ID
+```
+
+Puis vérifie la configuration StreetView :
+
+```text
+STREETVIEW_STORAGE_PROVIDER
+STREETVIEW_S3_BUCKET
+STREETVIEW_S3_ACCESS_KEY_ID
+STREETVIEW_S3_SECRET_ACCESS_KEY
+STREETVIEW_S3_REGION
+STREETVIEW_S3_ENDPOINT
+STREETVIEW_S3_FORCE_PATH_STYLE
+STREETVIEW_S3_SESSION_TOKEN
+STREETVIEW_S3_SIGNED_URL_TTL_SECONDS
+STREETVIEW_S3_MULTIPART_PART_SIZE_MB
+```
+
+---
+
+# 4. VALIDATION DE REFRESH_TOKEN_SALT
+
+Le précédent audit a montré que le démarrage production local échouait avec :
+
+```text
+REFRESH_TOKEN_SALT doit être défini en production avec une valeur stable.
+```
+
+Vérifie maintenant directement dans Railway Production :
+
+```text
+REFRESH_TOKEN_SALT
+```
+
+### Si elle est présente
+
+Ne la modifie surtout pas.
+
+### Si elle est absente
+
+Si tu as réellement la possibilité de modifier les variables Railway :
+
+* crée une valeur cryptographiquement aléatoire ;
+* mets-la directement dans Railway ;
+* ne l'affiche jamais ;
+* ne l'écris jamais dans un fichier ;
+* ne la commite jamais ;
+* ne la transmets jamais dans le rapport.
+
+Si tu n'as pas l'autorisation ou la capacité technique de modifier Railway :
+
+```text
+ACTION MANUELLE REQUISE
+```
+
+et arrête-toi.
+
+Ne contourne jamais cette exigence dans le code.
+
+---
+
+# 5. VALIDATION KMS / CHIFFREMENT
+
+Lis la valeur de :
+
+```text
+KMS_ENABLED
+```
+
+sans révéler de secret.
+
+### Si KMS_ENABLED=false
+
+Vérifie que :
+
+```text
+MASTER_ENCRYPTION_KEY
+```
+
+est présente.
+
+### Si KMS_ENABLED=true
+
+Vérifie que les quatre paramètres suivants sont présents :
+
+```text
+KMS_PROJECT_ID
+KMS_LOCATION_ID
+KMS_KEY_RING_ID
+KMS_CRYPTO_KEY_ID
+```
+
+Ne modifie pas la configuration KMS dans cette phase.
+
+Si la configuration est incomplète :
+
+```text
+KMS CONFIGURATION = INCOMPLETE
+```
+
+et explique exactement quelle variable manque, sans révéler de valeur.
+
+---
+
+# 6. VALIDATION STREETVIEW
+
+Détermine quel stockage est réellement configuré en production.
+
+Si :
+
+```text
+STREETVIEW_STORAGE_PROVIDER=s3
+```
+
+vérifie les paramètres S3 nécessaires.
+
+Ne crée aucune clé fictive.
+
+Ne change pas de fournisseur.
+
+Ne déplace aucun fichier StreetView.
+
+Ne modifie aucune donnée StreetView.
+
+L'objectif est uniquement de déterminer :
+
+```text
+StreetView production = CONFIGURÉ
+```
+
+ou :
+
+```text
+StreetView production = NON CONFIGURÉ
+```
+
+---
+
+# 7. BACKUP / SNAPSHOT
+
+Vérifie dans Railway si un mécanisme de backup/snapshot identifiable est disponible.
+
+Tu dois indiquer :
+
+```text
+BACKUP = CONFIRMÉ
+```
+
+ou :
+
+```text
+BACKUP = NON CONFIRMÉ
+```
+
+ou :
+
+```text
+BACKUP = NON ACCESSIBLE
+```
+
+Ne déclenche aucune restauration.
+
+Ne supprime aucun backup.
+
+Ne modifie aucune configuration de sauvegarde.
+
+---
+
+# 8. DÉPLOIEMENT RAILWAY
+
+Si et seulement si :
+
+* les variables critiques sont présentes ;
+* aucune configuration bloquante n'est détectée ;
+* le projet Railway est réellement accessible ;
+
+alors utilise uniquement le mécanisme normal de déploiement Railway déjà configuré.
+
+Ne change pas :
+
+* Build Command ;
+* Start Command ;
+* Dockerfile ;
+* Railpack ;
+* Nixpacks ;
+* branche Git ;
+* configuration du projet.
+
+Si `REFRESH_TOKEN_SALT` vient d'être ajouté dans Railway, un redeploiement normal peut être nécessaire.
+
+---
+
+# 9. VALIDATION DU DÉMARRAGE
+
+Après le déploiement, consulte les logs Railway.
+
+Nous voulons confirmer que :
+
+```text
+dist/index.js
+```
+
+démarre correctement.
+
+Vérifie particulièrement l'absence de :
+
+```text
+REFRESH_TOKEN_SALT
+DATABASE_URL
+RAILWAY_DATABASE_URL
+SESSION_SECRET
+KMS
+PostgreSQL
+connection refused
+authentication error
+S3
+StreetView
+crash
+restart loop
+```
+
+Le processus doit atteindre :
+
+```text
+server.listen()
+```
+
+ou son équivalent fonctionnel.
+
+Puis rester actif.
+
+Résultat attendu :
+
+```text
+PROCESS = STABLE
+```
+
+---
+
+# 10. VALIDATION HTTP RÉELLE
+
+Utilise uniquement le domaine public Railway réellement identifié.
+
+Teste :
+
+```text
+GET /
+```
+
+Puis :
+
+```text
+GET /api/stats
+```
+
+Si `/api/stats` nécessite une authentification dans l'état actuel, ne modifie pas l'authentification pour contourner le problème.
+
+Dans ce cas, utilise un endpoint public déjà existant et documente lequel.
+
+Pour chaque test, indique :
+
+```text
+HTTP STATUS
+TEMPS DE RÉPONSE
+RÉSULTAT
+```
+
+Ne te contente pas de tester le workflow Replit.
+
+---
+
+# 11. VALIDATION WEB
+
+Vérifie que le Web BurkinaWatch utilise réellement le backend de production.
+
+Nous voulons confirmer :
+
+```text
+Web
+ ↓
+Railway Backend
+ ↓
+PostgreSQL
+```
+
+et non :
+
+```text
+Web
+ ↓
+Replit Development
+```
+
+Vérifie au minimum :
+
+* chargement de la page ;
+* accès à l'API ;
+* absence d'erreur de connexion backend ;
+* authentification si elle peut être vérifiée sans modification ;
+* récupération des données publiques.
+
+Ne modifie aucun composant frontend.
+
+---
+
+# 12. POSTGRESQL — CONTRÔLE STRICTEMENT LECTURE SEULE
+
+Effectue uniquement les vérifications nécessaires pour confirmer que le backend utilise bien la bonne base.
+
+Tu peux vérifier :
+
+* connexion ;
+* nombre de tables ;
+* structure générale ;
+* présence des tables principales.
+
+Ne modifie absolument rien.
+
+Ne lance aucune migration.
+
+Ne lance aucun `db:push`.
+
+Ne crée aucune table.
+
+Ne crée aucune colonne.
+
+Ne crée aucun index.
+
+Ne crée pas `__drizzle_migrations`.
+
+Le résultat doit explicitement indiquer :
+
+```text
+POSTGRESQL = UNCHANGED
+```
+
+si aucune modification n'a été effectuée.
+
+---
+
+# 13. LOGS
+
+Analyse les logs Railway après le démarrage.
+
+Cherche notamment :
+
+* crash ;
+* restart loop ;
+* erreur PostgreSQL ;
+* erreur session ;
+* erreur refresh token ;
+* erreur KMS ;
+* erreur S3 ;
+* erreur StreetView ;
+* erreur de port ;
+* erreur de binding ;
+* erreur CORS ;
+* erreur fatale au démarrage.
+
+Distingue clairement :
+
+```text
+BLOQUANT
+NON BLOQUANT
+AVERTISSEMENT
+```
+
+---
+
+# 14. NE PAS CORRIGER LE CODE
+
+Si tu découvres une erreur applicative dans cette phase :
+
+NE MODIFIE PAS LE CODE.
+
+Indique :
+
+```text
+CODE FIX REQUIRED — PHASE SUIVANTE
+```
+
+avec :
+
+* fichier concerné ;
+* erreur ;
+* cause probable ;
+* impact ;
+* correction recommandée.
+
+Mais ne fais pas la correction maintenant.
+
+Cette phase sert à établir l'état réel de production.
+
+---
+
+# 15. RAPPORT FINAL OBLIGATOIRE
+
+À la fin, crée ou mets à jour uniquement le rapport :
+
+```text
+RAPPORT_PHASE_1_2_VALIDATION_RAILWAY_BURKINAWATCH.md
+```
+
+Le rapport doit contenir exactement les sections suivantes :
+
+## 1. Projet Railway identifié
+
+## 2. Service Production identifié
+
+## 3. Branche GitHub déployée
+
+## 4. Domaine Railway
+
+## 5. Variables d'environnement
+
+Tableau :
+
+| Variable                        | Statut |
+| ------------------------------- | ------ |
+| NODE_ENV                        |        |
+| PORT                            |        |
+| RAILWAY_DATABASE_URL            |        |
+| SESSION_SECRET                  |        |
+| REFRESH_TOKEN_SALT              |        |
+| KMS_ENABLED                     |        |
+| MASTER_ENCRYPTION_KEY           |        |
+| KMS_PROJECT_ID                  |        |
+| KMS_LOCATION_ID                 |        |
+| KMS_KEY_RING_ID                 |        |
+| KMS_CRYPTO_KEY_ID               |        |
+| STREETVIEW_STORAGE_PROVIDER     |        |
+| STREETVIEW_S3_BUCKET            |        |
+| STREETVIEW_S3_ACCESS_KEY_ID     |        |
+| STREETVIEW_S3_SECRET_ACCESS_KEY |        |
+
+Aucune valeur secrète.
+
+## 6. Backup / Snapshot
+
+## 7. Déploiement
+
+## 8. Logs
+
+## 9. Démarrage du processus
+
+## 10. HTTP production
+
+Inclure :
+
+```text
+GET /
+GET /api/stats
+```
+
+ou les endpoints publics réellement disponibles.
+
+## 11. Web → Backend Railway
+
+## 12. PostgreSQL
+
+## 13. StreetView
+
+## 14. Anomalies restantes
+
+Pour chaque anomalie :
+
+```text
+Niveau :
+Symptôme :
+Cause probable :
+Impact :
+Action nécessaire :
+```
+
+---
+
+# 16. VERDICT FINAL OBLIGATOIRE
+
+Termine le rapport avec exactement ces états :
+
+```text
+RAILWAY PRODUCTION        = READY / NOT READY
+BACKEND PRODUCTION        = OPERATIONAL / NOT OPERATIONAL
+POSTGRESQL                = UNCHANGED / MODIFIED
+WEB PRODUCTION            = VERIFIED / NOT VERIFIED / BROKEN
+STREETVIEW PRODUCTION     = VALIDATED / NOT VALIDATED
+BACKUP                    = CONFIRMED / NOT CONFIRMED / NOT ACCESSIBLE
+PHASE 2                   = READY / BLOCKED
+```
+
+---
+
+# 17. CONDITION POUR PASSER À LA PHASE 2
+
+La Phase 2 ne peut être déclarée READY que si :
+
+```text
+RAILWAY PRODUCTION    = READY
+BACKEND PRODUCTION    = OPERATIONAL
+POSTGRESQL            = UNCHANGED
+WEB PRODUCTION        = VERIFIED
+```
+
+StreetView doit également être validé si la fonctionnalité est destinée à être active en production.
+
+Si une de ces conditions échoue :
+
+```text
+PHASE 2 = BLOCKED
+```
+
+et tu t'arrêtes.
+
+---
+
+# 18. RÈGLE FINALE
+
+Après avoir produit le rapport :
+
+**ARRÊTE-TOI.**
+
+Ne commence aucune Phase 2.
+
+Ne commence pas la création de l'application mobile.
+
+Ne commence pas Expo.
+
+Ne commence pas React Native.
+
+Ne commence pas EAS.
+
+Ne commence pas l'OTA.
+
+Attends une nouvelle instruction.
+
+La seule mission de cette Phase 1.2 est :
+
+> **PROUVER QUE BURKINAWATCH FONCTIONNE RÉELLEMENT EN PRODUCTION SUR RAILWAY SANS MODIFIER LE CODE NI LA BASE DE DONNÉES.**

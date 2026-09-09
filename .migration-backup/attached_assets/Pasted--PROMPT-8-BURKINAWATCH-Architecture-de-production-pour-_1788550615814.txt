@@ -1,0 +1,1404 @@
+# PROMPT 8 — BURKINAWATCH
+
+## Architecture de production pour caméras distantes, NAT/CGNAT et Video Gateway
+
+Tu travailles sur le projet BurkinaWatch existant.
+
+Cette phase vient APRÈS le Prompt 7.
+
+Le Prompt 8 ne doit pas ajouter de nouvelles fonctionnalités métier inutiles.
+
+Son objectif est de préparer une architecture réellement capable de supporter des caméras IP appartenant à des utilisateurs situés sur différents réseaux, notamment derrière :
+
+* NAT ;
+* CGNAT ;
+* box Internet ;
+* réseaux mobiles ;
+* réseaux professionnels ;
+* réseaux privés ;
+* connexions Internet instables.
+
+IMPORTANT :
+
+* Ne réécris pas BurkinaWatch.
+* Ne casse aucune fonctionnalité existante.
+* Ne remplace pas l'architecture existante sans justification.
+* Ne transforme pas Express en serveur vidéo.
+* Ne demande jamais d'exposer publiquement le port RTSP 554 d'une caméra.
+* Ne demande jamais de mettre une caméra en DMZ.
+* Ne désactive jamais le firewall d'un utilisateur.
+* Ne contourne jamais NAT/CGNAT par une méthode dangereuse.
+* Ne mets jamais de credentials caméra dans le frontend.
+* Ne mets jamais de secrets dans Git.
+* Ne déploie aucune nouvelle infrastructure coûteuse sans nécessité.
+* Ne déploie rien en production sans validation.
+* Ne lance aucune migration destructive.
+* Ne lance jamais `db:push --force`.
+
+---
+
+# 1. COMMENCER PAR UN AUDIT
+
+Avant toute modification, inspecte l'état réel du projet après le Prompt 7.
+
+Analyse :
+
+* backend ;
+* frontend ;
+* PostgreSQL ;
+* Drizzle ;
+* authentification ;
+* autorisation ;
+* caméra ;
+* VideoGateway ;
+* MediaMTX ;
+* RTSP ;
+* WebRTC ;
+* viewer sessions ;
+* tokens ;
+* chiffrement ;
+* SSRF ;
+* logs ;
+* rate limiting ;
+* infrastructure ;
+* Docker ;
+* Railway ;
+* variables d'environnement ;
+* tests.
+
+Vérifie également les conclusions du rapport du Prompt 7.
+
+NE SUPPOSE PAS que le Prompt 7 a réussi simplement parce que son code existe.
+
+---
+
+# 2. RAPPORT AVANT MODIFICATION
+
+Avant de coder, produis un état précis :
+
+## A. Control Plane
+
+Comment BurkinaWatch gère actuellement :
+
+* utilisateurs ;
+* caméras ;
+* permissions ;
+* sessions ;
+* tokens ;
+* configuration.
+
+## B. Media Plane
+
+Comment fonctionne actuellement :
+
+* MediaMTX ;
+* RTSP ;
+* WebRTC ;
+* VideoGateway.
+
+## C. Réseau
+
+Identifier :
+
+* où se trouve actuellement MediaMTX ;
+* où se trouve la caméra de test ;
+* si elle est LAN ou WAN ;
+* si elle est derrière NAT ;
+* si elle est derrière CGNAT ;
+* si une connexion entrante est nécessaire ;
+* si une connexion sortante suffit.
+
+## D. Production
+
+Identifier :
+
+* Railway ;
+* éventuel serveur MediaMTX ;
+* DNS ;
+* TLS ;
+* firewall ;
+* ports ;
+* STUN ;
+* TURN.
+
+## E. Verdict
+
+Avant de modifier quoi que ce soit :
+
+* ce qui est déjà production-ready ;
+* ce qui ne l'est pas ;
+* ce qui manque ;
+* ce qui peut être conservé.
+
+---
+
+# 3. ARCHITECTURE CIBLE
+
+Préparer l'architecture suivante :
+
+```text
+                    BURKINAWATCH
+                 CONTROL PLANE
+                        │
+              Auth / API / PostgreSQL
+                        │
+                        │
+              ┌─────────▼─────────┐
+              │   Video Gateway   │
+              │     MediaMTX      │
+              └─────────┬─────────┘
+                        │
+                     WebRTC
+                        │
+                        ▼
+                    Utilisateur
+                    navigateur
+```
+
+Pour une caméra directement accessible depuis le gateway :
+
+```text
+Caméra IP
+    │
+   RTSP
+    │
+    ▼
+MediaMTX
+    │
+  WebRTC
+    │
+    ▼
+BurkinaWatch
+```
+
+Pour une caméra derrière NAT/CGNAT :
+
+```text
+Caméra IP
+    │
+    ▼
+Agent local / Gateway local
+    │
+    │ connexion SORTANTE sécurisée
+    ▼
+Infrastructure BurkinaWatch
+    │
+    ▼
+MediaMTX
+    │
+   WebRTC
+    │
+    ▼
+Utilisateur
+```
+
+L'objectif de cette phase est de préparer cette architecture.
+
+---
+
+# 4. PRINCIPE FONDAMENTAL
+
+Le serveur BurkinaWatch ne doit PAS avoir besoin d'établir une connexion entrante vers chaque réseau domestique.
+
+Privilégier lorsque nécessaire :
+
+CONNEXION SORTANTE
+
+plutôt que :
+
+CONNEXION ENTRANTE.
+
+Cela permet notamment de fonctionner avec :
+
+* NAT ;
+* CGNAT ;
+* box 4G/5G ;
+* certains réseaux professionnels.
+
+---
+
+# 5. AGENT LOCAL
+
+Étudier l'introduction future d'un composant :
+
+`BurkinaWatch Camera Agent`
+
+Son rôle éventuel :
+
+* fonctionner dans le réseau local du propriétaire ;
+* accéder à la caméra ;
+* récupérer le flux RTSP ;
+* établir une connexion sortante sécurisée vers l'infrastructure BurkinaWatch ;
+* publier le flux vers le Video Gateway ;
+* transmettre uniquement le flux nécessaire.
+
+IMPORTANT :
+
+Ne pas développer immédiatement un agent complexe si l'audit montre qu'il n'est pas encore nécessaire.
+
+Si sa nécessité est confirmée, préparer une architecture propre et un MVP minimal.
+
+---
+
+# 6. AGENT LOCAL : CE QU'IL NE DOIT PAS FAIRE
+
+L'agent ne doit pas devenir :
+
+* un scanner réseau ;
+* un proxy Internet général ;
+* un tunnel arbitraire ;
+* un accès shell distant ;
+* un outil de contrôle de machines ;
+* un service permettant d'atteindre d'autres appareils du LAN.
+
+Il doit avoir une fonction extrêmement limitée :
+
+CAMÉRA → FLUX VIDÉO → BURKINAWATCH
+
+---
+
+# 7. IDENTITÉ DE L'AGENT
+
+Chaque agent doit disposer d'une identité propre.
+
+Exemple conceptuel :
+
+agentId
+
+L'identité doit être :
+
+* unique ;
+* aléatoire ;
+* révocable ;
+* associée à un utilisateur ;
+* éventuellement associée à une ou plusieurs caméras.
+
+Ne pas utiliser simplement :
+
+cameraId
+
+comme mécanisme d'authentification.
+
+---
+
+# 8. ENREGISTREMENT DE L'AGENT
+
+Préparer un mécanisme sécurisé d'enrôlement.
+
+Architecture conceptuelle :
+
+Utilisateur connecté à BurkinaWatch
+
+↓
+
+"Ajouter un agent"
+
+↓
+
+BurkinaWatch génère une procédure d'enrôlement temporaire
+
+↓
+
+Agent local s'enregistre
+
+↓
+
+Serveur vérifie l'enrôlement
+
+↓
+
+Agent reçoit son identité/token
+
+↓
+
+Agent établit une connexion sortante sécurisée.
+
+Les codes ou tokens d'enrôlement doivent être :
+
+* temporaires ;
+* à usage limité ;
+* non prédictibles ;
+* révocables.
+
+Ne jamais utiliser un token permanent affiché dans l'interface.
+
+---
+
+# 9. AUTHENTIFICATION AGENT ↔ SERVEUR
+
+L'agent doit s'authentifier auprès du backend.
+
+Étudier l'option la plus appropriée entre :
+
+* token rotatif ;
+* clé API dédiée ;
+* mTLS ;
+* autre mécanisme adapté.
+
+Ne choisis pas une technologie uniquement parce qu'elle est populaire.
+
+Choisis selon :
+
+* sécurité ;
+* complexité ;
+* déploiement ;
+* maintenance ;
+* rotation ;
+* révocation ;
+* compatibilité avec l'infrastructure BurkinaWatch.
+
+Documenter le choix.
+
+---
+
+# 10. CONNEXION SORTANTE
+
+Si un agent est nécessaire, privilégier :
+
+Agent
+→ connexion sortante TLS
+→ BurkinaWatch
+
+Le serveur ne doit pas avoir besoin de connaître :
+
+* l'adresse publique du domicile ;
+* le port RTSP public ;
+* la configuration de la box.
+
+L'agent peut alors récupérer localement :
+
+rtsp://camera-local/...
+
+et publier vers le système BurkinaWatch.
+
+---
+
+# 11. PAS DE RTSP PUBLIC
+
+RÈGLE ABSOLUE :
+
+Ne jamais demander à l'utilisateur de faire :
+
+Internet
+→ port 554
+→ caméra.
+
+Une caméra utilisateur ne doit pas devenir publiquement accessible simplement pour fonctionner avec BurkinaWatch.
+
+Si une documentation existante demande cette configuration :
+
+corrige-la.
+
+---
+
+# 12. MEDIA GATEWAY
+
+Le Media Gateway doit rester séparé du backend métier.
+
+BurkinaWatch backend :
+
+* utilisateurs ;
+* droits ;
+* caméras ;
+* agents ;
+* tokens ;
+* configuration.
+
+MediaMTX :
+
+* ingestion ;
+* RTSP ;
+* WebRTC ;
+* transport vidéo.
+
+Ne pas ajouter la vidéo dans les routes Express.
+
+---
+
+# 13. API MEDIA GATEWAY
+
+Vérifier que l'API administrative de MediaMTX n'est pas exposée publiquement.
+
+Si une API de contrôle existe :
+
+elle doit être accessible uniquement depuis les composants autorisés.
+
+Ne jamais exposer :
+
+* API admin MediaMTX ;
+* credentials gateway ;
+* configuration interne ;
+* endpoints de publication arbitraire.
+
+---
+
+# 14. TLS
+
+Tout trafic de contrôle distant doit utiliser TLS.
+
+Vérifier :
+
+* HTTPS ;
+* certificats ;
+* validation TLS ;
+* expiration ;
+* renouvellement.
+
+Ne jamais utiliser :
+
+HTTP non chiffré
+
+pour une communication agent ↔ serveur en production.
+
+---
+
+# 15. WEBSOCKET / QUIC / TCP / UDP
+
+Si un agent distant est nécessaire, analyser objectivement le protocole de transport.
+
+Comparer selon le besoin :
+
+* HTTPS ;
+* WebSocket ;
+* TCP/TLS ;
+* QUIC ;
+* autres solutions appropriées.
+
+Critères :
+
+* NAT traversal ;
+* fiabilité ;
+* latence ;
+* simplicité ;
+* support infrastructure ;
+* sécurité ;
+* coût.
+
+Ne pas ajouter QUIC ou une technologie complexe simplement pour "faire moderne".
+
+Choisir la solution la plus simple qui répond réellement au problème.
+
+---
+
+# 16. WEBRTC
+
+Pour le viewer :
+
+Browser
+→ WebRTC
+→ MediaMTX
+
+Analyser :
+
+* ICE ;
+* STUN ;
+* TURN ;
+* NAT ;
+* firewall ;
+* UDP ;
+* fallback TCP/TLS si nécessaire.
+
+Déterminer dans quelles conditions TURN devient nécessaire.
+
+---
+
+# 17. TURN
+
+Ne pas installer TURN automatiquement.
+
+Déterminer :
+
+1. si STUN suffit ;
+2. dans quels scénarios STUN échoue ;
+3. si TURN est nécessaire ;
+4. quel type de TURN est nécessaire ;
+5. quels ports sont nécessaires ;
+6. comment authentifier les clients ;
+7. comment limiter les abus ;
+8. comment mesurer le coût.
+
+Si TURN est nécessaire :
+
+préparer une architecture sécurisée.
+
+---
+
+# 18. COÛTS
+
+Le système doit être conçu en tenant compte du coût.
+
+Identifier les ressources consommées par :
+
+* MediaMTX ;
+* TURN ;
+* bande passante ;
+* CPU ;
+* RAM ;
+* stockage futur ;
+* agents.
+
+Ne pas supposer que Railway est automatiquement adapté à la partie média.
+
+Séparer clairement :
+
+### Control plane
+
+BurkinaWatch / API / DB
+
+### Media plane
+
+MediaMTX / TURN / transport vidéo.
+
+Documenter quel composant doit être hébergé où.
+
+---
+
+# 19. RAILWAY
+
+Inspecter l'architecture actuelle Railway.
+
+Déterminer si le service actuel doit rester exclusivement :
+
+API / backend.
+
+Ne pas déplacer automatiquement MediaMTX dans le même service.
+
+Si MediaMTX est déjà sur Railway :
+
+évaluer :
+
+* ports ;
+* UDP ;
+* WebRTC ;
+* stabilité ;
+* limitations ;
+* coût ;
+* scaling.
+
+Ne rien migrer sans preuve technique.
+
+---
+
+# 20. INFRASTRUCTURE RECOMMANDÉE
+
+Produire une proposition d'architecture réaliste pouvant évoluer.
+
+Exemple :
+
+```text
+                Cloud
+                  │
+        ┌─────────┴─────────┐
+        │                   │
+   BurkinaWatch         MediaMTX
+   API + PostgreSQL     Media Plane
+        │                   │
+        │                   │
+        └─────────┬─────────┘
+                  │
+             WebRTC / API
+                  │
+            Utilisateurs
+```
+
+Et :
+
+```text
+Caméra distante
+      │
+      ▼
+Agent local
+      │
+      │ outbound TLS
+      ▼
+Media infrastructure
+```
+
+Adapter cette architecture aux résultats réels de l'audit.
+
+---
+
+# 21. FIREWALL
+
+Documenter précisément les ports réellement nécessaires.
+
+Principe :
+
+DENY BY DEFAULT
+
+Puis autoriser uniquement ce qui est nécessaire.
+
+Séparer :
+
+* API ;
+* WebRTC ;
+* TURN ;
+* RTSP interne ;
+* administration.
+
+Ne jamais ouvrir une plage énorme "pour que ça marche".
+
+---
+
+# 22. SECRETS
+
+Tous les secrets doivent rester dans :
+
+* Railway Secrets ;
+* variables sécurisées ;
+* gestionnaire de secrets approprié.
+
+Ne jamais mettre :
+
+* credentials caméra ;
+* agent secret ;
+* TURN secret ;
+* gateway secret ;
+* encryption key
+
+dans :
+
+* Git ;
+* frontend ;
+* Dockerfile ;
+* logs ;
+* README public ;
+* screenshots.
+
+---
+
+# 23. ROTATION
+
+Prévoir la rotation de :
+
+* agent credentials ;
+* gateway credentials ;
+* TURN credentials ;
+* tokens.
+
+Une clé compromise doit pouvoir être révoquée sans devoir reconstruire toute l'application.
+
+---
+
+# 24. RÉVOCATION D'UN AGENT
+
+L'utilisateur doit pouvoir désactiver un agent.
+
+Après révocation :
+
+Agent
+→ serveur
+
+doit être refusé.
+
+Les caméras associées doivent passer dans un état cohérent :
+
+OFFLINE ou DISCONNECTED.
+
+Une ancienne identité d'agent ne doit pas pouvoir se réinscrire automatiquement.
+
+---
+
+# 25. AGENT HORS LIGNE
+
+Gérer :
+
+* agent offline ;
+* agent reconnecting ;
+* agent online ;
+* camera offline ;
+* gateway offline.
+
+Ne pas confondre :
+
+Agent OFFLINE
+
+avec :
+
+Camera OFFLINE.
+
+Exemple :
+
+Agent = ONLINE
+Camera = OFFLINE
+
+est parfaitement possible.
+
+---
+
+# 26. RECONNEXION AGENT
+
+Prévoir une reconnexion progressive.
+
+Exemple :
+
+connexion perdue
+
+→ délai court
+→ retry
+→ délai croissant
+→ retry
+→ backoff maximal
+
+Ne pas créer une boucle agressive.
+
+---
+
+# 27. MISE À JOUR DE L'AGENT
+
+Documenter dès maintenant comment l'agent pourra être mis à jour.
+
+Objectifs futurs :
+
+* version ;
+* compatibilité ;
+* mise à jour sécurisée ;
+* rollback ;
+* vérification d'intégrité.
+
+NE PAS implémenter une mise à jour distante arbitraire dans cette phase.
+
+---
+
+# 28. IDENTIFICATION DES CAMÉRAS
+
+Une caméra doit pouvoir être associée :
+
+Utilisateur
+→ Agent
+→ Camera
+
+Mais le système doit aussi pouvoir gérer :
+
+Utilisateur
+→ Camera directe
+
+si elle est techniquement accessible.
+
+Ne force pas toutes les caméras à utiliser un agent si ce n'est pas nécessaire.
+
+---
+
+# 29. MODÈLE DE DONNÉES
+
+Analyser s'il faut ajouter des tables :
+
+### camera_agents
+
+Exemples de champs :
+
+* id ;
+* ownerId ;
+* name ;
+* status ;
+* version ;
+* lastSeenAt ;
+* revokedAt ;
+* createdAt ;
+* updatedAt.
+
+### agent_camera_bindings
+
+si nécessaire :
+
+* agentId ;
+* cameraId ;
+* status ;
+* createdAt.
+
+Ne crée pas ces tables si le modèle existant peut être étendu proprement.
+
+Créer uniquement les relations réellement nécessaires.
+
+---
+
+# 30. INDEX
+
+Si de nouvelles tables sont créées, prévoir les index adaptés :
+
+* ownerId ;
+* status ;
+* lastSeenAt ;
+* cameraId ;
+* agentId.
+
+Ne pas créer des dizaines d'index inutiles.
+
+Toutes les modifications doivent passer par une migration contrôlée.
+
+---
+
+# 31. PAS DE MIGRATION DESTRUCTIVE
+
+RÈGLE ABSOLUE :
+
+Ne jamais utiliser :
+
+db:push --force
+
+Ne jamais supprimer automatiquement une table existante.
+
+Ne jamais modifier destructivement la base pour "faire correspondre le schéma".
+
+Créer une migration explicite.
+
+Vérifier la base réelle avant exécution.
+
+---
+
+# 32. MONITORING
+
+Préparer les indicateurs suivants :
+
+### Agents
+
+* online ;
+* offline ;
+* revoked ;
+* lastSeen.
+
+### Cameras
+
+* online ;
+* offline ;
+* degraded.
+
+### Streams
+
+* active ;
+* failed ;
+* reconnecting.
+
+### Viewers
+
+* active sessions.
+
+### Infrastructure
+
+* CPU ;
+* RAM ;
+* bandwidth ;
+* WebRTC failures ;
+* TURN usage.
+
+---
+
+# 33. ALERTES
+
+Ne pas créer immédiatement un système d'alertes complexe.
+
+Documenter simplement les événements qui pourraient nécessiter une alerte future :
+
+* agent offline prolongé ;
+* caméra offline prolongée ;
+* gateway unavailable ;
+* taux élevé d'erreurs WebRTC ;
+* consommation anormale ;
+* tentative d'accès non autorisée.
+
+---
+
+# 34. SÉCURITÉ AGENT
+
+Effectuer une analyse spécifique des risques :
+
+### Agent compromis
+
+Que peut faire un attaquant qui possède l'agent ?
+
+Il ne doit pas pouvoir :
+
+* accéder aux autres caméras ;
+* accéder à PostgreSQL ;
+* accéder à l'API admin ;
+* exécuter des commandes serveur ;
+* accéder à d'autres utilisateurs.
+
+Limiter strictement les permissions.
+
+---
+
+# 35. MULTI-TENANCY
+
+Tester :
+
+User A
+→ Agent A
+→ Camera A
+
+User B
+→ Agent B
+→ Camera B
+
+Aucune donnée ne doit traverser les frontières :
+
+A ↛ B
+
+Tester :
+
+* API ;
+* tokens ;
+* sessions ;
+* agents ;
+* cameras ;
+* gateway paths.
+
+---
+
+# 36. PROTECTION CONTRE L'USAGE ABUSIF
+
+Limiter :
+
+* nombre d'agents par utilisateur ;
+* nombre de caméras ;
+* nombre de sessions ;
+* fréquence d'enrôlement ;
+* tentatives de connexion ;
+* génération de tokens.
+
+Les valeurs doivent être configurables et documentées.
+
+Ne pas choisir arbitrairement des limites trop basses.
+
+---
+
+# 37. PRIVACY
+
+Le système manipule potentiellement des images de lieux privés.
+
+Préparer une architecture respectueuse de la vie privée.
+
+Ne pas collecter inutilement :
+
+* flux ;
+* captures ;
+* historiques ;
+* données de localisation ;
+* métadonnées.
+
+Le MVP reste :
+
+LIVE uniquement.
+
+Pas de stockage vidéo.
+
+---
+
+# 38. SÉCURITÉ DU FRONTEND
+
+Inspecter le build frontend.
+
+S'assurer qu'il ne contient aucun :
+
+* RTSP URL ;
+* password ;
+* agent secret ;
+* gateway secret ;
+* encryption key ;
+* TURN secret permanent.
+
+Le frontend reçoit uniquement les informations nécessaires à la lecture.
+
+---
+
+# 39. TESTS D'ATTAQUE
+
+Créer des tests simulant :
+
+### Agent A → Camera B
+
+REFUS.
+
+### User A → Agent B
+
+REFUS.
+
+### Agent révoqué → serveur
+
+REFUS.
+
+### Token expiré
+
+REFUS.
+
+### Token d'une autre caméra
+
+REFUS.
+
+### Session d'un autre utilisateur
+
+REFUS.
+
+### RTSP privé malveillant
+
+BLOQUÉ.
+
+### API MediaMTX publique
+
+DOIT ÊTRE INACCESSIBLE.
+
+---
+
+# 40. TEST NAT / CGNAT
+
+Si un environnement de test approprié est disponible :
+
+tester :
+
+### Cas A
+
+Caméra et gateway sur même réseau.
+
+### Cas B
+
+Caméra derrière NAT.
+
+### Cas C
+
+Caméra derrière réseau mobile/CGNAT.
+
+### Cas D
+
+Viewer derrière un autre réseau.
+
+Documenter :
+
+* ce qui fonctionne ;
+* ce qui échoue ;
+* pourquoi ;
+* STUN ;
+* TURN ;
+* agent.
+
+Si aucun environnement CGNAT réel n'est disponible :
+
+ne pas prétendre que le test a été réalisé.
+
+Indiquer :
+
+NON TESTÉ — ENVIRONNEMENT NON DISPONIBLE.
+
+---
+
+# 41. TEST DE COUPURE
+
+Tester :
+
+Agent connecté
+→ couper Internet
+→ restaurer Internet.
+
+Vérifier :
+
+* reconnexion ;
+* récupération du stream ;
+* absence de duplicate sessions ;
+* absence de fuite mémoire ;
+* absence de boucle agressive.
+
+---
+
+# 42. TEST DE REDÉMARRAGE
+
+Tester :
+
+* redémarrage agent ;
+* redémarrage MediaMTX ;
+* redémarrage backend ;
+* redémarrage navigateur.
+
+Vérifier que l'architecture revient dans un état cohérent.
+
+---
+
+# 43. TEST DE CHARGE MINIMAL
+
+Ne pas effectuer un stress test massif.
+
+Effectuer seulement une validation contrôlée :
+
+* plusieurs caméras ;
+* plusieurs viewers ;
+* agents simultanés.
+
+Mesurer :
+
+* CPU ;
+* RAM ;
+* bande passante ;
+* temps de connexion ;
+* erreurs.
+
+Le but est d'identifier les premiers goulets d'étranglement.
+
+---
+
+# 44. DOCUMENTATION
+
+Créer ou mettre à jour une documentation technique interne expliquant :
+
+## Architecture
+
+Control plane / Media plane.
+
+## Caméra directe
+
+Camera → RTSP → MediaMTX.
+
+## Caméra distante
+
+Camera → Agent → Media infrastructure.
+
+## WebRTC
+
+Gateway → Browser.
+
+## NAT
+
+STUN/TURN.
+
+## Sécurité
+
+Auth / ownership / tokens / encryption.
+
+## Réseau
+
+Ports et flux réseau.
+
+## Déploiement
+
+Development / staging / production.
+
+Cette documentation doit être suffisamment claire pour qu'un autre développeur puisse comprendre l'architecture sans connaître les discussions précédentes.
+
+---
+
+# 45. CE QUI NE DOIT PAS ÊTRE FAIT
+
+NE PAS :
+
+* ouvrir RTSP sur Internet ;
+* scanner Internet ;
+* scanner automatiquement les réseaux des utilisateurs ;
+* créer un proxy réseau général ;
+* exposer MediaMTX admin ;
+* exposer PostgreSQL ;
+* exposer Redis si présent ;
+* stocker les credentials en clair ;
+* mettre des secrets dans Dockerfile ;
+* mettre des secrets dans Git ;
+* désactiver SSRF ;
+* désactiver authentication ;
+* contourner NAT par UPnP automatique ;
+* configurer automatiquement la box utilisateur ;
+* utiliser une DMZ ;
+* enregistrer les flux ;
+* créer une IA de surveillance ;
+* faire de la reconnaissance faciale.
+
+---
+
+# 46. CRITÈRES DE RÉUSSITE
+
+Le Prompt 8 est réussi si :
+
+1. L'architecture control plane / media plane est clairement définie.
+2. Railway/backend n'est pas utilisé comme proxy vidéo.
+3. L'architecture supporte les caméras directement accessibles.
+4. Une architecture pour les caméras derrière NAT/CGNAT est définie.
+5. L'agent local est correctement isolé si nécessaire.
+6. L'agent dispose d'une identité propre.
+7. L'enrôlement est sécurisé.
+8. La révocation fonctionne.
+9. Les credentials restent secrets.
+10. Les flux RTSP ne sont jamais exposés publiquement.
+11. MediaMTX admin n'est pas exposé.
+12. STUN/TURN ont été évalués objectivement.
+13. Les ports nécessaires sont documentés.
+14. Les frontières entre utilisateurs sont protégées.
+15. IDOR est testé.
+16. SSRF est conservé.
+17. Les sessions vidéo restent temporaires.
+18. Les agents offline/reconnecting sont gérés.
+19. Les migrations DB sont contrôlées.
+20. Les tests de non-régression passent.
+21. Aucun secret n'apparaît dans le frontend.
+22. Aucun secret n'apparaît dans les logs.
+23. Les fonctionnalités existantes de BurkinaWatch restent fonctionnelles.
+
+---
+
+# 47. RAPPORT FINAL OBLIGATOIRE
+
+À la fin, produire un rapport détaillé.
+
+## 1. État initial
+
+Ce qui existait avant le Prompt 8.
+
+## 2. Architecture retenue
+
+Schéma complet.
+
+## 3. Control Plane
+
+Description.
+
+## 4. Media Plane
+
+Description.
+
+## 5. Caméras LAN
+
+Description du fonctionnement.
+
+## 6. Caméras WAN/NAT
+
+Description.
+
+## 7. Agent local
+
+Indiquer :
+
+* nécessaire ou non ;
+* implémenté ou seulement préparé ;
+* protocole ;
+* authentification ;
+* sécurité.
+
+## 8. WebRTC
+
+Indiquer :
+
+* STUN ;
+* TURN ;
+* ICE ;
+* résultats des tests.
+
+## 9. Infrastructure
+
+Indiquer précisément :
+
+* Railway ;
+* MediaMTX ;
+* éventuel serveur média ;
+* TURN ;
+* DNS ;
+* TLS ;
+* ports ;
+* firewall.
+
+## 10. Database
+
+Indiquer :
+
+* tables ;
+* migrations ;
+* index ;
+* changements.
+
+## 11. Security
+
+Indiquer :
+
+* authentication ;
+* authorization ;
+* multi-tenancy ;
+* IDOR ;
+* SSRF ;
+* encryption ;
+* tokens ;
+* agent security ;
+* secret management ;
+* rate limiting.
+
+## 12. Tests
+
+Donner les résultats exacts.
+
+Ne pas écrire simplement :
+
+"Tests OK."
+
+Donner les tests réalisés et leurs résultats.
+
+## 13. Limites
+
+Lister tout ce qui n'a pas pu être testé.
+
+## 14. Coûts
+
+Donner une estimation qualitative :
+
+* faible ;
+* modéré ;
+* élevé.
+
+Et identifier les composants susceptibles de coûter cher :
+
+* bande passante ;
+* TURN ;
+* serveur média ;
+* stockage futur.
+
+## 15. Risques
+
+Lister les risques techniques encore présents.
+
+## 16. Prochaine étape
+
+Proposer ce qui doit être fait ensuite, sans l'implémenter automatiquement.
+
+## 17. VERDICT
+
+Terminer obligatoirement par UNE seule conclusion :
+
+### READY FOR PHASE 9
+
+ou
+
+### READY WITH CONDITIONS
+
+ou
+
+### NOT READY FOR PHASE 9
+
+Ne choisis `READY FOR PHASE 9` que si l'architecture est suffisamment claire et sécurisée pour poursuivre.
+
+---
+
+# RÈGLE ABSOLUE
+
+Le but de cette phase n'est PAS de faire fonctionner une caméra à n'importe quel prix.
+
+Le but est de construire la fondation technique qui permettra à BurkinaWatch de passer progressivement de :
+
+1 utilisateur
+→ 1 caméra
+→ 1 réseau
+
+à :
+
+des centaines/milliers d'utilisateurs
+→ plusieurs caméras chacun
+→ réseaux différents
+→ NAT/CGNAT
+→ WebRTC
+→ infrastructure média séparée.
+
+Ne jamais résoudre un problème réseau en supprimant une protection de sécurité.
+
+Ne jamais résoudre un problème NAT en exposant publiquement les caméras.
+
+Ne jamais résoudre un problème de performance en transformant Express en serveur vidéo.
+
+Si une architecture proposée nécessite l'ouverture publique du RTSP d'une caméra, considérer cette architecture comme NON ACCEPTABLE pour BurkinaWatch.
+
+Priorité absolue :
+
+SÉCURITÉ
+→ ISOLATION
+→ FIABILITÉ
+→ SIMPLICITÉ
+→ PERFORMANCE
+→ SCALABILITÉ

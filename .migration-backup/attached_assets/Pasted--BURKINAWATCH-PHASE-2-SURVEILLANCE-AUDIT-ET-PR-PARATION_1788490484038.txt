@@ -1,0 +1,814 @@
+# BURKINAWATCH — PHASE 2
+
+## SURVEILLANCE — AUDIT ET PRÉPARATION DE L’ARCHITECTURE CAMÉRAS IP
+
+Tu travailles sur le projet **BurkinaWatch**.
+
+Le projet est une plateforme citoyenne existante.
+La priorité absolue est de **préserver toutes les fonctionnalités existantes** et d'introduire progressivement une nouvelle fonctionnalité appelée :
+
+# SURVEILLANCE
+
+Cette fonctionnalité permettra à un utilisateur BurkinaWatch qui possède ou exploite une caméra IP chez lui, dans son commerce, son bureau, son atelier, son établissement, etc., de connecter cette caméra à son compte BurkinaWatch et de consulter son flux vidéo en direct depuis une interface sécurisée.
+
+---
+
+# ⚠️ RÈGLES ABSOLUES
+
+Avant toute modification :
+
+1. Inspecte réellement le dépôt et son architecture actuelle.
+2. Ne suppose pas que certaines fonctionnalités existent.
+3. Ne réécris pas le projet.
+4. Ne refactorise pas massivement `server/routes.ts`.
+5. Ne modifie pas les fonctionnalités existantes inutilement.
+6. Ne supprime aucune table existante.
+7. Ne supprime aucune donnée.
+8. Ne fais jamais :
+
+   * `db:push`
+   * `db:push --force`
+   * `drizzle-kit push`
+   * reset de base
+   * DROP TABLE
+   * TRUNCATE
+   * suppression/recréation de tables existantes
+9. N'utilise aucune vraie caméra pour cette phase.
+10. Ne demande jamais à l'utilisateur de rendre un port RTSP public sur Internet.
+11. Ne stocke jamais les mots de passe caméra en clair.
+12. Ne mets jamais de credentials caméra dans :
+
+* le frontend
+* les logs
+* les URLs publiques
+* le code source
+* Git
+* les variables exposées au navigateur.
+
+13. Ne modifie pas la configuration Railway de production sans nécessité.
+14. Ne commence PAS encore l'enregistrement vidéo.
+15. Ne commence PAS encore l'IA vidéo.
+16. Ne commence PAS encore les alertes intelligentes.
+17. Ne commence PAS encore l'intégration d'une vraie caméra.
+
+Cette phase est une phase **d'audit, d'architecture et de préparation**.
+
+---
+
+# 1. CONTEXTE TECHNIQUE À RESPECTER
+
+L'architecture actuelle comprend notamment :
+
+* React / Vite pour le frontend
+* Node.js
+* TypeScript
+* Express
+* PostgreSQL
+* Drizzle ORM
+* Railway pour la production
+* Replit pour le développement
+* GitHub pour le dépôt
+* Expo/mobile pour certaines interfaces
+
+La base PostgreSQL Railway est la **source de vérité de production**.
+
+Le backend utilise la résolution :
+
+`RAILWAY_DATABASE_URL || DATABASE_URL`
+
+La configuration Drizzle doit rester cohérente avec cette stratégie.
+
+La sécurité existante comprend déjà notamment :
+
+* authentification
+* contrôle d'accès
+* protections CSRF
+* protection SSRF
+* chiffrement AES-256-GCM
+* redaction des secrets dans les logs
+* protections IDOR
+* contrôles de permissions
+* protections sur les caches sensibles.
+
+Tu dois t'appuyer sur ces mécanismes existants au lieu d'en créer inutilement de nouveaux.
+
+---
+
+# 2. OBJECTIF DE CETTE PHASE
+
+Nous voulons déterminer précisément comment intégrer :
+
+```text
+CAMÉRA IP
+    ↓
+RTSP / ONVIF
+    ↓
+PASSERELLE VIDÉO
+    ↓
+WEBRTC
+    ↓
+BURKINAWATCH
+```
+
+Architecture cible :
+
+```text
+                    BURKINAWATCH
+
+Utilisateur
+     │
+     ▼
+Frontend React / Mobile
+     │
+     │ HTTPS
+     ▼
+Backend Express
+     │
+     ├── Authentification
+     ├── Autorisation
+     ├── Gestion des caméras
+     ├── Credentials chiffrés
+     ├── Tokens temporaires
+     └── Contrôle du flux
+              │
+              ▼
+       VIDEO GATEWAY
+       (ex. MediaMTX)
+              │
+              ▼
+        RTSP / ONVIF
+              │
+              ▼
+          CAMÉRA IP
+```
+
+IMPORTANT :
+
+Le backend Express ne doit PAS devenir un serveur vidéo.
+
+Il doit rester le **control plane**.
+
+Le système vidéo doit constituer le **media plane**.
+
+---
+
+# 3. AUDIT DU PROJET ACTUEL
+
+Inspecte le dépôt et cherche notamment :
+
+* modèles Drizzle
+* tables utilisateurs
+* rôles
+* permissions
+* middleware d'authentification
+* middleware d'autorisation
+* chiffrement
+* gestion des secrets
+* stockage des credentials
+* routes API
+* WebSocket éventuel
+* configuration CSP
+* configuration CORS
+* PWA
+* Expo/mobile
+* service workers
+* reverse proxy éventuel
+* infrastructure Docker
+* Railway
+* variables d'environnement
+* mécanismes de rate limiting
+* mécanismes de logging
+* système de notifications.
+
+Cherche également explicitement si le projet contient déjà :
+
+* RTSP
+* ONVIF
+* WebRTC
+* HLS
+* MediaMTX
+* Janus
+* LiveKit
+* FFmpeg
+* GStreamer
+* go2rtc
+* caméra
+* surveillance
+* video gateway
+* TURN
+* STUN.
+
+Ne suppose pas qu'un composant existe simplement parce qu'un nom apparaît dans un commentaire.
+
+---
+
+# 4. VÉRIFIER LES CAPACITÉS RÉELLES DU NAVIGATEUR
+
+Détermine comment le frontend actuel pourrait lire un flux vidéo sécurisé.
+
+Compare techniquement :
+
+### Option A
+
+WebRTC direct depuis le navigateur.
+
+### Option B
+
+WebRTC fourni par une passerelle vidéo.
+
+### Option C
+
+HLS.
+
+### Option D
+
+MJPEG.
+
+Détermine quelle solution est réellement compatible avec l'architecture actuelle.
+
+La préférence architecturale est :
+
+**WebRTC**
+
+car nous voulons une vidéo live avec une latence faible.
+
+Mais ne force pas cette solution si l'audit montre un problème concret.
+
+---
+
+# 5. ÉVALUATION DE MEDIAMTX
+
+Évalue précisément l'utilisation éventuelle de :
+
+**MediaMTX**
+
+comme passerelle vidéo.
+
+Objectif :
+
+```text
+RTSP Camera
+     ↓
+MediaMTX
+     ↓
+WebRTC
+     ↓
+Browser
+```
+
+Détermine :
+
+* comment MediaMTX pourrait être déployé
+* si Railway peut raisonnablement héberger cette couche
+* si un service séparé serait préférable
+* comment le backend communiquerait avec MediaMTX
+* comment authentifier les flux
+* comment empêcher un utilisateur d'accéder au flux d'un autre utilisateur
+* comment gérer les caméras offline
+* comment gérer les reconnexions
+* comment isoler les flux utilisateurs.
+
+Ne déploie pas encore MediaMTX.
+
+---
+
+# 6. PROBLÈME CRITIQUE : CAMÉRAS DERRIÈRE NAT
+
+Analyse le problème suivant :
+
+Une caméra peut être située :
+
+* chez un particulier
+* dans une boutique
+* dans un bureau
+* derrière une box
+* derrière un routeur 4G/5G
+* derrière CGNAT
+* avec une adresse IP privée.
+
+L'utilisateur ne doit pas être obligé de :
+
+* transférer un port RTSP
+* exposer directement la caméra à Internet
+* désactiver son firewall
+* donner son IP publique au frontend.
+
+Propose une architecture sécurisée permettant éventuellement :
+
+```text
+Caméra
+   ↓
+Agent / Gateway local
+   ↓
+Connexion sortante sécurisée
+   ↓
+Infrastructure BurkinaWatch
+   ↓
+WebRTC
+   ↓
+Utilisateur
+```
+
+Détermine si un **gateway local / agent** sera nécessaire pour le MVP.
+
+Ne développe pas cet agent maintenant.
+
+---
+
+# 7. MODÈLE DE DONNÉES À PROPOSER
+
+Propose un modèle de données pour une future table du type :
+
+`surveillance_cameras`
+
+Ne crée PAS encore automatiquement la table en production.
+
+Propose les champs nécessaires, par exemple :
+
+* id
+* userId / ownerId
+* name
+* description
+* connectionType
+* host
+* port
+* username
+* encryptedPassword
+* streamPath
+* status
+* lastSeenAt
+* createdAt
+* updatedAt
+
+Mais adapte réellement la proposition au schéma existant.
+
+Ne crée pas de champs redondants si le projet possède déjà des abstractions adaptées.
+
+Le mot de passe doit être stocké uniquement sous forme chiffrée.
+
+Il ne doit jamais être renvoyé dans une réponse API.
+
+---
+
+# 8. AUTORISATION
+
+Conçois le modèle d'accès suivant :
+
+Un utilisateur A :
+
+* peut voir ses propres caméras
+* peut modifier ses propres caméras
+* peut supprimer ses propres caméras
+* peut démarrer/arrêter l'accès à ses propres flux
+
+Un utilisateur B :
+
+* ne peut jamais lire les caméras de A
+* ne peut jamais modifier les caméras de A
+* ne peut jamais supprimer les caméras de A
+* ne peut jamais obtenir le flux de A.
+
+Les administrateurs doivent avoir uniquement les permissions nécessaires.
+
+Vérifie comment intégrer cela aux helpers d'autorisation existants :
+
+* `requireAuthenticatedUser`
+* `requireResourceOwnership`
+* `requirePermission`
+* autres helpers réellement présents.
+
+Ne crée pas un deuxième système d'autorisation parallèle sans raison.
+
+---
+
+# 9. SSRF
+
+Le système caméra est particulièrement sensible au SSRF.
+
+Analyse précisément la protection SSRF déjà présente.
+
+Vérifie qu'une future caméra ne puisse pas être utilisée pour demander au serveur d'accéder à :
+
+* localhost
+* 127.0.0.1
+* réseau privé
+* metadata cloud
+* réseau interne
+* services Railway
+* services Docker
+* ports arbitraires.
+
+Attention :
+
+Une caméra IP utilise souvent une adresse privée légitime.
+
+Il faut donc distinguer :
+
+### Cas utilisateur → caméra personnelle
+
+d'un :
+
+### Cas attaquant → infrastructure interne.
+
+Propose une stratégie réaliste pour cette distinction.
+
+Ne désactive surtout pas la protection SSRF globalement.
+
+---
+
+# 10. CREDENTIALS CAMÉRA
+
+Le système devra éventuellement accepter :
+
+```text
+Adresse caméra
+Utilisateur caméra
+Mot de passe caméra
+```
+
+Analyse comment utiliser le système AES-256-GCM déjà présent.
+
+Détermine :
+
+* quoi chiffrer
+* quoi éventuellement hasher
+* ce qui peut être stocké en clair
+* ce qui ne doit jamais être retourné
+* comment effectuer une rotation du secret
+* comment éviter les logs accidentels.
+
+Si KMS n'est pas opérationnel actuellement, utilise l'architecture de chiffrement déjà préparée avec `MASTER_ENCRYPTION_KEY`, sans contourner les garde-fous de production.
+
+Ne crée aucune nouvelle clé en dur dans le code.
+
+---
+
+# 11. TOKENS VIDÉO TEMPORAIRES
+
+Propose un mécanisme permettant :
+
+```text
+Utilisateur authentifié
+        ↓
+Demande accès caméra
+        ↓
+Backend vérifie ownership
+        ↓
+Backend délivre autorisation temporaire
+        ↓
+Gateway vidéo
+        ↓
+WebRTC
+```
+
+Le navigateur ne doit jamais recevoir :
+
+* mot de passe caméra
+* credential RTSP
+* secret permanent
+* token permanent.
+
+Les tokens vidéo doivent être :
+
+* courts
+* liés à l'utilisateur
+* liés à la caméra
+* expirables
+* révocables si possible.
+
+Ne code pas encore ce système si l'architecture finale n'est pas suffisamment définie.
+
+---
+
+# 12. FRONTEND
+
+Analyse où intégrer une future section :
+
+**Surveillance**
+
+dans l'interface BurkinaWatch existante.
+
+Propose une UX cohérente avec l'application actuelle.
+
+Ne modifie pas encore le design global.
+
+L'espace pourrait comporter :
+
+```text
+SURVEILLANCE
+
+[ + Ajouter une caméra ]
+
+Mes caméras
+
+┌───────────────────────┐
+│ 🟢 Boutique           │
+│ En ligne              │
+│                       │
+│      APERÇU VIDÉO     │
+│                       │
+│ [ Voir en direct ]    │
+└───────────────────────┘
+```
+
+Mais il s'agit seulement d'une proposition UX.
+
+Ne génère pas encore une interface complète.
+
+---
+
+# 13. MOBILE / EXPO
+
+Analyse également la compatibilité de l'architecture avec l'application mobile Expo.
+
+Détermine :
+
+* si WebRTC est compatible avec la stack mobile actuelle
+* si un composant natif serait nécessaire
+* si le navigateur mobile peut être utilisé
+* si une architecture différente serait nécessaire pour Android/iOS.
+
+Ne modifie pas encore l'application mobile.
+
+---
+
+# 14. INFRASTRUCTURE
+
+Analyse les besoins futurs :
+
+### Backend
+
+Express
+
+### Database
+
+PostgreSQL
+
+### Video Gateway
+
+MediaMTX ou solution équivalente
+
+### TURN/STUN
+
+À déterminer.
+
+### Reverse proxy
+
+À déterminer.
+
+### HTTPS
+
+Obligatoire.
+
+### Authentication
+
+BurkinaWatch.
+
+### Monitoring
+
+À déterminer.
+
+Ne déploie aucune nouvelle infrastructure dans cette phase.
+
+---
+
+# 15. RISQUES À ÉVALUER
+
+Fais une analyse spécifique des risques :
+
+### Critiques
+
+* accès caméra d'un autre utilisateur
+* fuite de credentials
+* exposition RTSP publique
+* SSRF
+* accès sans authentification
+* token vidéo permanent
+* compromission du gateway.
+
+### Élevés
+
+* brute force caméra
+* reconnaissance réseau
+* enumeration des camera IDs
+* flux non chiffré
+* logs contenant des secrets
+* abus de bande passante
+* DoS par flux vidéo.
+
+### Moyens
+
+* caméra offline
+* reconnexion
+* timeout
+* UX
+* quota.
+
+---
+
+# 16. TESTS À PRÉPARER
+
+Propose une stratégie de tests avant implémentation.
+
+Minimum :
+
+### Auth
+
+Utilisateur non connecté → refus.
+
+### Ownership
+
+Utilisateur A → caméra A → OK.
+
+Utilisateur A → caméra B → REFUS.
+
+Utilisateur B → caméra A → REFUS.
+
+### Credentials
+
+Vérifier qu'un GET API ne retourne jamais le mot de passe.
+
+### SSRF
+
+Tester les destinations interdites.
+
+### Token
+
+Token expiré → refus.
+
+Token caméra A utilisé pour caméra B → refus.
+
+### Logs
+
+Aucun secret caméra dans les logs.
+
+### Flux
+
+Caméra offline → état `offline`.
+
+### Reconnexion
+
+Caméra revient → état `online`.
+
+---
+
+# 17. CE QUE TU DOIS MODIFIER DANS CETTE PHASE
+
+Tu peux uniquement :
+
+* ajouter des fichiers d'architecture/documentation si nécessaire
+* ajouter des types/interfaces préparatoires si cela ne casse rien
+* préparer une configuration non activée
+* préparer des tests unitaires de sécurité
+* préparer des helpers réutilisables si réellement nécessaires.
+
+Tu ne dois PAS :
+
+* créer une caméra réelle
+* connecter une caméra réelle
+* déployer MediaMTX
+* ouvrir des ports RTSP
+* créer un tunnel public
+* modifier Railway inutilement
+* modifier le schéma PostgreSQL de production
+* ajouter une migration de production
+* ajouter une route publique vidéo
+* stocker des credentials réels.
+
+---
+
+# 18. VALIDATION TECHNIQUE
+
+À la fin :
+
+```bash
+npm run check
+npm run build
+```
+
+Puis exécute les tests de sécurité existants.
+
+Vérifie également :
+
+```bash
+git diff --check
+```
+
+Si des tests échouent à cause de modifications introduites pendant cette phase, corrige-les.
+
+Si une erreur préexistait, indique-la explicitement.
+
+---
+
+# 19. RAPPORT FINAL OBLIGATOIRE
+
+Ne réponds pas simplement "Phase 2 terminée".
+
+Produis un rapport structuré :
+
+## A. État actuel
+
+Architecture réelle trouvée.
+
+## B. Ce qui existe déjà
+
+Liste précise des composants réutilisables.
+
+## C. Ce qui manque
+
+Liste précise.
+
+## D. Architecture recommandée
+
+Présente clairement :
+
+```text
+Caméra
+ ↓
+RTSP / ONVIF
+ ↓
+Gateway
+ ↓
+WebRTC
+ ↓
+BurkinaWatch
+```
+
+## E. Media Gateway
+
+Indique si MediaMTX est recommandé ou non.
+
+## F. NAT / CGNAT
+
+Explique la stratégie recommandée.
+
+## G. Database
+
+Propose le modèle de données sans l'appliquer.
+
+## H. Security
+
+Explique les protections nécessaires.
+
+## I. Frontend
+
+Propose où intégrer Surveillance.
+
+## J. Mobile
+
+Indique les implications Expo.
+
+## K. Tests
+
+Liste les tests nécessaires.
+
+## L. Modifications réellement effectuées
+
+Liste uniquement les fichiers réellement modifiés.
+
+## M. Vérifications
+
+Indique :
+
+* `npm run check`
+* `npm run build`
+* tests sécurité
+* `git diff --check`
+
+avec PASS / FAIL.
+
+## N. Risques restants
+
+Liste-les clairement.
+
+## O. Verdict
+
+Choisis obligatoirement :
+
+**READY FOR PHASE 3**
+
+ou
+
+**READY WITH CONDITIONS**
+
+ou
+
+**NOT READY**
+
+---
+
+# RÈGLE FINALE
+
+À la fin de cette phase :
+
+**ARRÊTE-TOI.**
+
+Ne commence pas automatiquement la Phase 3.
+
+Ne connecte aucune caméra réelle.
+
+Ne déploie aucun serveur vidéo.
+
+Ne modifie pas la base de production.
+
+Nous utiliserons ton rapport pour décider de la prochaine étape.

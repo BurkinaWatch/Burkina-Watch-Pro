@@ -1,0 +1,1073 @@
+# PROMPT 6 — BURKINAWATCH
+
+## Intégration contrôlée d’une vraie caméra IP dans le système de vidéosurveillance
+
+Tu travailles sur le projet BurkinaWatch existant.
+
+IMPORTANT :
+
+* Tu dois travailler à partir du code existant.
+* Tu ne dois pas réécrire l’application.
+* Tu ne dois pas remplacer l’architecture existante sans justification.
+* Tu ne dois pas casser les fonctionnalités existantes.
+* Tu ne dois pas modifier inutilement l’UI générale de BurkinaWatch.
+* Tu dois préserver toutes les protections de sécurité déjà mises en place.
+* Tu dois avancer progressivement.
+* Tu ne dois jamais exposer de mot de passe caméra, URL RTSP, token vidéo ou secret au frontend.
+* Tu ne dois jamais demander à l’utilisateur d’exposer publiquement le port RTSP 554 de sa caméra.
+* Tu ne dois jamais désactiver une protection de sécurité pour faire fonctionner le prototype.
+
+L’objectif de cette phase est de passer du prototype avec source vidéo de test à une véritable caméra IP physique, mais uniquement dans un environnement contrôlé de développement/préproduction.
+
+---
+
+# 1. OBJECTIF GLOBAL
+
+Valider réellement la chaîne suivante :
+
+Caméra IP réelle
+↓
+RTSP / éventuellement ONVIF
+↓
+Media Gateway / MediaMTX
+↓
+WebRTC
+↓
+BurkinaWatch
+↓
+Utilisateur authentifié et autorisé
+
+Le système doit permettre à un utilisateur propriétaire d’une caméra enregistrée dans BurkinaWatch de demander son flux live et de le visualiser dans l’interface web.
+
+Cette phase ne doit PAS encore implémenter :
+
+* enregistrement vidéo ;
+* stockage vidéo ;
+* détection IA ;
+* reconnaissance faciale ;
+* partage public ;
+* partage par lien ;
+* réseau de caméras publiques ;
+* scan automatique du réseau ;
+* découverte automatique de toutes les caméras Internet ;
+* accès administrateur arbitraire aux caméras des utilisateurs ;
+* exposition publique du RTSP ;
+* proxy vidéo à travers Express.
+
+---
+
+# 2. COMMENCER PAR UN AUDIT
+
+Avant de modifier le moindre fichier, inspecte complètement l’état actuel du projet.
+
+Analyse notamment :
+
+* architecture frontend ;
+* architecture backend ;
+* routes API surveillance ;
+* modèles Drizzle ;
+* tables caméra ;
+* système d’authentification ;
+* système d’autorisation ;
+* système de permissions ;
+* chiffrement des credentials ;
+* variables d’environnement ;
+* service VideoGateway ;
+* MediaMTX ;
+* configuration RTSP ;
+* WebRTC ;
+* tokens vidéo ;
+* logs ;
+* gestion des erreurs ;
+* CSP ;
+* CORS ;
+* SSRF protection ;
+* tests existants.
+
+Inspecte également ce qui a été réalisé pendant les phases précédentes.
+
+Ne suppose pas que les composants existent : vérifie le code.
+
+---
+
+# 3. RAPPORT D’AUDIT AVANT CODAGE
+
+Avant toute modification importante, produis un rapport court indiquant :
+
+### Backend
+
+* Ce qui existe déjà.
+* Ce qui fonctionne.
+* Ce qui est incomplet.
+* Ce qui doit être modifié.
+
+### Frontend
+
+* Ce qui existe déjà.
+* Comment le lecteur vidéo est actuellement implémenté.
+* Comment il obtient son accès au flux.
+
+### Base de données
+
+Vérifie notamment :
+
+* cameras ;
+* ownership ;
+* credentials chiffrés ;
+* statut ;
+* gateway path ;
+* métadonnées nécessaires.
+
+### Media Gateway
+
+Vérifie :
+
+* MediaMTX ;
+* configuration ;
+* ports ;
+* RTSP ;
+* WebRTC ;
+* authentification ;
+* accès depuis le navigateur.
+
+### Sécurité
+
+Vérifie :
+
+* IDOR ;
+* SSRF ;
+* exposition des credentials ;
+* tokens ;
+* CORS ;
+* CSP ;
+* logs ;
+* permissions.
+
+Ne commence l'implémentation réelle qu'après cet audit.
+
+---
+
+# 4. CONFIGURATION D’UNE VRAIE CAMÉRA IP
+
+Le système doit permettre d'utiliser une caméra IP réelle de test.
+
+La caméra peut être :
+
+* sur le même réseau local que le gateway ;
+* ou accessible depuis le gateway via un réseau privé/VPN approprié.
+
+NE PAS exposer directement la caméra sur Internet uniquement pour rendre le test possible.
+
+NE PAS demander :
+
+"ouvre le port 554 sur ta box".
+
+NE PAS demander :
+
+"mets la caméra en DMZ".
+
+NE PAS désactiver le firewall.
+
+NE PAS utiliser une URL RTSP publique non sécurisée comme architecture de production.
+
+---
+
+# 5. INFORMATIONS CAMÉRA
+
+Le backend doit pouvoir gérer les informations nécessaires à la connexion :
+
+* adresse IP / hostname ;
+* port RTSP ;
+* chemin RTSP ;
+* username ;
+* password ;
+* protocole ;
+* modèle éventuel ;
+* statut ;
+* gateway/path associé.
+
+Les credentials doivent rester exclusivement côté serveur.
+
+Le frontend ne doit jamais recevoir :
+
+* password ;
+* username si inutile ;
+* RTSP URL complète ;
+* RTSP credentials ;
+* secret gateway.
+
+---
+
+# 6. CHIFFREMENT DES CREDENTIALS
+
+Utilise le système de chiffrement déjà présent dans BurkinaWatch.
+
+Si le projet dispose déjà de :
+
+AES-256-GCM
+
+utilise-le.
+
+Ne crée pas un deuxième système de chiffrement concurrent.
+
+Les credentials caméra doivent être :
+
+* chiffrés au repos ;
+* déchiffrés uniquement côté serveur lorsqu'ils sont nécessaires ;
+* jamais renvoyés dans une réponse API ;
+* jamais écrits dans les logs ;
+* jamais affichés dans le frontend ;
+* jamais inclus dans une URL publique.
+
+Si `MASTER_ENCRYPTION_KEY` est obligatoire en production, conserve cette exigence.
+
+Ne crée aucun fallback dangereux avec une clé aléatoire à chaque démarrage.
+
+---
+
+# 7. TEST DE CONNECTIVITÉ CAMÉRA
+
+Créer ou compléter une fonctionnalité backend permettant de vérifier qu'une caméra est réellement joignable.
+
+Exemple conceptuel :
+
+POST /api/surveillance/cameras/:id/test-connection
+
+Le serveur doit :
+
+1. authentifier l'utilisateur ;
+2. récupérer la caméra ;
+3. vérifier que l'utilisateur possède cette caméra ou dispose explicitement de la permission nécessaire ;
+4. appliquer la validation SSRF ;
+5. récupérer les credentials chiffrés ;
+6. tenter la connexion RTSP ;
+7. retourner uniquement un résultat abstrait.
+
+Exemple :
+
+{
+"success": true,
+"status": "online"
+}
+
+ou :
+
+{
+"success": false,
+"status": "offline"
+}
+
+Ne retourne jamais :
+
+* password ;
+* RTSP URL ;
+* détails internes inutiles ;
+* stack trace ;
+* secret ;
+* credentials.
+
+---
+
+# 8. ATTENTION À LA SSRF
+
+La validation SSRF existante doit être conservée.
+
+Une caméra enregistrée ne doit pas permettre de transformer BurkinaWatch en scanner/proxy réseau.
+
+Bloquer notamment :
+
+* localhost ;
+* 127.0.0.1 ;
+* loopback IPv6 ;
+* metadata endpoints ;
+* adresses privées non explicitement autorisées ;
+* link-local ;
+* multicast ;
+* schémas non autorisés ;
+* URLs contenant username/password si le système ne les supporte pas explicitement.
+
+IMPORTANT :
+
+Le fait qu'une adresse soit fournie par un utilisateur ne signifie pas qu'elle doit être considérée comme sûre.
+
+Si l'architecture nécessite exceptionnellement une adresse privée pour le test local, mettre en place une stratégie explicite d'environnement de développement plutôt que de supprimer globalement la protection SSRF.
+
+---
+
+# 9. ENREGISTREMENT DE LA CAMÉRA DANS MEDIAMTX
+
+Si MediaMTX est le gateway retenu lors de la phase précédente, utilise son architecture existante.
+
+Le backend doit pouvoir associer une caméra BurkinaWatch à un path MediaMTX.
+
+Exemple conceptuel :
+
+camera ID :
+cam_123
+
+gateway path :
+camera_cam_123
+
+Le nommage doit être déterministe et non devinable de manière dangereuse.
+
+Ne mets jamais :
+
+username/password
+
+dans le frontend.
+
+Évite également de stocker une RTSP URL complète avec credentials en clair.
+
+---
+
+# 10. ARCHITECTURE CONTROL PLANE / MEDIA PLANE
+
+Cette séparation doit rester stricte.
+
+## Control plane
+
+BurkinaWatch :
+
+* authentification ;
+* utilisateurs ;
+* caméra ;
+* ownership ;
+* permissions ;
+* configuration ;
+* statut ;
+* création de tokens ;
+* audit ;
+* sécurité.
+
+## Media plane
+
+MediaMTX :
+
+* RTSP ;
+* conversion/transport ;
+* WebRTC ;
+* diffusion du flux.
+
+Express ne doit PAS devenir un proxy vidéo.
+
+Ne crée pas une route du type :
+
+GET /camera/:id/video
+
+qui streamerait toute la vidéo via Node.js.
+
+---
+
+# 11. DÉMARRAGE DU FLUX
+
+Lorsqu'un utilisateur clique sur :
+
+"Voir le direct"
+
+le frontend doit appeler l'API BurkinaWatch.
+
+Le backend :
+
+1. authentifie l'utilisateur ;
+2. vérifie ownership/permission ;
+3. vérifie l'état de la caméra ;
+4. prépare ou active le stream gateway ;
+5. génère un accès vidéo temporaire ;
+6. renvoie uniquement les informations nécessaires au lecteur WebRTC.
+
+Le frontend ne doit jamais recevoir les secrets de connexion à la caméra.
+
+---
+
+# 12. TOKENS VIDÉO
+
+Les tokens doivent être :
+
+* courts ;
+* temporaires ;
+* aléatoires ;
+* liés à l'utilisateur ;
+* liés à la caméra ;
+* idéalement liés à une session ;
+* invalidables ;
+* inutilisables après expiration.
+
+Un token destiné à :
+
+camera A
+
+ne doit jamais fonctionner pour :
+
+camera B.
+
+Un utilisateur sans permission sur camera A ne doit jamais pouvoir créer lui-même un token valide.
+
+Ne mets jamais de token permanent dans le code frontend.
+
+Ne mets jamais de token secret dans une URL permanente.
+
+---
+
+# 13. WEBRTC
+
+Le navigateur doit recevoir le flux via WebRTC.
+
+Architecture :
+
+Camera
+→ RTSP
+→ MediaMTX
+→ WebRTC
+→ Browser
+
+Le navigateur ne doit jamais essayer de lire directement :
+
+rtsp://...
+
+Les composants WebRTC doivent gérer :
+
+* connecting ;
+* connected ;
+* live ;
+* disconnected ;
+* reconnecting ;
+* offline ;
+* error.
+
+Afficher un état clair à l'utilisateur.
+
+---
+
+# 14. TEST AVEC UNE VRAIE CAMÉRA
+
+Une fois le code prêt, prépare un environnement de test contrôlé.
+
+Créer une caméra de test clairement identifiée comme :
+
+"TEST CAMERA"
+
+ou équivalent.
+
+Cette caméra ne doit pas être présentée comme une caméra publique.
+
+Vérifier successivement :
+
+### Test 1
+
+Caméra accessible.
+
+Résultat attendu :
+
+ONLINE.
+
+### Test 2
+
+RTSP valide.
+
+Résultat attendu :
+
+MediaMTX reçoit le flux.
+
+### Test 3
+
+WebRTC disponible.
+
+Résultat attendu :
+
+Le navigateur reçoit le flux.
+
+### Test 4
+
+Utilisateur propriétaire.
+
+Résultat attendu :
+
+LIVE accessible.
+
+### Test 5
+
+Utilisateur non propriétaire.
+
+Résultat attendu :
+
+403.
+
+### Test 6
+
+Utilisateur non authentifié.
+
+Résultat attendu :
+
+401.
+
+### Test 7
+
+Token expiré.
+
+Résultat attendu :
+
+accès refusé.
+
+### Test 8
+
+Token d'une autre caméra.
+
+Résultat attendu :
+
+accès refusé.
+
+### Test 9
+
+Caméra hors ligne.
+
+Résultat attendu :
+
+interface OFFLINE propre.
+
+### Test 10
+
+Caméra reconnectée.
+
+Résultat attendu :
+
+le système récupère le flux sans intervention dangereuse.
+
+---
+
+# 15. TEST IDOR
+
+Tester explicitement :
+
+Utilisateur A possède Camera A.
+
+Utilisateur B possède Camera B.
+
+Utilisateur A ne doit jamais pouvoir accéder à Camera B en modifiant simplement :
+
+/cameras/A
+
+en :
+
+/cameras/B
+
+Tester également :
+
+* GET ;
+* POST ;
+* PUT ;
+* PATCH ;
+* DELETE ;
+* test connection ;
+* start stream ;
+* stop stream ;
+* token creation ;
+* gateway status.
+
+Chaque endpoint doit vérifier l'autorisation.
+
+---
+
+# 16. TEST DE FUITE DE SECRET
+
+Inspecter :
+
+* logs serveur ;
+* logs frontend ;
+* Network tab ;
+* réponses API ;
+* erreurs ;
+* exceptions ;
+* traces ;
+* console navigateur.
+
+Rechercher notamment :
+
+RTSP
+rtsp://
+password
+username
+secret
+token
+MASTER_ENCRYPTION_KEY
+CLIENT_SECRET
+
+Aucun secret caméra ne doit apparaître dans :
+
+* frontend ;
+* réponse JSON ;
+* URL ;
+* logs ;
+* messages d'erreur.
+
+---
+
+# 17. UI
+
+L'interface doit rester cohérente avec BurkinaWatch.
+
+Ne crée pas une interface générique de dashboard générée par IA.
+
+Le lecteur doit avoir au minimum :
+
+* nom de la caméra ;
+* statut ;
+* bouton Voir le direct ;
+* indicateur de connexion ;
+* lecteur vidéo ;
+* état Offline ;
+* état Reconnecting ;
+* message d'erreur compréhensible ;
+* bouton Arrêter le direct.
+
+Ne pas refaire tout le design de BurkinaWatch.
+
+Ne pas modifier la palette globale.
+
+Ne pas remplacer les composants existants sans nécessité.
+
+---
+
+# 18. MULTI-VIEWERS
+
+Tester au minimum :
+
+* 1 utilisateur ;
+* 2 utilisateurs autorisés ;
+* plusieurs onglets du même utilisateur.
+
+Vérifier que :
+
+* le gateway ne crée pas inutilement plusieurs flux RTSP ;
+* les connexions WebRTC restent indépendantes ;
+* un utilisateur qui quitte le lecteur ne coupe pas le flux des autres utilisateurs.
+
+---
+
+# 19. LATENCE
+
+Mesurer approximativement :
+
+Caméra → RTSP → MediaMTX → WebRTC → navigateur.
+
+Documenter :
+
+* latence approximative ;
+* résolution ;
+* codec vidéo ;
+* FPS ;
+* stabilité ;
+* consommation CPU ;
+* consommation mémoire.
+
+Ne pas optimiser prématurément.
+
+Identifier simplement les éventuels problèmes.
+
+---
+
+# 20. CODECS
+
+Vérifier la compatibilité réelle du flux de la caméra.
+
+Tester notamment si nécessaire :
+
+* H.264 ;
+* H.265 ;
+* AAC ;
+* Opus ;
+* autres codecs pertinents.
+
+Si un codec caméra n'est pas directement compatible WebRTC, documenter le problème.
+
+Ne pas ajouter FFmpeg ou transcoding lourd sans justification.
+
+Si transcoding nécessaire :
+
+* expliquer pourquoi ;
+* mesurer le coût ;
+* prévoir une architecture maîtrisée.
+
+---
+
+# 21. NAT / RÉSEAUX DISTANTS
+
+Tester le cas où :
+
+Caméra ≠ même réseau que MediaMTX.
+
+Identifier :
+
+* NAT ;
+* firewall ;
+* CGNAT ;
+* STUN ;
+* TURN ;
+* connectivité WebRTC.
+
+Ne pas considérer automatiquement que le problème vient du code.
+
+Si TURN est nécessaire, documenter précisément :
+
+* pourquoi ;
+* où il doit être déployé ;
+* quels ports sont nécessaires ;
+* quelles mesures de sécurité sont nécessaires.
+
+Ne pas installer une infrastructure TURN publique non sécurisée juste pour faire fonctionner le prototype.
+
+---
+
+# 22. ONVIF
+
+Si la caméra supporte ONVIF, vérifier si son utilisation apporte une vraie valeur.
+
+ONVIF peut être utilisé pour :
+
+* découverte contrôlée ;
+* récupération des capacités ;
+* récupération du profil média ;
+* récupération de l'URL RTSP.
+
+Mais :
+
+NE PAS créer un scanner ONVIF global.
+
+NE PAS scanner automatiquement tout le réseau.
+
+NE PAS permettre à un utilisateur de demander au serveur de scanner arbitrairement des plages IP.
+
+Si ONVIF n'est pas nécessaire au fonctionnement du MVP, le laisser hors périmètre.
+
+---
+
+# 23. JOURNALISATION / AUDIT
+
+Ajouter si nécessaire des événements d'audit abstraits :
+
+* caméra créée ;
+* caméra modifiée ;
+* test de connexion ;
+* stream démarré ;
+* stream arrêté ;
+* accès refusé ;
+* token expiré.
+
+Ne jamais enregistrer :
+
+* password ;
+* RTSP URL complète avec credentials ;
+* token vidéo ;
+* clé de chiffrement.
+
+---
+
+# 24. TESTS AUTOMATISÉS
+
+Ajouter ou compléter les tests couvrant :
+
+### Auth
+
+* utilisateur non connecté ;
+* utilisateur connecté.
+
+### Ownership
+
+* propriétaire ;
+* non-propriétaire.
+
+### Tokens
+
+* token valide ;
+* token expiré ;
+* token d'une autre caméra ;
+* token révoqué.
+
+### Camera
+
+* caméra existante ;
+* caméra inexistante ;
+* caméra offline ;
+* credentials invalides.
+
+### SSRF
+
+* localhost ;
+* private IP ;
+* metadata endpoint ;
+* adresse valide autorisée.
+
+### Secrets
+
+Vérifier que les réponses API ne contiennent aucun credential.
+
+---
+
+# 25. PRODUCTION SAFETY
+
+Même si la phase est réalisée en développement/préproduction :
+
+NE PAS modifier la production de manière destructive.
+
+NE PAS :
+
+* supprimer des tables ;
+* supprimer des données ;
+* modifier brutalement le schéma ;
+* lancer db:push --force ;
+* désactiver les protections ;
+* changer les secrets existants ;
+* ouvrir des ports publics inutilement.
+
+Toutes les migrations doivent rester contrôlées.
+
+---
+
+# 26. VARIABLES D’ENVIRONNEMENT
+
+Identifier précisément les variables nécessaires.
+
+Exemples conceptuels :
+
+MEDIA_GATEWAY_URL
+MEDIA_GATEWAY_API_URL
+MEDIA_GATEWAY_PUBLIC_URL
+MEDIA_GATEWAY_SECRET
+VIDEO_TOKEN_SECRET
+STUN_URL
+TURN_URL
+
+Mais :
+
+NE CRÉE PAS toutes ces variables automatiquement.
+
+Utilise uniquement celles réellement nécessaires à l'architecture existante.
+
+Documente :
+
+* développement ;
+* préproduction ;
+* production.
+
+Les secrets doivent rester dans le gestionnaire de secrets de l'environnement concerné.
+
+---
+
+# 27. NE PAS EXPOSER MEDIAMTX INUTILEMENT
+
+Vérifier attentivement les ports exposés.
+
+Le gateway ne doit pas devenir une porte d'entrée publique permettant :
+
+* de publier arbitrairement des flux ;
+* de lire les flux sans authentification ;
+* de modifier sa configuration ;
+* d'accéder à son API administrative.
+
+Séparer autant que possible :
+
+* API administrative ;
+* transport RTSP ;
+* WebRTC ;
+* accès utilisateur.
+
+---
+
+# 28. ARRÊT PROPRE DU STREAM
+
+Lorsqu'un utilisateur quitte le lecteur :
+
+* libérer proprement les ressources ;
+* arrêter uniquement ce qui doit l'être ;
+* ne pas arrêter le stream partagé par d'autres viewers.
+
+Gérer :
+
+* fermeture de l'onglet ;
+* navigation ;
+* déconnexion ;
+* expiration du token ;
+* caméra offline.
+
+---
+
+# 29. OBSERVABILITÉ
+
+Ajouter suffisamment de logs techniques pour diagnostiquer :
+
+* caméra inaccessible ;
+* RTSP échoué ;
+* MediaMTX indisponible ;
+* WebRTC échoué ;
+* token refusé ;
+* permission refusée.
+
+Mais appliquer systématiquement la redaction existante.
+
+Les logs doivent permettre de diagnostiquer le problème sans révéler les secrets.
+
+---
+
+# 30. CRITÈRES DE RÉUSSITE
+
+La phase est considérée comme réussie uniquement si :
+
+1. Une vraie caméra IP peut être enregistrée.
+2. Ses credentials restent chiffrés.
+3. Le backend peut vérifier sa connectivité.
+4. MediaMTX peut récupérer son flux RTSP.
+5. WebRTC peut transporter le flux.
+6. Le navigateur peut afficher le direct.
+7. Un utilisateur autorisé peut regarder.
+8. Un utilisateur non autorisé ne peut pas regarder.
+9. Un token expiré est refusé.
+10. Les credentials n'apparaissent jamais côté frontend.
+11. Aucun secret n'apparaît dans les logs.
+12. L'architecture ne transforme pas Express en proxy vidéo.
+13. La protection SSRF reste active.
+14. Le système gère caméra offline/reconnexion.
+15. Les tests automatisés passent.
+16. Les fonctionnalités existantes de BurkinaWatch restent fonctionnelles.
+
+---
+
+# 31. AVANT DE TERMINER
+
+Exécute les vérifications disponibles dans le projet :
+
+* npm check ;
+* build ;
+* tests ;
+* tests sécurité ;
+* tests backend ;
+* tests frontend si disponibles ;
+* vérification TypeScript ;
+* vérification Drizzle/migrations si concerné.
+
+Ne considère pas une implémentation comme terminée uniquement parce que le code compile.
+
+---
+
+# 32. RAPPORT FINAL OBLIGATOIRE
+
+À la fin, fournis un rapport structuré :
+
+## 1. Architecture finale
+
+Décrire :
+
+Camera
+→ RTSP
+→ MediaMTX
+→ WebRTC
+→ BurkinaWatch
+
+## 2. Fichiers modifiés
+
+Liste exacte.
+
+## 3. Fichiers créés
+
+Liste exacte.
+
+## 4. Base de données
+
+Indiquer :
+
+* tables modifiées ;
+* migrations créées ;
+* migrations exécutées ;
+* aucune migration destructive si aucune n'est nécessaire.
+
+## 5. Sécurité
+
+Confirmer :
+
+* authentication ;
+* authorization ;
+* ownership ;
+* SSRF ;
+* encryption ;
+* token security ;
+* secret redaction ;
+* CORS ;
+* CSP.
+
+## 6. Caméra réelle
+
+Indiquer :
+
+* connexion réussie ou non ;
+* RTSP réussi ou non ;
+* MediaMTX réussi ou non ;
+* WebRTC réussi ou non ;
+* lecture navigateur réussie ou non.
+
+## 7. Tests
+
+Indiquer :
+
+* tests réussis ;
+* tests échoués ;
+* tests non exécutables ;
+* raison.
+
+## 8. Problèmes
+
+Lister les problèmes restant à résoudre.
+
+## 9. Infrastructure
+
+Indiquer les besoins éventuels :
+
+* serveur ;
+* MediaMTX ;
+* TURN ;
+* réseau privé/VPN ;
+* ports ;
+* variables d'environnement.
+
+## 10. Verdict
+
+Terminer obligatoirement par une seule des trois conclusions :
+
+### READY FOR PHASE 7
+
+ou
+
+### READY WITH CONDITIONS
+
+ou
+
+### NOT READY FOR PHASE 7
+
+Si le système fonctionne seulement dans certaines conditions réseau, choisir :
+
+READY WITH CONDITIONS
+
+et détailler précisément lesquelles.
+
+---
+
+# RÈGLE ABSOLUE
+
+Ne passe pas à une architecture de production publique simplement parce que le flux fonctionne avec une caméra.
+
+Cette phase sert à prouver que la chaîne technique fonctionne réellement avec une caméra IP.
+
+Après cette phase, nous déciderons séparément de l'architecture de production :
+
+* caméra locale ;
+* caméra distante ;
+* agent local ;
+* VPN ;
+* TURN ;
+* scaling ;
+* monitoring ;
+* haute disponibilité ;
+* enregistrement ;
+* stockage ;
+* IA.
+
+Ne mélange pas ces sujets dans cette phase.
+
+Commence par l'audit, puis implémente uniquement ce qui est nécessaire pour obtenir un live réel sécurisé.
