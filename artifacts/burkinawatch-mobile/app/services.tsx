@@ -32,12 +32,13 @@ const categoryLabels: Record<string, string> = {
   '/marches': 'Marchés',
 };
 
-type NativeRoute = '/feed' | '/(tabs)/alertes' | '/connexion';
+type NativeRoute = '/feed' | '/(tabs)/alertes' | '/connexion' | '/tracking-live';
 
 const nativeRoutes: Record<string, NativeRoute> = {
   '/feed': '/feed',
   '/notifications': '/(tabs)/alertes',
   '/connexion': '/connexion',
+  '/tracking-live': '/tracking-live',
 };
 
 export default function ServicesScreen() {
