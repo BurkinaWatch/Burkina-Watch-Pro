@@ -169,7 +169,7 @@ export default function TrackingLiveScreen() {
         <View style={[styles.error, { backgroundColor: colors.destructive }]}>
           <Feather name="alert-circle" size={20} color={colors.destructiveForeground} />
           <Text style={[styles.errorText, { color: colors.destructiveForeground }]}>{error}</Text>
-          {permission === Location.PermissionStatus.DENIED || permission === Location.PermissionStatus.BLOCKED ? (
+          {permission === Location.PermissionStatus.DENIED ? (
             <Pressable onPress={openSettings} style={styles.settingsButton}>
               <Text style={[styles.settingsButtonText, { color: colors.destructive }]}>{Platform.OS === 'web' ? 'Réessayer' : 'Ouvrir les réglages'}</Text>
             </Pressable>
