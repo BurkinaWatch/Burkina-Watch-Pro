@@ -187,8 +187,10 @@ export interface IStorage {
   startPanicTrackingSession(userId: string): Promise<TrackingSession>;
   stopTrackingSession(sessionId: string): Promise<TrackingSession | undefined>; // Changed parameter to sessionId
   getActiveTrackingSession(userId: string): Promise<TrackingSession | undefined>;
+  getActiveTrackingSessions(): Promise<TrackingSession[]>;
   getTrackingSessionByShareToken(shareToken: string): Promise<TrackingSession | undefined>;
   addLocationPoint(locationPoint: InsertLocationPoint): Promise<LocationPoint>;
+  getLatestLocationPointBySession(sessionId: string): Promise<LocationPoint | undefined>;
   getSessionLocationPoints(sessionId: string): Promise<LocationPoint[]>;
   getUserTrackingSessions(userId: string): Promise<TrackingSession[]>;
   deleteTrackingSession(sessionId: string): Promise<boolean>; // Added method
@@ -299,6 +301,7 @@ export interface IStorage {
     userAgent?: string;
     severity?: "info" | "warning" | "critical";
   }): Promise<AuditLog>;
+  hasAuditLog(action: string, resourceType: string, resourceId: string): Promise<boolean>;
 
   // --- New methods for online users ---
   userConnected(userId: string): Promise<void>;
@@ -1086,11 +1089,28 @@ export class DbStorage implements IStorage {
     return session;
   }
 
+  async getActiveTrackingSessions(): Promise<TrackingSession[]> {
+    return db
+      .select()
+      .from(trackingSessions)
+      .where(eq(trackingSessions.isActive, true));
+  }
+
   async addLocationPoint(locationPoint: InsertLocationPoint): Promise<LocationPoint> {
     const [point] = await db
       .insert(locationPoints)
       .values(locationPoint)
       .returning();
+    return point;
+  }
+
+  async getLatestLocationPointBySession(sessionId: string): Promise<LocationPoint | undefined> {
+    const [point] = await db
+      .select()
+      .from(locationPoints)
+      .where(eq(locationPoints.sessionId, sessionId))
+      .orderBy(desc(locationPoints.timestamp))
+      .limit(1);
     return point;
   }
 
@@ -1865,6 +1885,19 @@ L'équipe Burkina Watch
       console.error("[AUDIT] Erreur lors de l'enregistrement du log:", error);
       throw error;
     }
+  }
+
+  async hasAuditLog(action: string, resourceType: string, resourceId: string): Promise<boolean> {
+    const [auditLog] = await db
+      .select({ id: auditLogs.id })
+      .from(auditLogs)
+      .where(and(
+        eq(auditLogs.action, action),
+        eq(auditLogs.resourceType, resourceType),
+        eq(auditLogs.resourceId, resourceId),
+      ))
+      .limit(1);
+    return Boolean(auditLog);
   }
 
   // --- New methods for online users ---
