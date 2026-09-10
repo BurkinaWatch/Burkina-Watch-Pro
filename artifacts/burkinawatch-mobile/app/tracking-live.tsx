@@ -62,6 +62,8 @@ export default function TrackingLiveScreen() {
   }, [sendLocation, stopWatching]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     let mounted = true;
     void requestJson<TrackingSession>('/tracking/session')
       .then((session) => {
@@ -75,7 +77,7 @@ export default function TrackingLiveScreen() {
       mounted = false;
       stopWatching();
     };
-  }, [stopWatching]);
+  }, [isAuthenticated, stopWatching]);
 
   async function startTracking() {
     if (!isAuthenticated) {
