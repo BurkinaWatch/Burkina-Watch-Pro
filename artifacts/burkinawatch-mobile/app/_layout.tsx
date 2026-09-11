@@ -33,6 +33,7 @@ function RootLayoutNav() {
       <Stack.Screen name="sos" options={{ headerShown: false }} />
       <Stack.Screen name="services" options={{ headerShown: false }} />
       <Stack.Screen name="burkina-pratique" options={{ headerShown: false }} />
+      <Stack.Screen name="place-results" options={{ headerShown: false }} />
       <Stack.Screen name="tracking-live" options={{ headerShown: false }} />
       <Stack.Screen name="connexion" options={{ headerShown: false }} />
       <Stack.Screen name="signalement/[id]" options={{ headerShown: false }} />

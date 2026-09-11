@@ -69,7 +69,38 @@ export default function BurkinaPratiqueScreen() {
 
   const openRoute = (route: string) => {
     Keyboard.dismiss();
-    router.push(route as never);
+    const parsed = new URL(route, 'https://burkina.local');
+    const routeMap: Record<string, { endpoint: string; title: string }> = {
+      '/pharmacies': { endpoint: '/places/pharmacy?limit=5000', title: 'Pharmacies' },
+      '/urgences': { endpoint: '/urgences', title: 'Urgences' },
+      '/banques': { endpoint: '/banques', title: "Retrait d'argent" },
+      '/stations': { endpoint: '/stations', title: 'Stations-service' },
+      '/boutiques': { endpoint: '/boutiques', title: 'Boutiques & artisans' },
+      '/restaurants': { endpoint: '/places?placeType=restaurant&limit=500', title: 'Restaurants' },
+      '/gares': { endpoint: '/transport', title: 'Transport' },
+      '/telephonie': { endpoint: '/telephonie', title: 'Téléphonie & réparation' },
+      '/hopitaux': { endpoint: '/places/hospital?limit=500', title: 'Hôpitaux & santé' },
+      '/marches': { endpoint: '/marches', title: 'Marchés' },
+      '/hotels': { endpoint: '/places?placeType=hotel&limit=500', title: 'Hôtels & auberges' },
+      '/boutiques-marches': { endpoint: '/boutiques', title: 'Boutiques & marchés' },
+    };
+    if (parsed.pathname === '/carte') {
+      router.push('/(tabs)/carte' as never);
+      return;
+    }
+    const target = routeMap[parsed.pathname];
+    if (!target) {
+      router.push(route as never);
+      return;
+    }
+    const params = new URLSearchParams({ endpoint: target.endpoint, title: target.title });
+    const budget = parsed.searchParams.get('budget');
+    const open = parsed.searchParams.get('open');
+    const nearby = parsed.searchParams.get('nearby');
+    if (budget) params.set('filter', `Budget ${budget} FCFA`);
+    else if (open) params.set('filter', 'Ouvert maintenant à confirmer');
+    else if (nearby) params.set('filter', 'À proximité');
+    router.push(`/place-results?${params.toString()}` as never);
   };
 
   const openIntent = () => {
