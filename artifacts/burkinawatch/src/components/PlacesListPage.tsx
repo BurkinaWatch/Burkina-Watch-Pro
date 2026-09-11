@@ -7,13 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowLeft, RefreshCw, MapPin, Building2, Locate } from "lucide-react";
+import { Search, ArrowLeft, RefreshCw, MapPin, Building2, Locate, Map as MapIcon, List, Crosshair } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import type { Place } from "@shared/schema";
 import { REGION_NAMES } from "@/lib/regions";
 import { getLocationErrorMessage, requestUserLocation } from "@/lib/geolocation";
+import GoogleMap, { type PlaceMapMarker } from "@/components/GoogleMap";
+import { offlineStorage } from "@/lib/offlineStorage";
 
 interface PlacesListPageProps {
   placeType: string;
@@ -52,6 +54,8 @@ export function PlacesListPage({
   const [showNearestOnly, setShowNearestOnly] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+  const [viewMode, setViewMode] = useState<"split" | "list" | "map">("split");
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
 
   useEffect(() => {
     if (externalSearchTerm !== undefined) {
@@ -104,9 +108,22 @@ export function PlacesListPage({
   const { data, isLoading, refetch, isRefetching } = useQuery<ApiResponse | Place[]>({
     queryKey: ['/api/places', placeType],
     queryFn: async () => {
-      const response = await fetch(`/api/places?placeType=${encodeURIComponent(placeType)}`);
-      if (!response.ok) throw new Error('Failed to fetch places');
-      return response.json();
+      try {
+        const response = await fetch(`/api/places?placeType=${encodeURIComponent(placeType)}`);
+        if (!response.ok) throw new Error('Failed to fetch places');
+        const freshData = await response.json() as ApiResponse | Place[];
+        const freshPlaces = Array.isArray(freshData) ? freshData : freshData.places;
+        if (Array.isArray(freshPlaces)) {
+          await offlineStorage.cachePlaces(placeType, freshPlaces);
+        }
+        return freshData;
+      } catch (error) {
+        const cachedPlaces = await offlineStorage.getCachedPlaces(placeType);
+        if (cachedPlaces.length > 0) {
+          return { places: cachedPlaces, total: cachedPlaces.length };
+        }
+        throw error;
+      }
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -165,6 +182,23 @@ export function PlacesListPage({
     
     return result;
   }, [places, searchTerm, selectedRegion, showNearestOnly, userLocation, calculateDistance]);
+
+  const placeMarkers = useMemo<PlaceMapMarker[]>(
+    () =>
+      filteredPlaces.flatMap((place) => {
+        const lat = Number(place.latitude);
+        const lng = Number(place.longitude);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return [];
+        return [{
+          id: String(place.id),
+          lat,
+          lng,
+          title: place.name || "Lieu sans nom",
+          address: place.address || [place.quartier, place.ville].filter(Boolean).join(", "),
+        }];
+      }),
+    [filteredPlaces],
+  );
 
   const regionCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -327,6 +361,21 @@ export function PlacesListPage({
           )}
         </div>
 
+        <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Vue des résultats">
+          <Button variant={viewMode === "split" ? "default" : "outline"} size="sm" onClick={() => setViewMode("split")} className="gap-2">
+            <Crosshair className="h-4 w-4" />
+            Liste + carte
+          </Button>
+          <Button variant={viewMode === "list" ? "default" : "outline"} size="sm" onClick={() => setViewMode("list")} className="gap-2">
+            <List className="h-4 w-4" />
+            Liste
+          </Button>
+          <Button variant={viewMode === "map" ? "default" : "outline"} size="sm" onClick={() => setViewMode("map")} className="gap-2">
+            <MapIcon className="h-4 w-4" />
+            Carte
+          </Button>
+        </div>
+
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -350,13 +399,40 @@ export function PlacesListPage({
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredPlaces.map(place => (
-              <PlaceCard
-                key={place.id}
-                place={place}
-              />
-            ))}
+          <div className={viewMode === "split" ? "grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,.9fr)]" : "space-y-5"}>
+            {viewMode !== "map" && (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {filteredPlaces.map((place) => (
+                  <div key={place.id} className={selectedPlaceId === String(place.id) ? "rounded-xl ring-2 ring-primary ring-offset-2" : undefined}>
+                    <PlaceCard place={place} />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-1 w-full gap-2"
+                      onClick={() => {
+                        setSelectedPlaceId(String(place.id));
+                        if (viewMode === "list") setViewMode("split");
+                      }}
+                    >
+                      <MapPin className="h-4 w-4" />
+                      Voir sur la carte
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {viewMode !== "list" && (
+              <div className="min-h-[420px] overflow-hidden rounded-xl border bg-muted/20 xl:sticky xl:top-4 xl:h-[calc(100vh-7rem)]">
+                <GoogleMap
+                  markers={[]}
+                  placeMarkers={placeMarkers}
+                  highlightPlaceId={selectedPlaceId}
+                  onPlaceMarkerClick={(marker) => setSelectedPlaceId(marker.id)}
+                  placeMode
+                  className="h-full min-h-[420px]"
+                />
+              </div>
+            )}
           </div>
         )}
       </main>

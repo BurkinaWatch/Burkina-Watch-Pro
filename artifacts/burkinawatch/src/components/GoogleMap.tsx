@@ -31,10 +31,21 @@ interface MapMarker {
   niveauUrgence?: string | null;
 }
 
+export interface PlaceMapMarker {
+  id: string;
+  lat: number;
+  lng: number;
+  title: string;
+  address?: string;
+}
+
 interface GoogleMapProps {
   markers: MapMarker[];
   className?: string;
   highlightMarkerId?: string | null;
+  placeMarkers?: PlaceMapMarker[];
+  highlightPlaceId?: string | null;
+  onPlaceMarkerClick?: (marker: PlaceMapMarker) => void;
   centerLat?: number | null;
   centerLng?: number | null;
   heatmapMode?: boolean;
@@ -293,6 +304,48 @@ function MarkerClusterLayer({ markers, onMarkerClick, show }: { markers: MapMark
   return null;
 }
 
+function createPlaceMarkerIcon() {
+  return L.divIcon({
+    html: '<div style="width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#16a34a;border:3px solid white;box-shadow:0 3px 10px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);color:white;font-size:14px">●</span></div>',
+    className: 'custom-leaflet-marker',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15],
+  });
+}
+
+function PlaceMarkerLayer({
+  markers,
+  highlightPlaceId,
+  onMarkerClick,
+}: {
+  markers: PlaceMapMarker[];
+  highlightPlaceId?: string | null;
+  onMarkerClick: (marker: PlaceMapMarker) => void;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    const leafletMarkers = markers.map((marker) => {
+      const leafletMarker = L.marker([marker.lat, marker.lng], { icon: createPlaceMarkerIcon() });
+      leafletMarker.on('click', () => onMarkerClick(marker));
+      leafletMarker.addTo(map);
+      return leafletMarker;
+    });
+
+    if (highlightPlaceId) {
+      const highlighted = markers.find((marker) => marker.id === highlightPlaceId);
+      if (highlighted) map.setView([highlighted.lat, highlighted.lng], 15, { animate: true });
+    }
+
+    return () => {
+      leafletMarkers.forEach((marker) => marker.remove());
+    };
+  }, [map, markers, highlightPlaceId, onMarkerClick]);
+
+  return null;
+}
+
 function MapController({ center, zoom, highlightMarkerId, markers, onSelectMarker }: {
   center: [number, number];
   zoom: number;
@@ -326,8 +379,20 @@ function MapController({ center, zoom, highlightMarkerId, markers, onSelectMarke
   return null;
 }
 
-export default function GoogleMap({ markers, className = '', highlightMarkerId = null, centerLat = null, centerLng = null, heatmapMode = false }: GoogleMapProps) {
+export default function GoogleMap({
+  markers,
+  className = '',
+  highlightMarkerId = null,
+  placeMarkers = [],
+  highlightPlaceId = null,
+  onPlaceMarkerClick,
+  centerLat = null,
+  centerLng = null,
+  heatmapMode = false,
+  placeMode = false,
+}: GoogleMapProps & { placeMode?: boolean }) {
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
+  const [selectedPlaceMarker, setSelectedPlaceMarker] = useState<PlaceMapMarker | null>(null);
   const [showHeatmap, setShowHeatmap] = useState<boolean>(heatmapMode);
   const [radiusFilter, setRadiusFilter] = useState<number | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
@@ -420,8 +485,16 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
 
   const handleMarkerClick = useCallback((marker: MapMarker) => {
     setSelectedMarker(marker);
+    setSelectedPlaceMarker(null);
     setMapCenter([marker.lat, marker.lng]);
   }, []);
+
+  const handlePlaceMarkerClick = useCallback((marker: PlaceMapMarker) => {
+    setSelectedMarker(null);
+    setSelectedPlaceMarker(marker);
+    setMapCenter([marker.lat, marker.lng]);
+    onPlaceMarkerClick?.(marker);
+  }, [onPlaceMarkerClick]);
 
   return (
     <div className={`relative ${className}`}>
@@ -434,7 +507,7 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
         .leaflet-popup-content { margin: 0 !important; }
       `}</style>
 
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-lg px-4">
+      {!placeMode && <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-lg px-4">
         <div className="relative">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -477,9 +550,9 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
             </Card>
           )}
         </div>
-      </div>
+      </div>}
 
-      <Draggable handle=".drag-handle">
+      {!placeMode && <Draggable handle=".drag-handle">
         <div className="absolute z-[1000] max-w-md space-y-2 cursor-move" style={{ top: '60px', left: '10px' }}>
           <Card className="bg-background/95 backdrop-blur shadow-lg">
             <div className="drag-handle p-2 flex items-center justify-center border-b cursor-grab active:cursor-grabbing">
@@ -557,7 +630,7 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
             </div>
           </Card>
         </div>
-      </Draggable>
+      </Draggable>}
 
       <MapContainer
         center={mapCenter}
@@ -589,6 +662,12 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
           markers={filteredMarkers}
           onMarkerClick={handleMarkerClick}
           show={!showHeatmap}
+        />
+
+        <PlaceMarkerLayer
+          markers={placeMarkers}
+          highlightPlaceId={highlightPlaceId}
+          onMarkerClick={handlePlaceMarkerClick}
         />
 
         {selectedMarker && (
@@ -635,6 +714,24 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
           </Popup>
         )}
 
+        {selectedPlaceMarker && (
+          <Popup
+            position={[selectedPlaceMarker.lat, selectedPlaceMarker.lng]}
+            eventHandlers={{ remove: () => setSelectedPlaceMarker(null) }}
+          >
+            <div className="p-3 min-w-[220px]" data-testid={`popup-place-${selectedPlaceMarker.id}`}>
+              <h3 className="font-semibold text-sm">{selectedPlaceMarker.title}</h3>
+              <p className="mt-1 text-xs text-muted-foreground">{selectedPlaceMarker.address || "Lieu BurkinaWatch"}</p>
+              <button
+                onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedPlaceMarker.lat},${selectedPlaceMarker.lng}`, "_blank", "noopener,noreferrer")}
+                className="mt-3 text-xs text-primary hover:underline"
+              >
+                Itinéraire
+              </button>
+            </div>
+          </Popup>
+        )}
+
         {userLocation && radiusFilter && (
           <Circle
             center={[userLocation.lat, userLocation.lng]}
@@ -644,7 +741,7 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
         )}
       </MapContainer>
 
-      <div className="absolute bottom-4 right-4 z-[1000]">
+      {!placeMode && <div className="absolute bottom-4 right-4 z-[1000]">
         <Button
           onClick={handleRecenter}
           size="icon"
@@ -655,9 +752,9 @@ export default function GoogleMap({ markers, className = '', highlightMarkerId =
         >
           <Locate className="w-5 h-5" />
         </Button>
-      </div>
+      </div>}
 
-      {(radiusFilter || selectedRegion || selectedCategory !== "tous") && (
+      {!placeMode && (radiusFilter || selectedRegion || selectedCategory !== "tous") && (
         <div className="absolute bottom-4 left-4 z-[1000]">
           <Card className="p-2 bg-background/95 backdrop-blur text-xs">
             <div className="font-medium flex items-center gap-2">
