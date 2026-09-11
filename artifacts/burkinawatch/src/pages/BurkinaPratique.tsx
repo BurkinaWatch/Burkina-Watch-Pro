@@ -417,6 +417,8 @@ export default function BurkinaPratique() {
           </div>
         </section>
 
+        <PratiqueExplorer initialType={explorerType} searchTerm={query} />
+
         <section className="mx-auto max-w-6xl px-4 pt-10 sm:px-6 md:pt-14">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
