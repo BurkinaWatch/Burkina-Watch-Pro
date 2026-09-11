@@ -105,7 +105,7 @@ export function LocationValidator({
           ) : (
             <Flag className="w-3.5 h-3.5" />
           )}
-          {reported ? "Signale" : "Signaler une erreur"}
+          {reported ? "Signalé" : "Signaler fermeture / problème"}
         </Button>
       </div>
     </div>

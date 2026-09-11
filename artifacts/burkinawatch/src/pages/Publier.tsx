@@ -76,6 +76,28 @@ export default function Publier() {
     },
   });
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const contribution = params.get("contribution");
+    const placeName = params.get("placeName");
+    const placeId = params.get("placeId");
+    if (!contribution || !placeName || !placeId) return;
+
+    const isPhoto = contribution === "photo";
+    form.setValue("titre", isPhoto ? `Photo récente — ${placeName}` : `Correction — ${placeName}`);
+    form.setValue(
+      "description",
+      isPhoto
+        ? `Photo citoyenne du lieu « ${placeName} » (référence ${placeId}). Décrivez si nécessaire la date ou le contexte de la prise de vue.`
+        : `Correction concernant le lieu « ${placeName} » (référence ${placeId}). Indiquez l'information à corriger et, si possible, une source ou une observation récente.`,
+    );
+    form.setValue("categorie", "infrastructure");
+    toast({
+      title: isPhoto ? "Ajouter un média citoyen" : "Corriger une fiche",
+      description: `Votre contribution concerne ${placeName}. Vérifiez le contenu avant publication.`,
+    });
+  }, [form, toast]);
+
   const createMutation = useMutation({
     mutationFn: async (data: FrontendSignalement) => {
       console.log("🚀 Mutation démarrée, envoi des données:", data);
