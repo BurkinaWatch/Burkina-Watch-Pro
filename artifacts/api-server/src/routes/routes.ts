@@ -181,6 +181,19 @@ function getMergedPharmacies(): any[] {
 // HELPERS POUR TRANSFORMER LES DONNÉES OSM
 // ============================================
 
+function preservePlaceContributionData<T extends object>(place: Place, transformed: T) {
+  const enrichedPlace = place as Place & {
+    placeContributions?: unknown;
+    placeContributionSummary?: unknown;
+  };
+
+  return {
+    ...transformed,
+    placeContributions: enrichedPlace.placeContributions,
+    placeContributionSummary: enrichedPlace.placeContributionSummary,
+  };
+}
+
 function transformOsmToRestaurant(place: Place, index?: number) {
   const tags = place.tags as Record<string, string> || {};
   const name = place.name || tags.name || tags["name:fr"] || tags["name:en"] || tags.operator || tags.brand || tags.owner || tags.ref || "Restaurant";
@@ -1167,12 +1180,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   app.get("/api/signalements", async (req, res) => {
     try {
-      const { categorie, statut, isSOS, limit } = req.query;
+      const { categorie, statut, isSOS, limit, placeContributions, placeId, moderationStatus } = req.query;
+      if (placeContributions === "true") {
+        if (!(await storage.supportsPlaceContributions())) {
+          return res.status(503).json({ error: "La modération des lieux sera disponible après la migration du schéma." });
+        }
+        const currentUser = (req as any).user?.claims?.sub
+          ? await storage.getUser((req as any).user.claims.sub)
+          : undefined;
+        if (!currentUser || !["admin", "moderateur", "moderator"].includes(currentUser.role || "")) {
+          return res.status(403).json({ error: "Accès réservé à la modération" });
+        }
+      }
 
       const signalements = await storage.getSignalements({
         categorie: categorie as string | undefined,
         statut: statut as string | undefined,
         isSOS: isSOS === "true" ? true : isSOS === "false" ? false : undefined,
+        placeContributionsOnly: placeContributions === "true",
+        excludePlaceContributions: placeContributions !== "true",
+        placeId: placeId as string | undefined,
+        moderationStatus: moderationStatus as string | undefined,
         limit: limit ? parseInt(limit as string) : 50, // Limite par défaut de 50 pour réduire la charge
       });
 
@@ -1222,6 +1250,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           reason: moderationResult.reason,
           suggestion: moderationResult.suggestion,
         });
+      }
+
+      const isPlaceContribution = Boolean(req.body.placeId || req.body.contributionType);
+      if (isPlaceContribution) {
+        if (
+          !req.body.placeId ||
+          !["place_correction", "place_media"].includes(req.body.contributionType)
+        ) {
+          return res.status(400).json({
+            error: "Une contribution de lieu doit préciser le lieu et son type.",
+          });
+        }
+
+        const place = await overpassService.getPlaceById(req.body.placeId);
+        if (!place) {
+          return res.status(400).json({ error: "Le lieu ciblé n'existe plus." });
+        }
       }
 
       const validationResult = insertSignalementSchema.safeParse({
@@ -1316,8 +1361,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         verificationMode,
       });
     } catch (error) {
+      if (error instanceof Error && error.message === "PLACE_CONTRIBUTION_SCHEMA_MISSING") {
+        res.status(503).json({ error: "Les contributions de lieux nécessitent la migration du schéma." });
+        return;
+      }
       console.error("Error creating signalement:", error);
       res.status(500).json({ error: "Erreur lors de la création du signalement" });
+    }
+  });
+
+  app.patch("/api/signalements/:id/moderation", isAuthenticated, signalementMutationLimiter, async (req: any, res) => {
+    try {
+      const currentUser = await storage.getUser(req.user.claims.sub);
+      if (!currentUser || !["admin", "moderateur", "moderator"].includes(currentUser.role || "")) {
+        return res.status(403).json({ error: "Seuls les modérateurs peuvent traiter une contribution" });
+      }
+
+      const moderationSchema = z.object({
+        status: z.enum(["approved", "rejected", "needs_info"]),
+        note: z.string().max(1000).nullable().optional(),
+      });
+      const parsed = moderationSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Statut de modération ou note invalide" });
+      }
+
+      if (parsed.data.status === "needs_info" && !parsed.data.note?.trim()) {
+        return res.status(400).json({ error: "Une précision est requise pour demander une information" });
+      }
+
+      const contribution = await storage.moderatePlaceContribution(
+        req.params.id,
+        parsed.data.status,
+        parsed.data.note?.trim() || null,
+        req.user.claims.sub,
+      );
+      if (!contribution) {
+        return res.status(404).json({ error: "Contribution de lieu non trouvée" });
+      }
+
+      const messages = {
+        approved: "Votre contribution a été validée et enrichit maintenant la fiche du lieu.",
+        rejected: "Votre contribution a été rejetée par la modération.",
+        needs_info: `La modération demande une précision : ${parsed.data.note?.trim()}`,
+      } as const;
+      await storage.notifySignalementOwner(
+        req.params.id,
+        parsed.data.status === "approved" ? "resolu" : "info",
+        "Mise à jour de votre contribution",
+        messages[parsed.data.status],
+      );
+
+      res.json(contribution);
+    } catch (error) {
+      console.error("Error moderating place contribution:", error);
+      res.status(500).json({ error: "Erreur lors de la modération de la contribution" });
     }
   });
 
@@ -3851,7 +3949,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Transformation spécifique pour les hôpitaux et cliniques
       if (placeType === "hospital" || placeType === "clinic") {
-        const transformedPlaces = response.places.map(transformOsmToHopital);
+        const transformedPlaces = response.places.map((place) =>
+          preservePlaceContributionData(place, transformOsmToHopital(place)),
+        );
         return res.json({
           places: transformedPlaces,
           total: response.places.length,
@@ -3862,7 +3962,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Transformation spécifique pour les universités
       if (placeType === "university" || placeType === "college") {
-        const transformedPlaces = response.places.map(transformOsmToUniversity);
+        const transformedPlaces = response.places.map((place) =>
+          preservePlaceContributionData(place, transformOsmToUniversity(place)),
+        );
         return res.json({
           places: transformedPlaces,
           total: response.places.length,
@@ -3899,7 +4001,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ...bar.places
             ];
             
-            const transformedPlaces = allRestaurants.map(transformOsmToRestaurant);
+            const transformedPlaces = allRestaurants.map((place) =>
+              preservePlaceContributionData(place, transformOsmToRestaurant(place)),
+            );
             return res.json({
               places: transformedPlaces,
               total: transformedPlaces.length,
@@ -3911,7 +4015,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        const transformedPlaces = response.places.map(transformOsmToRestaurant);
+        const transformedPlaces = response.places.map((place) =>
+          preservePlaceContributionData(place, transformOsmToRestaurant(place)),
+        );
         return res.json({
           places: transformedPlaces,
           total: response.places.length,
@@ -3932,7 +4038,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Transformation spécifique pour les restaurants
       if (placeType === "restaurant" || placeType === "fast_food" || placeType === "cafe") {
-        const transformedPlaces = response.places.map(transformOsmToRestaurant);
+        const transformedPlaces = response.places.map((place) =>
+          preservePlaceContributionData(place, transformOsmToRestaurant(place)),
+        );
         return res.json({
           places: transformedPlaces,
           total: response.places.length,

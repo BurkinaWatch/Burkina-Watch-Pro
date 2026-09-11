@@ -10,6 +10,20 @@ import { getCurrentMobileMoneyStatus, getFreshnessClasses, getPlaceFreshness } f
 
 interface PlaceWithDistance extends Place {
   distance?: number;
+  placeContributions?: Array<{
+    id: string;
+    contributionType?: string | null;
+    description: string;
+    medias?: string[] | null;
+    createdAt?: string | Date | null;
+    moderationStatus?: string | null;
+  }>;
+  placeContributionSummary?: {
+    approved?: number;
+    pending?: number;
+    needsInfo?: number;
+    rejected?: number;
+  };
 }
 
 interface PlaceCardProps {
@@ -68,10 +82,22 @@ export function PlaceCard({ place }: PlaceCardProps) {
   const mobileMoneyStatus = getCurrentMobileMoneyStatus(tags);
   const budget = tags.budget || tags.price || tags.priceRange || null;
   const listedServices = tags.services || tags.service || null;
-  const citizenMedia = Array.isArray(tags.citizenMedia)
+  const approvedContributions = place.placeContributions || [];
+  const approvedContributionMedia = approvedContributions.flatMap((contribution) =>
+    contribution.contributionType === "place_media" && Array.isArray(contribution.medias)
+      ? contribution.medias.filter((media): media is string => typeof media === "string" && media !== "[MEDIA_DATA]")
+      : [],
+  );
+  const legacyCitizenMedia = Array.isArray(tags.citizenMedia)
     ? tags.citizenMedia.filter((media): media is string => typeof media === "string")
     : [];
+  const citizenMedia = [...legacyCitizenMedia, ...approvedContributionMedia];
   const mediaGallery = [imageUrl, ...citizenMedia].filter((media, index, all): media is string => Boolean(media) && all.indexOf(media) === index);
+  const approvedCorrections = approvedContributions.filter(
+    (contribution) => contribution.contributionType === "place_correction",
+  );
+  const pendingContributionCount =
+    (place.placeContributionSummary?.pending || 0) + (place.placeContributionSummary?.needsInfo || 0);
 
   const cleanPhone = phone ? String(phone).replace(/[^\d+]/g, "") : null;
 
@@ -338,7 +364,41 @@ export function PlaceCard({ place }: PlaceCardProps) {
         {citizenMedia.length > 0 && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Camera className="w-4 h-4 flex-shrink-0 text-primary/70" />
-            <span>Vu récemment · {citizenMedia.length} média{citizenMedia.length > 1 ? "s" : ""} citoyen{citizenMedia.length > 1 ? "s" : ""}</span>
+            <span>
+              {approvedContributionMedia.length > 0 ? "Média citoyen validé" : "Média citoyen historique"} · {citizenMedia.length} média{citizenMedia.length > 1 ? "s" : ""}
+            </span>
+          </div>
+        )}
+
+        {approvedCorrections.length > 0 && (
+          <div className="rounded-md border border-emerald-200 bg-emerald-50/60 p-3 text-xs dark:border-emerald-900/60 dark:bg-emerald-950/20">
+            <div className="mb-2 flex items-center gap-1.5 font-semibold text-emerald-800 dark:text-emerald-300">
+              <ShieldCheck className="h-4 w-4" />
+              Corrections validées
+            </div>
+            <div className="space-y-2">
+              {approvedCorrections.slice(0, 3).map((contribution) => {
+                const createdAt = contribution.createdAt ? new Date(contribution.createdAt) : null;
+                const isRecent = createdAt ? Date.now() - createdAt.getTime() < 90 * 24 * 60 * 60 * 1000 : false;
+                return (
+                  <div key={contribution.id} className="border-l-2 border-emerald-400 pl-2">
+                    <p className="line-clamp-3 text-foreground">{contribution.description}</p>
+                    <p className="mt-1 text-muted-foreground">
+                      Validée · {createdAt ? createdAt.toLocaleDateString("fr-FR") : "date inconnue"} · fraîcheur {isRecent ? "récente" : "ancienne"}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {pendingContributionCount > 0 && (
+          <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50/70 p-2 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-200">
+            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+            <span>
+              {pendingContributionCount} contribution{pendingContributionCount > 1 ? "s" : ""} citoyenne{pendingContributionCount > 1 ? "s" : ""} en attente de modération. Elle{pendingContributionCount > 1 ? "s" : ""} n'est pas encore affichée{pendingContributionCount > 1 ? "s" : ""}.
+            </span>
           </div>
         )}
 

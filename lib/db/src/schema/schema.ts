@@ -147,6 +147,8 @@ export const signalements = pgTable("signalements", {
   latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
   longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
   localisation: text("localisation"),
+  placeId: text("place_id").references(() => places.id, { onDelete: "set null" }),
+  contributionType: text("contribution_type"),
   photo: text("photo"), // Base64 encoded (deprecated - use medias)
   video: text("video"), // Base64 encoded or URL (deprecated - use medias)
   medias: text("medias").array(), // Array of base64 encoded images/videos
@@ -161,11 +163,17 @@ export const signalements = pgTable("signalements", {
   reliabilityScore: integer("reliability_score"),
   verificationStatus: text("verification_status").notNull().default("pending"),
   verificationMode: text("verification_mode").notNull().default("pending"),
+  moderationStatus: text("moderation_status").notNull().default("not_applicable"),
+  moderationNote: text("moderation_note"),
+  moderatedAt: timestamp("moderated_at"),
+  moderatedBy: text("moderated_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("signalements_user_id_idx").on(table.userId),
   index("signalements_created_at_idx").on(table.createdAt),
   index("signalements_statut_idx").on(table.statut),
+  index("signalements_place_id_idx").on(table.placeId),
+  index("signalements_moderation_status_idx").on(table.moderationStatus),
 ]);
 
 export const commentaires = pgTable("commentaires", {
@@ -365,6 +373,8 @@ export const insertSignalementSchema = createInsertSchema(signalements, {
   medias: z.array(z.string()).optional(),
   localisation: z.string().optional(),
   niveauUrgence: z.string().optional(),
+  placeId: z.string().min(1).optional().nullable(),
+  contributionType: z.enum(["place_correction", "place_media"]).optional().nullable(),
 }).omit({
   id: true,
   createdAt: true,
@@ -374,6 +384,10 @@ export const insertSignalementSchema = createInsertSchema(signalements, {
   reliabilityScore: true,
   verificationStatus: true,
   verificationMode: true,
+  moderationStatus: true,
+  moderationNote: true,
+  moderatedAt: true,
+  moderatedBy: true,
   statut: true,
   photo: true,
   video: true,
@@ -395,6 +409,10 @@ export const updateSignalementSchema = createInsertSchema(signalements, {
   reliabilityScore: true,
   verificationStatus: true,
   verificationMode: true,
+  moderationStatus: true,
+  moderationNote: true,
+  moderatedAt: true,
+  moderatedBy: true,
   userId: true,
   isAnonymous: true,
   isSOS: true,

@@ -540,9 +540,37 @@ export class OverpassService {
 
     if (conditions.length > 0) q = q.where(and(...conditions)) as typeof q;
     const results = await q.limit(options.limit || 10000).offset(options.offset || 0);
+    const contributions = await storage.getPlaceContributions(results.map((place) => place.id));
+    const contributionsByPlace = new Map<string, typeof contributions>();
+
+    for (const contribution of contributions) {
+      if (!contribution.placeId) continue;
+      const current = contributionsByPlace.get(contribution.placeId) || [];
+      current.push(contribution);
+      contributionsByPlace.set(contribution.placeId, current);
+    }
+
+    const enrichedPlaces = results.map((place) => {
+      const placeContributions = contributionsByPlace.get(place.id) || [];
+      const approvedContributions = placeContributions.filter(
+        (contribution) => contribution.moderationStatus === "approved",
+      );
+      const summary = {
+        approved: approvedContributions.length,
+        pending: placeContributions.filter((contribution) => contribution.moderationStatus === "pending").length,
+        needsInfo: placeContributions.filter((contribution) => contribution.moderationStatus === "needs_info").length,
+        rejected: placeContributions.filter((contribution) => contribution.moderationStatus === "rejected").length,
+      };
+
+      return {
+        ...place,
+        placeContributions: approvedContributions,
+        placeContributionSummary: summary,
+      };
+    });
 
     return { 
-      places: results, 
+      places: enrichedPlaces as Place[],
       lastUpdated: results.length > 0 ? results[0].lastSyncedAt : null 
     };
   }
@@ -629,7 +657,23 @@ export class OverpassService {
 
   async getPlaceById(id: string): Promise<Place | null> {
     const result = await db.select().from(places).where(eq(places.id, id)).limit(1);
-    return result[0] || null;
+    if (!result[0]) return null;
+
+    const contributions = await storage.getPlaceContributions([id]);
+    const approvedContributions = contributions.filter(
+      (contribution) => contribution.moderationStatus === "approved",
+    );
+
+    return {
+      ...result[0],
+      placeContributions: approvedContributions,
+      placeContributionSummary: {
+        approved: approvedContributions.length,
+        pending: contributions.filter((contribution) => contribution.moderationStatus === "pending").length,
+        needsInfo: contributions.filter((contribution) => contribution.moderationStatus === "needs_info").length,
+        rejected: contributions.filter((contribution) => contribution.moderationStatus === "rejected").length,
+      },
+    } as Place;
   }
 
   getFallbackPlaces(_placeType: string): InsertPlace[] {

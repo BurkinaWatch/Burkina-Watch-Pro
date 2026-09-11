@@ -33,7 +33,6 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useEffect, useState, useRef } from "react";
-import { z } from "zod";
 import ModerationDialog from "@/components/ModerationDialog";
 import ImageBlurEditor from "@/components/ImageBlurEditor";
 import { useTranslation } from "react-i18next";
@@ -43,7 +42,7 @@ import { syncService } from "@/lib/syncService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const frontendSignalementSchema = insertSignalementSchema.omit({ userId: true });
-type FrontendSignalement = z.infer<typeof frontendSignalementSchema>;
+type FrontendSignalement = InsertSignalement;
 
 export default function Publier() {
   const { toast } = useToast();
@@ -61,7 +60,7 @@ export default function Publier() {
   const [savedOffline, setSavedOffline] = useState(false);
 
   const form = useForm<FrontendSignalement>({
-    resolver: zodResolver(frontendSignalementSchema),
+    resolver: zodResolver(frontendSignalementSchema as any),
     defaultValues: {
       titre: "",
       description: "",
@@ -73,8 +72,13 @@ export default function Publier() {
       isAnonymous: false,
       isSOS: false,
       niveauUrgence: "moyen",
+      placeId: undefined,
+      contributionType: undefined,
     },
   });
+
+  const contributionType = form.watch("contributionType");
+  const isPlaceContribution = Boolean(form.watch("placeId") && contributionType);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -84,7 +88,10 @@ export default function Publier() {
     if (!contribution || !placeName || !placeId) return;
 
     const isPhoto = contribution === "photo";
+    const contributionType = isPhoto ? "place_media" : "place_correction";
     form.setValue("titre", isPhoto ? `Photo récente — ${placeName}` : `Correction — ${placeName}`);
+    form.setValue("placeId", placeId);
+    form.setValue("contributionType", contributionType);
     form.setValue(
       "description",
       isPhoto
@@ -161,8 +168,10 @@ export default function Publier() {
       console.log("✅ Mutation réussie");
       queryClient.invalidateQueries({ queryKey: ["/api/signalements"] });
       toast({
-        title: "Signalement créé",
-        description: "Votre signalement a été publié avec succès.",
+        title: isPlaceContribution ? "Contribution envoyée" : "Signalement créé",
+        description: isPlaceContribution
+          ? "Votre contribution est en attente de modération. Elle apparaîtra sur la fiche après validation."
+          : "Votre signalement a été publié avec succès.",
       });
       form.reset();
       setLocation("/feed");
@@ -387,9 +396,15 @@ export default function Publier() {
 
       <div className="max-w-2xl mx-auto px-4 py-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Nouveau signalement</h1>
+          <h1 className="text-3xl font-bold mb-2">
+            {isPlaceContribution ? "Enrichir une fiche" : "Nouveau signalement"}
+          </h1>
           <p className="text-muted-foreground">
-            Signalez un problème ou une situation nécessitant attention
+            {isPlaceContribution
+              ? contributionType === "place_media"
+                ? "Votre photo sera visible sur la fiche après validation par la modération."
+                : "Votre correction sera visible sur la fiche après validation par la modération."
+              : "Signalez un problème ou une situation nécessitant attention"}
           </p>
         </div>
 
@@ -688,7 +703,7 @@ export default function Publier() {
                     data-testid="button-submit"
                   >
                     {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Publier le signalement
+                    {isPlaceContribution ? "Envoyer pour modération" : "Publier le signalement"}
                   </Button>
                   <Button 
                     type="button" 

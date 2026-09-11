@@ -72,7 +72,7 @@ import {
   agentMediaSessions,
 } from "@workspace/db";
 import { db } from "./db";
-import { eq, desc, and, sql, isNull, gt } from "drizzle-orm";
+import { eq, desc, and, or, sql, isNull, isNotNull, inArray, notInArray, gt } from "drizzle-orm";
 
 const baseSignalementSelection = {
   id: signalements.id,
@@ -97,6 +97,7 @@ const baseSignalementSelection = {
 };
 
 let verificationColumnsAvailable: boolean | undefined;
+let placeContributionColumnsAvailable: boolean | undefined;
 
 async function hasSignalementVerificationColumns(): Promise<boolean> {
   if (verificationColumnsAvailable !== undefined) {
@@ -114,17 +115,54 @@ async function hasSignalementVerificationColumns(): Promise<boolean> {
   return verificationColumnsAvailable;
 }
 
-async function getSignalementSelection() {
-  if (!(await hasSignalementVerificationColumns())) {
-    return baseSignalementSelection;
+async function hasPlaceContributionColumns(): Promise<boolean> {
+  if (placeContributionColumnsAvailable !== undefined) {
+    return placeContributionColumnsAvailable;
   }
 
-  return {
+  const result = await db.execute(sql`
+    SELECT COUNT(*)::int AS column_count
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'signalements'
+      AND column_name IN (
+        'place_id',
+        'contribution_type',
+        'moderation_status',
+        'moderation_note',
+        'moderated_at',
+        'moderated_by'
+      )
+  `);
+  placeContributionColumnsAvailable = Number(result.rows[0]?.column_count) === 6;
+  return placeContributionColumnsAvailable;
+}
+
+async function getSignalementSelection() {
+  const selection = {
     ...baseSignalementSelection,
-    reliabilityScore: signalements.reliabilityScore,
-    verificationStatus: signalements.verificationStatus,
-    verificationMode: signalements.verificationMode,
   };
+
+  if (await hasSignalementVerificationColumns()) {
+    Object.assign(selection, {
+      reliabilityScore: signalements.reliabilityScore,
+      verificationStatus: signalements.verificationStatus,
+      verificationMode: signalements.verificationMode,
+    });
+  }
+
+  if (await hasPlaceContributionColumns()) {
+    Object.assign(selection, {
+      placeId: signalements.placeId,
+      contributionType: signalements.contributionType,
+      moderationStatus: signalements.moderationStatus,
+      moderationNote: signalements.moderationNote,
+      moderatedAt: signalements.moderatedAt,
+      moderatedBy: signalements.moderatedBy,
+    });
+  }
+
+  return selection;
 }
 
 export interface IStorage {
@@ -162,11 +200,23 @@ export interface IStorage {
     categorie?: string;
     statut?: string;
     isSOS?: boolean;
+    placeContributionsOnly?: boolean;
+    excludePlaceContributions?: boolean;
+    placeId?: string;
+    moderationStatus?: string;
     limit?: number;
   }): Promise<SignalementWithAuthor[]>;
   getUserSignalements(userId: string): Promise<SignalementWithAuthor[]>;
   getSignalement(id: string): Promise<Signalement | undefined>;
   createSignalement(signalement: InsertSignalement): Promise<Signalement>;
+  supportsPlaceContributions(): Promise<boolean>;
+  getPlaceContributions(placeIds: string[]): Promise<Signalement[]>;
+  moderatePlaceContribution(
+    id: string,
+    moderationStatus: "approved" | "rejected" | "needs_info",
+    moderationNote: string | null,
+    moderatorId: string,
+  ): Promise<Signalement | undefined>;
   updateSignalement(id: string, updates: UpdateSignalement): Promise<Signalement | undefined>;
   deleteSignalement(id: string): Promise<boolean>;
   updateSignalementStatut(id: string, statut: string): Promise<Signalement | undefined>;
@@ -611,6 +661,10 @@ export class DbStorage implements IStorage {
     categorie?: string;
     statut?: string;
     isSOS?: boolean;
+    placeContributionsOnly?: boolean;
+    excludePlaceContributions?: boolean;
+    placeId?: string;
+    moderationStatus?: string;
     limit?: number;
   }): Promise<SignalementWithAuthor[]> {
     const signalementSelection = await getSignalementSelection();
@@ -632,6 +686,30 @@ export class DbStorage implements IStorage {
     }
     if (filters?.isSOS !== undefined) {
       conditions.push(eq(signalements.isSOS, filters.isSOS));
+    }
+    if (filters?.placeContributionsOnly) {
+      if (await hasPlaceContributionColumns()) {
+        conditions.push(isNotNull(signalements.placeId));
+        conditions.push(inArray(signalements.contributionType, ["place_correction", "place_media"]));
+      }
+    }
+    if (filters?.excludePlaceContributions) {
+      if (await hasPlaceContributionColumns()) {
+        conditions.push(or(
+          isNull(signalements.placeId),
+          notInArray(signalements.contributionType, ["place_correction", "place_media"]),
+        ));
+      }
+    }
+    if (filters?.placeId) {
+      if (await hasPlaceContributionColumns()) {
+        conditions.push(eq(signalements.placeId, filters.placeId));
+      }
+    }
+    if (filters?.moderationStatus) {
+      if (await hasPlaceContributionColumns()) {
+        conditions.push(eq(signalements.moderationStatus, filters.moderationStatus));
+      }
     }
 
     if (conditions.length > 0) {
@@ -671,15 +749,79 @@ export class DbStorage implements IStorage {
   }
 
   async createSignalement(insertSignalement: InsertSignalement): Promise<Signalement> {
+    const placeContributionColumns = await hasPlaceContributionColumns();
+    if (insertSignalement.placeId && !placeContributionColumns) {
+      throw new Error("PLACE_CONTRIBUTION_SCHEMA_MISSING");
+    }
+
     const values = {
       ...insertSignalement,
-      medias: insertSignalement.medias || []
+      medias: insertSignalement.medias || [],
+      ...(placeContributionColumns
+        ? {
+            moderationStatus: insertSignalement.placeId && insertSignalement.contributionType
+              ? "pending"
+              : "not_applicable",
+          }
+        : {}),
     };
     const result = await db
       .insert(signalements)
       .values(values)
       .returning(await getSignalementSelection());
     return result[0] as unknown as Signalement;
+  }
+
+  async supportsPlaceContributions(): Promise<boolean> {
+    return hasPlaceContributionColumns();
+  }
+
+  async getPlaceContributions(placeIds: string[]): Promise<Signalement[]> {
+    if (placeIds.length === 0 || !(await hasPlaceContributionColumns())) return [];
+
+    const result = await db
+      .select(await getSignalementSelection())
+      .from(signalements)
+      .where(and(
+        inArray(signalements.placeId, placeIds),
+        inArray(signalements.contributionType, ["place_correction", "place_media"]),
+      ))
+      .orderBy(desc(signalements.createdAt));
+
+    return result as unknown as Signalement[];
+  }
+
+  async moderatePlaceContribution(
+    id: string,
+    moderationStatus: "approved" | "rejected" | "needs_info",
+    moderationNote: string | null,
+    moderatorId: string,
+  ): Promise<Signalement | undefined> {
+    if (!(await hasPlaceContributionColumns())) return undefined;
+
+    const statut = moderationStatus === "approved"
+      ? "resolu"
+      : moderationStatus === "rejected"
+        ? "rejete"
+        : "en_cours";
+
+    const result = await db
+      .update(signalements)
+      .set({
+        moderationStatus,
+        moderationNote,
+        moderatedAt: new Date(),
+        moderatedBy: moderatorId,
+        statut,
+      })
+      .where(and(
+        eq(signalements.id, id),
+        isNotNull(signalements.placeId),
+        inArray(signalements.contributionType, ["place_correction", "place_media"]),
+      ))
+      .returning(await getSignalementSelection());
+
+    return result[0] as unknown as Signalement | undefined;
   }
 
   async updateSignalement(id: string, updates: UpdateSignalement | any): Promise<Signalement | undefined> {
