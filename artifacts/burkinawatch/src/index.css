@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@10..48,600;10..48,700;10..48,800&family=DM+Sans:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -76,7 +78,8 @@
   --chart-4: 200 70% 50%;
   --chart-5: 280 60% 50%;
 
-  --font-sans: 'Inter', sans-serif;
+  --font-sans: 'DM Sans', sans-serif;
+  --font-display: 'Bricolage Grotesque', 'DM Sans', sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
   --radius: .5rem;
@@ -231,6 +234,37 @@
   /* Fallback for older browsers */
   --destructive-border: hsl(var(--destructive));
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+@keyframes pratique-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pratique-reveal {
+  animation: pratique-reveal 560ms cubic-bezier(.22, .8, .24, 1) both;
+}
+
+.pratique-reveal-delay-1 {
+  animation-delay: 80ms;
+}
+
+.pratique-reveal-delay-2 {
+  animation-delay: 150ms;
+}
+
+.pratique-reveal-delay-3 {
+  animation-delay: 220ms;
 }
 
 @layer base {
