@@ -12,15 +12,28 @@ import { useToast } from "@/hooks/use-toast";
 import { MapPin, StopCircle, Loader2, Share2, ArrowLeft, RefreshCw } from "lucide-react";
 import type { TrackingSession, EmergencyContact } from "@shared/schema";
 
+type TrackingSessionWithSignal = TrackingSession & {
+  signalStatus?: "active" | "signal_lost" | "stopped";
+  lastLocationAt?: string | null;
+  lastLocation?: {
+    latitude: string;
+    longitude: string;
+    accuracy: string | null;
+    timestamp: string;
+  } | null;
+};
+
 export default function TrackingLive() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [isTracking, setIsTracking] = useState(false);
   const [currentPosition, setCurrentPosition] = useState<{ lat: number; lng: number } | null>(null);
 
-  const { data: activeSession } = useQuery<TrackingSession>({
+  const { data: activeSession } = useQuery<TrackingSessionWithSignal>({
     queryKey: ["/api/tracking/session"],
     retry: false,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
 
   const { data: contacts } = useQuery<EmergencyContact[]>({
@@ -259,6 +272,27 @@ export default function TrackingLive() {
                 Le suivi de localisation enregistre votre position toutes les 30 secondes. En cas d'incident ou d'accident, cette trajectoire peut aider les secours à vous retrouver rapidement.
               </p>
             </div>
+
+            {isTracking && activeSession?.signalStatus === "signal_lost" && (
+              <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-red-900 dark:border-red-800 dark:bg-red-950/30 dark:text-red-100">
+                <div className="flex items-start gap-3">
+                  <span className="mt-0.5 text-lg" aria-hidden="true">⚠</span>
+                  <div>
+                    <p className="font-semibold">Signal perdu</p>
+                    <p className="mt-1 text-sm">
+                      Le suivi reste actif. Aucune nouvelle position n’a été reçue depuis plus de 5 minutes.
+                    </p>
+                    {activeSession.lastLocation && (
+                      <p className="mt-2 text-xs opacity-80">
+                        Dernière position connue :{" "}
+                        {Number(activeSession.lastLocation.latitude).toFixed(6)},{" "}
+                        {Number(activeSession.lastLocation.longitude).toFixed(6)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {currentPosition && (
               <div className="p-4 bg-muted rounded-lg">
