@@ -1,0 +1,217 @@
+# BURKINAWATCH — PHASE 6
+
+# AUDIT FINAL BURKINA PRATIQUE
+
+IMPORTANT :
+
+Cette mission est STRICTEMENT EN LECTURE SEULE.
+
+NE MODIFIE AUCUN FICHIER.
+
+NE CORRIGE RIEN.
+
+---
+
+# 1. FONCTIONNALITÉS EXISTANTES
+
+Tester :
+
+* navigation ;
+* authentification ;
+* carte ;
+* SOS ;
+* PANIC ;
+* Bulletin Citoyen ;
+* signalements ;
+* notifications ;
+* StreetView/contributions ;
+* catégories ;
+* listes ;
+* fiches ;
+* recherche existante.
+
+---
+
+# 2. BURKINA PRATIQUE
+
+Tester :
+
+## Recherche
+
+* recherche simple ;
+* recherche par intention ;
+* recherche avec budget ;
+* recherche avec proximité.
+
+## Besoin maintenant
+
+* pharmacie ;
+* urgence ;
+* argent ;
+* station ;
+* dépannage ;
+* manger ;
+* transport ;
+* réparation.
+
+## Catégories
+
+Vérifier que TOUTES les catégories existantes sont toujours accessibles.
+
+## Autour de moi
+
+Tester localisation et sélection manuelle.
+
+## Fiches
+
+Tester :
+
+* téléphone ;
+* WhatsApp ;
+* itinéraire ;
+* partage ;
+* statut ;
+* vérification ;
+* signalement ;
+* contribution.
+
+## Citoyen
+
+Tester :
+
+* confirmation ;
+* fermeture ;
+* correction ;
+* problème ;
+* photo ;
+* disponibilité Mobile Money.
+
+## Services
+
+Tester les modules :
+
+* santé ;
+* argent ;
+* restauration ;
+* réparation ;
+* achat ;
+* administration ;
+* télécoms ;
+* transport ;
+* stations.
+
+## Médias
+
+Tester les médias citoyens sans dépendre du pipeline 3D.
+
+## Accès
+
+Tester les signalements :
+
+* travaux ;
+* route bloquée ;
+* inondation ;
+* embouteillage ;
+* accès difficile.
+
+---
+
+# 3. QUALITÉ DES DONNÉES
+
+Rechercher :
+
+* doublons ;
+* données fictives ;
+* lieux disparus ;
+* informations contradictoires ;
+* statuts trompeurs ;
+* horaires inventés ;
+* prix inventés ;
+* disponibilités inventées ;
+* liquidités inventées.
+
+---
+
+# 4. TECHNIQUE
+
+Vérifier :
+
+TypeScript
+
+imports
+
+routes
+
+API
+
+base de données
+
+build
+
+responsive
+
+mobile
+
+performances.
+
+---
+
+# 5. NON-RÉGRESSION
+
+Comparer autant que possible le comportement :
+
+AVANT BURKINA PRATIQUE
+
+VS
+
+APRÈS BURKINA PRATIQUE
+
+Toute fonctionnalité existante qui ne fonctionne plus est une RÉGRESSION.
+
+---
+
+# 6. RAPPORT
+
+Classer :
+
+🔴 CRITIQUE
+
+🟠 MAJEUR
+
+🟡 MINEUR
+
+🔵 INFO
+
+Pour chaque problème :
+
+* description ;
+* fichier ;
+* cause ;
+* impact ;
+* recommandation.
+
+Puis fournir :
+
+## FONCTIONNALITÉS EXISTANTES PRÉSERVÉES
+
+## NOUVELLES FONCTIONNALITÉS
+
+## FICHIERS CRÉÉS
+
+## FICHIERS MODIFIÉS
+
+## MIGRATIONS DE BASE DE DONNÉES
+
+## RISQUES
+
+## TESTS
+
+## VERDICT FINAL
+
+GO
+
+ou
+
+NO-GO
+
+Ne modifie aucun fichier.
