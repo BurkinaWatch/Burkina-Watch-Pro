@@ -10,6 +10,14 @@ import { Screen } from '@/components/Screen';
 
 type TrackingSession = {
   isActive?: boolean;
+  signalStatus?: 'active' | 'signal_lost' | 'stopped';
+  lastLocationAt?: string | null;
+  lastLocation?: {
+    latitude: string;
+    longitude: string;
+    accuracy: string | null;
+    timestamp: string;
+  } | null;
 };
 
 type StopTrackingResponse = {
@@ -26,6 +34,7 @@ export default function TrackingLiveScreen() {
   const [isBusy, setIsBusy] = useState(false);
   const [permission, setPermission] = useState<Location.PermissionStatus | null>(null);
   const [position, setPosition] = useState<Location.LocationObject | null>(null);
+  const [session, setSession] = useState<TrackingSession | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const stopWatching = useCallback(() => {
@@ -61,23 +70,30 @@ export default function TrackingLiveScreen() {
     );
   }, [sendLocation, stopWatching]);
 
+  const refreshSession = useCallback(async () => {
+    try {
+      const currentSession = await requestJson<TrackingSession>('/tracking/session');
+      setSession(currentSession);
+      setIsTracking(Boolean(currentSession.isActive));
+    } catch {
+      setSession(null);
+      setIsTracking(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    let mounted = true;
-    void requestJson<TrackingSession>('/tracking/session')
-      .then((session) => {
-        if (mounted && session.isActive) setIsTracking(true);
-      })
-      .catch(() => {
-        // An anonymous user receives the explicit connection state below.
-      });
+    void refreshSession();
+    const refreshTimer = setInterval(() => {
+      void refreshSession();
+    }, 30_000);
 
     return () => {
-      mounted = false;
+      clearInterval(refreshTimer);
       stopWatching();
     };
-  }, [isAuthenticated, stopWatching]);
+  }, [isAuthenticated, refreshSession, stopWatching]);
 
   async function startTracking() {
     if (!isAuthenticated) {
@@ -106,6 +122,7 @@ export default function TrackingLiveScreen() {
       await sendLocation(current);
       await startWatching();
       setIsTracking(true);
+      await refreshSession();
     } catch (startError) {
       setError(startError instanceof Error ? startError.message : 'Impossible de démarrer le suivi.');
       setIsTracking(false);
@@ -122,6 +139,7 @@ export default function TrackingLiveScreen() {
       const response = await requestJson<StopTrackingResponse>('/tracking/stop', { method: 'POST' });
       stopWatching();
       setIsTracking(false);
+      setSession(null);
       setPosition(null);
 
       const urls = response.whatsappUrls ?? [];
@@ -154,6 +172,23 @@ export default function TrackingLiveScreen() {
           Le suivi enregistre votre position toutes les 30 secondes. En cas d’incident, cette trajectoire peut aider les secours à vous retrouver rapidement.
         </Text>
       </View>
+
+      {isTracking && session?.signalStatus === 'signal_lost' ? (
+        <View style={[styles.signalLost, { backgroundColor: colors.destructive + '18', borderColor: colors.destructive }]}>
+          <Feather name="wifi-off" size={20} color={colors.destructive} />
+          <View style={styles.signalLostCopy}>
+            <Text style={[styles.signalLostTitle, { color: colors.destructive }]}>Signal perdu</Text>
+            <Text style={[styles.signalLostText, { color: colors.foreground }]}>
+              Le suivi reste actif. Aucune nouvelle position n’a été reçue depuis plus de 5 minutes.
+            </Text>
+            {session.lastLocation ? (
+              <Text style={[styles.signalLostText, { color: colors.mutedForeground }]}>
+                Dernière position connue : {Number(session.lastLocation.latitude).toFixed(5)}, {Number(session.lastLocation.longitude).toFixed(5)}
+              </Text>
+            ) : null}
+          </View>
+        </View>
+      ) : null}
 
       {!isAuthenticated ? (
         <View style={[styles.notice, { backgroundColor: colors.muted, borderColor: colors.border }]}>
@@ -226,6 +261,10 @@ const styles = StyleSheet.create({
   secondaryButtonText: { fontFamily: 'Inter_600SemiBold', fontSize: 13 },
   error: { alignItems: 'center', borderRadius: 14, gap: 10, padding: 15 },
   errorText: { fontFamily: 'Inter_500Medium', fontSize: 13, lineHeight: 18, textAlign: 'center' },
+  signalLost: { borderRadius: 14, borderWidth: 1, flexDirection: 'row', gap: 11, padding: 15 },
+  signalLostCopy: { flex: 1, gap: 4 },
+  signalLostTitle: { fontFamily: 'Inter_700Bold', fontSize: 14 },
+  signalLostText: { fontFamily: 'Inter_400Regular', fontSize: 12, lineHeight: 18 },
   settingsButton: { backgroundColor: 'white', borderRadius: 9, paddingHorizontal: 13, paddingVertical: 9 },
   settingsButtonText: { fontFamily: 'Inter_600SemiBold', fontSize: 12 },
   position: { alignItems: 'center', borderRadius: 14, borderWidth: 1, flexDirection: 'row', gap: 11, padding: 14 },
