@@ -68,7 +68,10 @@ export function PlaceCard({ place }: PlaceCardProps) {
   const mobileMoneyStatus = getCurrentMobileMoneyStatus(tags);
   const budget = tags.budget || tags.price || tags.priceRange || null;
   const listedServices = tags.services || tags.service || null;
-  const citizenMedia = Array.isArray(tags.citizenMedia) ? tags.citizenMedia : [];
+  const citizenMedia = Array.isArray(tags.citizenMedia)
+    ? tags.citizenMedia.filter((media): media is string => typeof media === "string")
+    : [];
+  const mediaGallery = [imageUrl, ...citizenMedia].filter((media, index, all): media is string => Boolean(media) && all.indexOf(media) === index);
 
   const cleanPhone = phone ? String(phone).replace(/[^\d+]/g, "") : null;
 
@@ -108,16 +111,27 @@ export function PlaceCard({ place }: PlaceCardProps) {
 
   return (
     <Card data-testid={`card-place-${place.id}`} className="overflow-hidden">
-      {imageUrl && (
+      {mediaGallery.length > 0 && (
         <div className="relative h-40 w-full overflow-hidden bg-muted">
-          <img 
-            src={imageUrl} 
-            alt={place.name}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-          />
+          {mediaGallery[0].match(/\.(mp4|webm|mov)(\?|$)/i) ? (
+            <video src={mediaGallery[0]} className="w-full h-full object-cover" controls muted />
+          ) : (
+            <img
+              src={mediaGallery[0]}
+              alt={place.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+          )}
+          {mediaGallery.length > 1 && (
+            <div className="absolute bottom-2 left-2 right-2 flex gap-1.5 overflow-x-auto">
+              {mediaGallery.slice(1, 4).map((media) => (
+                <img key={media} src={media} alt="" className="h-10 w-10 rounded border border-white/80 object-cover" loading="lazy" />
+              ))}
+            </div>
+          )}
         </div>
       )}
       
