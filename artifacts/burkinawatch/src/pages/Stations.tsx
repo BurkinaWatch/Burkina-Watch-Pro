@@ -129,6 +129,7 @@ export default function Stations() {
   const [show24hOnly, setShow24hOnly] = useState(false);
   const [showNearestOnly, setShowNearestOnly] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
   const [selectedStation, setSelectedStation] = useState<StationService | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([12.3714, -1.5197]);
   const [mapZoom, setMapZoom] = useState(7);
@@ -147,27 +148,85 @@ export default function Stations() {
     return R * c;
   }, []);
 
-  useEffect(() => {
+  const handleNearestFilter = useCallback(() => {
     if (showNearestOnly) {
-      if (!userLocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            setUserLocation({
-              lat: position.coords.latitude,
-              lng: position.coords.longitude
-            });
-          },
-          (error) => {
-            toast({
-              title: "Erreur de localisation",
-              description: "Impossible d'obtenir votre position. Veuillez autoriser la geolocalisation.",
-              variant: "destructive",
-            });
-            setShowNearestOnly(false);
-          }
-        );
-      }
+      setShowNearestOnly(false);
+      return;
     }
+
+    if (userLocation) {
+      setShowNearestOnly(true);
+      return;
+    }
+
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      toast({
+        title: "Localisation non disponible",
+        description: "La géolocalisation n'est pas prise en charge par ce navigateur.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLocating(true);
+
+    const onSuccess = (position: GeolocationPosition) => {
+      const location = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      };
+      setUserLocation(location);
+      setMapCenter([location.lat, location.lng]);
+      setMapZoom(12);
+      setShowNearestOnly(true);
+      setIsLocating(false);
+      toast({
+        title: "Position trouvée",
+        description: "Affichage des stations les plus proches",
+      });
+    };
+
+    const onFailure = (error: GeolocationPositionError) => {
+      setIsLocating(false);
+
+      const description =
+        error.code === error.PERMISSION_DENIED
+          ? "Autorisez la localisation pour BurkinaWatch dans les réglages du navigateur, puis réessayez."
+          : error.code === error.TIMEOUT
+            ? "La localisation prend trop de temps. Vérifiez que le GPS est activé, puis réessayez."
+            : "Votre position est momentanément indisponible. Vérifiez le GPS et réessayez.";
+
+      toast({
+        title: "Erreur de localisation",
+        description,
+        variant: "destructive",
+      });
+    };
+
+    // A coarse network/cell location is more reliable on mobile browsers.
+    // If it is unavailable, retry once with the device GPS.
+    navigator.geolocation.getCurrentPosition(
+      onSuccess,
+      (firstError) => {
+        if (
+          firstError.code === firstError.PERMISSION_DENIED ||
+          firstError.code === firstError.POSITION_UNAVAILABLE
+        ) {
+          navigator.geolocation.getCurrentPosition(onSuccess, onFailure, {
+            enableHighAccuracy: true,
+            timeout: 15_000,
+            maximumAge: 60_000,
+          });
+          return;
+        }
+        onFailure(firstError);
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 20_000,
+        maximumAge: 300_000,
+      },
+    );
   }, [showNearestOnly, userLocation, toast]);
 
   const { data, isLoading, refetch } = useQuery<{ stations: StationService[], lastUpdated: string }>({
@@ -487,12 +546,17 @@ export default function Stations() {
 
           <Button
             variant={showNearestOnly ? "default" : "outline"}
-            onClick={() => setShowNearestOnly(!showNearestOnly)}
+            onClick={handleNearestFilter}
+            disabled={isLocating}
             className="w-full"
             data-testid="button-nearest-filter"
           >
-            <Locate className="h-4 w-4 mr-2" />
-            {showNearestOnly ? "Voir tout" : "Les plus proches"}
+            {isLocating ? (
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Locate className="h-4 w-4 mr-2" />
+            )}
+            {isLocating ? "Localisation..." : showNearestOnly ? "Voir tout" : "Les plus proches"}
           </Button>
           {showNearestOnly && (
             <Badge className="bg-primary text-primary-foreground">
