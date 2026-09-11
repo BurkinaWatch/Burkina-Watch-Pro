@@ -57,9 +57,12 @@ export default function BurkinaPratiqueScreen() {
   const results = useMemo(() => {
     if (!normalizedQuery) return [];
     const matches = practicalCategories
-      .filter((item) => normalize(`${item.label} ${item.description} ${item.keywords.join(' ')}`).includes(normalizedQuery));
+      .filter((item) => {
+        const haystack = normalize(`${item.label} ${item.description} ${item.keywords.join(' ')}`);
+        return haystack.includes(normalizedQuery) || normalizedQuery.split(/\s+/).some((word) => word.length > 2 && haystack.includes(word));
+      });
     const intentCategory = intent.matched
-      ? practicalCategories.find((item) => item.route === intent.href && (item.label === intent.label || intent.key === 'commerces'))
+      ? practicalCategories.find((item) => item.label === intent.label) || practicalCategories.find((item) => item.route === intent.href)
       : undefined;
     return [...(intentCategory ? [intentCategory] : []), ...matches.filter((item) => item !== intentCategory)].slice(0, 5);
   }, [intent, normalizedQuery]);
