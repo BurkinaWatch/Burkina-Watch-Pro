@@ -44,7 +44,7 @@ export function getPlaceFreshness(place: Partial<Place>): PlaceFreshness {
     return {
       tone: "recent",
       label: "Vérifié récemment",
-      detail: `Confirmé il y a ${formatAge(ageMs)}`,
+      detail: `Confirmé il y a ${formatAge(ageMs!)}`,
       checkedAt,
     };
   }
@@ -53,7 +53,7 @@ export function getPlaceFreshness(place: Partial<Place>): PlaceFreshness {
     return {
       tone: "old",
       label: "Information ancienne",
-      detail: `Dernière vérification il y a ${formatAge(ageMs)}`,
+      detail: `Dernière vérification il y a ${formatAge(ageMs!)}`,
       checkedAt,
     };
   }
@@ -61,7 +61,7 @@ export function getPlaceFreshness(place: Partial<Place>): PlaceFreshness {
   return {
     tone: "confirm",
     label: "À confirmer",
-    detail: `Dernière vérification il y a ${formatAge(ageMs)}`,
+    detail: `Dernière vérification il y a ${formatAge(ageMs!)}`,
     checkedAt,
   };
 }
