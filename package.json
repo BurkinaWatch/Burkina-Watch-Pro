@@ -8,6 +8,7 @@
     "build": "pnpm run typecheck && pnpm run build:artifacts",
     "build:artifacts": "pnpm -r --if-present run build",
     "release:check": "bash ./scripts/release-check.sh",
+    "test:release-check": "bash ./scripts/release-check.test.sh",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
