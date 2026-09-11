@@ -34,6 +34,7 @@ import {
   parsePracticalSearch,
   practicalFilterLabel,
 } from "@/lib/practicalSearch";
+import { PratiqueExplorer } from "@/components/PratiqueExplorer";
 
 type Icon = ComponentType<{ className?: string }>;
 
@@ -267,6 +268,14 @@ export default function BurkinaPratique() {
       : undefined;
     return [...(intentCategory ? [intentCategory] : []), ...matches.filter((category) => category !== intentCategory)].slice(0, 5);
   }, [intent, normalizedQuery]);
+
+  const explorerType = useMemo(() => {
+    if (intent.href === "/stations") return "fuel" as const;
+    if (intent.href === "/restaurants") return "restaurant" as const;
+    if (intent.href === "/boutiques" || intent.href === "/boutiques-marches") return "shop" as const;
+    if (intent.href === "/marches") return "marketplace" as const;
+    return "pharmacy" as const;
+  }, [intent]);
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
