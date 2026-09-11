@@ -37,6 +37,7 @@ import { VoiceSearchInput } from "@/components/VoiceSearchInput";
 import { LocationValidator } from "@/components/LocationValidator";
 import { Link } from "wouter";
 import { Helmet } from "react-helmet-async";
+import { getLocationErrorMessage, requestUserLocation } from "@/lib/geolocation";
 
 interface Compagnie {
   id: string;
@@ -221,20 +222,24 @@ export default function Gares() {
       return;
     }
     setIsLocatingForSort(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
+    void requestUserLocation()
+      .then((location) => {
+        setUserLocation(location);
         setter(true);
         setCurrentPage(1);
-        setIsLocatingForSort(false);
-        toast({ title: "Position trouvee", description: `${label} triés par proximité` });
-      },
-      () => {
-        setIsLocatingForSort(false);
-        toast({ title: "Erreur de localisation", description: "Impossible d'obtenir votre position", variant: "destructive" });
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
+        toast({
+          title: "Position trouvée",
+          description: `${label} triées par proximité`,
+        });
+      })
+      .catch((error) => {
+        toast({
+          title: "Erreur de localisation",
+          description: getLocationErrorMessage(error),
+          variant: "destructive",
+        });
+      })
+      .finally(() => setIsLocatingForSort(false));
   };
 
   const handleSortByNearest = () => requestLocationAndSort(setSortByNearest, sortByNearest, "Les gares sont");
@@ -297,26 +302,23 @@ export default function Gares() {
 
   const handleLocateMe = () => {
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const nearestCity = findNearestCity(position.coords.latitude, position.coords.longitude);
+    void requestUserLocation()
+      .then((location) => {
+        const nearestCity = findNearestCity(location.lat, location.lng);
         setDepartVille(nearestCity);
-        setIsLocating(false);
-        toast({ 
-          title: "Position trouvée", 
-          description: `Ville la plus proche: ${nearestCity}` 
+        toast({
+          title: "Position trouvée",
+          description: `Ville la plus proche : ${nearestCity}`,
         });
-      },
-      (error) => {
-        setIsLocating(false);
-        toast({ 
-          title: "Erreur de localisation", 
-          description: "Impossible d'obtenir votre position", 
-          variant: "destructive" 
+      })
+      .catch((error) => {
+        toast({
+          title: "Erreur de localisation",
+          description: getLocationErrorMessage(error),
+          variant: "destructive",
         });
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
+      })
+      .finally(() => setIsLocating(false));
   };
 
   const filteredTrajets = useMemo(() => {

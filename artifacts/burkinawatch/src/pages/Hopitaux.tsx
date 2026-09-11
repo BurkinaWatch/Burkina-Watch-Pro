@@ -13,6 +13,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { REGION_NAMES } from "@/lib/regions";
 import { useToast } from "@/hooks/use-toast";
 import { LocationValidator } from "@/components/LocationValidator";
+import { getLocationErrorMessage, requestUserLocation } from "@/lib/geolocation";
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371;
@@ -44,39 +45,27 @@ export default function Hopitaux() {
   };
 
   const handleFindNearest = useCallback(() => {
-    if (!navigator.geolocation) {
-      toast({
-        title: "Erreur",
-        description: "La géolocalisation n'est pas supportée par votre navigateur.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
+    void requestUserLocation()
+      .then((location) => {
         setUserLocation({
-          lat: position.coords.latitude,
-          lon: position.coords.longitude,
+          lat: location.lat,
+          lon: location.lng,
         });
         setSortByProximity(true);
-        setIsLocating(false);
         toast({
           title: "Position trouvée",
           description: "Les hôpitaux sont triés par proximité.",
         });
-      },
-      (error) => {
-        setIsLocating(false);
+      })
+      .catch((error) => {
         toast({
           title: "Erreur de localisation",
-          description: "Impossible d'obtenir votre position. Vérifiez les permissions.",
+          description: getLocationErrorMessage(error),
           variant: "destructive",
         });
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-    );
+      })
+      .finally(() => setIsLocating(false));
   }, [toast]);
 
   const stats = useMemo(() => {

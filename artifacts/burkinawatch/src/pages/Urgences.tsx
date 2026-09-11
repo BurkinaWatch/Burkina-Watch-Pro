@@ -17,6 +17,7 @@ import { VoiceSearchInput } from "@/components/VoiceSearchInput";
 import { SiWhatsapp } from "react-icons/si";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { getLocationErrorMessage, requestUserLocation } from "@/lib/geolocation";
 
 interface EmergencyService {
   id: string;
@@ -71,43 +72,27 @@ export default function Urgences() {
       return;
     }
 
-    if (!navigator.geolocation) {
-      toast({
-        title: "Géolocalisation non disponible",
-        description: "Votre navigateur ne supporte pas la géolocalisation",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
+    void requestUserLocation()
+      .then((location) => {
         setUserLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
+          lat: location.lat,
+          lng: location.lng,
         });
         setSortByProximity(true);
-        setIsLocating(false);
         toast({
           title: "Position trouvée",
           description: "Services d'urgence triés par distance",
         });
-      },
-      (error) => {
-        setIsLocating(false);
-        let message = "Impossible d'obtenir votre position";
-        if (error.code === error.PERMISSION_DENIED) {
-          message = "Veuillez autoriser l'accès à votre position";
-        }
+      })
+      .catch((error) => {
         toast({
           title: "Erreur de localisation",
-          description: message,
+          description: getLocationErrorMessage(error),
           variant: "destructive",
         });
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
+      })
+      .finally(() => setIsLocating(false));
   }, [sortByProximity, toast]);
 
   // Chargement initial des données - exécuté une seule fois au montage

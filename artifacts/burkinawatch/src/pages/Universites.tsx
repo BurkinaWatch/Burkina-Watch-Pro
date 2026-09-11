@@ -16,6 +16,7 @@ import { Helmet } from "react-helmet-async";
 import { REGION_NAMES } from "@/lib/regions";
 import { useToast } from "@/hooks/use-toast";
 import { LocationValidator } from "@/components/LocationValidator";
+import { getLocationErrorMessage, requestUserLocation } from "@/lib/geolocation";
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371;
@@ -81,19 +82,20 @@ export default function Universites() {
     }
 
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserLocation({ lat: position.coords.latitude, lon: position.coords.longitude });
+    void requestUserLocation()
+      .then((location) => {
+        setUserLocation({ lat: location.lat, lon: location.lng });
         setSortByProximity(true);
-        setIsLocating(false);
         toast({ title: "Position trouvée", description: "Tri par proximité activé" });
-      },
-      (error) => {
-        setIsLocating(false);
-        toast({ title: "Erreur", description: "Impossible d'obtenir votre position", variant: "destructive" });
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
+      })
+      .catch((error) => {
+        toast({
+          title: "Erreur de localisation",
+          description: getLocationErrorMessage(error),
+          variant: "destructive",
+        });
+      })
+      .finally(() => setIsLocating(false));
   };
 
   const stats = useMemo(() => {
