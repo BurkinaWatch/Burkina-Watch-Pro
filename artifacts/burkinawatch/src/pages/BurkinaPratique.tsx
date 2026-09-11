@@ -1,4 +1,4 @@
-import { useMemo, useState, type ComponentType, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type ComponentType, type FormEvent } from "react";
 import { Link, useLocation } from "wouter";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
@@ -232,8 +232,28 @@ function CategoryIcon({ category, size = "md" }: { category: Category; size?: "s
 export default function BurkinaPratique() {
   const [, navigate] = useLocation();
   const [query, setQuery] = useState("");
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const normalizedQuery = normalize(query);
   const intent = useMemo(() => parsePracticalSearch(query), [query]);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("burkinawatch:practical-searches") || "[]");
+      if (Array.isArray(stored)) {
+        setRecentSearches(stored.filter((value): value is string => typeof value === "string").slice(0, 5));
+      }
+    } catch {
+      setRecentSearches([]);
+    }
+  }, []);
+
+  const rememberSearch = (value: string) => {
+    const nextValue = value.trim();
+    if (!nextValue) return;
+    const next = [nextValue, ...recentSearches.filter((item) => item.toLocaleLowerCase() !== nextValue.toLocaleLowerCase())].slice(0, 5);
+    setRecentSearches(next);
+    localStorage.setItem("burkinawatch:practical-searches", JSON.stringify(next));
+  };
 
   const searchResults = useMemo(() => {
     if (!normalizedQuery) return [];
@@ -250,6 +270,7 @@ export default function BurkinaPratique() {
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    rememberSearch(query);
     const route = intent.matched ? buildPracticalRoute(intent) : searchResults[0]?.href;
     if (route) navigate(route);
   };
