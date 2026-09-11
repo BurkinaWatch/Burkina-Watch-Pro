@@ -1,0 +1,157 @@
+# BURKINAWATCH — PHASE 5
+
+# INTÉGRATION WEB + MOBILE + CARTE + ROBUSTESSE
+
+Auditer puis finaliser BURKINA PRATIQUE sur toutes les plateformes réellement présentes.
+
+---
+
+# WEB DESKTOP
+
+Prévoir :
+
+recherche ;
+
+besoin maintenant ;
+
+catégories ;
+
+filtres ;
+
+liste ;
+
+carte ;
+
+fiche.
+
+Utiliser une vue carte/liste synchronisée.
+
+---
+
+# WEB MOBILE
+
+Adapter :
+
+* recherche ;
+* besoins rapides ;
+* catégories ;
+* fiches ;
+* actions ;
+* carte.
+
+---
+
+# EXPO MOBILE
+
+Si l'application Expo existe réellement :
+
+intégrer la même logique fonctionnelle.
+
+Ne pas créer une fausse architecture mobile.
+
+Ne pas dupliquer les données.
+
+Si certaines fonctionnalités sont uniquement Web :
+
+documenter les points d'intégration au lieu de créer un contournement fragile.
+
+---
+
+# CARTE
+
+Réutiliser la carte existante.
+
+NE PAS installer une deuxième solution cartographique sans nécessité démontrée.
+
+Synchroniser :
+
+liste ↔ carte
+
+sélection liste → carte
+
+sélection carte → fiche
+
+filtres → carte + liste
+
+recherche → carte + liste.
+
+---
+
+# AUTOUR DE MOI
+
+Réutiliser la géolocalisation existante.
+
+Si la localisation n'est pas disponible :
+
+permettre la sélection manuelle d'une zone.
+
+---
+
+# FAIBLE CONNEXION
+
+Auditer le cache/offline existant.
+
+Réutiliser ce mécanisme.
+
+Mettre en cache lorsque pertinent :
+
+* catégories ;
+* informations de base ;
+* dernières recherches.
+
+Ne pas conserver indéfiniment :
+
+* disponibilité ;
+* liquidité ;
+* ouverture ;
+* signalements urgents.
+
+Afficher la date de mise à jour.
+
+---
+
+# PERFORMANCE
+
+Vérifier :
+
+* temps de chargement ;
+* pagination ;
+* requêtes inutiles ;
+* images ;
+* carte ;
+* recherche ;
+* mobile.
+
+Ne pas optimiser en refactorant toute l'application.
+
+Optimiser uniquement ce qui est réellement nécessaire.
+
+---
+
+# RÈGLE DE NON-RÉGRESSION
+
+Tester les fonctionnalités existantes de BurkinaWatch.
+
+Particulièrement :
+
+* navigation ;
+* carte ;
+* SOS ;
+* PANIC ;
+* Bulletin Citoyen ;
+* signalements ;
+* authentification ;
+* notifications ;
+* StreetView/contributions ;
+* catégories existantes ;
+* fiches existantes.
+
+Aucune modification hors périmètre.
+
+À la fin :
+
+build Web ;
+
+vérification mobile ;
+
+rapport complet.
