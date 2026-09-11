@@ -1,0 +1,43 @@
+Le déploiement Railway échoue au build avec cette erreur exacte :
+
+ERR_PNPM_LOCKFILE_CONFIG_MISMATCH
+Cannot proceed with the frozen installation. The current "overrides"
+configuration doesn't match the value found in the lockfile
+
+Diagnostic : le package.json racine du monorepo pnpm n'a aucun champ
+"packageManager", donc aucune version de pnpm n'est pinnée. Le pnpm-lock.yaml
+a probablement été généré avec une version de pnpm différente de celle que
+Railway installe par défaut au build (le bloc "settings:" du lockfile ne
+reprend pas "minimumReleaseAge" qui est pourtant défini dans
+pnpm-workspace.yaml, ce qui est un signe de désynchronisation de version).
+
+Corrige ça en suivant exactement ces étapes, dans l'ordre :
+
+1. Exécute `pnpm --version` dans le shell et note le numéro exact.
+
+2. Ajoute ce champ au package.json à la racine du monorepo (pas dans un
+   sous-package), juste après "license":
+   "packageManager": "pnpm@<VERSION_EXACTE_TROUVÉE_A_L'ETAPE_1>"
+
+3. Supprime pnpm-lock.yaml et régénère-le proprement depuis zéro avec :
+   rm pnpm-lock.yaml
+   pnpm install
+   (PAS --frozen-lockfile, on veut qu'il se régénère complètement en accord
+   avec la config actuelle de pnpm-workspace.yaml)
+
+4. Vérifie qu'aucune dépendance n'a changé de version de façon inattendue en
+   comparant le diff du nouveau pnpm-lock.yaml avec l'ancien (via git diff).
+   Si tu vois des changements de version majeurs et non désirés, arrête-toi
+   et préviens-moi avant de continuer.
+
+5. Relance le build complet en local pour confirmer que tout compile :
+   pnpm run build
+
+6. Si le build local passe, commit ces deux fichiers modifiés
+   (package.json et pnpm-lock.yaml) avec un message de commit clair, du
+   type : "fix: pin pnpm version and regenerate lockfile to fix Railway
+   frozen-lockfile mismatch".
+
+Ne touche à aucun autre fichier, ne modifie aucune dépendance manuellement,
+ne change pas la structure du monorepo. L'objectif est uniquement de
+resynchroniser la version de pnpm et le lockfile.
