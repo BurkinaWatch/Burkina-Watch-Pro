@@ -338,6 +338,24 @@ export default function BurkinaPratique() {
                 <p className="mt-3 text-xs text-emerald-950/60 dark:text-emerald-50/60">
                   Recherchez par mot-clé, nom de service ou besoin.
                 </p>
+                {!normalizedQuery && recentSearches.length > 0 ? (
+                  <div className="mt-4 flex flex-wrap items-center gap-2" data-testid="practical-recent-searches">
+                    <span className="text-xs font-semibold text-muted-foreground">Recherches récentes</span>
+                    {recentSearches.map((recent) => (
+                      <button
+                        key={recent}
+                        type="button"
+                        onClick={() => {
+                          setQuery(recent);
+                          rememberSearch(recent);
+                        }}
+                        className="rounded-full border border-border bg-background/80 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        {recent}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
                 {normalizedQuery && intent.matched ? (
                   <div className="mt-4 rounded-2xl border border-emerald-900/10 bg-background/80 p-4 shadow-sm" data-testid="practical-intent-summary">
                     <div className="flex flex-wrap items-center gap-2">
