@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 import { useColors } from '@/hooks/useColors';
 import { EmptyState, ErrorState, LoadingState, Screen } from '@/components/Screen';
 import { requestJson } from '@/lib/api';
+import { cachePracticalPlaces, readCachedPracticalPlaces } from '@/lib/storage';
 
 type MobilePlace = {
   id?: string | number;
@@ -99,7 +100,17 @@ export default function MobilePlaceResultsScreen() {
   const title = params.title || 'Résultats';
   const query = useQuery<ApiResponse>({
     queryKey: ['mobile-practical-places', endpoint],
-    queryFn: () => requestJson<ApiResponse>(endpoint),
+    queryFn: async () => {
+      try {
+        const data = await requestJson<ApiResponse>(endpoint);
+        await cachePracticalPlaces(endpoint, data);
+        return data;
+      } catch (error) {
+        const cached = await readCachedPracticalPlaces(endpoint);
+        if (cached) return cached as ApiResponse;
+        throw error;
+      }
+    },
     retry: 1,
   });
   const places = useMemo(() => normalizePlaces(query.data || []), [query.data]);

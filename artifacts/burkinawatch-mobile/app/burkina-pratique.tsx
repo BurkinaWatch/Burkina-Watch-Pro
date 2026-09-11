@@ -1,12 +1,13 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Screen } from '@/components/Screen';
 import { SectionTitle } from '@/components/Brand';
 import { practicalCategories, practicalQuickLinks, type PracticalItem } from '@/lib/practicalNavigation';
 import { buildPracticalRoute, parsePracticalSearch, practicalFilterLabel } from '@/lib/practicalSearch';
+import { readPracticalSearches, savePracticalSearch } from '@/lib/storage';
 
 const normalize = (value: string) =>
   value
@@ -52,6 +53,7 @@ export default function BurkinaPratiqueScreen() {
   const colors = useColors();
   const router = useRouter();
   const [query, setQuery] = useState('');
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const normalizedQuery = normalize(query);
   const intent = useMemo(() => parsePracticalSearch(query), [query]);
   const results = useMemo(() => {
@@ -66,6 +68,14 @@ export default function BurkinaPratiqueScreen() {
       : undefined;
     return [...(intentCategory ? [intentCategory] : []), ...matches.filter((item) => item !== intentCategory)].slice(0, 5);
   }, [intent, normalizedQuery]);
+
+  useEffect(() => {
+    void readPracticalSearches().then(setRecentSearches);
+  }, []);
+
+  const rememberSearch = (value: string) => {
+    void savePracticalSearch(value).then(() => readPracticalSearches().then(setRecentSearches));
+  };
 
   const openRoute = (route: string) => {
     Keyboard.dismiss();
@@ -104,6 +114,7 @@ export default function BurkinaPratiqueScreen() {
   };
 
   const openIntent = () => {
+    rememberSearch(query);
     const route = buildPracticalRoute(intent);
     if (route) openRoute(route);
   };
@@ -135,6 +146,25 @@ export default function BurkinaPratiqueScreen() {
           value={query}
         />
       </View>
+      {!normalizedQuery && recentSearches.length ? (
+        <View style={styles.recentRow}>
+          <Text style={[styles.recentLabel, { color: colors.mutedForeground }]}>Recherches récentes</Text>
+          <View style={styles.recentPills}>
+            {recentSearches.map((recent) => (
+              <Pressable
+                key={recent}
+                onPress={() => {
+                  setQuery(recent);
+                  rememberSearch(recent);
+                }}
+                style={[styles.recentPill, { backgroundColor: colors.muted, borderColor: colors.border }]}
+              >
+                <Text style={[styles.recentText, { color: colors.foreground }]}>{recent}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       {normalizedQuery && intent.matched ? (
         <View style={[styles.intentCard, { backgroundColor: colors.card, borderColor: colors.border }]} testID="mobile-practical-intent-summary">
@@ -163,7 +193,7 @@ export default function BurkinaPratiqueScreen() {
 
       {normalizedQuery ? (
         <View style={styles.results}>
-          {results.length ? results.map((item) => <PracticalLink key={`${item.route}-${item.label}`} item={item} onPress={() => openRoute(item.route)} />) : (
+           {results.length ? results.map((item) => <PracticalLink key={`${item.route}-${item.label}`} item={item} onPress={() => { rememberSearch(query); openRoute(item.route); }} />) : (
             <Text style={[styles.noResult, { color: colors.mutedForeground }]}>Aucune catégorie correspondante. Essayez « pharmacie », « banque » ou « transport ».</Text>
           )}
         </View>
@@ -211,6 +241,11 @@ const styles = StyleSheet.create({
   heroBody: { fontFamily: 'Inter_400Regular', fontSize: 13, lineHeight: 19, marginTop: 9, maxWidth: 320, opacity: 0.88 },
   searchBox: { alignItems: 'center', borderRadius: 15, borderWidth: 1, flexDirection: 'row', gap: 10, minHeight: 56, paddingHorizontal: 15 },
   input: { flex: 1, fontFamily: 'Inter_400Regular', fontSize: 13, minHeight: 54 },
+  recentRow: { gap: 7 },
+  recentLabel: { fontFamily: 'Inter_600SemiBold', fontSize: 10, letterSpacing: 0.6, textTransform: 'uppercase' },
+  recentPills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  recentPill: { borderRadius: 99, borderWidth: 1, maxWidth: '100%', paddingHorizontal: 9, paddingVertical: 6 },
+  recentText: { fontFamily: 'Inter_500Medium', fontSize: 10 },
   results: { gap: 8, marginTop: -12 },
   intentCard: { borderRadius: 16, borderWidth: 1, gap: 10, padding: 14 },
   intentHeader: { gap: 4 },
