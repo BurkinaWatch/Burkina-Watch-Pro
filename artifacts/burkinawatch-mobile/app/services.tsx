@@ -5,6 +5,7 @@ import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native
 import { useColors } from '@/hooks/useColors';
 import { Screen } from '@/components/Screen';
 import { SectionTitle } from '@/components/Brand';
+import { categoryLabels, categoryRoutes } from '@/lib/practicalNavigation';
 
 const serviceGroups = [
   { title: 'Sécurité & mobilité', items: [['Urgences', '/urgences', 'phone-call'], ['Stations-service', '/stations', 'truck'], ['Gares routières', '/gares', 'navigation'], ['Suivi en direct', '/tracking-live', 'radio'], ['Surveillance', '/surveillance', 'video'], ['StreetView citoyen', '/streetview', 'camera'], ['Ouaga 3D', '/ouaga3d', 'box']] },
@@ -13,24 +14,6 @@ const serviceGroups = [
   { title: 'Culture & information', items: [['Cinéma', '/cine', 'film'], ['Événements', '/events', 'calendar'], ['Lieux de culte', '/lieux-de-culte', 'heart'], ['Météo', '/meteo', 'cloud'], ['Sonabel & ONEA', '/sonabel-onea', 'zap'], ['Téléphonie', '/telephonie', 'smartphone']] },
   { title: 'Compte & transparence', items: [['Fil d’actualité', '/feed', 'radio'], ['Notifications', '/notifications', 'bell'], ['Guide', '/guide', 'book-open'], ['À propos', '/a-propos', 'info'], ['Fiabilité', '/fiabilite', 'check-circle'], ['Conditions', '/conditions', 'file-text'], ['Confidentialité', '/confidentialite', 'lock'], ['Connexion', '/connexion', 'log-in']] },
 ] as const;
-
-const categoryRoutes: Record<string, string> = {
-  urgences: '/urgences',
-  pharmacies: '/pharmacies',
-  hopitaux: '/hopitaux',
-  stations: '/stations',
-  gares: '/gares',
-  marches: '/marches',
-};
-
-const categoryLabels: Record<string, string> = {
-  '/urgences': 'Urgences',
-  '/pharmacies': 'Pharmacies de garde',
-  '/hopitaux': 'Hôpitaux',
-  '/stations': 'Stations-service',
-  '/gares': 'Gares routières',
-  '/marches': 'Marchés',
-};
 
 type NativeRoute = '/feed' | '/(tabs)/alertes' | '/connexion' | '/tracking-live';
 
@@ -83,6 +66,23 @@ export default function ServicesScreen() {
 
   return (
     <Screen title="Tous les services" subtitle="L’écosystème BurkinaWatch sur mobile" showBack>
+      <Pressable
+        onPress={() => router.push('/burkina-pratique')}
+        style={({ pressed }) => [
+          styles.pratique,
+          { backgroundColor: colors.primary, borderColor: colors.primary, opacity: pressed ? 0.8 : 1 },
+        ]}
+        testID="service-link-burkina-pratique"
+      >
+        <View style={styles.pratiqueIcon}>
+          <Feather name="compass" size={21} color={colors.primary} />
+        </View>
+        <View style={styles.pratiqueCopy}>
+          <Text style={[styles.pratiqueTitle, { color: colors.primaryForeground }]}>Burkina Pratique</Text>
+          <Text style={[styles.pratiqueText, { color: colors.primaryForeground }]}>Chercher un service, un lieu ou une solution.</Text>
+        </View>
+        <Feather name="arrow-right" size={18} color={colors.primaryForeground} />
+      </Pressable>
       {selectedLabel ? (
         <View style={[styles.filter, { backgroundColor: colors.muted, borderColor: colors.primary }]}>
           <Feather name="filter" size={15} color={colors.primary} />
@@ -123,6 +123,11 @@ export default function ServicesScreen() {
 }
 
 const styles = StyleSheet.create({
+  pratique: { alignItems: 'center', borderRadius: 16, borderWidth: 1, flexDirection: 'row', gap: 11, padding: 14 },
+  pratiqueIcon: { alignItems: 'center', backgroundColor: '#f4c430', borderRadius: 12, height: 40, justifyContent: 'center', width: 40 },
+  pratiqueCopy: { flex: 1 },
+  pratiqueTitle: { fontFamily: 'Inter_700Bold', fontSize: 14 },
+  pratiqueText: { fontFamily: 'Inter_400Regular', fontSize: 11, lineHeight: 16, marginTop: 3 },
   filter: { alignItems: 'center', borderRadius: 11, borderWidth: 1, flexDirection: 'row', gap: 8, padding: 11 },
   filterText: { fontFamily: 'Inter_500Medium', fontSize: 12 },
   grid: { gap: 9 },

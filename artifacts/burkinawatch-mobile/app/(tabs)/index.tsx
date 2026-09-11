@@ -12,6 +12,7 @@ import heroImage from '@/assets/hero-citizens.png';
 const quickActions = [
   { label: 'Signaler', icon: 'plus-circle' as const, route: '/signaler', tone: 'danger' as const },
   { label: 'SOS', icon: 'phone-call' as const, route: '/sos', tone: 'danger' as const },
+  { label: 'Pratique', icon: 'compass' as const, route: '/burkina-pratique', tone: 'primary' as const },
   { label: 'Services', icon: 'grid' as const, route: '/services', tone: 'primary' as const },
   { label: 'Carte', icon: 'map-pin' as const, route: '/carte', tone: 'secondary' as const },
 ] as const;
