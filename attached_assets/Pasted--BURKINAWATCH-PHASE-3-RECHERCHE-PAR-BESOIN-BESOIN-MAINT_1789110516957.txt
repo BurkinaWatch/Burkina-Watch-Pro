@@ -1,0 +1,162 @@
+# BURKINAWATCH — PHASE 3
+
+# RECHERCHE PAR BESOIN + BESOIN MAINTENANT
+
+Enrichir BURKINA PRATIQUE sans modifier le fonctionnement existant des catégories.
+
+---
+
+# 1. RECHERCHE PAR INTENTION
+
+Permettre des requêtes naturelles :
+
+"pharmacie ouverte"
+
+"je veux retirer de l'argent"
+
+"où manger pour 3000"
+
+"ma voiture est en panne"
+
+"je cherche un plombier"
+
+"mon téléphone est cassé"
+
+"où acheter du ciment"
+
+"station essence"
+
+"je cherche une banque"
+
+Transformer :
+
+REQUÊTE
+
+↓
+
+INTENTION
+
+↓
+
+CATÉGORIES EXISTANTES
+
+↓
+
+FILTRES
+
+↓
+
+RÉSULTATS EXISTANTS
+
+Ne crée aucune seconde base de lieux.
+
+Commencer avec une logique robuste locale :
+
+mots-clés + synonymes + catégories + filtres.
+
+Prévoir une architecture extensible pour Mooré, Dioula et Fulfuldé.
+
+---
+
+# 2. BESOIN MAINTENANT
+
+Implémenter :
+
+💊 Pharmacie
+
+🏥 Urgence
+
+💰 Argent
+
+⛽ Station
+
+🚗 Dépannage
+
+🍽️ Manger
+
+🚕 Transport
+
+🔧 Réparation
+
+Priorité :
+
+1. disponible maintenant et récemment confirmé ;
+2. ouvert maintenant ;
+3. information récente ;
+4. information ancienne ;
+5. fermé.
+
+Ne jamais transformer une donnée inconnue en donnée positive.
+
+---
+
+# 3. FILTRES CONTEXTUELS
+
+PHARMACIE :
+
+* ouverte maintenant ;
+* de garde ;
+* vérifiée récemment ;
+* proximité.
+
+RESTAURANT :
+
+* ouvert ;
+* budget ;
+* à emporter ;
+* proximité.
+
+MOBILE MONEY :
+
+* retrait ;
+* dépôt ;
+* disponibilité confirmée ;
+* ouvert.
+
+RÉPARATION :
+
+* disponible maintenant ;
+* appel ;
+* WhatsApp ;
+* proximité.
+
+Ne pas afficher tous les filtres partout.
+
+---
+
+# 4. CATÉGORIES CONSERVÉES
+
+La recherche doit toujours pouvoir retomber sur les catégories existantes.
+
+Un utilisateur qui cherche simplement :
+
+"restaurants"
+
+doit retrouver l'expérience actuelle des restaurants.
+
+Un utilisateur qui cherche :
+
+"où manger pour 3000"
+
+doit obtenir l'expérience enrichie.
+
+---
+
+# 5. TESTS
+
+Tester plusieurs formulations.
+
+Tester :
+
+* recherche simple ;
+* recherche par besoin ;
+* recherche avec budget ;
+* recherche avec urgence ;
+* recherche avec proximité ;
+* recherche inconnue.
+
+Ne pas inventer de résultat.
+
+À la fin :
+
+rapport + build + fichiers modifiés + risques.
