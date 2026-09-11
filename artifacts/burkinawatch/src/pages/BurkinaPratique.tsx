@@ -60,23 +60,31 @@ const quickAccess: Category[] = [
   },
   {
     href: "/banques",
-    label: "Banques",
-    description: "Agences et services bancaires",
+    label: "Retrait d'argent",
+    description: "Agences, banques et guichets",
     icon: Banknote,
     tone: "bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300",
     keywords: ["banque", "banques", "agence", "atm", "guichet", "bicec", "coris"],
   },
   {
     href: "/stations",
-    label: "Stations",
+    label: "Station-service",
     description: "Carburant et stations-service",
     icon: Fuel,
     tone: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
     keywords: ["station", "stations", "essence", "carburant", "gaz", "fuel"],
   },
   {
+    href: "/stations",
+    label: "Dépannage",
+    description: "Commencer par les services de mobilité",
+    icon: Fuel,
+    tone: "bg-orange-100 text-orange-800 dark:bg-orange-950/50 dark:text-orange-300",
+    keywords: ["dépannage", "depannage", "panne", "voiture", "mécanique", "mecanique"],
+  },
+  {
     href: "/restaurants",
-    label: "Restaurants",
+    label: "Manger",
     description: "Maquis, restaurants, bars et cafés",
     icon: Utensils,
     tone: "bg-orange-100 text-orange-800 dark:bg-orange-950/50 dark:text-orange-300",
@@ -84,7 +92,7 @@ const quickAccess: Category[] = [
   },
   {
     href: "/gares",
-    label: "Gares",
+    label: "Transport",
     description: "Gares routières et départs",
     icon: Bus,
     tone: "bg-violet-100 text-violet-800 dark:bg-violet-950/50 dark:text-violet-300",
@@ -92,19 +100,11 @@ const quickAccess: Category[] = [
   },
   {
     href: "/telephonie",
-    label: "Téléphonie",
-    description: "Opérateurs, agences et services mobiles",
+    label: "Réparation",
+    description: "Téléphones, agences et services mobiles",
     icon: Smartphone,
     tone: "bg-cyan-100 text-cyan-800 dark:bg-cyan-950/50 dark:text-cyan-300",
-    keywords: ["téléphonie", "telephonie", "téléphone", "telephone", "orange", "moov", "telecel", "sim"],
-  },
-  {
-    href: "/boutiques",
-    label: "Boutiques",
-    description: "Commerces et adresses de proximité",
-    icon: ShoppingBag,
-    tone: "bg-pink-100 text-pink-800 dark:bg-pink-950/50 dark:text-pink-300",
-    keywords: ["boutique", "boutiques", "commerce", "magasin", "shopping"],
+    keywords: ["réparation", "reparation", "téléphonie", "telephonie", "téléphone", "telephone", "mobile"],
   },
 ];
 
@@ -278,7 +278,7 @@ export default function BurkinaPratique() {
                       {searchResults.length > 0 ? (
                         searchResults.map((category) => (
                           <Link
-                            key={category.href}
+                            key={`${category.href}-${category.label}`}
                             href={category.href}
                             className="flex items-center gap-3 rounded-xl p-3 text-left transition-colors hover:bg-muted"
                             data-testid={`link-search-result-${category.href.slice(1)}`}
@@ -344,7 +344,7 @@ export default function BurkinaPratique() {
           <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4 md:gap-4">
             {quickAccess.map((category) => (
               <Link
-                key={category.href}
+                key={`${category.href}-${category.label}`}
                 href={category.href}
                 className="group flex min-h-[148px] flex-col justify-between rounded-2xl border border-border/70 bg-card p-4 shadow-sm transition-transform duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-5"
                 data-testid={`link-quick-${category.href.slice(1)}`}
@@ -392,7 +392,7 @@ export default function BurkinaPratique() {
           <div className="mt-7 divide-y divide-border/70 rounded-2xl border border-border/70 bg-card">
             {allCategories.map((category) => (
               <Link
-                key={category.href}
+              key={`${category.href}-${category.label}`}
                 href={category.href}
                 className="group flex items-center gap-3 p-4 transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:gap-4 sm:p-5"
                 data-testid={`link-category-${category.href.slice(1)}`}
