@@ -39,9 +39,9 @@ export const practicalQuickLinks: PracticalItem[] = [
   },
   {
     label: 'Dépannage',
-    route: '/stations',
+    route: '/boutiques',
     icon: 'tool',
-    description: 'Commencer par les services mobilité',
+    description: 'Artisans, commerces et services de proximité',
     keywords: ['dépannage', 'panne', 'voiture', 'mécanique'],
   },
   {

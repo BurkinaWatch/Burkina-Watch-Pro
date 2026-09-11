@@ -29,6 +29,11 @@ import {
   Utensils,
   Zap,
 } from "lucide-react";
+import {
+  buildPracticalRoute,
+  parsePracticalSearch,
+  practicalFilterLabel,
+} from "@/lib/practicalSearch";
 
 type Icon = ComponentType<{ className?: string }>;
 
@@ -75,9 +80,9 @@ const quickAccess: Category[] = [
     keywords: ["station", "stations", "essence", "carburant", "gaz", "fuel"],
   },
   {
-    href: "/stations",
+    href: "/boutiques",
     label: "Dépannage",
-    description: "Commencer par les services de mobilité",
+    description: "Artisans, commerces et services de proximité",
     icon: Fuel,
     tone: "bg-orange-100 text-orange-800 dark:bg-orange-950/50 dark:text-orange-300",
     keywords: ["dépannage", "depannage", "panne", "voiture", "mécanique", "mecanique"],
@@ -133,6 +138,14 @@ const allCategories: Category[] = [
     icon: Store,
     tone: "bg-orange-100 text-orange-800 dark:bg-orange-950/50 dark:text-orange-300",
     keywords: ["boutiques marchés", "boutique marche", "commerce marché"],
+  },
+  {
+    href: "/boutiques",
+    label: "Commerces & artisans",
+    description: "Acheter, réparer et trouver un service de proximité",
+    icon: ShoppingBag,
+    tone: "bg-pink-100 text-pink-800 dark:bg-pink-950/50 dark:text-pink-300",
+    keywords: ["boutique", "commerce", "magasin", "ciment", "matériaux", "plombier", "artisan"],
   },
   {
     href: "/hotels",
@@ -220,21 +233,24 @@ export default function BurkinaPratique() {
   const [, navigate] = useLocation();
   const [query, setQuery] = useState("");
   const normalizedQuery = normalize(query);
+  const intent = useMemo(() => parsePracticalSearch(query), [query]);
 
   const searchResults = useMemo(() => {
     if (!normalizedQuery) return [];
-    return allCategories
+    const matches = allCategories
       .filter((category) => {
         const haystack = normalize(`${category.label} ${category.description} ${category.keywords.join(" ")}`);
         return haystack.includes(normalizedQuery) || normalizedQuery.split(/\s+/).some((word) => haystack.includes(word));
       })
-      .slice(0, 5);
-  }, [normalizedQuery]);
+      .filter((category) => category.href !== intent.href || category.label === intent.label);
+    const intentCategory = intent.matched ? allCategories.find((category) => category.href === intent.href && (category.label === intent.label || intent.key === "commerces")) : undefined;
+    return [...(intentCategory ? [intentCategory] : []), ...matches.filter((category) => category !== intentCategory)].slice(0, 5);
+  }, [intent, normalizedQuery]);
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const firstMatch = searchResults[0];
-    if (firstMatch) navigate(firstMatch.href);
+    const route = intent.matched ? buildPracticalRoute(intent) : searchResults[0]?.href;
+    if (route) navigate(route);
   };
 
   return (
@@ -279,7 +295,7 @@ export default function BurkinaPratique() {
                         searchResults.map((category) => (
                           <Link
                             key={`${category.href}-${category.label}`}
-                            href={category.href}
+                            href={category.href === intent.href && intent.matched ? buildPracticalRoute(intent) : category.href}
                             className="flex items-center gap-3 rounded-xl p-3 text-left transition-colors hover:bg-muted"
                             data-testid={`link-search-result-${category.href.slice(1)}`}
                           >
@@ -300,6 +316,30 @@ export default function BurkinaPratique() {
                 <p className="mt-3 text-xs text-emerald-950/60 dark:text-emerald-50/60">
                   Recherchez par mot-clé, nom de service ou besoin.
                 </p>
+                {normalizedQuery && intent.matched ? (
+                  <div className="mt-4 rounded-2xl border border-emerald-900/10 bg-background/80 p-4 shadow-sm" data-testid="practical-intent-summary">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Intention comprise</span>
+                      <Badge variant="secondary">{intent.label}</Badge>
+                    </div>
+                    {intent.filters.length ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {intent.filters.map((filter) => (
+                          <Badge key={filter} variant="outline" className="font-normal">
+                            {practicalFilterLabel(filter, intent.budget)}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : null}
+                    <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                      Les résultats restent ceux de la catégorie existante. Une information d’ouverture, de récence ou de disponibilité inconnue sera affichée comme inconnue et non comme positive.
+                    </p>
+                  </div>
+                ) : normalizedQuery ? (
+                  <div className="mt-4 rounded-2xl border border-amber-300/60 bg-amber-50/70 p-4 text-xs leading-5 text-amber-950 dark:bg-amber-950/30 dark:text-amber-100" data-testid="practical-unknown-search">
+                    Je n’ai pas identifié de catégorie existante pour cette demande. Aucun résultat n’est inventé ; essayez une catégorie ou un lieu connu.
+                  </div>
+                ) : null}
               </div>
 
               <div className="pratique-reveal pratique-reveal-delay-2 relative hidden min-h-[300px] lg:block" aria-hidden="true">
