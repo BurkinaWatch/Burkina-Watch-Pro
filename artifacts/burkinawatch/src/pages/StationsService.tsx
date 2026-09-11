@@ -14,6 +14,7 @@ import { VoiceSearchInput } from "@/components/VoiceSearchInput";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { LocationValidator } from "@/components/LocationValidator";
+import { getLocationErrorMessage, requestUserLocation } from "@/lib/geolocation";
 
 interface StationService {
   id: string;
@@ -240,25 +241,23 @@ export default function StationsService() {
       return;
     }
     setIsLocating(true);
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const loc = { lat: position.coords.latitude, lng: position.coords.longitude };
-          setUserLocation(loc);
-          setShowNearestOnly(true);
-          setIsLocating(false);
-          toast({ title: "Position trouvee", description: "Affichage des stations les plus proches" });
-        },
-        () => {
-          setIsLocating(false);
-          toast({ title: "Erreur de localisation", description: "Impossible d'obtenir votre position", variant: "destructive" });
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-      );
-    } else {
-      setIsLocating(false);
-      toast({ title: "Non supporte", description: "Geolocalisation non supportee", variant: "destructive" });
-    }
+    void requestUserLocation()
+      .then((loc) => {
+        setUserLocation(loc);
+        setShowNearestOnly(true);
+        toast({
+          title: "Position trouvée",
+          description: "Affichage des stations les plus proches",
+        });
+      })
+      .catch((error) => {
+        toast({
+          title: "Erreur de localisation",
+          description: getLocationErrorMessage(error),
+          variant: "destructive",
+        });
+      })
+      .finally(() => setIsLocating(false));
   }, [showNearestOnly, userLocation, toast]);
 
   const filteredStations = useMemo(() => {

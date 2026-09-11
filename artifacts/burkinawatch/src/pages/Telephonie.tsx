@@ -18,6 +18,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 import { REGION_NAMES } from "@/lib/regions";
+import { getLocationErrorMessage, requestUserLocation } from "@/lib/geolocation";
 
 interface Agence {
   id: string;
@@ -139,25 +140,23 @@ export default function Telephonie() {
       return;
     }
     setIsLocating(true);
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const loc = { lat: position.coords.latitude, lng: position.coords.longitude };
-          setUserLocation(loc);
-          setShowNearestOnly(true);
-          setIsLocating(false);
-          toast({ title: "Position trouvee", description: "Affichage des agences les plus proches" });
-        },
-        () => {
-          setIsLocating(false);
-          toast({ title: "Erreur de localisation", description: "Impossible d'obtenir votre position", variant: "destructive" });
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-      );
-    } else {
-      setIsLocating(false);
-      toast({ title: "Non supporte", description: "Geolocalisation non supportee", variant: "destructive" });
-    }
+    void requestUserLocation()
+      .then((loc) => {
+        setUserLocation(loc);
+        setShowNearestOnly(true);
+        toast({
+          title: "Position trouvée",
+          description: "Affichage des agences les plus proches",
+        });
+      })
+      .catch((error) => {
+        toast({
+          title: "Erreur de localisation",
+          description: getLocationErrorMessage(error),
+          variant: "destructive",
+        });
+      })
+      .finally(() => setIsLocating(false));
   }, [showNearestOnly, userLocation, toast]);
 
   const { data: apiData, isLoading, refetch } = useQuery<ApiResponse>({
