@@ -382,3 +382,110 @@ export async function sendEmergencyTrackingStartEmail(
   console.log(`✅ Emergency tracking email sent to ${toEmail}`);
   return result;
 }
+
+export async function sendEmergencyTrackingSignalLostEmail(
+  toEmail: string,
+  contactName: string,
+  userName: string,
+  liveTrackingUrl: string,
+  lastLocation?: {
+    latitude: string;
+    longitude: string;
+    timestamp: Date;
+  },
+): Promise<any> {
+  const locationInfo = lastLocation
+    ? `
+      <div style="background: #fff7ed; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ea580c;">
+        <h3 style="margin-top: 0; color: #c2410c;">Dernière position connue</h3>
+        <p><strong>Reçue le :</strong> ${new Date(lastLocation.timestamp).toLocaleString("fr-FR", {
+          timeZone: "Africa/Ouagadougou",
+          dateStyle: "full",
+          timeStyle: "medium",
+        })}</p>
+        <p><strong>Coordonnées GPS :</strong> ${lastLocation.latitude}, ${lastLocation.longitude}</p>
+        <a href="https://www.google.com/maps?q=${lastLocation.latitude},${lastLocation.longitude}"
+           style="display: inline-block; background: #ea580c; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin-top: 10px;">
+          Voir la dernière position
+        </a>
+      </div>
+    `
+    : `
+      <div style="background: #fff7ed; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ea580c;">
+        Aucune position n'a encore été reçue pour cette session.
+      </div>
+    `;
+
+  const subject = `ALERTE: signal de ${userName} perdu pendant le suivi`;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: 'Inter', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+        .urgent-badge { background: #fff7ed; border: 2px solid #ea580c; color: #c2410c; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; }
+        .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
+        .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ea580c; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #6b7280; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>ALERTE DE SÉCURITÉ</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Burkina Watch - Signal de suivi perdu</p>
+        </div>
+        <div class="urgent-badge">
+          Aucune nouvelle position de ${userName} depuis plus de 5 minutes
+        </div>
+        <div class="content">
+          <p>Bonjour <strong>${contactName}</strong>,</p>
+          <div class="info-box">
+            <p>Vous êtes un <strong>contact d'urgence</strong> de <strong>${userName}</strong>.</p>
+            <p>Le suivi de sécurité est toujours actif, mais son signal est actuellement perdu. Cela ne signifie pas que la personne est en sécurité : vérifiez la dernière position connue et contactez-la si nécessaire.</p>
+          </div>
+          ${locationInfo}
+          <p style="text-align: center;">
+            <a href="${liveTrackingUrl}"
+               style="display: inline-block; background: #dc2626; color: white; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+              Ouvrir le suivi en direct
+            </a>
+          </p>
+          <div class="footer">
+            <p>Le suivi reste actif jusqu'à son arrêt manuel.</p>
+            <p>© ${new Date().getFullYear()} Burkina Watch</p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  if (process.env.RESEND_API_KEY) {
+    const result = await sendViaResend(toEmail, subject, html);
+    if (result.success) return result;
+  }
+
+  const config = getEmailConfig();
+  if (!config) {
+    throw new Error("Service email non configuré");
+  }
+
+  const transport = createTransporter();
+  if (!transport) {
+    throw new Error("Transport SMTP non disponible");
+  }
+
+  const result = await transport.sendMail({
+    from: `"${config.fromName}" <${config.fromEmail}>`,
+    to: toEmail,
+    subject,
+    html,
+  });
+
+  console.log(`✅ Emergency tracking signal-lost email sent to ${toEmail}`);
+  return result;
+}

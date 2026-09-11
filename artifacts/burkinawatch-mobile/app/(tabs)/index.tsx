@@ -47,7 +47,7 @@ export default function HomeScreen() {
         <View style={[styles.heroAccent, { backgroundColor: colors.secondary }]} />
         <View style={styles.heroCopy}>
           <Text style={[styles.kicker, { color: colors.primaryForeground }]}>LA VIGILANCE CITOYENNE</Text>
-          <Text style={[styles.heroTitle, { color: colors.primaryForeground }]}>Votre Burkina,{'\n'}notre regard.</Text>
+          <Text style={[styles.heroTitle, { color: colors.primaryForeground }]}>Notre Burkina,{'\n'}secure.</Text>
           <View style={styles.slogan} accessibilityLabel="Voir. Agir. Protéger.">
             <Text style={[styles.sloganWord, { color: colors.destructive }]}>Voir.</Text>
             <Text style={[styles.sloganWord, { color: colors.secondary }]}>Agir.</Text>

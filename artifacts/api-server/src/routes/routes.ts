@@ -58,6 +58,10 @@ import { getCpuPreparationArtifactKeys } from "../streetviewArtifacts";
 import { OverpassService } from "../overpassService";
 import { reverseGeocode } from "../geocoding";
 import { sendLocationEmail, sendEmergencyTrackingStartEmail } from "../emailService";
+import {
+  startTrackingSignalMonitor,
+  toTrackingSessionView,
+} from "../trackingSignalMonitor";
 import { verifySignalement } from "../aiVerification";
 import { moderateContent, logModerationAction } from "../contentModeration";
 import {
@@ -724,6 +728,7 @@ function mapOsmBrandToMarque(brand: string): string {
 // ============================================
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
+  startTrackingSignalMonitor();
   const videoGatewayConfig = readVideoGatewayConfig();
   const videoGateway = createVideoGateway(videoGatewayConfig);
   app.get("/api/auth/csrf", issueCsrfToken);
@@ -2051,7 +2056,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Aucune session de tracking active" });
       }
 
-      res.json(session);
+      const lastPoint = await storage.getLatestLocationPointBySession(session.id);
+      res.json(toTrackingSessionView(session, lastPoint));
     } catch (error) {
       console.error("Error fetching active tracking session:", error);
       res.status(500).json({ error: "Erreur lors de la récupération de la session" });
@@ -2124,8 +2130,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
 
+          const lastPoint = points[points.length - 1];
           return {
             ...session,
+            ...toTrackingSessionView(session, lastPoint),
             trajectoryUrl,
             pointCount: points.length
           };
@@ -2339,6 +2347,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Recuperer les points de localisation (limites aux 50 derniers pour la confidentialite)
       const allLocations = await storage.getSessionLocationPoints(session.id);
       const locations = allLocations.slice(-50);
+      const lastPoint = allLocations[allLocations.length - 1];
+      const sessionView = toTrackingSessionView(session, lastPoint);
 
       // Recuperer les infos de l'utilisateur - ANONYMISE (prenom uniquement)
       const user = await storage.getUser(session.userId);
@@ -2346,6 +2356,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         isActive: session.isActive,
+        signalStatus: sessionView.signalStatus,
+        lastLocationAt: sessionView.lastLocationAt,
+        lastLocation: sessionView.lastLocation,
         isPanicMode: session.isPanicMode,
         startTime: session.startTime,
         endTime: session.endTime,
