@@ -1,0 +1,258 @@
+# BURKINAWATCH — PHASE 1
+
+# AUDIT STRATÉGIQUE ET PLAN D'INTÉGRATION DE BURKINA PRATIQUE
+
+## IMPORTANT
+
+Cette mission est STRICTEMENT EN LECTURE SEULE.
+
+NE MODIFIE AUCUN FICHIER.
+
+BURKINAWATCH est une application existante comportant déjà des fonctionnalités opérationnelles.
+
+Nous voulons enrichir sa fonctionnalité actuelle de lieux/catégories avec une nouvelle couche appelée :
+
+# BURKINA PRATIQUE
+
+L'objectif n'est PAS de remplacer l'existant.
+
+L'objectif est :
+
+EXISTANT + NOUVELLE COUCHE INTELLIGENTE
+
+---
+
+# 1. RÈGLE ABSOLUE
+
+Le principe de cette évolution est :
+
+EXTEND > REPLACE
+
+REUSE > DUPLICATE
+
+ADD > REFACTOR
+
+La fonctionnalité actuelle doit être conservée.
+
+Cela inclut notamment, lorsqu'elles existent :
+
+* catégories ;
+* listes de lieux ;
+* fiches ;
+* carte ;
+* recherche ;
+* filtres ;
+* géolocalisation ;
+* itinéraire ;
+* téléphone ;
+* WhatsApp ;
+* partage ;
+* données existantes.
+
+Aucune fonctionnalité existante ne doit être supprimée.
+
+Aucune catégorie existante ne doit disparaître.
+
+Aucun lieu existant ne doit être supprimé.
+
+Aucune donnée existante ne doit être remplacée par des données fictives.
+
+---
+
+# 2. EXPLORE LE REPOSITORY
+
+Identifier précisément :
+
+### Architecture
+
+* Web ;
+* backend ;
+* Mobile/Expo ;
+* base de données ;
+* API ;
+* services.
+
+### Lieux
+
+* modèles ;
+* tables ;
+* types ;
+* catégories ;
+* fiches ;
+* recherche ;
+* filtres ;
+* carte.
+
+### Systèmes réutilisables
+
+* géolocalisation ;
+* cartographie ;
+* authentification ;
+* contribution ;
+* signalement ;
+* médias ;
+* notifications ;
+* offline/cache.
+
+### StreetView
+
+Déterminer son état actuel.
+
+NE RIEN MODIFIER.
+
+### Administration
+
+Identifier les outils existants.
+
+---
+
+# 3. BURKINA PRATIQUE À PRÉPARER
+
+La nouvelle expérience devra permettre deux usages.
+
+## EXPLORER
+
+L'utilisateur continue à parcourir les catégories existantes :
+
+Restaurants
+
+Pharmacies
+
+Hôpitaux
+
+Marchés
+
+Banques
+
+Stations-service
+
+etc.
+
+## RÉSOUDRE
+
+L'utilisateur peut rechercher un besoin :
+
+"pharmacie ouverte"
+
+"je veux retirer de l'argent"
+
+"où manger pour 3000 F"
+
+"ma voiture est en panne"
+
+"je cherche un plombier"
+
+"je veux réparer mon téléphone"
+
+---
+
+# 4. FONCTIONNALITÉS CIBLES
+
+Préparer une architecture permettant :
+
+### Recherche
+
+* recherche par lieu ;
+* recherche par catégorie ;
+* recherche par intention/besoin.
+
+### Besoin maintenant
+
+* pharmacie ;
+* urgence ;
+* argent ;
+* station-service ;
+* dépannage ;
+* manger ;
+* transport ;
+* réparation.
+
+### Autour de moi
+
+* santé ;
+* argent ;
+* restauration ;
+* commerces ;
+* réparation ;
+* transport ;
+* administration ;
+* télécoms ;
+* services essentiels.
+
+### Services
+
+* santé ;
+* Mobile Money ;
+* banques/ATM ;
+* restaurants/maquis ;
+* marchés/commerces ;
+* réparateurs ;
+* dépannage ;
+* administration ;
+* télécoms.
+
+### Intelligence locale
+
+* ouvert maintenant ;
+* disponibilité ;
+* dernière vérification ;
+* confirmation citoyenne ;
+* information ancienne ;
+* information contestée ;
+* signalement ;
+* état des accès ;
+* médias citoyens.
+
+### Actions
+
+* appeler ;
+* WhatsApp ;
+* itinéraire ;
+* partager ;
+* confirmer ;
+* signaler ;
+* contribuer.
+
+---
+
+# 5. DONNÉES
+
+Identifier ce qui existe déjà et ce qui manque.
+
+NE CRÉE PAS encore les nouvelles structures.
+
+Pour chaque donnée manquante, indiquer :
+
+* où elle devrait être stockée ;
+* si elle peut être ajoutée au modèle existant ;
+* si une nouvelle table est réellement nécessaire ;
+* risque de migration.
+
+Aucune migration dans cette phase.
+
+---
+
+# 6. RAPPORT FINAL
+
+Fournis :
+
+1. architecture actuelle ;
+2. fonctionnalités réutilisables ;
+3. données existantes ;
+4. composants réutilisables ;
+5. fichiers concernés ;
+6. fichiers à créer ;
+7. fichiers à modifier ;
+8. risques ;
+9. architecture additive proposée ;
+10. ordre d'implémentation recommandé.
+
+Termine par :
+
+GO
+
+ou
+
+NO-GO
+
+Ne modifie rien.
