@@ -6,6 +6,7 @@ import { useColors } from '@/hooks/useColors';
 import { Screen } from '@/components/Screen';
 import { SectionTitle } from '@/components/Brand';
 import { practicalCategories, practicalQuickLinks, type PracticalItem } from '@/lib/practicalNavigation';
+import { buildPracticalRoute, parsePracticalSearch, practicalFilterLabel } from '@/lib/practicalSearch';
 
 const normalize = (value: string) =>
   value
@@ -52,16 +53,25 @@ export default function BurkinaPratiqueScreen() {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const normalizedQuery = normalize(query);
+  const intent = useMemo(() => parsePracticalSearch(query), [query]);
   const results = useMemo(() => {
     if (!normalizedQuery) return [];
-    return practicalCategories
-      .filter((item) => normalize(`${item.label} ${item.description} ${item.keywords.join(' ')}`).includes(normalizedQuery))
-      .slice(0, 5);
-  }, [normalizedQuery]);
+    const matches = practicalCategories
+      .filter((item) => normalize(`${item.label} ${item.description} ${item.keywords.join(' ')}`).includes(normalizedQuery));
+    const intentCategory = intent.matched
+      ? practicalCategories.find((item) => item.route === intent.href && (item.label === intent.label || intent.key === 'commerces'))
+      : undefined;
+    return [...(intentCategory ? [intentCategory] : []), ...matches.filter((item) => item !== intentCategory)].slice(0, 5);
+  }, [intent, normalizedQuery]);
 
   const openRoute = (route: string) => {
     Keyboard.dismiss();
     router.push(route as never);
+  };
+
+  const openIntent = () => {
+    const route = buildPracticalRoute(intent);
+    if (route) openRoute(route);
   };
 
   return (
@@ -82,7 +92,7 @@ export default function BurkinaPratiqueScreen() {
           autoCapitalize="none"
           autoCorrect={false}
           onChangeText={setQuery}
-          onSubmitEditing={() => results[0] && openRoute(results[0].route)}
+          onSubmitEditing={() => (intent.matched ? openIntent() : results[0] && openRoute(results[0].route))}
           placeholder="Je cherche un service, un lieu ou une solution..."
           placeholderTextColor={colors.mutedForeground}
           returnKeyType="search"
@@ -91,6 +101,31 @@ export default function BurkinaPratiqueScreen() {
           value={query}
         />
       </View>
+
+      {normalizedQuery && intent.matched ? (
+        <View style={[styles.intentCard, { backgroundColor: colors.card, borderColor: colors.border }]} testID="mobile-practical-intent-summary">
+          <View style={styles.intentHeader}>
+            <Text style={[styles.intentEyebrow, { color: colors.primary }]}>INTENTION COMPRISE</Text>
+            <Text style={[styles.intentTitle, { color: colors.foreground }]}>{intent.label}</Text>
+          </View>
+          {intent.filters.length ? (
+            <View style={styles.filterRow}>
+              {intent.filters.map((filter) => (
+                <View key={filter} style={[styles.filterPill, { backgroundColor: colors.muted }]}>
+                  <Text style={[styles.filterText, { color: colors.foreground }]}>{practicalFilterLabel(filter, intent.budget)}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+          <Text style={[styles.intentNote, { color: colors.mutedForeground }]}>
+            Les résultats restent ceux de la catégorie existante. Une ouverture ou disponibilité inconnue reste inconnue.
+          </Text>
+          <Pressable onPress={openIntent} style={[styles.intentButton, { backgroundColor: colors.primary }]} testID="button-mobile-practical-intent">
+            <Text style={[styles.intentButtonText, { color: colors.primaryForeground }]}>Voir les résultats existants</Text>
+            <Feather name="arrow-right" size={16} color={colors.primaryForeground} />
+          </Pressable>
+        </View>
+      ) : null}
 
       {normalizedQuery ? (
         <View style={styles.results}>
@@ -143,6 +178,16 @@ const styles = StyleSheet.create({
   searchBox: { alignItems: 'center', borderRadius: 15, borderWidth: 1, flexDirection: 'row', gap: 10, minHeight: 56, paddingHorizontal: 15 },
   input: { flex: 1, fontFamily: 'Inter_400Regular', fontSize: 13, minHeight: 54 },
   results: { gap: 8, marginTop: -12 },
+  intentCard: { borderRadius: 16, borderWidth: 1, gap: 10, padding: 14 },
+  intentHeader: { gap: 4 },
+  intentEyebrow: { fontFamily: 'Inter_700Bold', fontSize: 10, letterSpacing: 1.1 },
+  intentTitle: { fontFamily: 'Inter_700Bold', fontSize: 16 },
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  filterPill: { borderRadius: 99, paddingHorizontal: 9, paddingVertical: 6 },
+  filterText: { fontFamily: 'Inter_500Medium', fontSize: 10 },
+  intentNote: { fontFamily: 'Inter_400Regular', fontSize: 11, lineHeight: 17 },
+  intentButton: { alignItems: 'center', borderRadius: 11, flexDirection: 'row', gap: 7, justifyContent: 'center', paddingVertical: 11 },
+  intentButtonText: { fontFamily: 'Inter_600SemiBold', fontSize: 12 },
   noResult: { fontFamily: 'Inter_400Regular', fontSize: 12, lineHeight: 18, paddingHorizontal: 4 },
   quickGrid: { gap: 9 },
   quickLink: { alignItems: 'center', borderRadius: 15, borderWidth: 1, flexDirection: 'row', gap: 11, minHeight: 68, padding: 12 },

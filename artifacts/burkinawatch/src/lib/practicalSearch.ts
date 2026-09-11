@@ -24,11 +24,11 @@ const intentRules: IntentRule[] = [
   { key: 'retrait', href: '/banques', label: "Retrait d'argent", terms: ['argent', 'retirer', 'retrait', 'banque', 'atm', 'guichet', 'gab', 'cash'] },
   { key: 'stations', href: '/stations', label: 'Station-service', terms: ['station', 'essence', 'carburant', 'fuel', 'gasoil', 'diesel'] },
   { key: 'depannage', href: '/boutiques', label: 'Dépannage', terms: ['dépannage', 'depannage', 'panne', 'voiture', 'mécanique', 'mecanique', 'plombier'] },
-  { key: 'manger', href: '/restaurants', label: 'Manger', terms: ['manger', 'restaurant', 'maquis', 'café', 'cafe', 'cantine', 'repas', 'déjeuner', 'dejeuner'] },
+  { key: 'restaurants', href: '/restaurants', label: 'Restaurants', terms: ['restaurants', 'restaurant', 'resto'] },
+  { key: 'manger', href: '/restaurants', label: 'Manger', terms: ['manger', 'maquis', 'café', 'cafe', 'cantine', 'repas', 'déjeuner', 'dejeuner'] },
   { key: 'transport', href: '/gares', label: 'Transport', terms: ['transport', 'gare', 'bus', 'taxi', 'voyage', 'départ', 'depart'] },
   { key: 'reparation', href: '/telephonie', label: 'Réparation', terms: ['réparation', 'reparation', 'téléphone', 'telephone', 'mobile', 'cassé', 'casse'] },
   { key: 'commerces', href: '/boutiques', label: 'Commerces & artisans', terms: ['acheter', 'ciment', 'matériaux', 'materiaux', 'boutique', 'magasin', 'plombier', 'artisan'] },
-  { key: 'restaurants', href: '/restaurants', label: 'Restaurants', terms: ['restaurants', 'resto'] },
 ];
 
 export const normalizePracticalSearch = (value: string) =>

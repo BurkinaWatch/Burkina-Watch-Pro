@@ -98,6 +98,13 @@ export const practicalCategories: PracticalItem[] = [
     keywords: ['boutique', 'magasin', 'commerce'],
   },
   {
+    label: 'Commerces & artisans',
+    route: '/boutiques',
+    icon: 'tool',
+    description: 'Acheter, réparer et trouver un service de proximité',
+    keywords: ['commerce', 'magasin', 'ciment', 'matériaux', 'plombier', 'artisan'],
+  },
+  {
     label: 'Boutiques & marchés',
     route: '/boutiques-marches',
     icon: 'grid',

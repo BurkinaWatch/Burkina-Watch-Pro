@@ -241,8 +241,7 @@ export default function BurkinaPratique() {
       .filter((category) => {
         const haystack = normalize(`${category.label} ${category.description} ${category.keywords.join(" ")}`);
         return haystack.includes(normalizedQuery) || normalizedQuery.split(/\s+/).some((word) => haystack.includes(word));
-      })
-      .filter((category) => category.href !== intent.href || category.label === intent.label);
+      });
     const intentCategory = intent.matched ? allCategories.find((category) => category.href === intent.href && (category.label === intent.label || intent.key === "commerces")) : undefined;
     return [...(intentCategory ? [intentCategory] : []), ...matches.filter((category) => category !== intentCategory)].slice(0, 5);
   }, [intent, normalizedQuery]);
