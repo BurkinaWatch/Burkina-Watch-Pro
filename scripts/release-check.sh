@@ -32,7 +32,7 @@ run_isolated_mobile_build() {
   output_dir="$(mktemp -d "${TMPDIR:-/tmp}/burkinawatch-mobile-release.XXXXXX")"
 
   echo "Using isolated mobile build output: $output_dir"
-  if env STATIC_BUILD_DIR="$output_dir" pnpm run build; then
+  if env STATIC_BUILD_DIR="$output_dir" pnpm run build:artifacts; then
     status=0
   else
     status=$?
@@ -42,7 +42,7 @@ run_isolated_mobile_build() {
   return "$status"
 }
 
-run_gate "root build" run_isolated_mobile_build
+run_gate "artifact builds" run_isolated_mobile_build
 
 echo
-echo "Release check passed: clean install, typecheck, and build completed."
+echo "Release check passed: clean install, typecheck, and artifact builds completed."
