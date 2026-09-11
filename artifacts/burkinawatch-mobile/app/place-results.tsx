@@ -176,7 +176,7 @@ export default function MobilePlaceResultsScreen() {
                     <Text style={[styles.validationText, { color: colors.primary }]}>✓ Confirmer</Text>
                   </Pressable>
                   <Pressable onPress={() => void requestJson(`/places/${id}/report`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ comment: 'Fermeture ou problème signalé depuis la fiche mobile.' }) })} accessibilityRole="button">
-                    <Text style={[styles.validationText, { color: colors.danger }]}>⚠ Signaler</Text>
+                    <Text style={[styles.validationText, { color: colors.destructive }]}>⚠ Signaler</Text>
                   </Pressable>
                 </View>
               </View>
