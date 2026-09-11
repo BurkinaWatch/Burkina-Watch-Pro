@@ -56,7 +56,7 @@ export default function EditSignalementDialog({ signalement }: EditSignalementDi
   const [, setLocation] = useLocation();
 
   const form = useForm<UpdateSignalement>({
-    resolver: zodResolver(updateSignalementSchema),
+    resolver: zodResolver(updateSignalementSchema) as any,
     defaultValues: {
       titre: signalement.titre,
       description: signalement.description,

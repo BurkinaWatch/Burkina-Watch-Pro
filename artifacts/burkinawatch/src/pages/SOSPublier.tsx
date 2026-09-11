@@ -25,18 +25,17 @@ import {
 import { Upload, MapPin, Camera, Loader2, X, AlertTriangle, Phone } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertSignalementSchema } from "@shared/schema";
+import { insertSignalementSchema, type InsertSignalement } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useState, useRef } from "react";
-import { z } from "zod";
 import ModerationDialog from "@/components/ModerationDialog";
 import { useTranslation } from "react-i18next";
 
 const frontendSignalementSchema = insertSignalementSchema.omit({ userId: true });
-type FrontendSignalement = z.infer<typeof frontendSignalementSchema>;
+type FrontendSignalement = InsertSignalement;
 
 export default function SOSPublier() {
   const { toast } = useToast();
@@ -49,7 +48,7 @@ export default function SOSPublier() {
   const { t, i18n } = useTranslation();
 
   const form = useForm<FrontendSignalement>({
-    resolver: zodResolver(frontendSignalementSchema),
+    resolver: zodResolver(frontendSignalementSchema) as any,
     defaultValues: {
       titre: "",
       description: "",
