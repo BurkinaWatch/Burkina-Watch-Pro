@@ -61,6 +61,7 @@ const categorieColors: Record<string, string> = {
 };
 
 import { REGION_NAMES } from "@/lib/regions";
+import { getLocationErrorMessage, requestUserLocation } from "@/lib/geolocation";
 
 const regions = REGION_NAMES;
 
@@ -151,25 +152,23 @@ export default function Boutiques() {
       return;
     }
     setIsLocating(true);
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const loc = { lat: position.coords.latitude, lng: position.coords.longitude };
-          setUserLocation(loc);
-          setShowNearestOnly(true);
-          setIsLocating(false);
-          toast({ title: "Position trouvee", description: "Affichage des boutiques les plus proches" });
-        },
-        () => {
-          setIsLocating(false);
-          toast({ title: "Erreur de localisation", description: "Impossible d'obtenir votre position", variant: "destructive" });
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-      );
-    } else {
-      setIsLocating(false);
-      toast({ title: "Non supporte", description: "Geolocalisation non supportee", variant: "destructive" });
-    }
+    void requestUserLocation()
+      .then((loc) => {
+        setUserLocation(loc);
+        setShowNearestOnly(true);
+        toast({
+          title: "Position trouvée",
+          description: "Affichage des boutiques les plus proches",
+        });
+      })
+      .catch((error) => {
+        toast({
+          title: "Erreur de localisation",
+          description: getLocationErrorMessage(error),
+          variant: "destructive",
+        });
+      })
+      .finally(() => setIsLocating(false));
   }, [showNearestOnly, userLocation, toast]);
 
   const { data: boutiquesData, isLoading, refetch } = useQuery<{ boutiques: Boutique[], lastUpdated: string }>({

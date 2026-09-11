@@ -62,6 +62,7 @@ const categorieColors: Record<string, string> = {
 };
 
 import { REGION_NAMES } from "@/lib/regions";
+import { getLocationErrorMessage, requestUserLocation } from "@/lib/geolocation";
 
 const regions = REGION_NAMES;
 
@@ -160,38 +161,25 @@ export default function Banques() {
     }
 
     setIsLocating(true);
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const loc = { lat: position.coords.latitude, lng: position.coords.longitude };
-          setUserLocation(loc);
-          setShowNearestOnly(true);
-          setMapCenter([loc.lat, loc.lng]);
-          setMapZoom(12);
-          setIsLocating(false);
-          toast({
-            title: "Position trouvee",
-            description: "Affichage des etablissements les plus proches",
-          });
-        },
-        (error) => {
-          setIsLocating(false);
-          toast({
-            title: "Erreur de localisation",
-            description: "Impossible d'obtenir votre position. Verifiez les permissions.",
-            variant: "destructive",
-          });
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-      );
-    } else {
-      setIsLocating(false);
-      toast({
-        title: "Non supporte",
-        description: "La geolocalisation n'est pas supportee par votre navigateur.",
-        variant: "destructive",
-      });
-    }
+    void requestUserLocation()
+      .then((loc) => {
+        setUserLocation(loc);
+        setShowNearestOnly(true);
+        setMapCenter([loc.lat, loc.lng]);
+        setMapZoom(12);
+        toast({
+          title: "Position trouvée",
+          description: "Affichage des établissements les plus proches",
+        });
+      })
+      .catch((error) => {
+        toast({
+          title: "Erreur de localisation",
+          description: getLocationErrorMessage(error),
+          variant: "destructive",
+        });
+      })
+      .finally(() => setIsLocating(false));
   }, [showNearestOnly, userLocation, toast]);
 
   const { data: banques = [], isLoading, refetch } = useQuery<Banque[]>({
