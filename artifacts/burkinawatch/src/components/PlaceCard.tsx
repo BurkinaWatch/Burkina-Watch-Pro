@@ -1,10 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Phone, Clock, Navigation, Globe, Mail, ExternalLink, Locate, Activity, ShieldCheck, UtensilsCrossed, Star, DollarSign, Truck, Users } from "lucide-react";
+import { MapPin, Phone, Clock, Navigation, Globe, Mail, ExternalLink, Locate, Activity, ShieldCheck, UtensilsCrossed, Star, DollarSign, Share2, MessageCircle, Camera, Pencil, AlertTriangle } from "lucide-react";
 import type { Place } from "@shared/schema";
 import { SourceBadge } from "./SourceBadge";
 import { LocationValidator } from "./LocationValidator";
+import { useToast } from "@/hooks/use-toast";
+import { getCurrentMobileMoneyStatus, getFreshnessClasses, getPlaceFreshness } from "@/lib/placeFreshness";
 
 interface PlaceWithDistance extends Place {
   distance?: number;
@@ -31,6 +33,7 @@ const PLACE_TYPE_COLORS: Record<string, string> = {
 };
 
 export function PlaceCard({ place }: PlaceCardProps) {
+  const { toast } = useToast();
   const typeLabel = PLACE_TYPE_LABELS[place.placeType] || place.placeType;
   const typeColor = PLACE_TYPE_COLORS[place.placeType] || "bg-muted text-muted-foreground";
   
@@ -55,12 +58,19 @@ export function PlaceCard({ place }: PlaceCardProps) {
   // Nom de l'établissement pour la source si c'est une donnée enrichie
   const sourceName = place.source && place.source !== "OSM" && place.source !== "Fallback" && place.source !== "OpenStreetMap" ? place.source : "DATABASE";
 
-  const imageUrl = tags.photoUrl || tags.image || tags.photo || tags["image:url"] || null;
+  const imageUrl = place.imageUrl || tags.photoUrl || tags.image || tags.photo || tags["image:url"] || null;
   const website = tags.website || tags["contact:website"] || null;
   const email = tags.email || tags["contact:email"] || null;
   const phone = place.telephone || tags.phone || tags["contact:phone"] || tags["phone:mobile"] || null;
   const openingHours = place.horaires || tags.opening_hours || tags["service_times"] || null;
   const brand = tags.brand || tags.operator || null;
+  const freshness = getPlaceFreshness(place);
+  const mobileMoneyStatus = getCurrentMobileMoneyStatus(tags);
+  const budget = tags.budget || tags.price || tags.priceRange || null;
+  const listedServices = tags.services || tags.service || null;
+  const citizenMedia = Array.isArray(tags.citizenMedia) ? tags.citizenMedia : [];
+
+  const cleanPhone = phone ? String(phone).replace(/[^\d+]/g, "") : null;
 
   const openInMaps = () => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${place.latitude},${place.longitude}`;
@@ -70,6 +80,30 @@ export function PlaceCard({ place }: PlaceCardProps) {
   const openLocation = () => {
     const url = `https://www.google.com/maps?q=${place.latitude},${place.longitude}`;
     window.open(url, "_blank");
+  };
+
+  const sharePlace = async () => {
+    const mapsUrl = `https://www.google.com/maps?q=${place.latitude},${place.longitude}`;
+    const shareData = { title: displayName, text: `${displayName} — ${place.address || "Burkina Faso"}`, url: mapsUrl };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(mapsUrl);
+        toast({ title: "Lien copié", description: "Le lien de la carte a été copié." });
+      }
+    } catch {
+      // Annuler le partage natif ne doit pas afficher une erreur.
+    }
+  };
+
+  const openContribution = (kind: "correction" | "photo") => {
+    const params = new URLSearchParams({
+      contribution: kind,
+      placeId: place.id,
+      placeName: displayName,
+    });
+    window.location.assign(`/publier?${params.toString()}`);
   };
 
   return (
@@ -131,6 +165,15 @@ export function PlaceCard({ place }: PlaceCardProps) {
             size="sm"
           />
         </div>
+        <div className={`mt-2 rounded-md border px-2.5 py-1.5 text-xs ${getFreshnessClasses(freshness.tone)}`}>
+          <div className="flex items-center gap-1.5 font-medium">
+            <span aria-hidden="true">
+              {freshness.tone === "recent" ? "🟢" : freshness.tone === "contested" ? "🔴" : freshness.tone === "old" ? "⚪" : "🟡"}
+            </span>
+            <span>{freshness.label}</span>
+          </div>
+          <p className="mt-0.5 opacity-85">{freshness.detail}</p>
+        </div>
       </CardHeader>
       
       <CardContent className="space-y-3">
@@ -160,6 +203,33 @@ export function PlaceCard({ place }: PlaceCardProps) {
           <div className="flex items-start gap-2 text-sm text-muted-foreground">
             <Clock className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <span className="break-words">{openingHours}</span>
+          </div>
+        )}
+
+        {budget && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <DollarSign className="w-4 h-4 flex-shrink-0 text-primary/70" />
+            <span>Budget indiqué : {String(budget)}</span>
+          </div>
+        )}
+
+        {listedServices && (
+          <div className="flex items-start gap-2 text-sm text-muted-foreground">
+            <ShieldCheck className="w-4 h-4 flex-shrink-0 text-primary/70" />
+            <span>{String(listedServices)}</span>
+          </div>
+        )}
+
+        {mobileMoneyStatus && (
+          <div className={`flex items-start gap-2 rounded-md border p-2 text-xs ${
+            mobileMoneyStatus.tone === "available"
+              ? "border-green-200 bg-green-50 text-green-800 dark:border-green-900 dark:bg-green-950/30 dark:text-green-300"
+              : mobileMoneyStatus.tone === "closed"
+                ? "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300"
+                : "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300"
+          }`}>
+            <span aria-hidden="true">{mobileMoneyStatus.tone === "available" ? "✓" : mobileMoneyStatus.tone === "closed" ? "✕" : "⚠"}</span>
+            <span>{mobileMoneyStatus.label}</span>
           </div>
         )}
 
@@ -205,6 +275,18 @@ export function PlaceCard({ place }: PlaceCardProps) {
             </a>
           </div>
         )}
+
+        {cleanPhone && (
+          <a
+            href={`https://wa.me/${cleanPhone.replace(/^\+/, "")}?text=${encodeURIComponent(`Bonjour, je souhaite vérifier les informations de ${displayName}.`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-sm text-green-700 hover:underline dark:text-green-400"
+          >
+            <MessageCircle className="w-4 h-4 flex-shrink-0" />
+            WhatsApp
+          </a>
+        )}
         
         {email && (
           <div className="flex items-center gap-2 text-sm">
@@ -234,6 +316,13 @@ export function PlaceCard({ place }: PlaceCardProps) {
           </div>
         )}
 
+        {citizenMedia.length > 0 && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Camera className="w-4 h-4 flex-shrink-0 text-primary/70" />
+            <span>Vu récemment · {citizenMedia.length} média{citizenMedia.length > 1 ? "s" : ""} citoyen{citizenMedia.length > 1 ? "s" : ""}</span>
+          </div>
+        )}
+
         <div className="pt-3 border-t space-y-3">
           <LocationValidator
             placeId={place.id}
@@ -241,6 +330,20 @@ export function PlaceCard({ place }: PlaceCardProps) {
             initialReports={place.reports || 0}
             compact
           />
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={sharePlace}>
+              <Share2 className="w-3.5 h-3.5" />
+              Partager
+            </Button>
+            <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => openContribution("correction")}>
+              <Pencil className="w-3.5 h-3.5" />
+              Corriger
+            </Button>
+            <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => openContribution("photo")}>
+              <Camera className="w-3.5 h-3.5" />
+              Ajouter une photo
+            </Button>
+          </div>
           <Button
             onClick={openInMaps}
             className="w-full gap-2"
