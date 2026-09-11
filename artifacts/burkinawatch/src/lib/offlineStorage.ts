@@ -1,10 +1,11 @@
 const DB_NAME = 'burkina_watch_offline';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE_NAME = 'pending_signalements';
 const PHARMACIES_STORE = 'pharmacies_cache';
 const URGENCES_STORE = 'urgences_cache';
 const SIGNALEMENTS_STORE = 'signalements_cache';
 const METADATA_STORE = 'metadata';
+const PLACES_STORE = 'places_cache';
 
 export interface OfflineSignalement {
   id: string;
@@ -68,6 +69,10 @@ class OfflineStorageService {
         
         if (!db.objectStoreNames.contains(METADATA_STORE)) {
           db.createObjectStore(METADATA_STORE, { keyPath: 'key' });
+        }
+
+        if (!db.objectStoreNames.contains(PLACES_STORE)) {
+          db.createObjectStore(PLACES_STORE, { keyPath: 'cacheKey' });
         }
       };
     });
@@ -274,6 +279,50 @@ class OfflineStorageService {
 
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
+    });
+  }
+
+  async cachePlaces(cacheKey: string, places: any[]): Promise<void> {
+    await this.init();
+    if (!this.db) return;
+
+    const safePlaces = places.map((place) => {
+      const tags = { ...(place?.tags || {}) };
+      delete tags.mobileMoneyStatus;
+      delete tags.mobileMoneyCheckedAt;
+      delete tags.liquiditeStatus;
+      delete tags.liquiditeCheckedAt;
+      delete tags.opening_hours;
+      delete tags.service_times;
+      return {
+        ...place,
+        horaires: undefined,
+        opening_hours: undefined,
+        tags,
+      };
+    });
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([PLACES_STORE], 'readwrite');
+      transaction.objectStore(PLACES_STORE).put({
+        cacheKey,
+        places: safePlaces,
+        updatedAt: new Date().toISOString(),
+      });
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+  }
+
+  async getCachedPlaces(cacheKey: string): Promise<any[]> {
+    await this.init();
+    if (!this.db) return [];
+
+    return new Promise((resolve) => {
+      const transaction = this.db!.transaction([PLACES_STORE], 'readonly');
+      const request = transaction.objectStore(PLACES_STORE).get(cacheKey);
+      request.onsuccess = () => resolve(Array.isArray(request.result?.places) ? request.result.places : []);
+      request.onerror = () => resolve([]);
     });
   }
 
