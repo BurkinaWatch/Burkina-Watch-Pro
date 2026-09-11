@@ -34,6 +34,8 @@ export function OnboardingTip({
       }, delay);
       return () => clearTimeout(timer);
     }
+
+    return undefined;
   }, [showTips, hasSeenTip, id, delay]);
 
   const handleDismiss = (e: React.MouseEvent) => {

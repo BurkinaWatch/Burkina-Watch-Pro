@@ -86,6 +86,8 @@ export function InteractiveTutorial() {
       const timer = setTimeout(() => setIsOpen(true), 2000);
       return () => clearTimeout(timer);
     }
+
+    return undefined;
   }, []);
 
   const [paused, setPaused] = useState(false);
