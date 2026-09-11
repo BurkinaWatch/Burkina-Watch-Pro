@@ -320,6 +320,7 @@ export default function BurkinaPratique() {
                             href={category.href === intent.href && intent.matched ? buildPracticalRoute(intent) : category.href}
                             className="flex items-center gap-3 rounded-xl p-3 text-left transition-colors hover:bg-muted"
                             data-testid={`link-search-result-${category.href.slice(1)}`}
+                             onClick={() => rememberSearch(query)}
                           >
                             <CategoryIcon category={category} size="sm" />
                             <span className="min-w-0 flex-1">

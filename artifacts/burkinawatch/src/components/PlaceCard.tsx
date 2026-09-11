@@ -187,6 +187,11 @@ export function PlaceCard({ place }: PlaceCardProps) {
             <span>{freshness.label}</span>
           </div>
           <p className="mt-0.5 opacity-85">{freshness.detail}</p>
+            {freshness.checkedAt && (
+              <p className="mt-0.5 opacity-75">
+                Mise à jour : {freshness.checkedAt.toLocaleDateString("fr-FR")}
+              </p>
+            )}
         </div>
       </CardHeader>
       

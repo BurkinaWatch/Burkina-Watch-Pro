@@ -92,6 +92,13 @@ function getImage(place: MobilePlace) {
   return place.imageUrl || place.image || (typeof tags.photoUrl === 'string' ? tags.photoUrl : null) || (typeof tags.image === 'string' ? tags.image : null);
 }
 
+function getUpdatedLabel(place: MobilePlace) {
+  const rawDate = place.updatedAt || place.lastSyncedAt || place.lastUpdated;
+  if (!rawDate) return null;
+  const date = new Date(rawDate);
+  return Number.isNaN(date.getTime()) ? null : `Mise à jour : ${date.toLocaleDateString('fr-FR')}`;
+}
+
 export default function MobilePlaceResultsScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -143,6 +150,7 @@ export default function MobilePlaceResultsScreen() {
           const phone = getPhone(place);
           const image = getImage(place);
           const freshness = getFreshness(place);
+          const updatedLabel = getUpdatedLabel(place);
           const address = place.address || place.adresse || [place.quartier, place.ville].filter(Boolean).join(', ');
           const latitude = Number(place.latitude);
           const longitude = Number(place.longitude);
@@ -158,6 +166,7 @@ export default function MobilePlaceResultsScreen() {
                 </View>
                 {address ? <Text style={[styles.detail, { color: colors.mutedForeground }]}>{address}</Text> : null}
                 {place.horaires || place.opening_hours ? <Text style={[styles.detail, { color: colors.mutedForeground }]}>{place.horaires || place.opening_hours}</Text> : null}
+                {updatedLabel ? <Text style={[styles.detail, { color: colors.mutedForeground }]}>{updatedLabel}</Text> : null}
                 <View style={styles.actions}>
                   {phone ? (
                     <Pressable onPress={() => void Linking.openURL(`tel:${phone}`)} style={[styles.action, { borderColor: colors.border }]}>
