@@ -26,7 +26,23 @@ run_gate() {
 run_gate "clean frozen dependency install" \
   pnpm install --frozen-lockfile --prefer-offline
 run_gate "root typecheck" pnpm run typecheck
-run_gate "root build" pnpm run build
+
+run_isolated_mobile_build() {
+  local output_dir status
+  output_dir="$(mktemp -d "${TMPDIR:-/tmp}/burkinawatch-mobile-release.XXXXXX")"
+
+  echo "Using isolated mobile build output: $output_dir"
+  if env STATIC_BUILD_DIR="$output_dir" pnpm run build; then
+    status=0
+  else
+    status=$?
+  fi
+
+  rm -rf -- "$output_dir"
+  return "$status"
+}
+
+run_gate "root build" run_isolated_mobile_build
 
 echo
 echo "Release check passed: clean install, typecheck, and build completed."
