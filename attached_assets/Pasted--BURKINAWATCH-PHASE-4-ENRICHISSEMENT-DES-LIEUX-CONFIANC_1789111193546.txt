@@ -1,0 +1,260 @@
+# BURKINAWATCH — PHASE 4
+
+# ENRICHISSEMENT DES LIEUX + CONFIANCE CITOYENNE
+
+Enrichir les fiches et données existantes.
+
+NE PAS créer une deuxième fiche pour les mêmes lieux.
+
+NE PAS créer une deuxième base.
+
+---
+
+# 1. FICHE UNIQUE
+
+Conserver les informations actuelles.
+
+Ajouter lorsque disponible :
+
+* statut ;
+* disponibilité ;
+* dernière vérification ;
+* téléphone ;
+* WhatsApp ;
+* itinéraire ;
+* partage ;
+* budget/prix lorsqu'il existe ;
+* services proposés ;
+* médias citoyens.
+
+---
+
+# 2. FRAÎCHEUR
+
+Afficher :
+
+🟢 Vérifié récemment
+
+🟡 À confirmer
+
+⚪ Information ancienne
+
+🔴 Information contestée
+
+Afficher :
+
+"Confirmé il y a 18 minutes"
+
+ou
+
+"Information ancienne"
+
+Ne jamais présenter une donnée ancienne comme actuelle.
+
+---
+
+# 3. CONTRIBUTION
+
+Ajouter :
+
+[✓ CONFIRMER]
+
+[✕ SIGNALER FERMETURE]
+
+[⚠ SIGNALER UN PROBLÈME]
+
+[✏ CORRIGER]
+
+[📸 AJOUTER UNE PHOTO]
+
+Réutiliser le système citoyen existant.
+
+---
+
+# 4. MOBILE MONEY
+
+Permettre, lorsque pertinent :
+
+✓ retrait disponible
+
+✓ dépôt disponible
+
+⚠ manque de liquidité
+
+⚠ service indisponible
+
+✕ point fermé
+
+Une information de liquidité doit expirer rapidement.
+
+Ne jamais présenter une ancienne confirmation comme une liquidité actuelle.
+
+---
+
+# 5. SANTÉ
+
+Permettre :
+
+* pharmacie ouverte ;
+* pharmacie de garde ;
+* hôpital ;
+* centre de santé ;
+* laboratoire ;
+* dentiste ;
+* maternité ;
+* urgence.
+
+Ne jamais inventer une pharmacie de garde.
+
+---
+
+# 6. RESTAURATION
+
+Conserver les restaurants existants.
+
+Ajouter si les données existent :
+
+* restaurant ;
+* maquis ;
+* poulet braisé ;
+* cuisine locale ;
+* petit déjeuner ;
+* à emporter ;
+* livraison ;
+* budget.
+
+Ne jamais inventer les prix.
+
+---
+
+# 7. RÉPARATION / DÉPANNAGE
+
+Permettre :
+
+* téléphone ;
+* informatique ;
+* électricité ;
+* plomberie ;
+* mécanique ;
+* dépannage automobile ;
+* soudure ;
+* autres réparations.
+
+---
+
+# 8. ACHAT
+
+Permettre :
+
+* marchés ;
+* boutiques ;
+* supermarchés ;
+* quincailleries ;
+* matériaux ;
+* pièces détachées ;
+* téléphones/accessoires.
+
+Ne jamais prétendre connaître un stock sans donnée fiable.
+
+---
+
+# 9. ADMINISTRATION
+
+Permettre :
+
+* mairie ;
+* commissariat ;
+* gendarmerie ;
+* tribunal ;
+* CNSS ;
+* ONEA ;
+* SONABEL ;
+* autres services publics disponibles.
+
+Ne pas inventer de procédures.
+
+---
+
+# 10. TÉLÉCOMS
+
+Permettre :
+
+* Orange ;
+* Moov ;
+* Telecel ;
+* boutiques ;
+* services clients ;
+* points de vente.
+
+---
+
+# 11. ÉTAT DES ACCÈS
+
+Lorsqu'un signalement pertinent existe :
+
+🚧 travaux
+
+🚫 route bloquée
+
+🌊 inondation
+
+🚗 embouteillage
+
+⚠ accès difficile
+
+Afficher la date/heure.
+
+Réutiliser le système de signalement existant.
+
+---
+
+# 12. MÉDIAS CITOYENS
+
+Dans les fiches :
+
+📸 Vu récemment
+
+Afficher les photos/vidéos citoyennes disponibles.
+
+IMPORTANT :
+
+Ne pas réactiver le pipeline 3D StreetView dans cette phase.
+
+Ne pas installer COLMAP/CUDA/PyTorch.
+
+Cette phase doit fonctionner avec de simples médias citoyens.
+
+---
+
+# 13. MODÉRATION
+
+Réutiliser l'administration existante.
+
+Permettre si nécessaire :
+
+* validation ;
+* correction ;
+* signalement ;
+* conflit entre confirmations ;
+* informations anciennes.
+
+Ne pas créer un deuxième système d'administration.
+
+---
+
+# VALIDATION
+
+Tester :
+
+* fiche existante ;
+* nouvelle fiche enrichie ;
+* confirmation ;
+* signalement ;
+* média ;
+* Mobile Money ;
+* statut ;
+* fraîcheur.
+
+Aucune donnée fictive.
+
+Aucune suppression de donnée existante.
