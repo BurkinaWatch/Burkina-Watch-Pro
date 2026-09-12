@@ -2,6 +2,7 @@
 - [Build Expo statique](expo-build-port.md) — le script de build mobile suppose localhost:8081; il entre en conflit avec le serveur mockup-sandbox déjà actif.
 - [Compatibilité SecureStore Expo](expo-secure-store-web.md) — le preview Web peut manquer les méthodes natives; garder un fallback conditionnel sans remplacer SecureStore natif.
 - [Installation post-fusion](post-merge-install.md) — ne pas forcer le mode hors ligne; le lockfile peut référencer un paquet absent du cache local.
+- [Validation isolée](release-check-isolation.md) — les contrôles de publication doivent installer et compiler dans une copie temporaire, jamais dans les node_modules suivis par Metro.
 - [Assets Expo locaux](expo-local-assets.md) — les images mobiles doivent rester dans le périmètre Metro de l’artefact Expo.
 - [Schémas Railway et développement](railway-schema-source.md) — l’API privilégie Railway; les changements de schéma doivent passer par la publication, pas par le push dev seul.
 - [Politique des variables PostgreSQL](database-env-policy.md) — `lib/db` et l’API n’utilisent pas encore une convention DB unique.
