@@ -20,16 +20,10 @@ run_gate() {
 run_gate "PostgreSQL connection variable policy" \
   bash "$script_dir/check-database-url-policy.sh"
 
-echo "Release check: resetting workspace dependency state"
-rm -rf node_modules
-for workspace in artifacts/* lib/* scripts; do
-  if [[ -d "$workspace" ]]; then
-    rm -rf "$workspace/node_modules"
-  fi
-done
+echo "Release check: reconciling workspace dependency state without disrupting active workflows"
 
-run_gate "clean frozen dependency install" \
-  pnpm install --frozen-lockfile --prefer-offline
+run_gate "frozen dependency install" \
+  pnpm install --frozen-lockfile --prefer-offline --force
 run_gate "root typecheck" pnpm run typecheck
 
 run_isolated_mobile_build() {

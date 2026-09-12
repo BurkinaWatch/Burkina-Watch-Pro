@@ -30,7 +30,7 @@ set -Eeuo pipefail
 : "${RELEASE_CHECK_TEST_LOG:?}"
 
 case "$*" in
-  "install --frozen-lockfile --prefer-offline")
+  "install --frozen-lockfile --prefer-offline --force")
     printf '%s\n' install >> "$RELEASE_CHECK_TEST_LOG"
     ;;
   "run typecheck")
