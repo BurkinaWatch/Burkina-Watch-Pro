@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { hasRailwayDatabaseUrl } from "./databaseConfig";
+import { hasDatabaseUrl } from "./databaseConfig";
 
 const MIN_SESSION_SECRET_LENGTH = 32;
 const developmentSessionSecret = crypto.randomBytes(32).toString("hex");
@@ -26,10 +26,8 @@ export function assertProductionSecurityConfiguration(): void {
     );
   }
 
-  if (!hasRailwayDatabaseUrl()) {
-    throw new Error(
-      "RAILWAY_DATABASE_URL doit être configuré en production.",
-    );
+  if (!hasDatabaseUrl()) {
+    throw new Error("DATABASE_URL doit être configuré en production.");
   }
 
   if (!process.env.REFRESH_TOKEN_SALT?.trim()) {

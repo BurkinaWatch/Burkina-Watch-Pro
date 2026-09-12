@@ -1,24 +1,20 @@
 /**
  * PostgreSQL connection policy.
  *
- * Railway PostgreSQL is the production source of truth. DATABASE_URL remains
- * a local-development fallback only when the Railway-specific variable is not
- * available.
+ * DATABASE_URL is the only supported PostgreSQL connection variable in every
+ * environment. Railway should expose its PostgreSQL connection through this
+ * variable as well.
  */
 export function getDatabaseUrl(): string {
-  const railwayDatabaseUrl = process.env.RAILWAY_DATABASE_URL?.trim();
-  const standardDatabaseUrl = process.env.DATABASE_URL?.trim();
-  const databaseUrl = railwayDatabaseUrl || standardDatabaseUrl;
+  const databaseUrl = process.env.DATABASE_URL?.trim();
 
   if (!databaseUrl) {
-    throw new Error(
-      "RAILWAY_DATABASE_URL must be set for production, or DATABASE_URL for local development.",
-    );
+    throw new Error("DATABASE_URL must be configured.");
   }
 
   return databaseUrl;
 }
 
-export function hasRailwayDatabaseUrl(): boolean {
-  return Boolean(process.env.RAILWAY_DATABASE_URL?.trim());
+export function hasDatabaseUrl(): boolean {
+  return Boolean(process.env.DATABASE_URL?.trim());
 }

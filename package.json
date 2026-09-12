@@ -9,7 +9,7 @@
     "build:artifacts": "pnpm -r --if-present run build",
     "release:check": "bash ./scripts/release-check.sh && pnpm run test:release-check",
     "start": "node --enable-source-maps artifacts/api-server/dist/index.mjs",
-    "test:release-check": "bash ./scripts/release-check.test.sh",
+    "test:release-check": "bash ./scripts/release-check.test.sh && bash ./scripts/check-database-url-policy.test.sh",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },

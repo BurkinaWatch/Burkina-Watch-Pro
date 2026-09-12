@@ -7,6 +7,19 @@ trap 'rm -rf -- "$sandbox"' EXIT
 
 mkdir -p "$sandbox/bin" "$sandbox/scripts"
 cp "$repo_root/scripts/release-check.sh" "$sandbox/scripts/release-check.sh"
+cp "$repo_root/scripts/check-database-url-policy.sh" "$sandbox/scripts/check-database-url-policy.sh"
+
+for file in \
+  lib/db/src/index.ts \
+  lib/db/drizzle.config.ts \
+  artifacts/api-server/src/db.ts \
+  artifacts/api-server/src/databaseConfig.ts \
+  artifacts/api-server/src/securityConfig.ts \
+  artifacts/api-server/.env.example \
+  replit.md; do
+  mkdir -p "$sandbox/$(dirname "$file")"
+  cp "$repo_root/$file" "$sandbox/$file"
+done
 
 command_log="$sandbox/commands.log"
 

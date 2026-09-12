@@ -1,13 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-echo "Release check: resetting workspace dependency state"
-rm -rf node_modules
-for workspace in artifacts/* lib/* scripts; do
-  if [[ -d "$workspace" ]]; then
-    rm -rf "$workspace/node_modules"
-  fi
-done
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 run_gate() {
   local name="$1"
@@ -22,6 +16,17 @@ run_gate() {
     exit 1
   fi
 }
+
+run_gate "PostgreSQL connection variable policy" \
+  bash "$script_dir/check-database-url-policy.sh"
+
+echo "Release check: resetting workspace dependency state"
+rm -rf node_modules
+for workspace in artifacts/* lib/* scripts; do
+  if [[ -d "$workspace" ]]; then
+    rm -rf "$workspace/node_modules"
+  fi
+done
 
 run_gate "clean frozen dependency install" \
   pnpm install --frozen-lockfile --prefer-offline
