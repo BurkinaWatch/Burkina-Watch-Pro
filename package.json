@@ -5,10 +5,10 @@
   "packageManager": "pnpm@10.26.1",
   "scripts": {
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
-    "build": "pnpm run typecheck && pnpm run build:artifacts",
+    "build": "pnpm run typecheck && pnpm --filter @workspace/burkinawatch run build && pnpm --filter @workspace/api-server run build",
     "build:artifacts": "pnpm -r --if-present run build",
     "release:check": "bash ./scripts/release-check.sh && pnpm run test:release-check",
-    "start": "node --enable-source-maps artifacts/api-server/dist/index.mjs",
+    "start": "SERVE_WEB=true node --enable-source-maps artifacts/api-server/dist/index.mjs",
     "test:release-check": "bash ./scripts/release-check.test.sh && bash ./scripts/check-database-url-policy.test.sh",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
