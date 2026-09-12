@@ -6,7 +6,8 @@ repo_root="$(cd -- "$script_dir/.." && pwd)"
 validation_root="$(mktemp -d "${TMPDIR:-/tmp}/burkinawatch-release-check.XXXXXX")"
 
 cleanup_validation_root() {
-  rm -rf -- "$validation_root"
+  chmod -R u+w "$validation_root" 2>/dev/null || true
+  rm -rf -- "$validation_root" 2>/dev/null || true
 }
 
 trap cleanup_validation_root EXIT
@@ -39,6 +40,10 @@ tar \
   --exclude='*/static-build' \
   --exclude='./.expo' \
   --exclude='*/.expo' \
+  --exclude='./.cache' \
+  --exclude='*/.cache' \
+  --exclude='*.tsbuildinfo' \
+  --exclude='*/.tsbuildinfo' \
   -C "$repo_root" -cf - . | tar -C "$validation_root" -xf -
 
 (
