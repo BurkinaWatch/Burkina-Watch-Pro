@@ -4,4 +4,5 @@
 - [Installation post-fusion](post-merge-install.md) — ne pas forcer le mode hors ligne; le lockfile peut référencer un paquet absent du cache local.
 - [Assets Expo locaux](expo-local-assets.md) — les images mobiles doivent rester dans le périmètre Metro de l’artefact Expo.
 - [Schémas Railway et développement](railway-schema-source.md) — l’API privilégie Railway; les changements de schéma doivent passer par la publication, pas par le push dev seul.
+- [Politique des variables PostgreSQL](database-env-policy.md) — `lib/db` et l’API n’utilisent pas encore une convention DB unique.
 - [Installations Railway propres](railway-clean-install.md) — une dépendance transitive visible localement peut manquer sur Railway; valider avec une installation gelée et propre.
