@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fiche technique — Burkina Pratique</title>
+    <style>
+      :root {
+        --green-950: #063b2a;
+        --green-800: #08633f;
+        --green-100: #e6f4ec;
+        --amber-400: #f4b942;
+        --amber-100: #fff5d9;
+        --ink: #1f2933;
+        --muted: #5f6b76;
+        --line: #d8e1dc;
+        --paper: #ffffff;
+        --soft: #f5f8f6;
+      }
+
+      @page {
+        size: A4;
+        margin: 16mm 15mm 17mm;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: var(--paper);
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+        font-size: 10.5pt;
+        line-height: 1.52;
+      }
+
+      h1, h2, h3 { color: var(--green-950); }
+      h1, h2, h3, p { margin-top: 0; }
+      h2 {
+        margin: 24px 0 9px;
+        padding-bottom: 5px;
+        border-bottom: 2px solid var(--amber-400);
+        font-size: 17pt;
+      }
+      h3 { margin: 14px 0 5px; font-size: 12pt; }
+      p { margin-bottom: 8px; }
+      ul { margin: 5px 0 10px 20px; padding: 0; }
+      li { margin: 3px 0; }
+
+      .cover {
+        position: relative;
+        overflow: hidden;
+        min-height: 220px;
+        padding: 30px 32px;
+        color: #fff;
+        background:
+          radial-gradient(circle at 88% 18%, rgba(244,185,66,.42), transparent 28%),
+          linear-gradient(135deg, var(--green-950), var(--green-800));
+        border-radius: 18px;
+      }
+      .cover::after {
+        content: "";
+        position: absolute;
+        right: -55px;
+        bottom: -88px;
+        width: 250px;
+        height: 250px;
+        border: 1px solid rgba(255,255,255,.22);
+        border-radius: 42px;
+        transform: rotate(25deg);
+      }
+      .eyebrow {
+        display: inline-block;
+        margin-bottom: 26px;
+        padding: 5px 9px;
+        border: 1px solid rgba(255,255,255,.35);
+        border-radius: 999px;
+        color: #fff5d9;
+        font-size: 8.5pt;
+        font-weight: 700;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+      }
+      .cover h1 {
+        max-width: 560px;
+        margin: 0 0 10px;
+        color: #fff;
+        font-size: 30pt;
+        line-height: 1.04;
+      }
+      .cover .subtitle {
+        max-width: 560px;
+        margin-bottom: 25px;
+        color: rgba(255,255,255,.82);
+        font-size: 13pt;
+      }
+      .cover .meta {
+        color: rgba(255,255,255,.72);
+        font-size: 9pt;
+      }
+
+      .summary-grid, .feature-grid, .two-col {
+        display: grid;
+        gap: 10px;
+      }
+      .summary-grid { grid-template-columns: repeat(4, 1fr); margin-top: 16px; }
+      .feature-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-col { grid-template-columns: 1fr 1fr; }
+      .card {
+        padding: 12px 13px;
+        background: var(--soft);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+      .card strong {
+        display: block;
+        color: var(--green-800);
+        font-size: 15pt;
+        line-height: 1.1;
+      }
+      .card span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 8.8pt;
+      }
+      .feature-card {
+        min-height: 95px;
+        padding: 13px;
+        border-left: 4px solid var(--amber-400);
+        background: var(--amber-100);
+        border-radius: 8px;
+      }
+      .feature-card h3 { margin-top: 0; }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 9px 0 13px;
+        font-size: 9pt;
+      }
+      th, td {
+        padding: 7px 8px;
+        border: 1px solid var(--line);
+        vertical-align: top;
+        text-align: left;
+      }
+      th {
+        color: #fff;
+        background: var(--green-800);
+        font-weight: 700;
+      }
+      tr:nth-child(even) td { background: #f8fbf9; }
+      code {
+        padding: 1px 4px;
+        color: var(--green-950);
+        background: var(--green-100);
+        border-radius: 4px;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 8.5pt;
+      }
+      .note {
+        margin: 10px 0;
+        padding: 10px 12px;
+        border-left: 4px solid var(--green-800);
+        background: var(--green-100);
+      }
+      .warning {
+        border-left-color: var(--amber-400);
+        background: var(--amber-100);
+      }
+      .footer {
+        margin-top: 25px;
+        padding-top: 8px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 8.5pt;
+      }
+      .page-break { page-break-before: always; }
+      .avoid-break { break-inside: avoid; }
+      .route { white-space: nowrap; }
+    </style>
+  </head>
+  <body>
+    <header class="cover">
+      <div class="eyebrow">BurkinaWatch · fiche technique</div>
+      <h1>Burkina Pratique</h1>
+      <p class="subtitle">Page d’orientation pour trouver rapidement des lieux, services et solutions disponibles dans BurkinaWatch.</p>
+      <div class="meta">Version observée dans le code source · 12 septembre 2026 · Périmètre : page Web <code>/burkina-pratique</code></div>
+    </header>
+
+    <section class="summary-grid" aria-label="Résumé">
+      <div class="card"><strong>20</strong><span>accès de catégorie dans le catalogue</span></div>
+      <div class="card"><strong>5</strong><span>types de lieux dans l’explorateur</span></div>
+      <div class="card"><strong>24</strong><span>résultats filtrables côté interface</span></div>
+      <div class="card"><strong>2</strong><span>modes d’affichage : liste et carte</span></div>
+    </section>
+
+    <h2>1. Positionnement et objectif</h2>
+    <p>
+      Burkina Pratique constitue un point d’entrée transversal de BurkinaWatch. La page regroupe
+      les raccourcis vers les services utiles du quotidien et permet de chercher un besoin en langage
+      naturel avant d’ouvrir la catégorie correspondante.
+    </p>
+    <div class="note">
+      <strong>Principe de fiabilité :</strong> lorsque la recherche ne correspond à aucune catégorie connue,
+      l’interface n’invente aucun résultat. Les informations d’ouverture, de récence ou de disponibilité
+      inconnues sont présentées comme inconnues, et non comme confirmées.
+    </div>
+
+    <h2>2. Parcours utilisateur</h2>
+    <div class="feature-grid">
+      <div class="feature-card avoid-break">
+        <h3>Recherche directe</h3>
+        <p>L’utilisateur saisit un besoin (« pharmacie », « station », « banque », « restaurant ») dans le champ principal. Les correspondances sont proposées instantanément.</p>
+      </div>
+      <div class="feature-card avoid-break">
+        <h3>Recherche par intention</h3>
+        <p>Le moteur reconnaît des intentions comme urgence, retrait d’argent, transport, dépannage ou réparation et construit un lien vers la catégorie adaptée.</p>
+      </div>
+      <div class="feature-card avoid-break">
+        <h3>Exploration des lieux</h3>
+        <p>La section d’exploration propose les pharmacies, stations, restaurants, boutiques et marchés, avec filtre local par nom, ville ou quartier.</p>
+      </div>
+      <div class="feature-card avoid-break">
+        <h3>Repérage sur carte</h3>
+        <p>Les lieux disposant de coordonnées valides peuvent être affichés sur la carte Google intégrée. L’utilisateur peut basculer entre liste et carte.</p>
+      </div>
+    </div>
+
+    <h2>3. Catalogue fonctionnel</h2>
+    <table>
+      <thead><tr><th>Accès</th><th>Route</th><th>Usage</th></tr></thead>
+      <tbody>
+        <tr><td>Pharmacies</td><td class="route"><code>/pharmacies</code></td><td>Trouver une pharmacie du Faso.</td></tr>
+        <tr><td>Urgences</td><td class="route"><code>/urgences</code></td><td>Accéder aux contacts utiles en situation urgente.</td></tr>
+        <tr><td>Retrait d’argent</td><td class="route"><code>/banques</code></td><td>Rechercher agences, banques et guichets.</td></tr>
+        <tr><td>Station-service</td><td class="route"><code>/stations</code></td><td>Rechercher carburant et stations-service.</td></tr>
+        <tr><td>Dépannage</td><td class="route"><code>/boutiques</code></td><td>Artisans, commerces et services de proximité.</td></tr>
+        <tr><td>Manger</td><td class="route"><code>/restaurants</code></td><td>Maquis, restaurants, bars et cafés.</td></tr>
+        <tr><td>Transport</td><td class="route"><code>/gares</code></td><td>Gares routières et départs.</td></tr>
+        <tr><td>Réparation</td><td class="route"><code>/telephonie</code></td><td>Téléphones, agences et services mobiles.</td></tr>
+        <tr><td>Hôpitaux & santé</td><td class="route"><code>/hopitaux</code></td><td>Établissements de santé.</td></tr>
+        <tr><td>Marchés</td><td class="route"><code>/marches</code></td><td>Marchés et lieux de commerce.</td></tr>
+        <tr><td>Boutiques & marchés</td><td class="route"><code>/boutiques-marches</code></td><td>Commerces, étals et marchés de proximité.</td></tr>
+        <tr><td>Commerces & artisans</td><td class="route"><code>/boutiques</code></td><td>Achat, réparation et services de proximité.</td></tr>
+        <tr><td>Hôtels & auberges</td><td class="route"><code>/hotels</code></td><td>Hébergement au Burkina Faso.</td></tr>
+        <tr><td>Mairies & préfectures</td><td class="route"><code>/mairies-prefectures</code></td><td>Services administratifs de proximité.</td></tr>
+        <tr><td>Ministères</td><td class="route"><code>/ministeres</code></td><td>Institutions et services publics.</td></tr>
+        <tr><td>Lieux de culte</td><td class="route"><code>/lieux-de-culte</code></td><td>Églises et mosquées.</td></tr>
+        <tr><td>Universités & instituts</td><td class="route"><code>/universites</code></td><td>Étudier et se former.</td></tr>
+        <tr><td>SONABEL & ONEA</td><td class="route"><code>/sonabel-onea</code></td><td>Électricité et eau.</td></tr>
+        <tr><td>Programme ciné</td><td class="route"><code>/cine</code></td><td>Séances et salles de cinéma.</td></tr>
+        <tr><td>Cimetières</td><td class="route"><code>/cimetieres</code></td><td>Repères et lieux de recueillement.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="page-break"></div>
+    <h2>4. Recherche et règles d’interprétation</h2>
+    <div class="two-col">
+      <div class="card avoid-break">
+        <h3>Termes reconnus</h3>
+        <p>Pharmacie, urgence, ambulance, police, banque, guichet, station, carburant, dépannage, restaurant, maquis, transport, gare, réparation, téléphone, boutique et artisan font partie des intentions reconnues.</p>
+      </div>
+      <div class="card avoid-break">
+        <h3>Filtres compris</h3>
+        <p>La recherche peut détecter « ouvert maintenant », « de garde », « récent », « proche », un budget en FCFA et un besoin urgent. Ces paramètres sont transmis à la route de catégorie.</p>
+      </div>
+    </div>
+    <p>
+      Les recherches récentes sont conservées localement dans le navigateur, avec un maximum de cinq entrées.
+      Une recherche sans correspondance connue affiche un message explicite et ne redirige pas vers une donnée inventée.
+    </p>
+
+    <h2>5. Architecture technique</h2>
+    <table>
+      <thead><tr><th>Couche</th><th>Implémentation constatée</th><th>Responsabilité</th></tr></thead>
+      <tbody>
+        <tr><td>Page</td><td>React + TypeScript, route Wouter</td><td>Composition de l’accueil, recherche, catalogue et navigation.</td></tr>
+        <tr><td>État serveur</td><td>TanStack Query</td><td>Chargement, cache, état de chargement, rafraîchissement et erreur.</td></tr>
+        <tr><td>API</td><td><code>GET /api/places?placeType=…</code></td><td>Fourniture des lieux selon le type choisi.</td></tr>
+        <tr><td>Carte</td><td>GoogleMap + coordonnées latitude/longitude</td><td>Affichage des marqueurs lorsque les coordonnées sont numériques et valides.</td></tr>
+        <tr><td>Persistance locale</td><td>localStorage pour les recherches ; offlineStorage pour les lieux</td><td>Préserver les recherches récentes et réutiliser un cache en cas d’échec réseau.</td></tr>
+        <tr><td>Navigation</td><td>Liens vers les catégories existantes</td><td>Ouvrir les pages métier sans dupliquer leur contenu dans Burkina Pratique.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>6. Résilience, limites et dépendances</h2>
+    <ul>
+      <li>En cas d’échec réseau, l’explorateur tente de restituer les lieux mis en cache localement.</li>
+      <li>Sans cache disponible, un état d’erreur demande de réessayer ou d’ouvrir une catégorie.</li>
+      <li>La liste de l’explorateur affiche au maximum six cartes à la fois, tandis que le filtrage travaille sur un maximum de 24 lieux.</li>
+      <li>Les marqueurs sans latitude ou longitude valides ne sont pas ajoutés à la carte.</li>
+      <li>La page dépend de l’API des lieux et, pour la carte, de la configuration Google Maps du projet.</li>
+      <li>La page d’accueil ne garantit pas à elle seule qu’un lieu est ouvert ou disponible : ces informations doivent être confirmées par les données de la catégorie ou par la source métier.</li>
+    </ul>
+    <div class="note warning">
+      <strong>Point de vigilance produit :</strong> les catégories et les résultats sont des données vivantes.
+      Une mise à jour du catalogue API est nécessaire pour refléter les changements de lieux, horaires,
+      contacts ou coordonnées.
+    </div>
+
+    <h2>7. Contrat d’accès</h2>
+    <table>
+      <thead><tr><th>Élément</th><th>Valeur</th></tr></thead>
+      <tbody>
+        <tr><td>Page principale</td><td><code>/burkina-pratique</code></td></tr>
+        <tr><td>Recherche</td><td>Champ « Rechercher un service ou un lieu » avec soumission et suggestions.</td></tr>
+        <tr><td>Explorateur</td><td><code>/api/places?placeType=pharmacy|fuel|restaurant|shop|marketplace</code></td></tr>
+        <tr><td>Modes de consultation</td><td>Liste, carte, filtre texte et actualisation manuelle.</td></tr>
+        <tr><td>Action carte</td><td>Le bouton « Autour de moi » ouvre la carte BurkinaWatch.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>8. Synthèse</h2>
+    <p>
+      Burkina Pratique est une page d’orientation et d’exploration, pas une base de données indépendante.
+      Elle centralise la découverte, comprend les demandes courantes, réutilise les catégories existantes
+      et expose les lieux disponibles avec une alternative carte/liste. La séparation entre recherche,
+      données API et pages métier limite les duplications et permet de faire évoluer le catalogue sans
+      réécrire la page d’accueil.
+    </p>
+
+    <div class="footer">
+      Document généré à partir de l’implémentation présente dans l’artefact Web BurkinaWatch.
+      Les informations dynamiques (lieux, disponibilités, contacts et horaires) ne sont pas figées dans cette fiche.
+    </div>
+  </body>
+</html>
