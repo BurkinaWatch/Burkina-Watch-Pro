@@ -1,6 +1,7 @@
 import app from "./app";
 import { initializeApp } from "./app";
 import { logger } from "./lib/logger";
+import { configureWebServing } from "./webServing";
 
 const rawPort = process.env["PORT"];
 
@@ -17,6 +18,7 @@ if (Number.isNaN(port) || port <= 0) {
 }
 
 await initializeApp();
+configureWebServing(app);
 
 app.listen(port, (err) => {
   if (err) {
