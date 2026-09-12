@@ -1,0 +1,236 @@
+BURKINAWATCH — PHASE 2/5
+BURKINA PRATIQUE — RECHERCHE PAR BESOIN
+
+À partir de l'audit validé, implémente uniquement cette phase.
+
+==================================================
+RÈGLE DE SÉCURITÉ DU PROJET
+==================================================
+
+La fonctionnalité actuelle est conservée.
+
+Ne supprimer :
+- aucune catégorie ;
+- aucun lieu ;
+- aucune route ;
+- aucune fiche ;
+- aucune carte ;
+- aucun filtre existant.
+
+Ne créer aucune deuxième base de lieux.
+
+Ne modifier aucune configuration Railway.
+
+Ne modifier aucun secret ou variable d'environnement.
+
+Ne modifier les commandes build/start que si une nécessité absolue est démontrée.
+Dans ce cas, STOP et demande validation.
+
+==================================================
+OBJECTIF
+==================================================
+
+Faire évoluer la recherche actuelle.
+
+Aujourd'hui, une recherche peut identifier une intention puis ouvrir une catégorie.
+
+Nous voulons maintenant :
+
+REQUÊTE UTILISATEUR
+        ↓
+COMPRÉHENSION DU BESOIN
+        ↓
+CATÉGORIES EXISTANTES
+        +
+FILTRES
+        +
+OFFRES lorsqu'elles existent
+        +
+SIGNAUX lorsqu'ils existent
+        ↓
+SOLUTIONS
+
+==================================================
+RECHERCHE PAR BESOIN
+==================================================
+
+Supporter notamment :
+
+"je cherche une pharmacie ouverte"
+
+"je veux retirer de l'argent"
+
+"où manger pour 3000 F"
+
+"je cherche un mécanicien"
+
+"ma voiture est en panne"
+
+"je cherche un plombier"
+
+"mon téléphone est cassé"
+
+"où acheter du ciment"
+
+"je cherche une chambre"
+
+"je cherche une station"
+
+"où trouver un marché"
+
+"je cherche un service administratif"
+
+==================================================
+INTENTIONS
+==================================================
+
+Prévoir au minimum :
+
+SANTÉ
+ARGENT
+MANGER
+TRANSPORT
+DÉPANNAGE
+RÉPARATION
+ACHAT
+HÉBERGEMENT
+ADMINISTRATION
+TÉLÉCOMS
+CARBURANT
+URGENCE
+
+Réutiliser les catégories existantes lorsqu'elles correspondent.
+
+==================================================
+FILTRES
+==================================================
+
+Comprendre lorsque possible :
+
+- ouvert maintenant ;
+- de garde ;
+- proche ;
+- budget en FCFA ;
+- disponible ;
+- aujourd'hui ;
+- date ;
+- besoin urgent.
+
+Ne jamais inventer une information absente.
+
+==================================================
+RÉSULTAT
+==================================================
+
+Les résultats doivent progressivement pouvoir distinguer :
+
+📍 LIEU
+🎁 OFFRE
+👁️ SIGNAL
+
+Exemple :
+
+Utilisateur :
+"où manger pour moins de 3000 F ce soir ?"
+
+Résultat possible :
+
+LIEU
+Restaurant X
+
+OFFRE
+Menu à 2500 F
+
+SIGNAL
+Confirmé ouvert récemment
+
+==================================================
+CATÉGORIES EXISTANTES
+==================================================
+
+Un utilisateur qui tape simplement :
+
+"restaurants"
+
+doit continuer à accéder à l'expérience actuelle des restaurants.
+
+Un utilisateur qui tape :
+
+"restaurant ouvert ce soir à moins de 3000"
+
+doit pouvoir bénéficier de la nouvelle logique.
+
+Les deux usages doivent coexister.
+
+==================================================
+ARCHITECTURE
+==================================================
+
+Ne pas construire un LLM complexe.
+
+Commencer avec une architecture locale :
+
+synonymes
++
+mots-clés
++
+intentions
++
+filtres
+
+Préparer une architecture extensible pour ajouter ultérieurement :
+
+Mooré
+Dioula
+Fulfuldé
+et éventuellement une couche IA.
+
+==================================================
+UX
+==================================================
+
+La page doit présenter clairement :
+
+🔎 Que cherchez-vous ?
+
+⚡ Besoin maintenant
+
+📍 Autour de moi
+
+📚 Explorer par catégorie
+
+Ne pas transformer la page en une interface générique d'IA.
+
+Conserver l'identité BurkinaWatch.
+
+==================================================
+VALIDATION
+==================================================
+
+Tester :
+
+- recherche simple ;
+- recherche par intention ;
+- budget ;
+- proximité ;
+- disponibilité ;
+- urgence ;
+- recherche inconnue ;
+- accès aux anciennes catégories.
+
+Tester Web desktop et mobile Web.
+
+Tester Expo uniquement si le code Expo existe réellement.
+
+À la fin fournir :
+
+- fichiers modifiés ;
+- fichiers créés ;
+- API utilisées ;
+- migrations ;
+- tests ;
+- build ;
+- fonctionnalités existantes vérifiées ;
+- risques.
+
+NE PAS passer à la phase suivante automatiquement.
