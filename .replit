@@ -42,4 +42,4 @@ timeoutMs = 120000
 
 [nix]
 channel = "stable-25_05"
-packages = ["glib", "nspr", "nss"]
+packages = ["glib", "nspr", "nss", "dbus"]
