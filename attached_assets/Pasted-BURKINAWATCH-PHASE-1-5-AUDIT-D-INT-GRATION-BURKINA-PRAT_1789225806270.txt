@@ -1,0 +1,284 @@
+BURKINAWATCH — PHASE 1/5
+AUDIT D'INTÉGRATION BURKINA PRATIQUE 2.0
+
+MISSION STRICTEMENT EN LECTURE SEULE.
+
+NE MODIFIE AUCUN FICHIER.
+NE CRÉE AUCUNE MIGRATION.
+NE MODIFIE AUCUN SECRET.
+NE MODIFIE AUCUNE VARIABLE D'ENVIRONNEMENT.
+NE MODIFIE AUCUNE CONFIGURATION RAILWAY.
+NE MODIFIE AUCUNE COMMANDE BUILD OU START.
+NE PUSH RIEN.
+NE DÉPLOIE RIEN.
+
+==================================================
+CONTEXTE PRODUIT
+==================================================
+
+BURKINA PRATIQUE existe déjà dans BurkinaWatch.
+
+La version actuelle doit impérativement être conservée.
+
+Elle possède notamment :
+- catégories de lieux ;
+- navigation vers les pages métier ;
+- recherche ;
+- recherche par intention ;
+- explorateur ;
+- carte ;
+- liste ;
+- cache/offline ;
+- API des lieux.
+
+Cette fonctionnalité existante constitue le SOCLE.
+
+Nous voulons maintenant l'enrichir pour obtenir :
+
+LIEUX + OFFRES + SIGNAUX + CONTEXTE DE SÉCURITÉ
+
+L'objectif n'est absolument PAS de remplacer Burkina Pratique.
+
+L'objectif est de la faire évoluer de :
+
+"page d'orientation vers des catégories"
+
+vers :
+
+"outil pratique capable de comprendre un besoin concret, rechercher des solutions disponibles, intégrer des informations dynamiques et fournir un contexte de sécurité avant et pendant le déplacement."
+
+==================================================
+PRINCIPE ABSOLU
+==================================================
+
+EXTEND > REPLACE
+
+REUSE > DUPLICATE
+
+ADD > REFACTOR
+
+La fonctionnalité actuelle doit continuer à fonctionner.
+
+Aucune catégorie existante ne doit disparaître.
+
+Aucun lieu existant ne doit disparaître.
+
+Aucune route existante ne doit être supprimée.
+
+Aucune donnée existante ne doit être supprimée.
+
+Aucune fonctionnalité existante de BurkinaWatch ne doit être remplacée par une nouvelle implémentation simplement parce qu'elle pourrait être reconstruite différemment.
+
+==================================================
+1. AUDITER BURKINA PRATIQUE
+==================================================
+
+Identifier précisément :
+
+- route /burkina-pratique ;
+- composants ;
+- hooks ;
+- services ;
+- API ;
+- modèles ;
+- types ;
+- catégories ;
+- explorateur ;
+- recherche ;
+- recherche par intention ;
+- carte ;
+- liste ;
+- filtres ;
+- cache ;
+- offline ;
+- navigation vers les pages métier.
+
+Vérifier également le constat actuel :
+
+GET /api/places?placeType=...
+
+Identifier exactement les types actuellement pris en charge.
+
+==================================================
+2. AUDITER LE SYSTÈME DE LIEUX
+==================================================
+
+Identifier :
+
+- modèle/table des lieux ;
+- catégories ;
+- coordonnées ;
+- horaires ;
+- téléphone ;
+- WhatsApp ;
+- adresse ;
+- source ;
+- images ;
+- statut ;
+- données administratives.
+
+Déterminer comment enrichir les lieux sans créer une seconde base.
+
+==================================================
+3. AUDITER LES SYSTÈMES CITOYENS
+==================================================
+
+Chercher dans tout le repository :
+
+- signalements ;
+- contributions ;
+- confirmations ;
+- photos ;
+- vidéos ;
+- événements ;
+- notifications ;
+- utilisateurs ;
+- authentification ;
+- modération.
+
+Ne rien modifier.
+
+==================================================
+4. AUDITER LA SÉCURITÉ EXISTANTE
+==================================================
+
+C'est particulièrement important.
+
+Identifier exactement comment fonctionnent :
+
+- SOS ;
+- PANIC ;
+- partage de localisation ;
+- contacts de confiance ;
+- géolocalisation ;
+- notifications ;
+- éventuel suivi de déplacement ;
+- événements de sécurité.
+
+Nous voulons réutiliser ces systèmes.
+
+NE PAS créer un deuxième système SOS.
+
+NE PAS créer un deuxième système PANIC.
+
+NE PAS créer un deuxième système de localisation.
+
+NE PAS créer un deuxième système de contact de confiance.
+
+==================================================
+5. AUDITER LES SOURCES EXTERNES
+==================================================
+
+Chercher si le projet possède déjà :
+
+- APIs externes ;
+- connecteurs ;
+- scraping ;
+- flux RSS ;
+- URLs de sources ;
+- imports ;
+- jobs/cron ;
+- systèmes d'ingestion ;
+- publications externes ;
+- événements externes.
+
+Identifier également les possibilités techniques d'ajouter ultérieurement des sources publiques/autorisées telles que :
+
+- sites web ;
+- pages officielles ;
+- flux RSS ;
+- APIs ;
+- sources publiques ;
+- plateformes disposant d'une API autorisée.
+
+IMPORTANT :
+
+Ne propose pas de scraping agressif ou de contournement des protections de plateformes.
+
+Si une source nécessite une API ou une autorisation qui n'existe pas actuellement, documente-la comme dépendance future.
+
+==================================================
+6. ARCHITECTURE CIBLE
+==================================================
+
+Proposer comment obtenir :
+
+                 BURKINA PRATIQUE
+                        |
+       +----------------+----------------+
+       |                |                |
+     LIEUX            OFFRES           SIGNAUX
+       |                |                |
+       +----------------+----------------+
+                        |
+                  RECHERCHE BESOIN
+                        |
+                 CONTEXTE SÉCURITÉ
+                        |
+                      ACTION
+
+LIEUX :
+où se trouve le service ?
+
+OFFRES :
+qu'est-ce qui est proposé concrètement ?
+
+SIGNAUX :
+qu'est-ce qui se passe actuellement ?
+
+SÉCURITÉ :
+quelles informations pertinentes l'utilisateur doit-il connaître avant de se déplacer ?
+
+==================================================
+7. AUDIT RAILWAY
+==================================================
+
+La plateforme Railway fonctionne actuellement.
+
+Cette mission ne doit absolument rien modifier concernant :
+
+- Railway ;
+- secrets ;
+- variables d'environnement ;
+- build ;
+- start ;
+- Docker ;
+- configuration de déploiement ;
+- domaine ;
+- base de données de production.
+
+Identifier uniquement les dépendances éventuelles.
+
+==================================================
+8. RAPPORT
+==================================================
+
+Ne code rien.
+
+Fournis :
+
+A. architecture actuelle ;
+B. fichiers concernés ;
+C. systèmes réutilisables ;
+D. données existantes ;
+E. sécurité existante ;
+F. sources externes existantes ;
+G. possibilités d'ajouter OFFRES ;
+H. possibilités d'ajouter SIGNAUX ;
+I. possibilités d'intégrer la sécurité ;
+J. risques ;
+K. migrations éventuellement nécessaires ;
+L. fichiers qui devront être modifiés ;
+M. fichiers qui devront être créés ;
+N. stratégie d'implémentation additive ;
+O. stratégie garantissant l'absence d'impact Railway.
+
+Termine par :
+
+GO
+
+ou
+
+NO-GO
+
+NE MODIFIE RIEN.
