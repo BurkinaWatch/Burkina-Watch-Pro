@@ -10,6 +10,8 @@ cp "$repo_root/scripts/release-check.sh" "$sandbox/scripts/release-check.sh"
 cp "$repo_root/scripts/check-database-url-policy.sh" "$sandbox/scripts/check-database-url-policy.sh"
 
 for file in \
+  package.json \
+  pnpm-workspace.yaml \
   lib/db/src/index.ts \
   lib/db/drizzle.config.ts \
   artifacts/api-server/src/db.ts \
@@ -30,7 +32,7 @@ set -Eeuo pipefail
 : "${RELEASE_CHECK_TEST_LOG:?}"
 
 case "$*" in
-  "install --frozen-lockfile --prefer-offline --force")
+  "install --frozen-lockfile --prefer-offline")
     printf '%s\n' install >> "$RELEASE_CHECK_TEST_LOG"
     ;;
   "run typecheck")
