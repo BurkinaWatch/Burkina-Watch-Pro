@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { List, Loader2, Map as MapIcon, RefreshCw, Search } from "lucide-react";
 import type { Place } from "@shared/schema";
@@ -9,8 +9,16 @@ import { Input } from "@/components/ui/input";
 import GoogleMap, { type PlaceMapMarker } from "@/components/GoogleMap";
 import { PlaceCard } from "@/components/PlaceCard";
 import { offlineStorage } from "@/lib/offlineStorage";
+import {
+  filterPracticalPlaces,
+  parsePracticalSearch,
+  practicalFilterLabel,
+  type PracticalExplorerType,
+  type PracticalLocation,
+  type PracticalSearchIntent,
+} from "@/lib/practicalSearch";
 
-type ExplorerType = "pharmacy" | "fuel" | "restaurant" | "shop" | "marketplace";
+type ExplorerType = PracticalExplorerType;
 
 const EXPLORER_TYPES: Array<{ value: ExplorerType; label: string }> = [
   { value: "pharmacy", label: "Pharmacies" },
@@ -23,6 +31,7 @@ const EXPLORER_TYPES: Array<{ value: ExplorerType; label: string }> = [
 interface PratiqueExplorerProps {
   initialType?: ExplorerType;
   searchTerm?: string;
+  intent?: PracticalSearchIntent;
 }
 
 interface PlacesResponse {
@@ -34,11 +43,26 @@ function normalizePlaces(data: Place[] | PlacesResponse | undefined): Place[] {
   return Array.isArray(data?.places) ? data.places : [];
 }
 
-export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "" }: PratiqueExplorerProps) {
+export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "", intent }: PratiqueExplorerProps) {
   const [placeType, setPlaceType] = useState<ExplorerType>(initialType);
   const [localSearch, setLocalSearch] = useState(searchTerm);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
+  const [location, setLocation] = useState<PracticalLocation>();
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLocalSearch(searchTerm);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    setPlaceType(initialType);
+  }, [initialType]);
+
+  const effectiveIntent = useMemo<PracticalSearchIntent>(() => {
+    const parsed = intent || parsePracticalSearch(localSearch);
+    return { ...parsed, searchText: localSearch };
+  }, [intent, localSearch]);
 
   const { data, isLoading, isFetching, isError, refetch } = useQuery<Place[] | PlacesResponse>({
     queryKey: ["pratique-explorer", placeType],
@@ -60,16 +84,28 @@ export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "" }: 
   });
 
   const places = useMemo(() => {
-    const query = localSearch.trim().toLocaleLowerCase();
-    return normalizePlaces(data)
-      .filter((place) => {
-        if (!query) return true;
-        return [place.name, place.address, place.quartier, place.ville, place.region]
-          .filter(Boolean)
-          .some((value) => String(value).toLocaleLowerCase().includes(query));
-      })
+    return filterPracticalPlaces(normalizePlaces(data), effectiveIntent, location)
       .slice(0, 24);
-  }, [data, localSearch]);
+  }, [data, effectiveIntent, location]);
+
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError("La position n’est pas disponible sur cet appareil.");
+      return;
+    }
+
+    setLocationError(null);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      () => setLocationError("Position non disponible. Les résultats proches restent inconnus."),
+      { enableHighAccuracy: false, maximumAge: 5 * 60 * 1000, timeout: 10_000 },
+    );
+  };
 
   const markers = useMemo<PlaceMapMarker[]>(
     () =>
@@ -120,6 +156,26 @@ export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "" }: 
           ))}
         </div>
 
+        {effectiveIntent.filters.length > 0 ? (
+          <div className="mt-4 flex flex-wrap items-center gap-2" data-testid="practical-active-filters">
+            <span className="text-xs font-semibold text-muted-foreground">Filtres compris</span>
+            {effectiveIntent.filters.map((filter) => (
+              <Badge key={filter} variant="secondary">
+                {practicalFilterLabel(filter, effectiveIntent.budget)}
+              </Badge>
+            ))}
+            {effectiveIntent.filters.includes("proximity") && !location ? (
+              <Button type="button" size="sm" variant="outline" onClick={requestLocation}>
+                Utiliser ma position
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
+
+        {locationError ? (
+          <p className="mt-2 text-xs text-amber-700 dark:text-amber-300" role="status">{locationError}</p>
+        ) : null}
+
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
@@ -167,7 +223,7 @@ export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "" }: 
               ))}
             </div>
           ) : (
-            <Card><CardHeader><CardTitle className="text-base">Aucun lieu trouvé</CardTitle></CardHeader><CardContent className="pt-0 text-sm text-muted-foreground">Essayez une autre catégorie ou retirez le filtre de recherche.</CardContent></Card>
+            <Card><CardHeader><CardTitle className="text-base">Aucun lieu vérifiable trouvé</CardTitle></CardHeader><CardContent className="pt-0 text-sm text-muted-foreground">Essayez une autre catégorie ou retirez un filtre. Une disponibilité, une ouverture ou un prix absents ne sont pas inventés.</CardContent></Card>
           )}
           {viewMode === "list" && places.length > 6 ? (
             <p className="mt-4 text-center text-xs text-muted-foreground">Les 6 premiers résultats sont affichés ici. Utilisez une catégorie pour ouvrir la liste complète.</p>
