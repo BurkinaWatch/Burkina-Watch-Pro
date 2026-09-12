@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "IqHayBuHOime0VPoM2hfz"
+uri = "file://docs/fiche-technique-burkina-pratique.pdf"
+type = "pdf"
+title = "Fiche technique — Burkina Pratique"
+description = "Fiche technique PDF téléchargeable de la page Burkina Pratique : fonctionnalités, catalogue, recherche, architecture, API, cache hors ligne et limites."
+logical_id = "7c885a60-7523-4c61-aeeb-325970bd6d7b"
+content_hash = "sha256:2d3cba22eb8120583b367b2ccab87bd17a32cdf2f8760836574f96f5f27472e1"
+size = 116665
+mtime_ms = 1789219106884
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:766d3c29-01ad-41d8-90b6-ccbc39f09e61/7c885a60-7523-4c61-aeeb-325970bd6d7b/bbdc3350-8276-4cd0-a18d-0d950be09a0b"
+storage_version_token = "1789219607892884"
+content_type = "application/pdf"
