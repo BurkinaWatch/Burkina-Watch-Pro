@@ -270,6 +270,7 @@ export default function BurkinaPratique() {
   }, [intent, normalizedQuery]);
 
   const explorerType = useMemo(() => {
+    if (intent.explorerType) return intent.explorerType;
     if (intent.href === "/stations") return "fuel" as const;
     if (intent.href === "/restaurants") return "restaurant" as const;
     if (intent.href === "/boutiques" || intent.href === "/boutiques-marches") return "shop" as const;
@@ -280,8 +281,19 @@ export default function BurkinaPratique() {
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     rememberSearch(query);
+    if (intent.matched && intent.filters.length > 0) {
+      document.getElementById("pratique-explorer")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     const route = intent.matched ? buildPracticalRoute(intent) : searchResults[0]?.href;
     if (route) navigate(route);
+  };
+
+  const chooseUrgentNeed = () => {
+    setQuery("besoin urgent maintenant");
+    window.setTimeout(() => {
+      document.getElementById("pratique-explorer")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 0);
   };
 
   return (
