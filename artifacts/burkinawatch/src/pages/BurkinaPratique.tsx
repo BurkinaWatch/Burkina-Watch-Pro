@@ -317,7 +317,7 @@ export default function BurkinaPratique() {
 
                 <form onSubmit={handleSearch} className="pratique-reveal pratique-reveal-delay-3 relative mt-7 max-w-2xl" role="search">
                   <label htmlFor="burkina-pratique-search" className="sr-only">
-                    Rechercher un service ou un lieu
+                    Que cherchez-vous ?
                   </label>
                   <Search className="pointer-events-none absolute left-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                   <Input
@@ -338,10 +338,16 @@ export default function BurkinaPratique() {
                         searchResults.map((category) => (
                           <Link
                             key={`${category.href}-${category.label}`}
-                            href={category.href === intent.href && intent.matched ? buildPracticalRoute(intent) : category.href}
+                            href={category.href === intent.href && intent.matched && intent.filters.length > 0 ? "#pratique-explorer" : category.href === intent.href && intent.matched ? buildPracticalRoute(intent) : category.href}
                             className="flex items-center gap-3 rounded-xl p-3 text-left transition-colors hover:bg-muted"
                             data-testid={`link-search-result-${category.href.slice(1)}`}
-                             onClick={() => rememberSearch(query)}
+                            onClick={(event) => {
+                              rememberSearch(query);
+                              if (intent.matched && intent.filters.length > 0) {
+                                event.preventDefault();
+                                document.getElementById("pratique-explorer")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                              }
+                            }}
                           >
                             <CategoryIcon category={category} size="sm" />
                             <span className="min-w-0 flex-1">
@@ -360,6 +366,22 @@ export default function BurkinaPratique() {
                 <p className="mt-3 text-xs text-emerald-950/60 dark:text-emerald-50/60">
                   Recherchez par mot-clé, nom de service ou besoin.
                 </p>
+                <div className="mt-4 flex flex-wrap gap-2" aria-label="Raccourcis de recherche">
+                  <Button type="button" size="sm" variant="outline" className="rounded-full bg-background/70" onClick={chooseUrgentNeed}>
+                    <Zap className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                    Besoin maintenant
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full bg-background/70"
+                    onClick={() => document.getElementById("pratique-explorer")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                  >
+                    <MapPin className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                    Autour de moi
+                  </Button>
+                </div>
                 {!normalizedQuery && recentSearches.length > 0 ? (
                   <div className="mt-4 flex flex-wrap items-center gap-2" data-testid="practical-recent-searches">
                     <span className="text-xs font-semibold text-muted-foreground">Recherches récentes</span>
@@ -429,13 +451,17 @@ export default function BurkinaPratique() {
           </div>
         </section>
 
-        <PratiqueExplorer initialType={explorerType} searchTerm={query} />
+        <PratiqueExplorer
+          initialType={explorerType}
+          searchTerm={intent.matched ? intent.searchText : query}
+          intent={intent}
+        />
 
         <section className="mx-auto max-w-6xl px-4 pt-10 sm:px-6 md:pt-14">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Commencer maintenant</p>
-              <h2 className="mt-2 font-display text-3xl font-bold tracking-tight md:text-4xl">Les accès les plus utiles</h2>
+              <h2 className="mt-2 font-display text-3xl font-bold tracking-tight md:text-4xl">Explorer par catégorie</h2>
               <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Les services recherchés au quotidien, sans détour.</p>
             </div>
             <Button variant="outline" className="w-full gap-2 rounded-xl sm:w-auto" onClick={() => navigate("/carte")} data-testid="button-open-map">

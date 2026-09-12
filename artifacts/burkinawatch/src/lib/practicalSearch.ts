@@ -283,7 +283,7 @@ export function filterPracticalPlaces(
   location?: PracticalLocation,
 ): PracticalPlace[] {
   const search = normalizePracticalSearch(intent.searchText);
-  const filtered = places
+  const filtered: PracticalPlace[] = places
     .filter((place) => {
       if (search) {
         const tags = placeTags(place);
@@ -314,7 +314,7 @@ export function filterPracticalPlaces(
 
       return true;
     })
-    .map((place) => {
+    .map((place): PracticalPlace => {
       const distance = location ? distanceInKm(place, location) : undefined;
       return distance === undefined ? place : { ...place, distance };
     });
