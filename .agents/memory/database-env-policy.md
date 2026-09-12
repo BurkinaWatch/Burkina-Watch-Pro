@@ -1,10 +1,10 @@
 ---
 name: Politique des variables PostgreSQL
-description: Le dépôt distingue actuellement la connexion directe de lib/db et la politique Railway de l’API
+description: La connexion PostgreSQL de lib/db et de l’API utilise la variable DATABASE_URL
 ---
 
-`lib/db` exige `DATABASE_URL`, tandis que l’API peut privilégier `RAILWAY_DATABASE_URL` et ses contrôles de production peuvent exiger cette variable séparément.
+`DATABASE_URL` est désormais la seule variable PostgreSQL supportée par `lib/db`, le pool API, les sessions et les contrôles de production. `RAILWAY_DATABASE_URL` n’est plus une variante active.
 
-**Why:** Cette double convention peut permettre au build de réussir tout en faisant échouer le démarrage ou un parcours d’authentification selon la variable configurée.
+**Why:** Une convention unique évite qu’un déploiement Railway fournisse une variable que certains modules ignorent, provoquant un échec au démarrage ou dans un parcours d’authentification.
 
-**How to apply:** Lors d’un prochain changement de configuration ou déploiement, traiter les deux variables comme une incohérence à résoudre explicitement; ne pas supposer qu’elles sont interchangeables sans vérifier tous les consommateurs.
+**How to apply:** Lors d’un changement de configuration ou déploiement, configurer `DATABASE_URL` sur le service API et vérifier qu’aucun nouveau fallback PostgreSQL n’est introduit.
