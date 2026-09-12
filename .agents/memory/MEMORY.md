@@ -6,3 +6,4 @@
 - [Schémas Railway et développement](railway-schema-source.md) — l’API privilégie Railway; les changements de schéma doivent passer par la publication, pas par le push dev seul.
 - [Politique des variables PostgreSQL](database-env-policy.md) — `lib/db` et l’API n’utilisent pas encore une convention DB unique.
 - [Installations Railway propres](railway-clean-install.md) — une dépendance transitive visible localement peut manquer sur Railway; valider avec une installation gelée et propre.
+- [Routage Web et API Railway](railway-web-api-routing.md) — le domaine principal doit servir le frontend à la racine et conserver l’API sous `/api`.
