@@ -37,7 +37,7 @@ run_isolated_mobile_build() {
   output_dir="$(mktemp -d "${TMPDIR:-/tmp}/burkinawatch-mobile-release.XXXXXX")"
 
   echo "Using isolated mobile build output: $output_dir"
-  if env STATIC_BUILD_DIR="$output_dir" pnpm run build:artifacts; then
+  if env STATIC_BUILD_DIR="$output_dir" METRO_PORT="${METRO_PORT:-8082}" pnpm run build:artifacts; then
     status=0
   else
     status=$?
