@@ -1,3 +1,5 @@
+import type { Place } from "@shared/schema";
+
 export type PracticalFilterKey =
   | 'open_now'
   | 'on_duty'
@@ -184,4 +186,141 @@ export function practicalFilterLabel(filter: PracticalFilterKey, budget?: number
   if (filter === 'date') return 'Date demandée';
   if (filter === 'urgent') return 'Besoin urgent';
   return `${budget ? 'Budget max' : 'Budget'} ${new Intl.NumberFormat('fr-FR').format(budget || 0)} FCFA`;
+}
+
+export type PracticalLocation = {
+  latitude: number;
+  longitude: number;
+};
+
+type PracticalPlace = Place & { distance?: number };
+
+function placeTags(place: Place) {
+  return (place.tags && typeof place.tags === 'object' ? place.tags : {}) as Record<string, unknown>;
+}
+
+function textValue(value: unknown) {
+  return typeof value === 'string' || typeof value === 'number' ? String(value) : '';
+}
+
+function parsePrice(value: unknown) {
+  const match = textValue(value).match(/\d[\d\s.]*/);
+  if (!match) return undefined;
+  const parsed = Number(match[0].replace(/[\s.]/g, ''));
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function placePrice(place: Place) {
+  const tags = placeTags(place);
+  return parsePrice(tags.budget) ?? parsePrice(tags.price) ?? parsePrice(tags.priceRange) ?? parsePrice(tags.priceLevel);
+}
+
+function placeOpeningHours(place: Place) {
+  const tags = placeTags(place);
+  return textValue(place.horaires || tags.opening_hours || tags.service_times);
+}
+
+function isOpenNow(place: Place) {
+  const hours = placeOpeningHours(place).toLocaleLowerCase('fr-FR');
+  if (!hours) return undefined;
+  if (/(24\s*\/\s*7|24h|24 h|toujours|non[- ]?stop)/.test(hours)) return true;
+
+  const match = hours.match(/(\d{1,2})(?:[:h](\d{2}))?\s*[-–à]\s*(\d{1,2})(?:[:h](\d{2}))?/);
+  if (!match) return undefined;
+  const start = Number(match[1]) * 60 + Number(match[2] || 0);
+  const end = Number(match[3]) * 60 + Number(match[4] || 0);
+  const now = new Date();
+  const current = now.getHours() * 60 + now.getMinutes();
+  return start <= end ? current >= start && current <= end : current >= start || current <= end;
+}
+
+function isOnDuty(place: Place) {
+  const tags = placeTags(place);
+  const content = [
+    placeOpeningHours(place),
+    textValue(tags.garde),
+    textValue(tags.on_duty),
+    textValue(tags.duty),
+    textValue(tags.services),
+  ].join(' ').toLocaleLowerCase('fr-FR');
+  return /\b(garde|de garde|astreinte|nuit|24\s*\/\s*7)\b/.test(content);
+}
+
+function isAvailable(place: Place) {
+  const tags = placeTags(place);
+  const content = [
+    textValue(tags.available),
+    textValue(tags.availability),
+    textValue(tags.disponibilite),
+    textValue(tags.status),
+    textValue(tags.services),
+  ].join(' ').toLocaleLowerCase('fr-FR');
+  return /\b(oui|yes|true|disponible|disponibles|en stock|ouvert|ouverte|actif|active)\b/.test(content);
+}
+
+function isRecent(place: Place) {
+  const timestamp = place.updatedAt || place.lastSyncedAt || place.createdAt;
+  if (!timestamp) return false;
+  const age = Date.now() - new Date(timestamp).getTime();
+  return Number.isFinite(age) && age >= 0 && age <= 90 * 24 * 60 * 60 * 1000;
+}
+
+function distanceInKm(place: Place, location: PracticalLocation) {
+  const latitude = Number(place.latitude);
+  const longitude = Number(place.longitude);
+  if (![latitude, longitude, location.latitude, location.longitude].every(Number.isFinite)) return undefined;
+  const earthRadius = 6371;
+  const latitudeDelta = (location.latitude - latitude) * Math.PI / 180;
+  const longitudeDelta = (location.longitude - longitude) * Math.PI / 180;
+  const a = Math.sin(latitudeDelta / 2) ** 2
+    + Math.cos(latitude * Math.PI / 180) * Math.cos(location.latitude * Math.PI / 180) * Math.sin(longitudeDelta / 2) ** 2;
+  return earthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+export function filterPracticalPlaces(
+  places: Place[],
+  intent: PracticalSearchIntent,
+  location?: PracticalLocation,
+): PracticalPlace[] {
+  const search = normalizePracticalSearch(intent.searchText);
+  const filtered = places
+    .filter((place) => {
+      if (search) {
+        const tags = placeTags(place);
+        const haystack = normalizePracticalSearch([
+          place.name,
+          place.address,
+          place.quartier,
+          place.ville,
+          place.region,
+          textValue(tags.description),
+          textValue(tags.services),
+          textValue(tags.cuisine),
+        ].filter(Boolean).join(' '));
+        if (!search.split(/\s+/).every((word) => haystack.includes(word))) return false;
+      }
+
+      if (intent.filters.includes('open_now') && isOpenNow(place) !== true) return false;
+      if (intent.filters.includes('on_duty') && !isOnDuty(place)) return false;
+      if (intent.filters.includes('recent') && !isRecent(place)) return false;
+      if (intent.filters.includes('available') && !isAvailable(place)) return false;
+
+      if (intent.budget) {
+        const price = placePrice(place);
+        if (price === undefined) return false;
+        if (intent.budgetMode === 'max' && price > intent.budget) return false;
+        if (intent.budgetMode === 'target' && price > intent.budget) return false;
+      }
+
+      return true;
+    })
+    .map((place) => {
+      const distance = location ? distanceInKm(place, location) : undefined;
+      return distance === undefined ? place : { ...place, distance };
+    });
+
+  if (intent.filters.includes('proximity') && location) {
+    return filtered.sort((a, b) => (a.distance ?? Number.POSITIVE_INFINITY) - (b.distance ?? Number.POSITIVE_INFINITY));
+  }
+  return filtered;
 }
