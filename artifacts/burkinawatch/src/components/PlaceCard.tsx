@@ -7,6 +7,7 @@ import { SourceBadge } from "./SourceBadge";
 import { LocationValidator } from "./LocationValidator";
 import { useToast } from "@/hooks/use-toast";
 import { getCurrentMobileMoneyStatus, getFreshnessClasses, getPlaceFreshness } from "@/lib/placeFreshness";
+import { PlacePracticalContext } from "./PlacePracticalContext";
 
 interface PlaceWithDistance extends Place {
   distance?: number;
@@ -297,6 +298,8 @@ export function PlaceCard({ place }: PlaceCardProps) {
             <span className="text-xs line-clamp-2 italic">{String(services)}</span>
           </div>
         )}
+
+        <PlacePracticalContext placeId={place.id} />
 
         {plats && (
           <div className="flex items-start gap-2 text-sm text-muted-foreground">

@@ -1330,6 +1330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const signalements = await storage.getSignalements({
         limit: Math.min(Math.max(limit, 1), 50),
         excludePlaceContributions: true,
+        placeId: typeof req.query.placeId === "string" ? req.query.placeId : undefined,
       });
       const userId = (req as any).user?.claims?.sub;
       const freshSignals = signalements
