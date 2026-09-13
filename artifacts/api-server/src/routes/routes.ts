@@ -2155,16 +2155,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/tracking/start", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { latitude, longitude } = req.body || {};
-      
-      const session = await storage.startTrackingSession(userId);
+      const {
+        latitude,
+        longitude,
+        destinationLabel,
+        destinationPlaceId,
+        destinationLatitude,
+        destinationLongitude,
+        contactIds,
+      } = req.body || {};
+      const requestedContactIds = Array.isArray(contactIds)
+        ? contactIds.filter((id: unknown): id is string => typeof id === "string")
+        : [];
+      const emergencyContacts = await storage.getEmergencyContacts(userId);
+      const selectedContacts = requestedContactIds.length > 0
+        ? emergencyContacts.filter((contact) => requestedContactIds.includes(contact.id))
+        : emergencyContacts;
+      const session = await storage.startTrackingSession(userId, {
+        destinationLabel: typeof destinationLabel === "string" ? destinationLabel.trim() : null,
+        destinationPlaceId: typeof destinationPlaceId === "string" ? destinationPlaceId : null,
+        destinationLatitude: typeof destinationLatitude === "number" || typeof destinationLatitude === "string" ? destinationLatitude : null,
+        destinationLongitude: typeof destinationLongitude === "number" || typeof destinationLongitude === "string" ? destinationLongitude : null,
+        sharedContactIds: requestedContactIds.length > 0 ? selectedContacts.map((contact) => contact.id) : null,
+      });
       
       // Envoyer une notification aux contacts d'urgence
       try {
         const user = await storage.getUser(userId);
-        const emergencyContacts = await storage.getEmergencyContacts(userId);
         
-        if (user && emergencyContacts.length > 0) {
+        if (user && selectedContacts.length > 0) {
           const userName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Utilisateur';
           
           // Get initial location if provided
@@ -2179,7 +2198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           // Envoyer des emails à tous les contacts avec email
-          const emailPromises = emergencyContacts
+          const emailPromises = selectedContacts
             .filter(contact => contact.email)
             .map(contact => 
               sendEmergencyTrackingStartEmail(
@@ -2272,7 +2291,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Récupérer les contacts d'urgence
-      const contacts = await storage.getEmergencyContacts(userId);
+      const allContacts = await storage.getEmergencyContacts(userId);
+      const contacts = activeSession.sharedContactIds?.length
+        ? allContacts.filter((contact) => activeSession.sharedContactIds?.includes(contact.id))
+        : allContacts;
 
       // Si des contacts existent, créer les URLs WhatsApp avec l'adresse géocodée
       if (contacts && contacts.length > 0 && lastLocation) {
@@ -2297,6 +2319,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error stopping tracking session:", error);
       res.status(500).json({ error: "Erreur lors de l'arrêt du tracking" });
+    }
+  });
+
+  app.post("/api/tracking/arrive", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const session = await storage.confirmTrackingArrival(userId);
+      if (!session) {
+        return res.status(404).json({ error: "Aucune protection de déplacement active" });
+      }
+      res.json(session);
+    } catch (error) {
+      console.error("Error confirming tracking arrival:", error);
+      res.status(500).json({ error: "Impossible de confirmer l'arrivée" });
     }
   });
 
