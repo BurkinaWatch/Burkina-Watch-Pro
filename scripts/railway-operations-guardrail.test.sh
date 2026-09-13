@@ -73,12 +73,20 @@ guard_target() {
   [[ "$expected_service" == "$received_service" ]] || divergences+=("service")
 
   if ((${#divergences[@]} > 0)); then
+    local divergence_summary=""
+    for divergence in "${divergences[@]}"; do
+      if [[ -n "$divergence_summary" ]]; then
+        divergence_summary+=", "
+      fi
+      divergence_summary+="$divergence"
+    done
+
     printf 'Cible diagnostiquée : projet=%s, environnement=%s, service=%s\n' \
       "$expected_project" "$expected_environment" "$expected_service"
     printf 'Cible reçue : projet=%s, environnement=%s, service=%s\n' \
       "$received_project" "$received_environment" "$received_service"
     printf 'Raison de l’arrêt : divergence de cible (%s); opération bloquée avant toute écriture.\n' \
-      "$(IFS=', '; echo "${divergences[*]}")"
+      "$divergence_summary"
     return 42
   fi
 }
