@@ -81,6 +81,9 @@ import {
   getOwnedVisit,
   getPlaceExperienceConfig,
   getPlaceExperienceReadiness,
+  placeExperienceConsentInputSchema,
+  placeExperiencePresenceInputSchema,
+  placeExperienceResponseInputSchema,
   recordPlaceExperience,
   recordPresence,
   savePlaceExperienceConsent,
@@ -2145,24 +2148,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----------------------------------------
   // EXPÉRIENCE DU LIEU (OPT-IN, PHASE 1)
   // ----------------------------------------
-  const presenceObservationSchema = z.object({
-    latitude: z.coerce.number().min(-90).max(90),
-    longitude: z.coerce.number().min(-180).max(180),
-    accuracyMeters: z.coerce.number().finite().nonnegative().max(10_000).optional().nullable(),
-    speedMps: z.coerce.number().finite().nonnegative().max(100).optional().nullable(),
-  });
-
-  const placeExperienceConsentSchema = z.object({
-    enabled: z.boolean(),
-    locationPermissionGranted: z.boolean(),
-  });
-
-  const placeExperienceResponseSchema = z.object({
-    perception: z.enum(["SAFE", "UNCERTAIN", "UNSAFE"]),
-    reasonCodes: z.array(z.string().trim().min(1).max(50)).max(8).optional().nullable(),
-    comment: z.string().trim().max(1000).optional().nullable(),
-  });
-
   app.get("/api/place-experience/config", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -2189,7 +2174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAuthenticated,
     placeExperienceMutationLimiter,
     async (req: any, res) => {
-      const parsed = placeExperienceConsentSchema.safeParse(req.body);
+      const parsed = placeExperienceConsentInputSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({ error: "Consentement d'expérience du lieu invalide" });
       }
@@ -2233,7 +2218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAuthenticated,
     placeExperienceMutationLimiter,
     async (req: any, res) => {
-      const parsed = presenceObservationSchema.safeParse(req.body);
+      const parsed = placeExperiencePresenceInputSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({ error: "Observation de présence invalide" });
       }
@@ -2308,7 +2293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAuthenticated,
     placeExperienceMutationLimiter,
     async (req: any, res) => {
-      const parsed = placeExperienceResponseSchema.safeParse(req.body);
+      const parsed = placeExperienceResponseInputSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({ error: "Réponse d'expérience du lieu invalide" });
       }
@@ -2319,14 +2304,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           visitId: req.params.visitId,
           ...parsed.data,
         });
-        if (!experience) {
+        if (experience.outcome === "not_found") {
           return res.status(404).json({ error: "Présence éligible introuvable" });
         }
+        if (experience.outcome === "duplicate") {
+          return res.status(409).json({ error: "Une réponse existe déjà pour cette présence" });
+        }
         res.status(201).json({
-          id: experience.id,
-          visitId: experience.visitId,
-          perception: experience.perception,
-          createdAt: experience.createdAt,
+          id: experience.experience.id,
+          visitId: experience.experience.visitId,
+          perception: experience.experience.perception,
+          createdAt: experience.experience.createdAt,
         });
       } catch (error: any) {
         if (error?.code === "23505") {

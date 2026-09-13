@@ -1,4 +1,5 @@
 import { and, desc, eq, gt, gte, inArray, lte } from "drizzle-orm";
+import { z } from "zod";
 import {
   db,
   placeExperienceCandidates,
@@ -11,6 +12,7 @@ import {
   type Place,
   type PlaceExperienceCandidate,
   type PlaceExperienceConsent,
+  type PlaceExperience,
   type PlaceExperienceVisit,
 } from "@workspace/db";
 
@@ -50,6 +52,24 @@ export type PlaceExperienceReadiness = {
   locationPermissionGranted: boolean;
   pushSubscriptionActive: boolean;
 };
+
+export const placeExperiencePresenceInputSchema = z.object({
+  latitude: z.coerce.number().min(-90).max(90),
+  longitude: z.coerce.number().min(-180).max(180),
+  accuracyMeters: z.coerce.number().finite().nonnegative().max(10_000).optional().nullable(),
+  speedMps: z.coerce.number().finite().nonnegative().max(100).optional().nullable(),
+});
+
+export const placeExperienceConsentInputSchema = z.object({
+  enabled: z.boolean(),
+  locationPermissionGranted: z.boolean(),
+});
+
+export const placeExperienceResponseInputSchema = z.object({
+  perception: z.enum(["SAFE", "UNCERTAIN", "UNSAFE"]),
+  reasonCodes: z.array(z.string().trim().min(1).max(50)).max(8).optional().nullable(),
+  comment: z.string().trim().max(1000).optional().nullable(),
+});
 
 export type PresenceObservation = {
   startedAt: Date;
@@ -280,18 +300,30 @@ export async function recordPresence(
   const startedAt = activeVisit && gapSeconds <= config.maxObservationGapSeconds
     ? activeVisit.startedAt
     : observation.observedAt;
-  const evaluation = evaluatePresence({
+  const initialEvaluation = evaluatePresence({
     startedAt,
     observedAt: observation.observedAt,
     speedMps: observation.speedMps,
     accuracyMeters: observation.accuracyMeters,
   }, config);
+  const invalidatedDwell =
+    Boolean(activeVisit && !activeVisit.checkInTriggeredAt) &&
+    (initialEvaluation.reason === "moving" || initialEvaluation.reason === "inaccurate");
+  const effectiveStartedAt = invalidatedDwell ? observation.observedAt : startedAt;
+  const evaluation = invalidatedDwell
+    ? evaluatePresence({
+        startedAt: effectiveStartedAt,
+        observedAt: observation.observedAt,
+        speedMps: observation.speedMps,
+        accuracyMeters: observation.accuracyMeters,
+      }, config)
+    : initialEvaluation;
   const nextStatus = evaluation.eligible ? "eligible" : "observing";
   const shouldTrigger = shouldTriggerCheckIn(evaluation, activeVisit?.checkInTriggeredAt);
   const visitValues = {
     userId,
     placeId: place.id,
-    startedAt,
+     startedAt: effectiveStartedAt,
     lastSeenAt: observation.observedAt,
     estimatedDurationSeconds: evaluation.durationSeconds,
     lastLatitude: String(observation.latitude),
@@ -315,7 +347,13 @@ export async function recordPresence(
     placeState: previousVisit ? "known" : "new",
     previouslyVisited: previousVisit,
     checkInEligible: shouldTrigger,
-    reason: shouldTrigger ? "eligible" : activeVisit?.checkInTriggeredAt ? "already_triggered" : evaluation.reason,
+    reason: shouldTrigger
+      ? "eligible"
+      : activeVisit?.checkInTriggeredAt
+        ? "already_triggered"
+        : invalidatedDwell
+          ? initialEvaluation.reason
+          : evaluation.reason,
   };
 }
 
@@ -328,15 +366,20 @@ export async function getOwnedVisit(userId: string, visitId: string): Promise<Pl
   return visit ?? null;
 }
 
+export type RecordPlaceExperienceResult =
+  | { outcome: "created"; experience: PlaceExperience }
+  | { outcome: "not_found" }
+  | { outcome: "duplicate" };
+
 export async function recordPlaceExperience(input: {
   userId: string;
   visitId: string;
   perception: "SAFE" | "UNCERTAIN" | "UNSAFE";
   reasonCodes?: string[] | null;
   comment?: string | null;
-}) {
+}): Promise<RecordPlaceExperienceResult> {
   const visit = await getOwnedVisit(input.userId, input.visitId);
-  if (!visit || !visit.checkInTriggeredAt) return null;
+  if (!visit || !visit.checkInTriggeredAt) return { outcome: "not_found" };
 
   const [existingExperience] = await db.select({ id: placeExperiences.id })
     .from(placeExperiences)
@@ -345,7 +388,7 @@ export async function recordPlaceExperience(input: {
       eq(placeExperiences.userId, input.userId),
     ))
     .limit(1);
-  if (existingExperience) return null;
+  if (existingExperience) return { outcome: "duplicate" };
 
   const [experience] = await db.insert(placeExperiences).values({
     visitId: visit.id,
@@ -361,7 +404,7 @@ export async function recordPlaceExperience(input: {
     .set({ status: "checked_in", updatedAt: new Date() })
     .where(eq(placeExperienceVisits.id, visit.id));
 
-  return experience;
+  return { outcome: "created", experience };
 }
 
 export async function deferPlaceExperience(userId: string, visitId: string): Promise<PlaceExperienceVisit | null> {
