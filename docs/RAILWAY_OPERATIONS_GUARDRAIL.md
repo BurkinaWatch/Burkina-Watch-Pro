@@ -30,9 +30,16 @@ Cette phase ne doit effectuer aucune migration, aucun `push`, aucun changement
 de variable, aucun redéploiement et aucune suppression.
 
 La cible doit être vérifiée par son identifiant et son environnement, jamais
-déduite uniquement d'un nom de domaine ou d'un contexte précédent. Si le
-projet, l'environnement ou le service ne correspond pas à la cible annoncée,
-arrêter immédiatement.
+déduite uniquement d'un nom de domaine ou d'un contexte précédent. Conserver
+la cible diagnostiquée comme une empreinte immuable composée du projet, de
+l'environnement et du service. Juste avant toute proposition ou action
+mutante, comparer cette empreinte à la cible reçue dans la confirmation.
+
+Si le projet, l'environnement ou le service ne correspond pas à la cible
+diagnostiquée, arrêter immédiatement, avant d'appeler la commande d'écriture,
+la migration, le redéploiement ou toute autre action mutante. Une confirmation
+de la nouvelle cible ne réautorise pas l'action : elle exige un nouveau
+diagnostic complet et une nouvelle proposition.
 
 ## Phase 2 — Proposition obligatoire avant écriture
 
@@ -83,6 +90,24 @@ Les suppressions, renommages inattendus, diffs destructifs et divergences de
 cible imposent un arrêt immédiat. Ils ne peuvent pas être couverts par une
 confirmation générale.
 
+### Contrôle de cohérence de cible
+
+Le contrôle compare toujours les trois valeurs suivantes :
+
+| Valeur | Source |
+| --- | --- |
+| Projet | Identifiant capturé pendant le diagnostic |
+| Environnement | Identifiant capturé pendant le diagnostic |
+| Service | Identifiant capturé pendant le diagnostic |
+
+En cas de divergence, l'opération mutante est bloquée avant toute écriture.
+Le rapport doit indiquer, sans secret :
+
+- la cible diagnostiquée (projet, environnement, service) ;
+- la cible reçue (projet, environnement, service) ;
+- la valeur divergente et la raison de l'arrêt ;
+- la confirmation que l'action a été bloquée avant toute écriture.
+
 ## Règles spécifiques au schéma et au démarrage
 
 - `DATABASE_URL` est la seule variable PostgreSQL prise en charge par l'API,
@@ -113,6 +138,8 @@ rapport structuré qui distingue clairement :
 - action ;
 - raison de la non-exécution : confirmation absente, refus, précondition
   manquante ou arrêt de sécurité.
+- en cas de divergence : cible diagnostiquée, cible reçue et valeur qui ne
+  correspond pas.
 
 ### Risques et suite
 
