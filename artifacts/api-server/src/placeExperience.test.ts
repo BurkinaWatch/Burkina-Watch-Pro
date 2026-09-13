@@ -15,6 +15,7 @@ import {
   shouldTriggerCheckIn,
 } from "./placeExperience";
 import { requireAuthenticatedUser } from "./authorization";
+import { insertPlaceExperienceCandidateSchema } from "@workspace/db";
 
 const baseObservation = {
   startedAt: new Date("2026-09-13T10:00:00.000Z"),
@@ -227,6 +228,26 @@ test("les validateurs partagés rejettent les coordonnées et perceptions invali
     placeExperienceResponseInputSchema.safeParse({
       perception: "SAFE",
       reasonCodes: Array.from({ length: 9 }, () => "reason"),
+    }).success,
+    false,
+  );
+  assert.equal(
+    insertPlaceExperienceCandidateSchema.safeParse({
+      userId: "user-1",
+      name: "Lieu test",
+      category: "shop",
+      latitude: 12.37,
+      longitude: -1.52,
+    }).success,
+    true,
+  );
+  assert.equal(
+    insertPlaceExperienceCandidateSchema.safeParse({
+      userId: "user-1",
+      name: "Lieu test",
+      category: "shop",
+      latitude: 91,
+      longitude: -1.52,
     }).success,
     false,
   );
