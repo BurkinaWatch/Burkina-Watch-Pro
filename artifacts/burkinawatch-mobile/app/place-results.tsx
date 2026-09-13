@@ -38,6 +38,26 @@ type MobilePlace = {
 
 type ApiResponse = MobilePlace[] | { places?: MobilePlace[]; pharmacies?: MobilePlace[]; boutiques?: MobilePlace[]; banques?: MobilePlace[]; stations?: MobilePlace[]; restaurants?: MobilePlace[]; lastUpdated?: string };
 
+type SecurityContextItem = {
+  id?: string | number;
+  title?: string;
+  label?: string;
+  description?: string;
+  source?: string;
+  sourceName?: string;
+  origin?: string;
+  freshness?: string;
+  freshnessLabel?: string;
+  updatedAt?: string;
+  createdAt?: string;
+};
+
+type SecurityContext = {
+  perceptions?: SecurityContextItem[];
+  signals?: SecurityContextItem[];
+  incidents?: SecurityContextItem[];
+};
+
 const ENDPOINTS: Record<string, string> = {
   pharmacy: '/places/pharmacy?limit=5000',
   hospital: '/places/hospital?limit=500',
@@ -97,6 +117,67 @@ function getUpdatedLabel(place: MobilePlace) {
   if (!rawDate) return null;
   const date = new Date(rawDate);
   return Number.isNaN(date.getTime()) ? null : `Mise à jour : ${date.toLocaleDateString('fr-FR')}`;
+}
+
+function contextItems(value: unknown): SecurityContextItem[] {
+  return Array.isArray(value) ? value.filter((item): item is SecurityContextItem => Boolean(item && typeof item === 'object')) : [];
+}
+
+function contextSource(item: SecurityContextItem) {
+  return item.source || item.sourceName || item.origin || 'Source non précisée';
+}
+
+function contextFreshness(item: SecurityContextItem) {
+  if (item.freshnessLabel || item.freshness) return item.freshnessLabel || item.freshness;
+  const date = item.updatedAt || item.createdAt;
+  if (!date) return 'Fraîcheur inconnue';
+  const parsed = new Date(date);
+  return Number.isNaN(parsed.getTime()) ? 'Fraîcheur inconnue' : `Actualisé le ${parsed.toLocaleDateString('fr-FR')}`;
+}
+
+function SecurityContextCard({ placeId, colors }: { placeId: string; colors: ReturnType<typeof useColors> }) {
+  const contextQuery = useQuery<SecurityContext>({
+    queryKey: ['mobile-place-security-context', placeId],
+    queryFn: () => requestJson<SecurityContext>(`/places/${encodeURIComponent(placeId)}/security-context`),
+    staleTime: 60 * 1000,
+    retry: 1,
+  });
+  const sections = [
+    { key: 'perceptions', label: 'Perceptions', icon: 'eye' as const, items: contextItems(contextQuery.data?.perceptions) },
+    { key: 'signals', label: 'Signaux', icon: 'radio' as const, items: contextItems(contextQuery.data?.signals) },
+    { key: 'incidents', label: 'Incidents', icon: 'alert-triangle' as const, items: contextItems(contextQuery.data?.incidents) },
+  ];
+
+  return (
+    <View style={[styles.securityContext, { backgroundColor: colors.muted, borderColor: colors.border }]}>
+      <View style={styles.securityHeading}>
+        <Feather name="shield" size={15} color={colors.primary} />
+        <Text style={[styles.securityTitle, { color: colors.foreground }]}>Contexte de sécurité</Text>
+      </View>
+      {contextQuery.isLoading ? <Text style={[styles.contextMeta, { color: colors.mutedForeground }]}>Chargement du contexte…</Text> : null}
+      {contextQuery.isError ? <Text style={[styles.contextMeta, { color: colors.mutedForeground }]}>Contexte indisponible pour le moment.</Text> : null}
+      {!contextQuery.isLoading && !contextQuery.isError ? sections.map((section) => section.items.length ? (
+        <View key={section.key} style={styles.contextSection}>
+          <View style={styles.contextSectionTitle}>
+            <Feather name={section.icon} size={13} color={colors.primary} />
+            <Text style={[styles.contextLabel, { color: colors.foreground }]}>{section.label}</Text>
+          </View>
+          {section.items.map((item, index) => (
+            <View key={String(item.id || index)} style={[styles.contextItem, { borderLeftColor: colors.primary }]}>
+              <Text style={[styles.contextItemTitle, { color: colors.foreground }]}>{item.title || item.label || 'Information de sécurité'}</Text>
+              {item.description ? <Text style={[styles.contextMeta, { color: colors.mutedForeground }]}>{item.description}</Text> : null}
+              <Text style={[styles.contextMeta, { color: colors.mutedForeground }]}>
+                Source : {contextSource(item)} · {contextFreshness(item)}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : null) : null}
+      <Text style={[styles.disclaimer, { color: colors.mutedForeground }]}>
+        Contexte indicatif, temporel et non garanti. Il ne constitue pas une garantie de sécurité ni un score de sécurité.
+      </Text>
+    </View>
+  );
 }
 
 export default function MobilePlaceResultsScreen() {
@@ -167,6 +248,7 @@ export default function MobilePlaceResultsScreen() {
                 {address ? <Text style={[styles.detail, { color: colors.mutedForeground }]}>{address}</Text> : null}
                 {place.horaires || place.opening_hours ? <Text style={[styles.detail, { color: colors.mutedForeground }]}>{place.horaires || place.opening_hours}</Text> : null}
                 {updatedLabel ? <Text style={[styles.detail, { color: colors.mutedForeground }]}>{updatedLabel}</Text> : null}
+                <SecurityContextCard placeId={id} colors={colors} />
                 <View style={styles.actions}>
                   {phone ? (
                     <Pressable onPress={() => void Linking.openURL(`tel:${phone}`)} style={[styles.action, { borderColor: colors.border }]}>
@@ -186,6 +268,23 @@ export default function MobilePlaceResultsScreen() {
                       <Text style={[styles.actionText, { color: colors.foreground }]}>Itinéraire</Text>
                     </Pressable>
                   ) : null}
+                  <Pressable
+                    onPress={() =>
+                      router.push({
+                        pathname: '/tracking-live',
+                        params: {
+                          destinationName: name,
+                          destinationAddress: address || '',
+                          destinationLatitude: String(latitude),
+                          destinationLongitude: String(longitude),
+                        },
+                      })
+                    }
+                    style={[styles.protectAction, { backgroundColor: colors.primary }]}
+                  >
+                    <Feather name="shield" size={14} color={colors.primaryForeground} />
+                    <Text style={[styles.protectActionText, { color: colors.primaryForeground }]}>Protéger mon déplacement</Text>
+                  </Pressable>
                   <Pressable onPress={() => void Share.share({ title: name, message: `${name}${address ? ` — ${address}` : ''}` })} style={[styles.action, { borderColor: colors.border }]}>
                     <Feather name="share-2" size={14} color={colors.primary} />
                     <Text style={[styles.actionText, { color: colors.foreground }]}>Partager</Text>
@@ -220,6 +319,16 @@ const styles = StyleSheet.create({
   titleRow: { alignItems: 'flex-start', flexDirection: 'row', gap: 8, justifyContent: 'space-between' },
   name: { flex: 1, fontFamily: 'Inter_700Bold', fontSize: 15 },
   detail: { fontFamily: 'Inter_400Regular', fontSize: 11, lineHeight: 17 },
+  securityContext: { borderRadius: 12, borderWidth: 1, gap: 8, padding: 10 },
+  securityHeading: { alignItems: 'center', flexDirection: 'row', gap: 6 },
+  securityTitle: { fontFamily: 'Inter_700Bold', fontSize: 12 },
+  contextSection: { gap: 6 },
+  contextSectionTitle: { alignItems: 'center', flexDirection: 'row', gap: 5 },
+  contextLabel: { fontFamily: 'Inter_600SemiBold', fontSize: 11 },
+  contextItem: { borderLeftWidth: 2, gap: 2, paddingLeft: 7 },
+  contextItemTitle: { fontFamily: 'Inter_500Medium', fontSize: 11 },
+  contextMeta: { fontFamily: 'Inter_400Regular', fontSize: 10, lineHeight: 15 },
+  disclaimer: { fontFamily: 'Inter_400Regular', fontSize: 10, lineHeight: 14 },
   freshness: { borderRadius: 99, paddingHorizontal: 7, paddingVertical: 4 },
   recent: { backgroundColor: '#dcfce7' },
   confirm: { backgroundColor: '#fef3c7' },
@@ -229,6 +338,8 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   action: { alignItems: 'center', borderRadius: 9, borderWidth: 1, flexDirection: 'row', gap: 5, paddingHorizontal: 8, paddingVertical: 7 },
   actionText: { fontFamily: 'Inter_500Medium', fontSize: 10 },
+  protectAction: { alignItems: 'center', borderRadius: 9, flexDirection: 'row', gap: 5, paddingHorizontal: 9, paddingVertical: 8, width: '100%' },
+  protectActionText: { flex: 1, fontFamily: 'Inter_600SemiBold', fontSize: 11, textAlign: 'center' },
   validationRow: { borderTopColor: '#e2e8f0', borderTopWidth: 1, flexDirection: 'row', gap: 16, paddingTop: 9 },
   validationText: { fontFamily: 'Inter_600SemiBold', fontSize: 11 },
   filterNotice: { alignItems: 'center', borderRadius: 12, borderWidth: 1, flexDirection: 'row', gap: 8, padding: 10 },

@@ -76,7 +76,10 @@ import {
 import {
   createPlaceExperienceCandidate,
   deferPlaceExperience,
+  getPlaceExperienceContext,
   getPlaceExperienceBlockReason,
+  listPlaceExperienceCandidates,
+  moderatePlaceExperienceCandidate,
   getOwnedCandidate,
   getOwnedVisit,
   getPlaceExperienceConfig,
@@ -2168,6 +2171,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public minimized context: no identity, visit history, comments or coordinates.
+  app.get("/api/place-experience/context/:placeId", placeExperienceMutationLimiter, async (req, res) => {
+    try {
+      const placeId = String(req.params.placeId);
+      const context = await getPlaceExperienceContext(placeId);
+      if (!context) return res.status(404).json({ error: "Lieu introuvable" });
+      const [signals, offers] = await Promise.all([
+        storage.getSignalements({ placeId, limit: 20 }),
+        storage.getOffers({ placeId, limit: 20 }),
+      ]);
+      const now = Date.now();
+      const freshness = (value: Date | string | null | undefined) => {
+        if (!value) return "date inconnue";
+        const days = Math.max(0, Math.floor((now - new Date(value).getTime()) / 86_400_000));
+        return days === 0 ? "aujourd'hui" : days === 1 ? "il y a 1 jour" : `il y a ${days} jours`;
+      };
+      const incidents = signals.filter((item: any) =>
+        item.statut !== "rejete" && item.moderationStatus !== "rejected" &&
+        (!item.expiresAt || new Date(item.expiresAt).getTime() > now),
+      ).map((item: any) => ({
+        type: "incident",
+        title: item.titre,
+        category: item.categorie,
+        source: item.sourceName || item.sourceType || "community",
+        status: item.statut || item.verificationStatus || "pending",
+        observedAt: item.createdAt,
+        freshness: freshness(item.createdAt),
+      }));
+      const practicalOffers = offers.map((item: any) => ({
+        type: "signal",
+        title: item.title,
+        category: item.category,
+        source: item.sourceName || item.sourceType || "community",
+        status: item.status,
+        observedAt: item.updatedAt || item.createdAt,
+        freshness: freshness(item.updatedAt || item.createdAt),
+      }));
+      res.json({
+        ...context,
+        incidents,
+        signals: practicalOffers,
+        insufficientData: context.insufficientData && incidents.length === 0 && practicalOffers.length === 0,
+        disclaimer: "Informations communautaires et pratiques, sans score de sécurité ni garantie.",
+        // Keep the categories explicit for consumers (and avoid implying that
+        // an offer is an incident or a community perception).
+        practicalSignals: practicalOffers,
+        offers: practicalOffers,
+      });
+    } catch (error) {
+      console.error("Error getting place experience context:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération du contexte du lieu" });
+    }
+  });
+
   app.put(
     "/api/place-experience/consent",
     isAuthenticated,
@@ -2372,6 +2429,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("Error creating place experience candidate:", error);
         res.status(500).json({ error: "Erreur lors de la création du candidat de lieu" });
+      }
+    },
+  );
+
+  app.get(
+    "/api/admin/place-experience/candidates",
+    isAuthenticated,
+    async (req: any, res) => {
+      const role = req.user?.role;
+      if (!["admin", "moderateur", "moderator"].includes(role)) {
+        return res.status(403).json({ error: "Accès réservé à la modération" });
+      }
+      try {
+        const status = typeof req.query.status === "string" ? req.query.status : "PENDING";
+        if (!["PENDING", "APPROVED", "REJECTED"].includes(status)) {
+          return res.status(400).json({ error: "Statut de modération invalide" });
+        }
+        res.json(await listPlaceExperienceCandidates(status));
+      } catch (error) {
+        console.error("Error listing place experience candidates:", error);
+        res.status(500).json({ error: "Erreur lors de la récupération des candidats" });
+      }
+    },
+  );
+
+  app.patch(
+    "/api/admin/place-experience/candidates/:candidateId",
+    isAuthenticated,
+    placeExperienceMutationLimiter,
+    async (req: any, res) => {
+      const role = req.user?.role;
+      if (!["admin", "moderateur", "moderator"].includes(role)) {
+        return res.status(403).json({ error: "Accès réservé à la modération" });
+      }
+      const parsed = z.object({
+        status: z.enum(["APPROVED", "REJECTED"]),
+        note: z.string().trim().max(1000).optional().nullable(),
+      }).safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ error: "Décision de modération invalide" });
+      try {
+        const candidate = await moderatePlaceExperienceCandidate({
+          candidateId: req.params.candidateId,
+          status: parsed.data.status,
+          note: parsed.data.note,
+          moderatorId: req.user.claims.sub,
+        });
+        if (!candidate) return res.status(404).json({ error: "Candidat introuvable ou déjà modéré" });
+        // Approval only changes candidate status; it does not fabricate an official place.
+        res.json({
+          id: candidate.id,
+          status: candidate.status,
+          moderationNote: candidate.moderationNote,
+          moderatedAt: candidate.moderatedAt,
+        });
+      } catch (error) {
+        console.error("Error moderating place experience candidate:", error);
+        res.status(500).json({ error: "Erreur lors de la modération du candidat" });
       }
     },
   );

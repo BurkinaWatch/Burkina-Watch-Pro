@@ -463,3 +463,68 @@ export async function getOwnedCandidate(userId: string, candidateId: string): Pr
     .limit(1);
   return candidate ?? null;
 }
+
+/**
+ * Public, deliberately minimized view of place experience data.  This function
+ * never selects a visit, user, comment, or coordinate.
+ */
+export async function getPlaceExperienceContext(placeId: string) {
+  const [place] = await db.select({
+    id: places.id,
+    name: places.name,
+    placeType: places.placeType,
+  }).from(places).where(eq(places.id, placeId)).limit(1);
+  if (!place) return null;
+
+  const perceptions = await db.select({
+    perception: placeExperiences.perception,
+    createdAt: placeExperiences.createdAt,
+  }).from(placeExperiences)
+    .where(and(eq(placeExperiences.placeId, placeId), eq(placeExperiences.processingStatus, "recorded")))
+    .orderBy(desc(placeExperiences.createdAt)).limit(20);
+
+  const now = Date.now();
+  const freshness = (date: Date | null) => {
+    if (!date) return "date inconnue";
+    const ageDays = Math.max(0, Math.floor((now - date.getTime()) / 86_400_000));
+    return ageDays === 0 ? "aujourd'hui" : ageDays === 1 ? "il y a 1 jour" : `il y a ${ageDays} jours`;
+  };
+  return {
+    place,
+    disclaimer: "Informations communautaires, sans score de sécurité ni garantie.",
+    insufficientData: perceptions.length === 0,
+    perceptions: perceptions.map((item) => ({
+      type: "perception" as const,
+      perception: item.perception,
+      source: "place_experience",
+      status: "recorded",
+      observedAt: item.createdAt,
+      freshness: freshness(item.createdAt),
+    })),
+  };
+}
+
+export async function listPlaceExperienceCandidates(status = "PENDING") {
+  return db.select().from(placeExperienceCandidates)
+    .where(eq(placeExperienceCandidates.status, status))
+    .orderBy(desc(placeExperienceCandidates.createdAt)).limit(100);
+}
+
+export async function moderatePlaceExperienceCandidate(input: {
+  candidateId: string;
+  status: "APPROVED" | "REJECTED";
+  moderatorId: string;
+  note?: string | null;
+}) {
+  const [candidate] = await db.update(placeExperienceCandidates)
+    .set({
+      status: input.status,
+      moderationNote: input.note ?? null,
+      moderatedAt: new Date(),
+      moderatedBy: input.moderatorId,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(placeExperienceCandidates.id, input.candidateId), eq(placeExperienceCandidates.status, "PENDING")))
+    .returning();
+  return candidate ?? null;
+}
