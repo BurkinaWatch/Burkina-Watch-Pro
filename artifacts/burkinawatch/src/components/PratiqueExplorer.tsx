@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { List, Loader2, Map as MapIcon, RefreshCw, Search } from "lucide-react";
-import type { Place } from "@shared/schema";
+import type { Offer, Place, Signalement } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import GoogleMap, { type PlaceMapMarker } from "@/components/GoogleMap";
 import { PlaceCard } from "@/components/PlaceCard";
+import { OfferCard } from "@/components/OfferCard";
+import { PracticalSignalCard } from "@/components/PracticalSignalCard";
 import { offlineStorage } from "@/lib/offlineStorage";
 import {
   filterPracticalPlaces,
@@ -37,6 +39,28 @@ interface PratiqueExplorerProps {
 interface PlacesResponse {
   places?: Place[];
 }
+
+type PracticalConfirmationSummary = {
+  confirm: number;
+  report: number;
+  contest: number;
+  currentAction: string | null;
+  state: "confirmed" | "reported" | "contested" | "mixed" | "unknown";
+};
+
+type PracticalOffer = Offer & {
+  placeName?: string | null;
+  confirmations?: PracticalConfirmationSummary;
+};
+
+type PracticalSignal = Signalement & {
+  signalType?: string | null;
+  sourceType?: string | null;
+  sourceName?: string | null;
+  expiresAt?: string | Date | null;
+  freshnessExpiresAt?: string | Date | null;
+  confirmations?: PracticalConfirmationSummary;
+};
 
 function normalizePlaces(data: Place[] | PlacesResponse | undefined): Place[] {
   if (Array.isArray(data)) return data;
@@ -83,10 +107,58 @@ export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "", in
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: offers = [], isLoading: offersLoading } = useQuery<PracticalOffer[]>({
+    queryKey: ["/api/pratique/offers"],
+    queryFn: async () => {
+      const response = await fetch("/api/pratique/offers?limit=24");
+      if (!response.ok) throw new Error("Impossible de charger les offres");
+      return response.json();
+    },
+    staleTime: 60 * 1000,
+  });
+
+  const { data: signals = [], isLoading: signalsLoading } = useQuery<PracticalSignal[]>({
+    queryKey: ["/api/pratique/signals"],
+    queryFn: async () => {
+      const response = await fetch("/api/pratique/signals?limit=12");
+      if (!response.ok) throw new Error("Impossible de charger les signaux");
+      return response.json();
+    },
+    staleTime: 60 * 1000,
+  });
+
   const places = useMemo(() => {
     return filterPracticalPlaces(normalizePlaces(data), effectiveIntent, location)
       .slice(0, 24);
   }, [data, effectiveIntent, location]);
+
+  const visibleOffers = useMemo(() => {
+    const terms = effectiveIntent.searchText.toLocaleLowerCase("fr-FR").trim().split(/\s+/).filter((term) => term.length > 2);
+    if (!terms.length) return offers.slice(0, 6);
+    return offers
+      .filter((offer) => {
+        const haystack = [offer.title, offer.description, offer.category, offer.zone, offer.placeName]
+          .filter(Boolean)
+          .join(" ")
+          .toLocaleLowerCase("fr-FR");
+        return terms.every((term) => haystack.includes(term));
+      })
+      .slice(0, 6);
+  }, [effectiveIntent.searchText, offers]);
+
+  const visibleSignals = useMemo(() => {
+    const terms = effectiveIntent.searchText.toLocaleLowerCase("fr-FR").trim().split(/\s+/).filter((term) => term.length > 2);
+    if (!terms.length) return signals.slice(0, 4);
+    return signals
+      .filter((signal) => {
+        const haystack = [signal.titre, signal.description, signal.signalType, signal.localisation]
+          .filter(Boolean)
+          .join(" ")
+          .toLocaleLowerCase("fr-FR");
+        return terms.some((term) => haystack.includes(term));
+      })
+      .slice(0, 4);
+  }, [effectiveIntent.searchText, signals]);
 
   const requestLocation = () => {
     if (!navigator.geolocation) {
