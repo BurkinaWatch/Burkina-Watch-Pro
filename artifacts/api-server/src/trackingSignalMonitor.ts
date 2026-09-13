@@ -149,9 +149,18 @@ export function startTrackingSignalMonitor(): void {
 
   const run = () => {
     if (monitorRun) return;
-    monitorRun = checkTrackingSignalLoss().finally(() => {
-      monitorRun = undefined;
-    });
+    monitorRun = checkTrackingSignalLoss()
+      .catch((error) => {
+        // A schema mismatch or a transient database outage must not terminate
+        // the API process. Keep the failure visible and retry on the next tick.
+        console.error(
+          "[TRACKING] Moniteur indisponible, nouvelle tentative au prochain intervalle:",
+          error instanceof Error ? error.message : error,
+        );
+      })
+      .finally(() => {
+        monitorRun = undefined;
+      });
   };
 
   run();
