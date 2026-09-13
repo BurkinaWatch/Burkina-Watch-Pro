@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lt, lte } from "drizzle-orm";
 import { z } from "zod";
 import {
   db,
@@ -24,6 +24,8 @@ export const DEFAULT_PLACE_EXPERIENCE_CONFIG = {
   minAccuracyMeters: 100,
   maxObservationGapSeconds: 10 * 60,
 } as const;
+
+export const DEFAULT_PLACE_EXPERIENCE_RETENTION_DAYS = 30;
 
 export type PlaceExperienceConfig = {
   enabled: boolean;
@@ -249,16 +251,57 @@ export async function savePlaceExperienceConsent(
   enabled: boolean,
   locationPermissionGranted: boolean,
 ): Promise<PlaceExperienceConsent> {
-  const [consent] = await db
-    .insert(placeExperienceConsents)
-    .values({ userId, enabled, locationPermissionGranted })
-    .onConflictDoUpdate({
-      target: placeExperienceConsents.userId,
-      set: { enabled, locationPermissionGranted, updatedAt: new Date() },
-    })
-    .returning();
+  return db.transaction(async (tx) => {
+    if (!enabled) {
+      const visits = await tx.select({ id: placeExperienceVisits.id })
+        .from(placeExperienceVisits)
+        .where(eq(placeExperienceVisits.userId, userId));
+      const visitIds = visits.map(({ id }) => id);
+      if (visitIds.length > 0) {
+        await tx.update(placeExperiences)
+          .set({ userId: null, visitId: null, comment: null, anonymizedAt: new Date() })
+          .where(inArray(placeExperiences.visitId, visitIds));
+        await tx.delete(placeExperienceVisits).where(inArray(placeExperienceVisits.id, visitIds));
+      }
+    }
 
-  return consent;
+    const [consent] = await tx
+      .insert(placeExperienceConsents)
+      .values({ userId, enabled, locationPermissionGranted })
+      .onConflictDoUpdate({
+        target: placeExperienceConsents.userId,
+        set: { enabled, locationPermissionGranted, updatedAt: new Date() },
+      })
+      .returning();
+    return consent;
+  });
+}
+
+export async function purgeExpiredPlaceExperienceData(
+  retentionDays = DEFAULT_PLACE_EXPERIENCE_RETENTION_DAYS,
+  now = new Date(),
+): Promise<{ visitsDeleted: number; experiencesAnonymized: number }> {
+  const safeRetentionDays = Number.isInteger(retentionDays) && retentionDays > 0
+    ? Math.min(retentionDays, 365)
+    : DEFAULT_PLACE_EXPERIENCE_RETENTION_DAYS;
+  const cutoff = new Date(now.getTime() - safeRetentionDays * 86_400_000);
+
+  return db.transaction(async (tx) => {
+    const expired = await tx.select({ id: placeExperienceVisits.id })
+      .from(placeExperienceVisits)
+      .where(lt(placeExperienceVisits.lastSeenAt, cutoff));
+    const visitIds = expired.map(({ id }) => id);
+    if (visitIds.length === 0) return { visitsDeleted: 0, experiencesAnonymized: 0 };
+
+    const anonymized = await tx.update(placeExperiences)
+      .set({ userId: null, visitId: null, comment: null, anonymizedAt: now })
+      .where(inArray(placeExperiences.visitId, visitIds))
+      .returning({ id: placeExperiences.id });
+    const deleted = await tx.delete(placeExperienceVisits)
+      .where(inArray(placeExperienceVisits.id, visitIds))
+      .returning({ id: placeExperienceVisits.id });
+    return { visitsDeleted: deleted.length, experiencesAnonymized: anonymized.length };
+  });
 }
 
 async function findNearestPlace(

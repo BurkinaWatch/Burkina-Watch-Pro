@@ -88,6 +88,7 @@ import {
   placeExperienceConsentInputSchema,
   placeExperiencePresenceInputSchema,
   placeExperienceResponseInputSchema,
+  purgeExpiredPlaceExperienceData,
   recordPlaceExperience,
   recordPresence,
   savePlaceExperienceConsent,
@@ -2046,6 +2047,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error subscribing to push:", error);
       res.status(500).json({ error: "Erreur lors de l'abonnement" });
+    }
+  });
+
+  app.post("/api/push/native-subscribe", isAuthenticated, async (req: any, res) => {
+    const parsed = z.object({ token: z.string().trim().min(20).max(512) }).safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: "Jeton de notification mobile invalide" });
+    try {
+      const { saveSubscription } = await import("../pushService");
+      await saveSubscription(req.user.claims.sub, {
+        endpoint: `expo:${parsed.data.token}`,
+        keys: { p256dh: "native", auth: "native" },
+      });
+      res.json({ message: "Notifications mobiles activées" });
+    } catch (error) {
+      console.error("Error subscribing native push:", error);
+      res.status(500).json({ error: "Erreur lors de l'activation des notifications mobiles" });
     }
   });
 

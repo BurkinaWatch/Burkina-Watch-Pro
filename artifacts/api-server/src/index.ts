@@ -2,6 +2,7 @@ import app from "./app";
 import { initializeApp } from "./app";
 import { logger } from "./lib/logger";
 import { configureWebServing } from "./webServing";
+import { purgeExpiredPlaceExperienceData } from "./placeExperience";
 
 const rawPort = process.env["PORT"];
 
@@ -19,6 +20,14 @@ if (Number.isNaN(port) || port <= 0) {
 
 await initializeApp();
 configureWebServing(app);
+void purgeExpiredPlaceExperienceData().catch((error) => {
+  logger.error({ err: error }, "Place experience retention purge failed");
+});
+setInterval(() => {
+  void purgeExpiredPlaceExperienceData().catch((error) => {
+    logger.error({ err: error }, "Place experience retention purge failed");
+  });
+}, 6 * 60 * 60 * 1000).unref();
 
 app.listen(port, (err) => {
   if (err) {

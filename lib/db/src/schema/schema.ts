@@ -1281,14 +1281,15 @@ export const placeExperienceVisits = pgTable("place_experience_visits", {
 
 export const placeExperiences = pgTable("place_experiences", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
-  visitId: text("visit_id").notNull().references(() => placeExperienceVisits.id, { onDelete: "cascade" }),
-  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  visitId: text("visit_id").references(() => placeExperienceVisits.id, { onDelete: "set null" }),
+  userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
   placeId: text("place_id").references(() => places.id, { onDelete: "set null" }),
   candidateId: text("candidate_id").references(() => placeExperienceCandidates.id, { onDelete: "set null" }),
   perception: text("perception").notNull(),
   reasonCodes: text("reason_codes").array(),
   comment: text("comment"),
   processingStatus: text("processing_status").notNull().default("recorded"),
+  anonymizedAt: timestamp("anonymized_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => [
   uniqueIndex("place_experiences_visit_user_idx").on(table.visitId, table.userId),
@@ -1337,6 +1338,7 @@ export const insertPlaceExperienceSchema = createInsertSchema(placeExperiences, 
   id: true,
   userId: true,
   processingStatus: true,
+  anonymizedAt: true,
   createdAt: true,
 });
 
