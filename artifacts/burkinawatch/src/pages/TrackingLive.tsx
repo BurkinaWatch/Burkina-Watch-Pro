@@ -46,7 +46,7 @@ export default function TrackingLive() {
         throw new Error("La géolocalisation n'est pas supportée par votre navigateur");
       }
 
-      await new Promise<GeolocationPosition>((resolve, reject) => {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
           reject(new Error("La demande de localisation a pris trop de temps. Réessayez."));
         }, 15000);
@@ -211,8 +211,6 @@ export default function TrackingLive() {
     }
 
     const mapsUrl = `https://www.google.com/maps?q=${currentPosition.lat},${currentPosition.lng}`;
-    const message = `📍 Ma position actuelle:\n\n${mapsUrl}\n\nTracking en cours...`;
-
     const sharedContactIds = activeSession?.sharedContactIds || [];
     const selectedContacts = sharedContactIds.length > 0
       ? contacts.filter((contact) => sharedContactIds.includes(contact.id))
