@@ -33,6 +33,14 @@ export const signalementMutationLimiter = rateLimit({
   message: { message: "Limite de publication atteinte. Veuillez patienter avant de publier à nouveau." }
 });
 
+export const placeExperienceMutationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Trop d'actions d'expérience du lieu. Veuillez réessayer plus tard." },
+});
+
 // Rate limiting for camera management mutations. This is intentionally
 // separate from the global limiter because camera setup can trigger expensive
 // validation/encryption work even though no network connection is made here.

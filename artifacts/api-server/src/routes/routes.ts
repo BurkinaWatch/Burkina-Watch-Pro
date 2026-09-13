@@ -67,11 +67,27 @@ import { verifySignalement } from "../aiVerification";
 import { moderateContent, logModerationAction } from "../contentModeration";
 import {
   signalementMutationLimiter,
+  placeExperienceMutationLimiter,
   surveillanceConnectionTestLimiter,
   surveillanceAgentEnrollmentLimiter,
   surveillanceAgentHeartbeatLimiter,
   surveillanceMutationLimiter,
 } from "../securityHardening";
+import {
+  createPlaceExperienceCandidate,
+  deferPlaceExperience,
+  getOwnedCandidate,
+  getOwnedVisit,
+  getPlaceExperienceConfig,
+  getPlaceExperienceReadiness,
+  recordPlaceExperience,
+  recordPresence,
+  savePlaceExperienceConsent,
+} from "../placeExperience";
+import {
+  insertPlaceExperienceCandidateSchema,
+  insertPlaceExperienceSchema,
+} from "@workspace/db";
 import {
   CAMERA_AGENT_ENROLLMENT_TTL_SECONDS,
   CAMERA_AGENT_MEDIA_SESSION_TTL_SECONDS,
@@ -2124,6 +2140,285 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Erreur lors de la récupération des abonnements" });
     }
   });
+
+  // ----------------------------------------
+  // EXPÉRIENCE DU LIEU (OPT-IN, PHASE 1)
+  // ----------------------------------------
+  const presenceObservationSchema = z.object({
+    latitude: z.coerce.number().min(-90).max(90),
+    longitude: z.coerce.number().min(-180).max(180),
+    accuracyMeters: z.coerce.number().finite().nonnegative().max(10_000).optional().nullable(),
+    speedMps: z.coerce.number().finite().nonnegative().max(100).optional().nullable(),
+  });
+
+  const placeExperienceConsentSchema = z.object({
+    enabled: z.boolean(),
+    locationPermissionGranted: z.boolean(),
+  });
+
+  const placeExperienceResponseSchema = z.object({
+    perception: z.enum(["SAFE", "UNCERTAIN", "UNSAFE"]),
+    reasonCodes: z.array(z.string().trim().min(1).max(50)).max(8).optional().nullable(),
+    comment: z.string().trim().max(1000).optional().nullable(),
+  });
+
+  app.get("/api/place-experience/config", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const [config, readiness] = await Promise.all([
+        getPlaceExperienceConfig(),
+        getPlaceExperienceReadiness(userId),
+      ]);
+      res.json({
+        config,
+        readiness: {
+          enabled: readiness.enabled,
+          locationPermissionGranted: readiness.locationPermissionGranted,
+          pushSubscriptionActive: readiness.pushSubscriptionActive,
+        },
+      });
+    } catch (error) {
+      console.error("Error getting place experience config:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération de la configuration" });
+    }
+  });
+
+  app.put(
+    "/api/place-experience/consent",
+    isAuthenticated,
+    placeExperienceMutationLimiter,
+    async (req: any, res) => {
+      const parsed = placeExperienceConsentSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Consentement d'expérience du lieu invalide" });
+      }
+
+      try {
+        const userId = req.user.claims.sub;
+        const config = await getPlaceExperienceConfig();
+        if (parsed.data.enabled && !config.enabled) {
+          return res.status(409).json({ error: "La fonctionnalité n'est pas disponible" });
+        }
+        if (parsed.data.enabled && !parsed.data.locationPermissionGranted) {
+          return res.status(400).json({ error: "La permission de localisation est requise" });
+        }
+
+        const readiness = await getPlaceExperienceReadiness(userId);
+        if (parsed.data.enabled && !readiness.pushSubscriptionActive) {
+          return res.status(409).json({ error: "Un abonnement push actif est requis" });
+        }
+
+        const consent = await savePlaceExperienceConsent(
+          userId,
+          parsed.data.enabled,
+          parsed.data.locationPermissionGranted,
+        );
+        res.json({
+          consent: {
+            enabled: consent.enabled,
+            locationPermissionGranted: consent.locationPermissionGranted,
+            updatedAt: consent.updatedAt,
+          },
+        });
+      } catch (error) {
+        console.error("Error saving place experience consent:", error);
+        res.status(500).json({ error: "Erreur lors de l'enregistrement du consentement" });
+      }
+    },
+  );
+
+  app.post(
+    "/api/place-experience/presence",
+    isAuthenticated,
+    placeExperienceMutationLimiter,
+    async (req: any, res) => {
+      const parsed = presenceObservationSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Observation de présence invalide" });
+      }
+
+      try {
+        const userId = req.user.claims.sub;
+        const [config, readiness] = await Promise.all([
+          getPlaceExperienceConfig(),
+          getPlaceExperienceReadiness(userId),
+        ]);
+        if (!config.enabled) {
+          return res.status(409).json({ error: "La fonctionnalité n'est pas disponible" });
+        }
+        if (!readiness.enabled || !readiness.locationPermissionGranted || !readiness.pushSubscriptionActive) {
+          return res.status(403).json({
+            error: "Le consentement, la localisation et les notifications push sont requis",
+            readiness: {
+              enabled: readiness.enabled,
+              locationPermissionGranted: readiness.locationPermissionGranted,
+              pushSubscriptionActive: readiness.pushSubscriptionActive,
+            },
+          });
+        }
+
+        const result = await recordPresence(userId, {
+          ...parsed.data,
+          observedAt: new Date(),
+        }, config);
+
+        if (!result) {
+          return res.json({
+            place: null,
+            placeState: "unmapped",
+            previouslyVisited: false,
+            checkInEligible: false,
+            reason: "no_place_nearby",
+          });
+        }
+
+        res.json({
+          place: {
+            id: result.place?.id,
+            name: result.place?.name,
+            placeType: result.place?.placeType,
+            latitude: result.place?.latitude,
+            longitude: result.place?.longitude,
+          },
+          visit: {
+            id: result.visit.id,
+            status: result.visit.status,
+            startedAt: result.visit.startedAt,
+            lastSeenAt: result.visit.lastSeenAt,
+            estimatedDurationSeconds: result.visit.estimatedDurationSeconds,
+            checkInTriggeredAt: result.visit.checkInTriggeredAt,
+          },
+          placeState: result.placeState,
+          previouslyVisited: result.previouslyVisited,
+          checkInEligible: result.checkInEligible,
+          reason: result.reason,
+        });
+      } catch (error) {
+        console.error("Error recording place experience presence:", error);
+        res.status(500).json({ error: "Erreur lors de l'enregistrement de la présence" });
+      }
+    },
+  );
+
+  app.post(
+    "/api/place-experience/visits/:visitId/response",
+    isAuthenticated,
+    placeExperienceMutationLimiter,
+    async (req: any, res) => {
+      const parsed = placeExperienceResponseSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Réponse d'expérience du lieu invalide" });
+      }
+
+      try {
+        const experience = await recordPlaceExperience({
+          userId: req.user.claims.sub,
+          visitId: req.params.visitId,
+          ...parsed.data,
+        });
+        if (!experience) {
+          return res.status(404).json({ error: "Présence éligible introuvable" });
+        }
+        res.status(201).json({
+          id: experience.id,
+          visitId: experience.visitId,
+          perception: experience.perception,
+          createdAt: experience.createdAt,
+        });
+      } catch (error: any) {
+        if (error?.code === "23505") {
+          return res.status(409).json({ error: "Une réponse existe déjà pour cette présence" });
+        }
+        console.error("Error recording place experience response:", error);
+        res.status(500).json({ error: "Erreur lors de l'enregistrement de la perception" });
+      }
+    },
+  );
+
+  app.post(
+    "/api/place-experience/visits/:visitId/defer",
+    isAuthenticated,
+    placeExperienceMutationLimiter,
+    async (req: any, res) => {
+      try {
+        const visit = await deferPlaceExperience(req.user.claims.sub, req.params.visitId);
+        if (!visit) {
+          return res.status(404).json({ error: "Présence éligible introuvable" });
+        }
+        res.json({
+          id: visit.id,
+          status: visit.status,
+          checkInTriggeredAt: visit.checkInTriggeredAt,
+        });
+      } catch (error) {
+        console.error("Error deferring place experience:", error);
+        res.status(500).json({ error: "Erreur lors du report de l'expérience" });
+      }
+    },
+  );
+
+  app.post(
+    "/api/place-experience/candidates",
+    isAuthenticated,
+    placeExperienceMutationLimiter,
+    async (req: any, res) => {
+      const parsed = insertPlaceExperienceCandidateSchema.safeParse({
+        ...req.body,
+        userId: req.user.claims.sub,
+      });
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Candidat de lieu invalide" });
+      }
+
+      try {
+        const candidate = await createPlaceExperienceCandidate(parsed.data);
+        res.status(201).json({
+          id: candidate.id,
+          name: candidate.name,
+          category: candidate.category,
+          status: candidate.status,
+          createdAt: candidate.createdAt,
+        });
+      } catch (error) {
+        console.error("Error creating place experience candidate:", error);
+        res.status(500).json({ error: "Erreur lors de la création du candidat de lieu" });
+      }
+    },
+  );
+
+  app.get(
+    "/api/place-experience/candidates/:candidateId",
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const candidate = await getOwnedCandidate(req.user.claims.sub, req.params.candidateId);
+        if (!candidate) {
+          return res.status(404).json({ error: "Candidat de lieu introuvable" });
+        }
+        res.json(candidate);
+      } catch (error) {
+        console.error("Error getting place experience candidate:", error);
+        res.status(500).json({ error: "Erreur lors de la récupération du candidat" });
+      }
+    },
+  );
+
+  app.get(
+    "/api/place-experience/visits/:visitId",
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const visit = await getOwnedVisit(req.user.claims.sub, req.params.visitId);
+        if (!visit) {
+          return res.status(404).json({ error: "Présence introuvable" });
+        }
+        res.json(visit);
+      } catch (error) {
+        console.error("Error getting place experience visit:", error);
+        res.status(500).json({ error: "Erreur lors de la récupération de la présence" });
+      }
+    },
+  );
 
   // ----------------------------------------
   // ROUTES PROFIL PUBLIC
