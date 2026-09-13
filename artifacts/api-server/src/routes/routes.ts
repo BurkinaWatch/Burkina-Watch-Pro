@@ -2171,9 +2171,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const selectedContacts = requestedContactIds.length > 0
         ? emergencyContacts.filter((contact) => requestedContactIds.includes(contact.id))
         : emergencyContacts;
+      let safeDestinationPlaceId: string | null = null;
+      if (typeof destinationPlaceId === "string" && destinationPlaceId.trim()) {
+        const [destinationPlace] = await db
+          .select({ id: places.id })
+          .from(places)
+          .where(eq(places.id, destinationPlaceId.trim()))
+          .limit(1);
+        safeDestinationPlaceId = destinationPlace?.id || null;
+      }
       const session = await storage.startTrackingSession(userId, {
         destinationLabel: typeof destinationLabel === "string" ? destinationLabel.trim() : null,
-        destinationPlaceId: typeof destinationPlaceId === "string" ? destinationPlaceId : null,
+        destinationPlaceId: safeDestinationPlaceId,
         destinationLatitude: typeof destinationLatitude === "number" || typeof destinationLatitude === "string" ? destinationLatitude : null,
         destinationLongitude: typeof destinationLongitude === "number" || typeof destinationLongitude === "string" ? destinationLongitude : null,
         sharedContactIds: requestedContactIds.length > 0 ? selectedContacts.map((contact) => contact.id) : null,
