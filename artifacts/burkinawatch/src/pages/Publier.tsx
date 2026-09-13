@@ -72,6 +72,7 @@ export default function Publier() {
       isAnonymous: false,
       isSOS: false,
       niveauUrgence: "moyen",
+      signalType: undefined,
       placeId: undefined,
       contributionType: undefined,
     },
@@ -492,6 +493,41 @@ export default function Publier() {
                           <SelectItem value="personne_recherchee">Personne recherchée</SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="signalType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type de signal (optionnel)</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || undefined}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-signal-type">
+                            <SelectValue placeholder="Précisez le signal si nécessaire" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="route_bloquee">Route bloquée</SelectItem>
+                          <SelectItem value="travaux">Travaux</SelectItem>
+                          <SelectItem value="inondation">Inondation</SelectItem>
+                          <SelectItem value="embouteillage">Embouteillage</SelectItem>
+                          <SelectItem value="acces_difficile">Accès difficile</SelectItem>
+                          <SelectItem value="etablissement_ferme">Établissement fermé</SelectItem>
+                          <SelectItem value="service_indisponible">Service indisponible</SelectItem>
+                          <SelectItem value="mobile_money_retrait">Retrait Mobile Money</SelectItem>
+                          <SelectItem value="mobile_money_depot">Dépôt Mobile Money</SelectItem>
+                          <SelectItem value="mobile_money_liquidite">Liquidité Mobile Money</SelectItem>
+                          <SelectItem value="information_contestee">Information contestée</SelectItem>
+                          <SelectItem value="autre">Autre</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Les informations de liquidité et de disponibilité sont automatiquement traitées comme temporaires.
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}

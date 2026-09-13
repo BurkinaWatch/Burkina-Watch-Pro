@@ -1437,9 +1437,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      const currentUser = await storage.getUser(userId);
+      const signalType = typeof req.body.signalType === "string" ? req.body.signalType : undefined;
+      const now = new Date();
+      const isShortLivedSignal = Boolean(signalType?.startsWith("mobile_money"));
       const validationResult = insertSignalementSchema.safeParse({
         ...req.body,
         userId,
+        sourceType: "USER",
+        sourceName: [currentUser?.firstName, currentUser?.lastName].filter(Boolean).join(" ") || "Utilisateur BurkinaWatch",
+        freshnessExpiresAt: new Date(now.getTime() + (isShortLivedSignal ? 6 : 24) * 60 * 60 * 1000),
+        ...(isShortLivedSignal ? { expiresAt: new Date(now.getTime() + 12 * 60 * 60 * 1000) } : {}),
       });
 
       if (!validationResult.success) {
