@@ -1,0 +1,238 @@
+BURKINAWATCH — IMPLÉMENTATION PHASE 1
+FONCTIONNALITÉ : EXPÉRIENCE DU LIEU
+BACKEND + DONNÉES + LOGIQUE DE DÉTECTION
+
+Tu as terminé l’audit préalable.
+
+Maintenant implémente la première couche technique de la fonctionnalité « Expérience du lieu ».
+
+RÈGLE ABSOLUE :
+
+Le projet BurkinaWatch EXISTANT doit rester fonctionnel.
+
+EXTENDRE > REMPLACER
+RÉUTILISER > DUPLIQUER
+AJOUTER > REFACTORER
+
+NE TOUCHE PAS À RAILWAY.
+
+Interdiction de modifier :
+- configuration Railway ;
+- variables d’environnement ;
+- secrets ;
+- domaine ;
+- Build Command ;
+- Start Command ;
+- healthcheck ;
+- configuration de production ;
+- pipeline de déploiement.
+
+Aucune migration destructive.
+
+Aucune suppression de table ou colonne existante.
+
+Aucune réécriture massive du projet.
+
+==================================================
+1. MODÈLE DE DONNÉES
+==================================================
+
+Ajoute uniquement les entités nécessaires à la fonctionnalité, en respectant le système ORM/schema existant.
+
+Le modèle doit permettre de représenter au minimum :
+
+A. VISITE / PRÉSENCE
+
+Une présence potentielle de l’utilisateur dans un lieu.
+
+Elle doit pouvoir contenir, selon les besoins réels du projet :
+- utilisateur ;
+- lieu ;
+- début de présence ;
+- dernière activité/localisation pertinente ;
+- durée estimée ;
+- statut ;
+- déclenchement ou non du check-in ;
+- date de création.
+
+Ne conserve pas inutilement un historique GPS détaillé.
+
+B. EXPÉRIENCE DU LIEU
+
+Enregistrement de la perception déclarée par l’utilisateur.
+
+Valeurs :
+- SAFE / sécurité ressentie ;
+- UNCERTAIN / incertain ;
+- UNSAFE / pas en sécurité.
+
+Prévoir éventuellement :
+- catégories de raisons ;
+- commentaire facultatif ;
+- lieu concerné ;
+- date/heure ;
+- contexte minimal nécessaire ;
+- statut de traitement.
+
+Ne transforme jamais automatiquement UNSAFE en « incident confirmé ».
+
+Une perception subjective de sécurité est différente d’un signalement d’incident.
+
+C. CANDIDAT DE LIEU
+
+Permettre de proposer un nouveau lieu.
+
+Champs selon architecture existante :
+- nom ;
+- catégorie ;
+- description ;
+- latitude ;
+- longitude ;
+- photo/média ;
+- utilisateur contributeur ;
+- date ;
+- statut de modération ;
+- lieu existant éventuellement associé ;
+- source/contribution.
+
+Statuts recommandés :
+- PENDING
+- APPROVED
+- REJECTED
+- DUPLICATE
+
+D. CONFIGURATION DU DÉLAI
+
+Le délai avant déclenchement du check-in doit être configurable.
+
+NE PAS inscrire dans le code une valeur présentée comme scientifiquement universelle.
+
+Utilise la valeur recommandée par l’audit comme valeur initiale si elle est techniquement pertinente, mais rends-la configurable.
+
+==================================================
+2. DÉTECTION « NOUVEAU LIEU »
+==================================================
+
+Réutilise le système de lieux existant.
+
+Ne crée surtout pas une deuxième base de lieux.
+
+La logique doit déterminer si la zone correspond :
+- à un lieu existant ;
+- à un lieu déjà visité par l’utilisateur ;
+- à un lieu nouveau/candidat.
+
+Prévois une tolérance géographique raisonnable afin de ne pas générer plusieurs lieux pour quelques mètres de différence GPS.
+
+==================================================
+3. DÉTECTION DE PRÉSENCE
+==================================================
+
+La fonctionnalité ne doit pas se déclencher simplement parce que le GPS indique une nouvelle position.
+
+Évite les déclenchements lorsque l’utilisateur :
+- marche rapidement ;
+- roule ;
+- est en transit ;
+- traverse simplement une zone.
+
+Lorsque les capacités techniques existantes le permettent, utilise des signaux tels que :
+- stabilité de position ;
+- durée dans la zone ;
+- activité/déplacement ;
+- vitesse estimée ;
+- présence continue.
+
+Si le Web ne permet pas une détection fiable en arrière-plan, NE SIMULE PAS cette capacité.
+
+Implémente proprement ce qui est réellement possible et prépare une architecture compatible avec le Mobile si celui-ci possède les capacités nécessaires.
+
+==================================================
+4. OPT-IN
+==================================================
+
+La fonctionnalité doit être explicitement activée par l’utilisateur.
+
+Conditions minimales :
+- notifications push activées ;
+- permission de localisation nécessaire accordée ;
+- préférence « Expérience du lieu » activée.
+
+Si une permission manque :
+- ne pas déclencher ;
+- ne pas contourner la permission ;
+- ne pas tenter de collecter clandestinement la localisation.
+
+==================================================
+5. API
+==================================================
+
+Ajoute les endpoints nécessaires en suivant les conventions existantes.
+
+Exemples fonctionnels :
+
+- enregistrer/mettre à jour une présence ;
+- déterminer si un check-in est éligible ;
+- enregistrer la perception ;
+- proposer un lieu ;
+- récupérer le statut d’une contribution ;
+- récupérer la configuration nécessaire.
+
+Respecte :
+- authentification ;
+- autorisation ;
+- validation ;
+- rate limiting existant ;
+- gestion d’erreurs existante.
+
+Ne crée pas une nouvelle architecture API parallèle.
+
+==================================================
+6. PRIVACY
+==================================================
+
+Minimise les données.
+
+Ne stocke pas une trajectoire GPS complète uniquement pour cette fonctionnalité.
+
+Conserve seulement ce qui est réellement nécessaire.
+
+Prévois une séparation entre :
+- données opérationnelles ;
+- contribution citoyenne ;
+- statistiques.
+
+==================================================
+7. TESTS
+==================================================
+
+Ajoute des tests ciblés pour :
+
+- utilisateur opt-in ;
+- utilisateur opt-out ;
+- permission localisation absente ;
+- notifications désactivées ;
+- nouveau lieu ;
+- lieu déjà connu ;
+- déplacement rapide ;
+- présence suffisamment longue ;
+- présence trop courte ;
+- déclenchement unique ;
+- absence de doublons ;
+- réponse enregistrée ;
+- lieu candidat ;
+- sécurité/permissions API.
+
+IMPORTANT :
+
+Après implémentation :
+- vérifie TypeScript ;
+- vérifie build ;
+- vérifie migrations ;
+- vérifie tests ;
+- vérifie qu’aucune fonctionnalité existante n’a été supprimée.
+
+NE FAIS AUCUNE MODIFICATION RAILWAY.
+
+À LA FIN :
+fournis un rapport précis des fichiers modifiés, des migrations ajoutées et des tests exécutés.
