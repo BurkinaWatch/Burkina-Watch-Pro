@@ -301,6 +301,32 @@ export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "", in
             <p className="mt-4 text-center text-xs text-muted-foreground">Les 6 premiers résultats sont affichés ici. Utilisez une catégorie pour ouvrir la liste complète.</p>
           ) : null}
         </div>
+
+        {visibleOffers.length > 0 ? (
+          <div className="mt-10" data-testid="practical-offers">
+            <div className="mb-4">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-700 dark:text-amber-300">Concret maintenant</p>
+              <h3 className="mt-1 text-2xl font-bold text-emerald-950 dark:text-emerald-50">Offres disponibles</h3>
+              <p className="mt-1 text-sm text-muted-foreground">Chaque offre garde sa source, sa date et son statut.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {visibleOffers.map((offer) => <OfferCard key={offer.id} offer={offer} />)}
+            </div>
+          </div>
+        ) : null}
+
+        {visibleSignals.length > 0 ? (
+          <div className="mt-10" data-testid="practical-signals">
+            <div className="mb-4">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-sky-700 dark:text-sky-300">Contexte citoyen</p>
+              <h3 className="mt-1 text-2xl font-bold text-emerald-950 dark:text-emerald-50">Signaux récents</h3>
+              <p className="mt-1 text-sm text-muted-foreground">Les confirmations contradictoires restent affichées comme « À confirmer ».</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {visibleSignals.map((signal) => <PracticalSignalCard key={signal.id} signal={signal} />)}
+            </div>
+          </div>
+        ) : null}
       </div>
     </section>
   );
