@@ -341,7 +341,7 @@ export async function recordPresence(
   const visitValues = {
     userId,
     placeId: place.id,
-     startedAt: effectiveStartedAt,
+    startedAt,
     lastSeenAt: observation.observedAt,
     estimatedDurationSeconds: evaluation.durationSeconds,
     lastLatitude: String(observation.latitude),
