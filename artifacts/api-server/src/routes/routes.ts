@@ -75,6 +75,7 @@ import {
   surveillanceMutationLimiter,
 } from "../securityHardening";
 import {
+  attachPlaceExperienceCandidateMedia,
   createPlaceExperienceCandidate,
   deferPlaceExperience,
   getPlaceExperienceContext,
@@ -82,6 +83,7 @@ import {
   listPlaceExperienceCandidates,
   moderatePlaceExperienceCandidate,
   getOwnedCandidate,
+  getPlaceExperienceCandidate,
   getOwnedVisit,
   getPlaceExperienceConfig,
   getPlaceExperienceReadiness,
@@ -89,6 +91,7 @@ import {
   placeExperiencePresenceInputSchema,
   placeExperienceResponseInputSchema,
   purgeExpiredPlaceExperienceData,
+  readPlaceExperienceCandidateMedia,
   recordPlaceExperience,
   recordPresence,
   savePlaceExperienceConsent,
@@ -2452,8 +2455,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAuthenticated,
     placeExperienceMutationLimiter,
     async (req: any, res) => {
+      const mediaDataUrl = typeof req.body?.mediaDataUrl === "string" ? req.body.mediaDataUrl : undefined;
       const parsed = insertPlaceExperienceCandidateSchema.safeParse({
         ...req.body,
+        mediaUrl: undefined,
         userId: req.user.claims.sub,
       });
       if (!parsed.success) {
@@ -2461,7 +2466,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        const candidate = await createPlaceExperienceCandidate(parsed.data);
+        let candidate = await createPlaceExperienceCandidate(parsed.data);
+        if (mediaDataUrl) {
+          if (!/^data:image\/jpeg;base64,[A-Za-z0-9+/=\s]+$/i.test(mediaDataUrl) || mediaDataUrl.length > 7_000_000) {
+            return res.status(400).json({ error: "Photo JPEG invalide ou trop volumineuse" });
+          }
+          candidate = (await attachPlaceExperienceCandidateMedia(
+            req.user.claims.sub,
+            candidate.id,
+            mediaDataUrl,
+          )) ?? candidate;
+        }
         res.status(201).json({
           id: candidate.id,
           name: candidate.name,
@@ -2475,6 +2490,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     },
   );
+
+  app.get("/api/place-experience/candidates/:candidateId/media", async (req: any, res) => {
+    try {
+      const candidate = await getPlaceExperienceCandidate(req.params.candidateId);
+      if (!candidate?.mediaUrl) return res.status(404).end();
+      const isModerator = ["admin", "moderateur", "moderator"].includes(req.user?.role);
+      const canRead = candidate.status === "APPROVED" ||
+        candidate.userId === req.user?.claims?.sub ||
+        isModerator;
+      if (!canRead) return res.status(403).json({ error: "Accès refusé" });
+      const content = await readPlaceExperienceCandidateMedia(candidate.id);
+      res.type("jpg").set("Cache-Control", candidate.status === "APPROVED" ? "public, max-age=3600" : "private, no-store").send(content);
+    } catch (error) {
+      console.error("Error reading place experience candidate media:", error);
+      res.status(404).end();
+    }
+  });
 
   app.get(
     "/api/admin/place-experience/candidates",

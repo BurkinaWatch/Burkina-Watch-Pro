@@ -554,6 +554,14 @@ export async function getOwnedCandidate(userId: string, candidateId: string): Pr
   return candidate ?? null;
 }
 
+export async function getPlaceExperienceCandidate(candidateId: string): Promise<PlaceExperienceCandidate | null> {
+  const [candidate] = await db.select()
+    .from(placeExperienceCandidates)
+    .where(eq(placeExperienceCandidates.id, candidateId))
+    .limit(1);
+  return candidate ?? null;
+}
+
 /**
  * Public, deliberately minimized view of place experience data.  This function
  * never selects a visit, user, comment, or coordinate.
