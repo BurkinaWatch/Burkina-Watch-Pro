@@ -1,0 +1,247 @@
+BURKINAWATCH — AUDIT FINAL DE NON-RÉGRESSION
+FONCTIONNALITÉ : EXPÉRIENCE DU LIEU
+
+NE MODIFIE RIEN PENDANT CET AUDIT.
+
+OBJECTIF :
+Vérifier que la fonctionnalité « Expérience du lieu » est réellement terminée et qu’elle n’a cassé aucune partie existante de BurkinaWatch.
+
+AUDIT STRICTEMENT EN LECTURE SEULE.
+
+==================================================
+1. FONCTIONNALITÉS EXISTANTES
+==================================================
+
+Vérifie que fonctionnent toujours :
+
+- accueil ;
+- authentification ;
+- profil ;
+- carte ;
+- Burkina Pratique ;
+- Vie quotidienne ;
+- catégories existantes ;
+- fiches de lieux ;
+- recherche ;
+- filtres ;
+- navigation ;
+- signalements ;
+- SOS ;
+- PANIC ;
+- localisation ;
+- contacts de confiance ;
+- notifications ;
+- administration ;
+- modération ;
+- offline/cache si présent ;
+- API existantes.
+
+Aucune fonctionnalité existante ne doit avoir été supprimée ou remplacée inutilement.
+
+==================================================
+2. EXPÉRIENCE DU LIEU
+==================================================
+
+Vérifie le parcours complet :
+
+OPT-IN
+↓
+permissions
+↓
+nouveau lieu
+↓
+présence
+↓
+délai configurable
+↓
+question
+↓
+SAFE / UNCERTAIN / UNSAFE / PLUS TARD
+↓
+enregistrement
+↓
+contribution éventuelle
+↓
+photo
+↓
+nom
+↓
+catégorie
+↓
+description
+↓
+candidat
+↓
+modération
+↓
+approbation
+↓
+intégration au système de lieux
+↓
+apparition dans Burkina Pratique
+↓
+future expérience utilisateur.
+
+==================================================
+3. CAS LIMITES
+==================================================
+
+Teste/logiquement vérifie :
+
+- utilisateur sans notifications ;
+- utilisateur sans localisation ;
+- utilisateur ayant refusé la permission ;
+- utilisateur désactivant la fonctionnalité ;
+- passage rapide ;
+- conduite ;
+- déplacement ;
+- présence courte ;
+- présence prolongée ;
+- lieu connu ;
+- lieu inconnu ;
+- lieu sans fiche ;
+- lieu déjà proposé ;
+- doublon ;
+- absence de photo ;
+- photo invalide ;
+- utilisateur non authentifié ;
+- plusieurs réponses ;
+- spam ;
+- réponse UNSAFE ;
+- signalement réel ;
+- SOS ;
+- PANIC.
+
+==================================================
+4. BASE DE DONNÉES
+==================================================
+
+Vérifie :
+
+- intégrité du schéma ;
+- migrations ;
+- relations ;
+- contraintes ;
+- index ;
+- absence de doublons ;
+- absence de migration destructive ;
+- compatibilité avec les données existantes.
+
+==================================================
+5. PERFORMANCE
+==================================================
+
+Vérifie que la fonctionnalité n'effectue pas :
+
+- polling excessif ;
+- requêtes GPS permanentes inutiles ;
+- requêtes API répétitives ;
+- notifications répétées ;
+- création massive de données ;
+- consommation excessive de batterie ;
+- consommation excessive de données mobiles.
+
+==================================================
+6. CONFIDENTIALITÉ
+==================================================
+
+Vérifie :
+
+- opt-in réel ;
+- permissions ;
+- minimisation des données ;
+- absence d'historique GPS inutile ;
+- absence d'exposition publique de l'identité ;
+- absence d'exposition du trajet ;
+- séparation perception / incident ;
+- absence de garantie de sécurité.
+
+==================================================
+7. RAILWAY — CONTRÔLE CRITIQUE
+==================================================
+
+Vérifie que rien n'a été modifié concernant :
+
+- Railway ;
+- variables d'environnement ;
+- secrets ;
+- Build Command ;
+- Start Command ;
+- healthcheck ;
+- domaine ;
+- configuration production ;
+- base de production ;
+- pipeline de déploiement.
+
+Si une modification de ce type a été effectuée, signale-la clairement.
+
+NE LA CORRIGE PAS AUTOMATIQUEMENT.
+
+==================================================
+8. BUILD ET CODE
+==================================================
+
+Effectue les vérifications possibles :
+
+- TypeScript ;
+- lint ;
+- tests ;
+- build ;
+- routes ;
+- imports ;
+- dépendances ;
+- erreurs runtime potentielles.
+
+Ne modifie pas le code pendant cet audit.
+
+==================================================
+9. RAPPORT FINAL
+==================================================
+
+Donne un rapport structuré :
+
+A. FONCTIONNALITÉ
+- complète ;
+- partiellement complète ;
+- incomplète.
+
+B. RÉGRESSIONS
+- aucune ;
+- liste précise.
+
+C. BASE DE DONNÉES
+- OK / problème.
+
+D. UX
+- OK / problème.
+
+E. MOBILE
+- OK / limitation.
+
+F. WEB
+- OK / limitation.
+
+G. PRIVACY
+- OK / problème.
+
+H. PERFORMANCE
+- OK / problème.
+
+I. RAILWAY
+- INCHANGÉ / MODIFIÉ.
+
+J. TESTS
+- réussis ;
+- échoués ;
+- non exécutables.
+
+K. DÉCISION :
+
+GO
+ou
+NO-GO
+
+Si NO-GO :
+liste uniquement les corrections nécessaires, par ordre de priorité.
+
+NE MODIFIE AUCUN FICHIER DURANT CET AUDIT.
