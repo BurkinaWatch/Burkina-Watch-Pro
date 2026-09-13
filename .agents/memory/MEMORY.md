@@ -11,3 +11,4 @@
 - [Dérive de la commande Railway](railway-start-command-drift.md) — un wrapper versionné évite qu’une commande Railway persistée hors dépôt appelle un script absent.
 - [Protection contextuelle des déplacements](contextual-trip-protection.md) — jamais de score ou garantie; partage volontaire limité aux contacts choisis et clôturable à l’arrivée.
 - [État des tests Bash](railway-guardrail-shell-tests.md) — éviter les substitutions de commande pour mesurer un état modifié par une garde multi-étapes.
+- [Contexte lieu sans schéma publié](place-experience-schema-availability.md) — le contexte public doit rester lisible si les tables optionnelles de présence ne sont pas encore publiées.
