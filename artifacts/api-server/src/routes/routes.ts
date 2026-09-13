@@ -10,6 +10,7 @@ import { storage } from "../storage";
 import { 
   places,
   insertSignalementSchema, 
+  insertOfferSchema,
   updateSignalementSchema, 
   insertCommentaireSchema, 
   updateUserProfileSchema, 
@@ -1221,10 +1222,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Signalement non trouvé" });
       }
 
-      res.json(signalement);
+       const userId = (req as any).user?.claims?.sub;
+       const confirmations = await storage.getPracticalConfirmationSummary(
+         { signalementId: req.params.id },
+         userId,
+       );
+
+       res.json({ ...signalement, confirmations });
     } catch (error) {
       console.error("Error fetching signalement:", error);
       res.status(500).json({ error: "Erreur lors de la récupération du signalement" });
+    }
+  });
+
+  // ----------------------------------------
+  // ROUTES BURKINA PRATIQUE — OFFRES
+  // ----------------------------------------
+  app.get("/api/pratique/offers", async (req, res) => {
+    try {
+      const { category, placeId, status, limit } = req.query;
+      const offers = await storage.getOffers({
+        category: typeof category === "string" ? category : undefined,
+        placeId: typeof placeId === "string" ? placeId : undefined,
+        status: typeof status === "string" ? status : undefined,
+        limit: typeof limit === "string" ? Number.parseInt(limit, 10) : undefined,
+      });
+
+      const userId = (req as any).user?.claims?.sub;
+      const enriched = await Promise.all(
+        offers.map(async (offer) => ({
+          ...offer,
+          confirmations: await storage.getPracticalConfirmationSummary({ offerId: offer.id }, userId),
+        })),
+      );
+
+      res.set("Cache-Control", "public, max-age=60");
+      res.json(enriched);
+    } catch (error) {
+      console.error("Error fetching practical offers:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des offres" });
+    }
+  });
+
+  app.get("/api/pratique/offers/:id", async (req, res) => {
+    try {
+      const offer = await storage.getOffer(req.params.id);
+      if (!offer) {
+        return res.status(404).json({ error: "Offre non trouvée ou expirée" });
+      }
+
+      const userId = (req as any).user?.claims?.sub;
+      const confirmations = await storage.getPracticalConfirmationSummary({ offerId: offer.id }, userId);
+      res.json({ ...offer, confirmations });
+    } catch (error) {
+      console.error("Error fetching practical offer:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération de l'offre" });
+    }
+  });
+
+  app.post("/api/pratique/offers", isAuthenticated, signalementMutationLimiter, async (req: any, res) => {
+    try {
+      const body = {
+        ...req.body,
+        sourceType: "USER",
+        status: "PENDING",
+        currency: req.body.currency || "XOF",
+      };
+      const parsed = insertOfferSchema.safeParse(body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: fromZodError(parsed.error).toString() });
+      }
+
+      if (parsed.data.startsAt && parsed.data.endsAt && parsed.data.endsAt <= parsed.data.startsAt) {
+        return res.status(400).json({ error: "La date de fin doit être postérieure à la date de début." });
+      }
+
+      if (parsed.data.placeId) {
+        const place = await overpassService.getPlaceById(parsed.data.placeId);
+        if (!place) {
+          return res.status(400).json({ error: "Le lieu associé n'existe plus." });
+        }
+      }
+
+      const currentUser = await storage.getUser(req.user.claims.sub);
+      const sourceName = parsed.data.sourceName ||
+        [currentUser?.firstName, currentUser?.lastName].filter(Boolean).join(" ") ||
+        "Utilisateur BurkinaWatch";
+
+      const offer = await storage.createOffer({
+        ...parsed.data,
+        sourceUserId: req.user.claims.sub,
+        sourceName,
+      });
+
+      const confirmations = await storage.getPracticalConfirmationSummary({ offerId: offer.id }, req.user.claims.sub);
+      res.status(201).json({ ...offer, confirmations });
+    } catch (error) {
+      console.error("Error creating practical offer:", error);
+      res.status(500).json({ error: "Erreur lors de la création de l'offre" });
+    }
+  });
+
+  app.get("/api/pratique/confirmations", async (req, res) => {
+    try {
+      const offerId = typeof req.query.offerId === "string" ? req.query.offerId : undefined;
+      const signalementId = typeof req.query.signalementId === "string" ? req.query.signalementId : undefined;
+      if (Boolean(offerId) === Boolean(signalementId)) {
+        return res.status(400).json({ error: "Précisez une offre ou un signalement." });
+      }
+
+      const userId = (req as any).user?.claims?.sub;
+      res.json(await storage.getPracticalConfirmationSummary({ offerId, signalementId }, userId));
+    } catch (error) {
+      console.error("Error fetching practical confirmations:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des confirmations" });
+    }
+  });
+
+  app.post("/api/pratique/confirmations", isAuthenticated, signalementMutationLimiter, async (req: any, res) => {
+    try {
+      const schema = z.object({
+        offerId: z.string().min(1).optional(),
+        signalementId: z.string().min(1).optional(),
+        action: z.enum(["confirm", "report", "contest"]),
+        comment: z.string().max(500).optional().nullable(),
+      }).refine((value) => Boolean(value.offerId) !== Boolean(value.signalementId), {
+        message: "Précisez une seule offre ou un seul signalement.",
+      });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: fromZodError(parsed.error).toString() });
+      }
+
+      if (parsed.data.offerId && !(await storage.getOffer(parsed.data.offerId))) {
+        return res.status(404).json({ error: "Offre non trouvée ou expirée" });
+      }
+      if (parsed.data.signalementId && !(await storage.getSignalement(parsed.data.signalementId))) {
+        return res.status(404).json({ error: "Signalement non trouvé" });
+      }
+
+      const summary = await storage.recordPracticalConfirmation({
+        ...parsed.data,
+        userId: req.user.claims.sub,
+      });
+      res.json(summary);
+    } catch (error) {
+      console.error("Error recording practical confirmation:", error);
+      res.status(500).json({ error: "Erreur lors de l'enregistrement de votre avis" });
     }
   });
 
