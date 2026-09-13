@@ -309,9 +309,7 @@ export default function BurkinaPratique() {
                   <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
                   La vie pratique, en un geste
                 </div>
-                <h1 className="pratique-reveal pratique-reveal-delay-1 mt-5 max-w-2xl font-display text-4xl font-extrabold leading-[0.98] tracking-tight text-emerald-950 dark:text-emerald-50 sm:text-5xl md:text-6xl">
-                  Décrivez votre besoin. Trouvez le bon lieu.
-                </h1>
+                <h1 className="pratique-reveal pratique-reveal-delay-1 mt-5 max-w-2xl font-display text-4xl font-extrabold leading-[0.98] tracking-tight text-emerald-950 dark:text-emerald-50 sm:text-5xl md:text-6xl">Trouvez le bon lieu, le plus safe.</h1>
                 <p className="pratique-reveal pratique-reveal-delay-2 mt-5 max-w-xl text-base leading-7 text-emerald-950/70 dark:text-emerald-50/70 md:text-lg">
                   Réparateur de téléphone, boucherie, légumes ou chaussure précise : dites ce que vous cherchez et consultez les établissements référencés près de vous.
                 </p>
