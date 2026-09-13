@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { User, LogOut, Loader2, Save, Camera, Trash2, MapPin, Calendar, Navigation, PlayCircle, StopCircle, Clock, Activity, Copy, ExternalLink, Briefcase, Mail, Shield, Plus, Trophy, Smartphone, Download, Bell } from "lucide-react";
 import { PushNotificationManager } from "@/components/PushNotificationManager";
+import { PlaceExperienceSettings } from "@/components/PlaceExperienceSettings";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/use-onboarding";
 import { Switch } from "@/components/ui/switch";
@@ -1429,6 +1430,7 @@ export default function Profil() {
                 Notifications Push
               </Label>
               <PushNotificationManager />
+              <PlaceExperienceSettings />
             </div>
 
             <Separator />
