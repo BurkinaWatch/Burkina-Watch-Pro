@@ -60,7 +60,7 @@ const PLACE_TYPE_QUERIES: Record<string, string> = {
   
   // Commerce
   marketplace: `["amenity"="marketplace"]`,
-  shop: `["shop"~"supermarket|convenience|grocery|butcher|bakery|clothes|shoes|electronics|mobile_phone|computer|hardware|furniture|cosmetics|beauty|hairdresser"]`,
+  shop: `["shop"~"supermarket|convenience|grocery|butcher|bakery|greengrocer|seafood|deli|clothes|shoes|electronics|mobile_phone|computer|hardware|furniture|cosmetics|beauty|hairdresser"]`,
   supermarket: `["shop"="supermarket"]`,
   convenience: `["shop"="convenience"]`,
   grocery: `["shop"="grocery"]`,

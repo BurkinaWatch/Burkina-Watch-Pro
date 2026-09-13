@@ -26,8 +26,9 @@ const EXPLORER_TYPES: Array<{ value: ExplorerType; label: string }> = [
   { value: "pharmacy", label: "Pharmacies" },
   { value: "fuel", label: "Stations" },
   { value: "restaurant", label: "Restaurants" },
-  { value: "shop", label: "Boutiques" },
+  { value: "shop", label: "Commerces" },
   { value: "marketplace", label: "Marchés" },
+  { value: "mobile_phone", label: "Téléphones" },
 ];
 
 interface PratiqueExplorerProps {
@@ -87,6 +88,7 @@ export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "", in
     const parsed = intent || parsePracticalSearch(localSearch);
     return { ...parsed, searchText: localSearch };
   }, [intent, localSearch]);
+  const hasDirectSearch = Boolean(effectiveIntent.originalQuery.trim());
 
   const { data, isLoading, isFetching, isError, refetch } = useQuery<Place[] | PlacesResponse>({
     queryKey: ["pratique-explorer", placeType],
@@ -201,10 +203,16 @@ export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "", in
       <div className="mx-auto min-w-0 max-w-6xl px-4 sm:px-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">Nouveau dans Burkina Pratique</p>
-            <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-emerald-950 dark:text-emerald-50">Explorez les lieux autour de vous</h2>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
+              {hasDirectSearch ? "Recherche de lieux concrets" : "Nouveau dans Burkina Pratique"}
+            </p>
+            <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-emerald-950 dark:text-emerald-50">
+              {hasDirectSearch ? "Voici les endroits qui correspondent à votre besoin" : "Explorez les lieux autour de vous"}
+            </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Filtrez les données existantes, passez de la liste à la carte et ouvrez directement une fiche vérifiable.
+              {hasDirectSearch
+                ? "Les résultats viennent des lieux référencés et des informations disponibles. Les éléments inconnus restent indiqués comme tels."
+                : "Filtrez les données existantes, passez de la liste à la carte et ouvrez directement une fiche vérifiable."}
             </p>
           </div>
           <Badge variant="outline" className="w-fit gap-2 border-emerald-700/20 bg-background">
@@ -241,6 +249,18 @@ export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "", in
                 Utiliser ma position
               </Button>
             ) : null}
+          </div>
+        ) : null}
+
+        {effectiveIntent.filters.includes("proximity") && !location ? (
+          <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-emerald-900/10 bg-background/80 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-emerald-950 dark:text-emerald-50">Vous cherchez le lieu le plus proche ?</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">Autorisez votre position pour classer les résultats par distance.</p>
+            </div>
+            <Button type="button" size="sm" variant="outline" onClick={requestLocation} className="w-full sm:w-auto">
+              Utiliser ma position
+            </Button>
           </div>
         ) : null}
 
@@ -295,7 +315,7 @@ export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "", in
               ))}
             </div>
           ) : (
-            <Card><CardHeader><CardTitle className="text-base">Aucun lieu vérifiable trouvé</CardTitle></CardHeader><CardContent className="pt-0 text-sm text-muted-foreground">Essayez une autre catégorie ou retirez un filtre. Une disponibilité, une ouverture ou un prix absents ne sont pas inventés.</CardContent></Card>
+            <Card><CardHeader><CardTitle className="text-base">{hasDirectSearch ? "Aucun lieu correspondant pour le moment" : "Aucun lieu vérifiable trouvé"}</CardTitle></CardHeader><CardContent className="pt-0 text-sm text-muted-foreground">Essayez un autre mot-clé ou retirez un filtre. Une disponibilité, une ouverture ou un prix absents ne sont pas inventés.</CardContent></Card>
           )}
           {viewMode === "list" && places.length > 6 ? (
             <p className="mt-4 text-center text-xs text-muted-foreground">Les 6 premiers résultats sont affichés ici. Utilisez une catégorie pour ouvrir la liste complète.</p>

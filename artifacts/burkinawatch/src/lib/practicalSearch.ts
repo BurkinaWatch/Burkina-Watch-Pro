@@ -66,6 +66,7 @@ type IntentRule = {
   familyLabel: string;
   explorerType: PracticalExplorerType;
   terms: string[];
+  searchTerms?: string[];
 };
 
 const intentRules: IntentRule[] = [
@@ -80,6 +81,36 @@ const intentRules: IntentRule[] = [
   { key: 'transport', href: '/gares', label: 'Transport', family: 'transport', familyLabel: 'Transport', explorerType: 'bus_station', terms: ['transport', 'gare', 'bus', 'taxi', 'voyage', 'départ', 'depart'] },
   { key: 'reparation', href: '/telephonie', label: 'Réparation', family: 'reparation', familyLabel: 'Réparation', explorerType: 'mobile_phone', terms: ['réparation', 'reparation', 'téléphone', 'telephone', 'mobile', 'cassé', 'casse'] },
   { key: 'marches', href: '/marches', label: 'Marchés', family: 'achat', familyLabel: 'Achat', explorerType: 'marketplace', terms: ['marché', 'marche', 'marchés', 'marches'] },
+  {
+    key: 'commerce_precis',
+    href: '/boutiques',
+    label: 'Commerces de proximité',
+    family: 'achat',
+    familyLabel: 'Achat',
+    explorerType: 'shop',
+    terms: [
+      'acheter',
+      'achat',
+      'payer',
+      'boucherie',
+      'viande',
+      'légume',
+      'legume',
+      'légumes',
+      'legumes',
+      'fruit',
+      'fruits',
+      'épicerie',
+      'epicerie',
+      'chaussure',
+      'chaussures',
+      'nike',
+      'commerce',
+      'boutique',
+      'magasin',
+    ],
+    searchTerms: ['acheter', 'achat', 'payer', 'commerce', 'boutique', 'magasin'],
+  },
   { key: 'commerces', href: '/boutiques', label: 'Commerces & artisans', family: 'achat', familyLabel: 'Achat', explorerType: 'shop', terms: ['acheter', 'achat', 'ciment', 'matériaux', 'materiaux', 'boutique', 'magasin', 'plombier', 'artisan'] },
   { key: 'hebergement', href: '/hotels', label: 'Hôtels & auberges', family: 'hebergement', familyLabel: 'Hébergement', explorerType: 'hotel', terms: ['chambre', 'hôtel', 'hotel', 'auberge', 'hébergement', 'hebergement', 'dormir'] },
   { key: 'administration', href: '/mairies-prefectures', label: 'Mairies & préfectures', family: 'administration', familyLabel: 'Administration', explorerType: 'townhall', terms: ['administration', 'administratif', 'mairie', 'préfecture', 'prefecture', 'service public'] },
@@ -107,11 +138,11 @@ function parseDate(query: string) {
 
 function removeSearchNoise(query: string, rule?: IntentRule) {
   let searchText = query;
-  for (const term of rule?.terms || []) {
+  for (const term of rule?.searchTerms || rule?.terms || []) {
     searchText = searchText.replace(normalizePracticalSearch(term), ' ');
   }
   return searchText
-    .replace(/\b(je|j|cherche|cherchons|veux|veut|une|un|des|du|de|la|le|les|pour|ou|où|a|à|au|aux|moi|mon|ma|mes|ce|cette|cet|dans|sur|maintenant|soir|aujourd hui|aujourd'hui|disponible|disponibles|ouvert|ouverte|ouverts|ouvertes|garde|proche|pres|pres de|autour|besoin|urgent|urgence|moins|max|budget)\b/g, ' ')
+    .replace(/\b(je|j|cherche|cherchons|veux|veut|une|un|des|du|de|la|le|les|pour|ou|où|a|à|au|aux|moi|mon|ma|mes|ce|cette|cet|dans|sur|maintenant|soir|aujourd hui|aujourd'hui|disponible|disponibles|ouvert|ouverte|ouverts|ouvertes|garde|proche|pres|pres de|autour|besoin|urgent|urgence|moins|max|budget|tel|type)\b/g, ' ')
     .replace(/\b\d[\d\s.]*\b/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -198,6 +229,23 @@ type PracticalPlace = Place & { distance?: number };
 
 function placeTags(place: Place) {
   return (place.tags && typeof place.tags === 'object' ? place.tags : {}) as Record<string, unknown>;
+}
+
+const placeSearchAliases: Record<string, string[]> = {
+  chaussure: ['chaussure', 'chaussures', 'shoe', 'shoes'],
+  chaussures: ['chaussure', 'chaussures', 'shoe', 'shoes'],
+  boucherie: ['boucherie', 'butcher', 'viande', 'meat'],
+  viande: ['boucherie', 'butcher', 'viande', 'meat'],
+  legume: ['legume', 'legumes', 'légume', 'légumes', 'greengrocer', 'grocery', 'produce'],
+  legumes: ['legume', 'legumes', 'légume', 'légumes', 'greengrocer', 'grocery', 'produce'],
+  fruit: ['fruit', 'fruits', 'greengrocer', 'grocery', 'produce'],
+  fruits: ['fruit', 'fruits', 'greengrocer', 'grocery', 'produce'],
+  epicerie: ['epicerie', 'épicerie', 'grocery', 'convenience', 'supermarket'],
+  nike: ['nike'],
+};
+
+function searchAlternatives(token: string) {
+  return [token, ...(placeSearchAliases[token] || [])].map(normalizePracticalSearch);
 }
 
 function textValue(value: unknown) {
@@ -288,6 +336,9 @@ export function filterPracticalPlaces(
     .filter((place) => {
       if (search) {
         const tags = placeTags(place);
+        const tagText = Object.entries(tags)
+          .flatMap(([key, value]) => [key, textValue(value)])
+          .filter(Boolean);
         const haystack = normalizePracticalSearch([
           place.name,
           place.address,
@@ -297,8 +348,13 @@ export function filterPracticalPlaces(
           textValue(tags.description),
           textValue(tags.services),
           textValue(tags.cuisine),
+          textValue(tags.brand),
+          textValue(tags.operator),
+          textValue(tags.shop),
+          textValue(tags.product),
+          ...tagText,
         ].filter(Boolean).join(' '));
-        if (!search.split(/\s+/).every((word) => haystack.includes(word))) return false;
+        if (!search.split(/\s+/).every((word) => searchAlternatives(word).some((alternative) => haystack.includes(alternative)))) return false;
       }
 
       if (intent.filters.includes('open_now') && isOpenNow(place) !== true) return false;
