@@ -163,6 +163,11 @@ export const signalements = pgTable("signalements", {
   reliabilityScore: integer("reliability_score"),
   verificationStatus: text("verification_status").notNull().default("pending"),
   verificationMode: text("verification_mode").notNull().default("pending"),
+  signalType: text("signal_type"),
+  sourceType: text("source_type"),
+  sourceName: text("source_name"),
+  expiresAt: timestamp("expires_at"),
+  freshnessExpiresAt: timestamp("freshness_expires_at"),
   moderationStatus: text("moderation_status").notNull().default("not_applicable"),
   moderationNote: text("moderation_note"),
   moderatedAt: timestamp("moderated_at"),
@@ -173,6 +178,8 @@ export const signalements = pgTable("signalements", {
   index("signalements_created_at_idx").on(table.createdAt),
   index("signalements_statut_idx").on(table.statut),
   index("signalements_place_id_idx").on(table.placeId),
+  index("signalements_signal_type_idx").on(table.signalType),
+  index("signalements_expires_at_idx").on(table.expiresAt),
   index("signalements_moderation_status_idx").on(table.moderationStatus),
 ]);
 
@@ -988,6 +995,58 @@ export const placeVerifications = pgTable("place_verifications", {
   ipIdx: index("place_verifications_ip_idx").on(table.ipAddress),
 }));
 
+// Offres concrètes publiées par une source identifiable. Une offre n'est jamais
+// transformée automatiquement en lieu : placeId est uniquement une association.
+export const offers = pgTable("offers", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(),
+  placeId: text("place_id").references(() => places.id, { onDelete: "set null" }),
+  sourceUserId: text("source_user_id").references(() => users.id, { onDelete: "set null" }),
+  sourceType: text("source_type").notNull().default("USER"),
+  sourceName: text("source_name"),
+  price: integer("price"),
+  currency: text("currency").notNull().default("XOF"),
+  zone: text("zone"),
+  publishedAt: timestamp("published_at").defaultNow(),
+  startsAt: timestamp("starts_at"),
+  endsAt: timestamp("ends_at"),
+  availability: text("availability"),
+  phone: text("phone"),
+  whatsapp: text("whatsapp"),
+  sourceUrl: text("source_url"),
+  mediaUrl: text("media_url"),
+  collectedAt: timestamp("collected_at").defaultNow(),
+  status: text("status").notNull().default("PENDING"),
+  confidenceScore: decimal("confidence_score", { precision: 3, scale: 2 }).notNull().default("0.50"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("offers_category_idx").on(table.category),
+  index("offers_place_id_idx").on(table.placeId),
+  index("offers_status_idx").on(table.status),
+  index("offers_ends_at_idx").on(table.endsAt),
+  index("offers_source_type_idx").on(table.sourceType),
+]);
+
+// Une action citoyenne est une indication de contexte, jamais une vérité
+// automatique. Les contradictions sont agrégées et affichées comme "À confirmer".
+export const practicalConfirmations = pgTable("practical_confirmations", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  offerId: text("offer_id").references(() => offers.id, { onDelete: "cascade" }),
+  signalementId: text("signalement_id").references(() => signalements.id, { onDelete: "cascade" }),
+  action: text("action").notNull(),
+  comment: text("comment"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("practical_confirmations_offer_user_action_idx").on(table.offerId, table.userId, table.action),
+  uniqueIndex("practical_confirmations_signalement_user_action_idx").on(table.signalementId, table.userId, table.action),
+  index("practical_confirmations_offer_id_idx").on(table.offerId),
+  index("practical_confirmations_signalement_id_idx").on(table.signalementId),
+]);
+
 // Schemas d'insertion pour les lieux
 export const insertPlaceSchema = createInsertSchema(places, {
   latitude: z.union([z.string(), z.number()]).transform(val => String(val)),
@@ -1006,11 +1065,43 @@ export const insertPlaceVerificationSchema = createInsertSchema(placeVerificatio
   createdAt: true,
 });
 
+export const insertOfferSchema = createInsertSchema(offers, {
+  title: z.string().min(3).max(160),
+  description: z.string().min(3).max(4000),
+  category: z.string().min(2).max(80),
+  price: z.union([z.number().int().nonnegative(), z.string().regex(/^\d+$/)]).optional().nullable(),
+  sourceType: z.enum(["INTERNAL", "OFFICIAL", "EXTERNAL", "RSS", "USER"]).optional(),
+  status: z.enum(["ACTIVE", "EXPIRED", "CANCELLED", "PENDING", "UNVERIFIED"]).optional(),
+  sourceUrl: z.string().url().optional().nullable(),
+  startsAt: z.coerce.date().optional().nullable(),
+  endsAt: z.coerce.date().optional().nullable(),
+}).omit({
+  id: true,
+  sourceUserId: true,
+  publishedAt: true,
+  collectedAt: true,
+  confidenceScore: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPracticalConfirmationSchema = createInsertSchema(practicalConfirmations, {
+  action: z.enum(["confirm", "report", "contest"]),
+}).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+});
+
 // Types pour les lieux
 export type InsertPlace = z.infer<typeof insertPlaceSchema>;
 export type Place = typeof places.$inferSelect;
 export type InsertPlaceVerification = z.infer<typeof insertPlaceVerificationSchema>;
 export type PlaceVerification = typeof placeVerifications.$inferSelect;
+export type InsertOffer = z.infer<typeof insertOfferSchema>;
+export type Offer = typeof offers.$inferSelect;
+export type InsertPracticalConfirmation = z.infer<typeof insertPracticalConfirmationSchema>;
+export type PracticalConfirmation = typeof practicalConfirmations.$inferSelect;
 
 // Enum pour les types de lieux
 export const PlaceTypes = {
@@ -1040,6 +1131,31 @@ export const DataSources = {
 } as const;
 
 export type DataSource = typeof DataSources[keyof typeof DataSources];
+
+export const offerStatuses = ["ACTIVE", "EXPIRED", "CANCELLED", "PENDING", "UNVERIFIED"] as const;
+export type OfferStatus = typeof offerStatuses[number];
+
+export const offerSourceTypes = ["INTERNAL", "OFFICIAL", "EXTERNAL", "RSS", "USER"] as const;
+export type OfferSourceType = typeof offerSourceTypes[number];
+
+export const practicalConfirmationActions = ["confirm", "report", "contest"] as const;
+export type PracticalConfirmationAction = typeof practicalConfirmationActions[number];
+
+export const signalTypes = [
+  "route_bloquee",
+  "travaux",
+  "inondation",
+  "embouteillage",
+  "acces_difficile",
+  "etablissement_ferme",
+  "service_indisponible",
+  "information_contestee",
+  "mobile_money_retrait",
+  "mobile_money_depot",
+  "mobile_money_liquidite",
+  "autre",
+] as const;
+export type SignalType = typeof signalTypes[number];
 
 // Push Notifications - Preferences (nouvelle table pour préférences utilisateur)
 export const notificationPreferences = pgTable("notification_preferences", {

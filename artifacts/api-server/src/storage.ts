@@ -6,6 +6,8 @@ import {
   type SignalementWithAuthor,
   type InsertSignalement,
   type UpdateSignalement,
+  type Offer,
+  type InsertOffer,
   type Commentaire,
   type InsertCommentaire,
   type TrackingSession,
@@ -44,6 +46,8 @@ import {
   magicLinks,
   users,
   signalements,
+  offers,
+  practicalConfirmations,
   commentaires,
   trackingSessions,
   locationPoints,
@@ -98,6 +102,7 @@ const baseSignalementSelection = {
 
 let verificationColumnsAvailable: boolean | undefined;
 let placeContributionColumnsAvailable: boolean | undefined;
+let signalEnrichmentColumnsAvailable: boolean | undefined;
 
 async function hasSignalementVerificationColumns(): Promise<boolean> {
   if (verificationColumnsAvailable !== undefined) {
@@ -138,6 +143,28 @@ async function hasPlaceContributionColumns(): Promise<boolean> {
   return placeContributionColumnsAvailable;
 }
 
+async function hasSignalEnrichmentColumns(): Promise<boolean> {
+  if (signalEnrichmentColumnsAvailable !== undefined) {
+    return signalEnrichmentColumnsAvailable;
+  }
+
+  const result = await db.execute(sql`
+    SELECT COUNT(*)::int AS column_count
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'signalements'
+      AND column_name IN (
+        'signal_type',
+        'source_type',
+        'source_name',
+        'expires_at',
+        'freshness_expires_at'
+      )
+  `);
+  signalEnrichmentColumnsAvailable = Number(result.rows[0]?.column_count) === 5;
+  return signalEnrichmentColumnsAvailable;
+}
+
 async function getSignalementSelection() {
   const selection = {
     ...baseSignalementSelection,
@@ -159,6 +186,16 @@ async function getSignalementSelection() {
       moderationNote: signalements.moderationNote,
       moderatedAt: signalements.moderatedAt,
       moderatedBy: signalements.moderatedBy,
+    });
+  }
+
+  if (await hasSignalEnrichmentColumns()) {
+    Object.assign(selection, {
+      signalType: signalements.signalType,
+      sourceType: signalements.sourceType,
+      sourceName: signalements.sourceName,
+      expiresAt: signalements.expiresAt,
+      freshnessExpiresAt: signalements.freshnessExpiresAt,
     });
   }
 
@@ -220,6 +257,34 @@ export interface IStorage {
   updateSignalement(id: string, updates: UpdateSignalement): Promise<Signalement | undefined>;
   deleteSignalement(id: string): Promise<boolean>;
   updateSignalementStatut(id: string, statut: string): Promise<Signalement | undefined>;
+  getOffers(filters?: {
+    category?: string;
+    placeId?: string;
+    status?: string;
+    limit?: number;
+  }): Promise<Array<Offer & { placeName?: string | null }>>;
+  getOffer(id: string): Promise<(Offer & { placeName?: string | null }) | undefined>;
+  createOffer(offer: InsertOffer & { sourceUserId?: string | null }): Promise<Offer>;
+  getPracticalConfirmationSummary(target: { offerId?: string; signalementId?: string }, userId?: string): Promise<{
+    confirm: number;
+    report: number;
+    contest: number;
+    currentAction: string | null;
+    state: "confirmed" | "reported" | "contested" | "mixed" | "unknown";
+  }>;
+  recordPracticalConfirmation(input: {
+    userId: string;
+    offerId?: string;
+    signalementId?: string;
+    action: "confirm" | "report" | "contest";
+    comment?: string | null;
+  }): Promise<{
+    confirm: number;
+    report: number;
+    contest: number;
+    currentAction: string | null;
+    state: "confirmed" | "reported" | "contested" | "mixed" | "unknown";
+  }>;
   likeSignalement(signalementId: string, userId: string): Promise<{ signalement: Signalement | undefined; isLiked: boolean }>;
   shareSignalement(id: string): Promise<Signalement | undefined>;
 
@@ -723,6 +788,200 @@ export class DbStorage implements IStorage {
     }
 
     return (await query) as unknown as SignalementWithAuthor[];
+  }
+
+  async getOffers(filters?: {
+    category?: string;
+    placeId?: string;
+    status?: string;
+    limit?: number;
+  }): Promise<Array<Offer & { placeName?: string | null }>> {
+    const conditions = [
+      sql`${offers.status} <> 'CANCELLED'`,
+      or(isNull(offers.endsAt), gt(offers.endsAt, new Date())),
+    ];
+
+    if (filters?.category) conditions.push(eq(offers.category, filters.category));
+    if (filters?.placeId) conditions.push(eq(offers.placeId, filters.placeId));
+    if (filters?.status) conditions.push(eq(offers.status, filters.status));
+
+    const query = db
+      .select({
+        id: offers.id,
+        title: offers.title,
+        description: offers.description,
+        category: offers.category,
+        placeId: offers.placeId,
+        sourceUserId: offers.sourceUserId,
+        sourceType: offers.sourceType,
+        sourceName: offers.sourceName,
+        price: offers.price,
+        currency: offers.currency,
+        zone: offers.zone,
+        publishedAt: offers.publishedAt,
+        startsAt: offers.startsAt,
+        endsAt: offers.endsAt,
+        availability: offers.availability,
+        phone: offers.phone,
+        whatsapp: offers.whatsapp,
+        sourceUrl: offers.sourceUrl,
+        mediaUrl: offers.mediaUrl,
+        collectedAt: offers.collectedAt,
+        status: offers.status,
+        confidenceScore: offers.confidenceScore,
+        createdAt: offers.createdAt,
+        updatedAt: offers.updatedAt,
+        placeName: places.name,
+      })
+      .from(offers)
+      .leftJoin(places, eq(offers.placeId, places.id))
+      .where(and(...conditions))
+      .orderBy(desc(offers.createdAt))
+      .limit(Math.min(Math.max(filters?.limit || 24, 1), 100));
+
+    return (await query) as Array<Offer & { placeName?: string | null }>;
+  }
+
+  async getOffer(id: string): Promise<(Offer & { placeName?: string | null }) | undefined> {
+    const results = await this.getOffers({ limit: 100 });
+    return results.find((offer) => offer.id === id);
+  }
+
+  async createOffer(offer: InsertOffer & { sourceUserId?: string | null }): Promise<Offer> {
+    const result = await db.insert(offers).values({
+      ...offer,
+      sourceUserId: offer.sourceUserId ?? null,
+      sourceType: offer.sourceType || "USER",
+      status: offer.status || "PENDING",
+      currency: offer.currency || "XOF",
+      collectedAt: new Date(),
+      confidenceScore: offer.confidenceScore || "0.35",
+    } as any).returning();
+    return result[0] as Offer;
+  }
+
+  async getPracticalConfirmationSummary(
+    target: { offerId?: string; signalementId?: string },
+    userId?: string,
+  ): Promise<{
+    confirm: number;
+    report: number;
+    contest: number;
+    currentAction: string | null;
+    state: "confirmed" | "reported" | "contested" | "mixed" | "unknown";
+  }> {
+    const targetCondition = target.offerId
+      ? eq(practicalConfirmations.offerId, target.offerId)
+      : target.signalementId
+        ? eq(practicalConfirmations.signalementId, target.signalementId)
+        : undefined;
+
+    if (!targetCondition) {
+      return { confirm: 0, report: 0, contest: 0, currentAction: null, state: "unknown" };
+    }
+
+    const rows = await db
+      .select({
+        action: practicalConfirmations.action,
+        total: sql<number>`count(*)::int`,
+      })
+      .from(practicalConfirmations)
+      .where(targetCondition)
+      .groupBy(practicalConfirmations.action);
+
+    const counts = { confirm: 0, report: 0, contest: 0 };
+    for (const row of rows) {
+      if (row.action === "confirm" || row.action === "report" || row.action === "contest") {
+        counts[row.action] = Number(row.total) || 0;
+      }
+    }
+
+    let currentAction: string | null = null;
+    if (userId) {
+      const current = await db
+        .select({ action: practicalConfirmations.action })
+        .from(practicalConfirmations)
+        .where(and(targetCondition, eq(practicalConfirmations.userId, userId)))
+        .limit(1);
+      currentAction = current[0]?.action || null;
+    }
+
+    const nonZero = Object.values(counts).filter((value) => value > 0).length;
+    const state = nonZero > 1
+      ? "mixed"
+      : counts.confirm > 0
+        ? "confirmed"
+        : counts.report > 0
+          ? "reported"
+          : counts.contest > 0
+            ? "contested"
+            : "unknown";
+
+    return { ...counts, currentAction, state };
+  }
+
+  async recordPracticalConfirmation(input: {
+    userId: string;
+    offerId?: string;
+    signalementId?: string;
+    action: "confirm" | "report" | "contest";
+    comment?: string | null;
+  }) {
+    const targetCondition = input.offerId
+      ? eq(practicalConfirmations.offerId, input.offerId)
+      : input.signalementId
+        ? eq(practicalConfirmations.signalementId, input.signalementId)
+        : undefined;
+    if (!targetCondition || Boolean(input.offerId) === Boolean(input.signalementId)) {
+      throw new Error("PRACTICAL_CONFIRMATION_TARGET_REQUIRED");
+    }
+
+    return db.transaction(async (tx) => {
+      const existing = await tx
+        .select({ id: practicalConfirmations.id, action: practicalConfirmations.action })
+        .from(practicalConfirmations)
+        .where(and(targetCondition, eq(practicalConfirmations.userId, input.userId)));
+
+      await tx.delete(practicalConfirmations).where(and(targetCondition, eq(practicalConfirmations.userId, input.userId)));
+
+      if (existing[0]?.action !== input.action) {
+        await tx.insert(practicalConfirmations).values({
+          userId: input.userId,
+          offerId: input.offerId || null,
+          signalementId: input.signalementId || null,
+          action: input.action,
+          comment: input.comment || null,
+        });
+      }
+
+      const rows = await tx
+        .select({
+          action: practicalConfirmations.action,
+          total: sql<number>`count(*)::int`,
+        })
+        .from(practicalConfirmations)
+        .where(targetCondition)
+        .groupBy(practicalConfirmations.action);
+
+      const counts = { confirm: 0, report: 0, contest: 0 };
+      for (const row of rows) {
+        if (row.action === "confirm" || row.action === "report" || row.action === "contest") {
+          counts[row.action] = Number(row.total) || 0;
+        }
+      }
+      const nonZero = Object.values(counts).filter((value) => value > 0).length;
+      const state = nonZero > 1
+        ? "mixed"
+        : counts.confirm > 0
+          ? "confirmed"
+          : counts.report > 0
+            ? "reported"
+            : counts.contest > 0
+              ? "contested"
+              : "unknown";
+      const currentAction = existing[0]?.action === input.action ? null : input.action;
+      return { ...counts, currentAction, state };
+    });
   }
 
   async getUserSignalements(userId: string): Promise<SignalementWithAuthor[]> {
