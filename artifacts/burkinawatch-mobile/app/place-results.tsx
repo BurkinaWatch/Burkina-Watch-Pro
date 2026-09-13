@@ -338,6 +338,7 @@ const styles = StyleSheet.create({
   contextItemTitle: { fontFamily: 'Inter_500Medium', fontSize: 11 },
   contextMeta: { fontFamily: 'Inter_400Regular', fontSize: 10, lineHeight: 15 },
   disclaimer: { fontFamily: 'Inter_400Regular', fontSize: 10, lineHeight: 14 },
+  insufficientData: { borderRadius: 8, fontFamily: 'Inter_400Regular', fontSize: 10, lineHeight: 15, paddingVertical: 2 },
   freshness: { borderRadius: 99, paddingHorizontal: 7, paddingVertical: 4 },
   recent: { backgroundColor: '#dcfce7' },
   confirm: { backgroundColor: '#fef3c7' },
