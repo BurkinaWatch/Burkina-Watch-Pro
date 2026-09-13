@@ -1,9 +1,10 @@
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
+import * as ImagePicker from 'expo-image-picker';
 import Constants from 'expo-constants';
 import { Feather } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useColors } from '@/hooks/useColors';
 import { requestJson } from '@/lib/api';
@@ -29,6 +30,8 @@ export function PlaceExperienceMobileCard() {
   const lastPresenceAt = useRef(0);
   const [busy, setBusy] = useState(false);
   const [eligibleVisit, setEligibleVisit] = useState<(PresenceResponse['visit'] & { placeName?: string }) | null>(null);
+  const [candidate, setCandidate] = useState({ name: '', category: '', description: '', photo: '' });
+  const [candidateBusy, setCandidateBusy] = useState(false);
   const configQuery = useQuery<ConfigResponse>({
     queryKey: ['/api/place-experience/config'],
     queryFn: () => requestJson<ConfigResponse>('/place-experience/config'),
@@ -149,6 +152,56 @@ export function PlaceExperienceMobileCard() {
     }
   }
 
+  async function chooseCandidatePhoto() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permission.status !== ImagePicker.PermissionStatus.GRANTED) {
+      Alert.alert('Photo indisponible', 'Autorisez l’accès aux photos pour joindre une image.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.8,
+      base64: true,
+    });
+    const asset = result.canceled ? undefined : result.assets[0];
+    if (!asset?.base64) return;
+    if (asset.mimeType && asset.mimeType !== 'image/jpeg') {
+      Alert.alert('Format non pris en charge', 'Choisissez une photo JPEG.');
+      return;
+    }
+    setCandidate((current) => ({ ...current, photo: `data:image/jpeg;base64,${asset.base64}` }));
+  }
+
+  async function submitCandidate() {
+    if (!candidate.name.trim() || !candidate.category.trim()) {
+      Alert.alert('Champs requis', 'Indiquez le nom et la catégorie du lieu.');
+      return;
+    }
+    setCandidateBusy(true);
+    try {
+      const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      await requestJson('/place-experience/candidates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: candidate.name.trim(),
+          category: candidate.category.trim(),
+          description: candidate.description.trim() || null,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          mediaDataUrl: candidate.photo || undefined,
+        }),
+      });
+      setCandidate({ name: '', category: '', description: '', photo: '' });
+      Alert.alert('Proposition envoyée', 'Elle restera en attente de modération.');
+    } catch (error) {
+      Alert.alert('Proposition impossible', error instanceof Error ? error.message : 'Réessayez plus tard.');
+    } finally {
+      setCandidateBusy(false);
+    }
+  }
+
   if (!configQuery.data) return null;
   const enabled = configQuery.data.readiness.enabled;
   return (
@@ -191,6 +244,43 @@ export function PlaceExperienceMobileCard() {
           </View>
         </View>
       ) : null}
+      <View style={[styles.candidate, { borderColor: colors.border }]}>
+        <Text style={[styles.promptTitle, { color: colors.foreground }]}>Proposer un lieu ou service</Text>
+        <Text style={[styles.body, { color: colors.mutedForeground }]}>La position actuelle sera jointe. La photo JPEG est facultative.</Text>
+        <TextInput
+          value={candidate.name}
+          onChangeText={(name) => setCandidate((current) => ({ ...current, name }))}
+          placeholder="Nom du lieu"
+          placeholderTextColor={colors.mutedForeground}
+          style={[styles.input, { borderColor: colors.border, color: colors.foreground }]}
+          maxLength={160}
+        />
+        <TextInput
+          value={candidate.category}
+          onChangeText={(category) => setCandidate((current) => ({ ...current, category }))}
+          placeholder="Catégorie"
+          placeholderTextColor={colors.mutedForeground}
+          style={[styles.input, { borderColor: colors.border, color: colors.foreground }]}
+          maxLength={80}
+        />
+        <TextInput
+          value={candidate.description}
+          onChangeText={(description) => setCandidate((current) => ({ ...current, description }))}
+          placeholder="Description facultative"
+          placeholderTextColor={colors.mutedForeground}
+          style={[styles.input, styles.multiline, { borderColor: colors.border, color: colors.foreground }]}
+          multiline
+          maxLength={1000}
+        />
+        <View style={styles.candidateActions}>
+          <Pressable onPress={() => void chooseCandidatePhoto()} style={[styles.choice, { borderColor: colors.border }]}>
+            <Text style={[styles.choiceText, { color: colors.foreground }]}>{candidate.photo ? 'Photo jointe' : 'Joindre une photo'}</Text>
+          </Pressable>
+          <Pressable disabled={candidateBusy} onPress={() => void submitCandidate()} style={[styles.choice, { backgroundColor: colors.primary, borderColor: colors.primary, opacity: candidateBusy ? 0.6 : 1 }]}>
+            <Text style={[styles.choiceText, { color: colors.primaryForeground }]}>{candidateBusy ? 'Envoi…' : 'Proposer'}</Text>
+          </Pressable>
+        </View>
+      </View>
     </View>
   );
 }
@@ -210,4 +300,8 @@ const styles = StyleSheet.create({
   choice: { borderRadius: 8, borderWidth: 1, paddingHorizontal: 8, paddingVertical: 7 },
   choiceText: { fontFamily: 'Inter_600SemiBold', fontSize: 10 },
   later: { justifyContent: 'center', paddingHorizontal: 5 },
+  candidate: { borderRadius: 11, borderWidth: 1, gap: 7, padding: 11 },
+  input: { borderRadius: 8, borderWidth: 1, fontFamily: 'Inter_400Regular', fontSize: 12, paddingHorizontal: 10, paddingVertical: 9 },
+  multiline: { minHeight: 58, textAlignVertical: 'top' },
+  candidateActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
 });

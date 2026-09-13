@@ -2456,6 +2456,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     placeExperienceMutationLimiter,
     async (req: any, res) => {
       const mediaDataUrl = typeof req.body?.mediaDataUrl === "string" ? req.body.mediaDataUrl : undefined;
+      if (mediaDataUrl && (!/^data:image\/jpeg;base64,[A-Za-z0-9+/=\s]+$/i.test(mediaDataUrl) || mediaDataUrl.length > 7_000_000)) {
+        return res.status(400).json({ error: "Photo JPEG invalide ou trop volumineuse" });
+      }
       const parsed = insertPlaceExperienceCandidateSchema.safeParse({
         ...req.body,
         mediaUrl: undefined,
@@ -2468,9 +2471,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         let candidate = await createPlaceExperienceCandidate(parsed.data);
         if (mediaDataUrl) {
-          if (!/^data:image\/jpeg;base64,[A-Za-z0-9+/=\s]+$/i.test(mediaDataUrl) || mediaDataUrl.length > 7_000_000) {
-            return res.status(400).json({ error: "Photo JPEG invalide ou trop volumineuse" });
-          }
           candidate = (await attachPlaceExperienceCandidateMedia(
             req.user.claims.sub,
             candidate.id,
