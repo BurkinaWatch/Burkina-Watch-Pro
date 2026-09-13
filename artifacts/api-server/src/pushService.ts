@@ -22,6 +22,32 @@ export interface PushPayload {
   tag?: string;
 }
 
+async function sendExpoNotification(token: string, payload: PushPayload): Promise<void> {
+  const response = await fetch("https://exp.host/--/api/v2/push/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      to: token,
+      title: payload.title,
+      body: payload.body,
+      sound: "default",
+      data: {
+        url: payload.url,
+        signalementId: payload.signalementId,
+        tag: payload.tag,
+      },
+    }),
+  });
+  if (!response.ok) throw new Error(`Expo Push returned ${response.status}`);
+  const result = await response.json() as { data?: { status?: string; details?: { error?: string } } };
+  const ticket = result.data;
+  if (ticket?.status === "error") {
+    const error = new Error(ticket.details?.error || "Expo Push rejected notification") as Error & { statusCode?: number };
+    if (ticket.details?.error === "DeviceNotRegistered") error.statusCode = 410;
+    throw error;
+  }
+}
+
 interface SubscriptionData {
   endpoint: string;
   keys: {
@@ -82,11 +108,6 @@ export async function removeSubscription(endpoint: string): Promise<void> {
 }
 
 export async function sendPushToUser(userId: string, payload: PushPayload): Promise<number> {
-  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-    console.log('Push notifications not configured');
-    return 0;
-  }
-
   const subscriptions = await db.select()
     .from(pushSubscriptions)
     .where(and(
@@ -97,16 +118,15 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
   let sent = 0;
   for (const sub of subscriptions) {
     try {
-      await webpush.sendNotification(
-        {
-          endpoint: sub.endpoint,
-          keys: {
-            p256dh: sub.p256dh,
-            auth: sub.auth,
-          },
-        },
-        JSON.stringify(payload)
-      );
+      if (sub.endpoint.startsWith("expo:")) {
+        await sendExpoNotification(sub.endpoint.slice("expo:".length), payload);
+      } else {
+        if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) continue;
+        await webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          JSON.stringify(payload),
+        );
+      }
       sent++;
     } catch (error: any) {
       if (error.statusCode === 404 || error.statusCode === 410) {
@@ -126,10 +146,6 @@ export async function sendPushToNearbySubscriptions(
   payload: PushPayload,
   excludeUserId?: string
 ): Promise<number> {
-  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-    return 0;
-  }
-
   const subscriptions = await db.select()
     .from(pushSubscriptions)
     .where(eq(pushSubscriptions.isActive, true));
@@ -155,16 +171,15 @@ export async function sendPushToNearbySubscriptions(
 
     if (shouldSend) {
       try {
-        await webpush.sendNotification(
-          {
-            endpoint: sub.endpoint,
-            keys: {
-              p256dh: sub.p256dh,
-              auth: sub.auth,
-            },
-          },
-          JSON.stringify(payload)
-        );
+        if (sub.endpoint.startsWith("expo:")) {
+          await sendExpoNotification(sub.endpoint.slice("expo:".length), payload);
+        } else {
+          if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) continue;
+          await webpush.sendNotification(
+            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+            JSON.stringify(payload),
+          );
+        }
         totalSent++;
       } catch (error: any) {
         if (error.statusCode === 404 || error.statusCode === 410) {
