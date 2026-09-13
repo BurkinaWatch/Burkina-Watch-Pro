@@ -16,6 +16,13 @@ function session(startTime: Date, isActive = true): TrackingSession {
     isActive,
     isPanicMode: false,
     shareToken: null,
+    protectionStatus: "active",
+    destinationLabel: null,
+    destinationPlaceId: null,
+    destinationLatitude: null,
+    destinationLongitude: null,
+    sharedContactIds: null,
+    arrivalConfirmedAt: null,
   };
 }
 
