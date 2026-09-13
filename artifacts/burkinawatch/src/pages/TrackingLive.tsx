@@ -5,12 +5,14 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import PanicButton from "@/components/PanicButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, StopCircle, Loader2, Share2, ArrowLeft, RefreshCw, ShieldCheck } from "lucide-react";
 import type { TrackingSession, EmergencyContact } from "@shared/schema";
+import { Link } from "wouter";
 
 type TrackingSessionWithSignal = TrackingSession & {
   signalStatus?: "active" | "signal_lost" | "stopped";
@@ -421,6 +423,17 @@ export default function TrackingLive() {
                   </Button>
                 </>
               )}
+            </div>
+
+            <div className="border-t pt-5">
+              <p className="mb-3 text-sm font-semibold">Besoin d’une aide immédiate ?</p>
+              <div className="flex flex-wrap items-center gap-3">
+                <PanicButton className="min-w-[130px]" />
+                <Button asChild variant="outline" className="gap-2">
+                  <Link href="/sos/publier">Ouvrir SOS</Link>
+                </Button>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">Ces boutons utilisent les mécanismes SOS/PANIC existants. Ils ne remplacent pas les services d’urgence.</p>
             </div>
 
             {(!contacts || contacts.length === 0) && (
