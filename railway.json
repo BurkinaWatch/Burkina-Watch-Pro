@@ -5,7 +5,7 @@
     "buildCommand": "pnpm run typecheck && pnpm --filter @workspace/burkinawatch run build && pnpm --filter @workspace/api-server run build"
   },
   "deploy": {
-    "startCommand": "SERVE_WEB=true node --enable-source-maps artifacts/api-server/dist/index.mjs",
+    "startCommand": "bash scripts/pre-start.sh",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
