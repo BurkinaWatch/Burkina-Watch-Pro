@@ -259,9 +259,11 @@ export async function savePlaceExperienceConsent(
         .where(eq(placeExperienceVisits.userId, userId));
       const visitIds = visits.map(({ id }) => id);
       if (visitIds.length > 0) {
-        await tx.update(placeExperiences)
-          .set({ userId: sql`null`, visitId: sql`null`, comment: null, anonymizedAt: new Date() })
-          .where(inArray(placeExperiences.visitId, visitIds));
+        await tx.execute(sql`
+          UPDATE place_experiences
+          SET user_id = NULL, visit_id = NULL, comment = NULL, anonymized_at = NOW()
+          WHERE visit_id IN (${sql.join(visitIds.map((id) => sql`${id}`), sql`, `)})
+        `);
         await tx.delete(placeExperienceVisits).where(inArray(placeExperienceVisits.id, visitIds));
       }
     }
@@ -294,14 +296,16 @@ export async function purgeExpiredPlaceExperienceData(
     const visitIds = expired.map(({ id }) => id);
     if (visitIds.length === 0) return { visitsDeleted: 0, experiencesAnonymized: 0 };
 
-    const anonymized = await tx.update(placeExperiences)
-      .set({ userId: sql`null`, visitId: sql`null`, comment: null, anonymizedAt: now })
-      .where(inArray(placeExperiences.visitId, visitIds))
-      .returning({ id: placeExperiences.id });
+    const anonymized = await tx.execute(sql`
+      UPDATE place_experiences
+      SET user_id = NULL, visit_id = NULL, comment = NULL, anonymized_at = ${now}
+      WHERE visit_id IN (${sql.join(visitIds.map((id) => sql`${id}`), sql`, `)})
+      RETURNING id
+    `);
     const deleted = await tx.delete(placeExperienceVisits)
       .where(inArray(placeExperienceVisits.id, visitIds))
       .returning({ id: placeExperienceVisits.id });
-    return { visitsDeleted: deleted.length, experiencesAnonymized: anonymized.length };
+    return { visitsDeleted: deleted.length, experiencesAnonymized: anonymized.rows.length };
   });
 }
 
