@@ -310,10 +310,10 @@ export default function BurkinaPratique() {
                   La vie pratique, en un geste
                 </div>
                 <h1 className="pratique-reveal pratique-reveal-delay-1 mt-5 max-w-2xl font-display text-4xl font-extrabold leading-[0.98] tracking-tight text-emerald-950 dark:text-emerald-50 sm:text-5xl md:text-6xl">
-                  Trouvez ce qu&apos;il vous faut au Burkina.
+                  Décrivez votre besoin. Trouvez le bon lieu.
                 </h1>
                 <p className="pratique-reveal pratique-reveal-delay-2 mt-5 max-w-xl text-base leading-7 text-emerald-950/70 dark:text-emerald-50/70 md:text-lg">
-                  Un point de départ simple pour les lieux, services et solutions déjà disponibles dans BurkinaWatch.
+                  Réparateur de téléphone, boucherie, légumes ou chaussure précise : dites ce que vous cherchez et consultez les établissements référencés près de vous.
                 </p>
 
                 <form onSubmit={handleSearch} className="pratique-reveal pratique-reveal-delay-3 relative mt-7 max-w-2xl" role="search">
