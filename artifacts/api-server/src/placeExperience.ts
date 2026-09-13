@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, lt, lte } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lt, lte, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
   db,
@@ -260,7 +260,7 @@ export async function savePlaceExperienceConsent(
       const visitIds = visits.map(({ id }) => id);
       if (visitIds.length > 0) {
         await tx.update(placeExperiences)
-          .set({ userId: null, visitId: null, comment: null, anonymizedAt: new Date() })
+          .set({ userId: sql`null`, visitId: sql`null`, comment: null, anonymizedAt: new Date() })
           .where(inArray(placeExperiences.visitId, visitIds));
         await tx.delete(placeExperienceVisits).where(inArray(placeExperienceVisits.id, visitIds));
       }
@@ -295,7 +295,7 @@ export async function purgeExpiredPlaceExperienceData(
     if (visitIds.length === 0) return { visitsDeleted: 0, experiencesAnonymized: 0 };
 
     const anonymized = await tx.update(placeExperiences)
-      .set({ userId: null, visitId: null, comment: null, anonymizedAt: now })
+      .set({ userId: sql`null`, visitId: sql`null`, comment: null, anonymizedAt: now })
       .where(inArray(placeExperiences.visitId, visitIds))
       .returning({ id: placeExperiences.id });
     const deleted = await tx.delete(placeExperienceVisits)
