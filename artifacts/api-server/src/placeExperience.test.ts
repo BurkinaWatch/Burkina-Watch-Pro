@@ -7,6 +7,7 @@ import {
   DEFAULT_PLACE_EXPERIENCE_CONFIG,
   distanceMeters,
   evaluatePresence,
+  evaluatePresenceSession,
   getPlaceExperienceBlockReason,
   placeExperienceConsentInputSchema,
   placeExperiencePresenceInputSchema,
@@ -125,6 +126,44 @@ test("un déplacement rapide ou une précision insuffisante invalide la présenc
     DEFAULT_PLACE_EXPERIENCE_CONFIG,
   );
   assert.deepEqual(inaccurate, { eligible: false, reason: "inaccurate", durationSeconds: 0 });
+});
+
+test("une observation invalide réinitialise la durée de la session active", () => {
+  const activeVisit = {
+    startedAt: new Date("2026-09-13T10:00:00.000Z"),
+    lastSeenAt: new Date("2026-09-13T10:10:00.000Z"),
+    checkInTriggeredAt: null,
+  };
+  const session = evaluatePresenceSession(
+    activeVisit,
+    {
+      observedAt: new Date("2026-09-13T10:12:00.000Z"),
+      speedMps: DEFAULT_PLACE_EXPERIENCE_CONFIG.maxSpeedMps + 1,
+      accuracyMeters: 20,
+    },
+    DEFAULT_PLACE_EXPERIENCE_CONFIG,
+  );
+
+  assert.equal(session.invalidatedDwell, true);
+  assert.equal(session.startedAt.toISOString(), "2026-09-13T10:12:00.000Z");
+  assert.equal(session.evaluation.durationSeconds, 0);
+  assert.equal(session.reportedReason, "moving");
+
+  const nextStationaryObservation = evaluatePresenceSession(
+    {
+      ...activeVisit,
+      startedAt: session.startedAt,
+      lastSeenAt: session.startedAt,
+    },
+    {
+      observedAt: new Date("2026-09-13T10:20:00.000Z"),
+      speedMps: 0.1,
+      accuracyMeters: 20,
+    },
+    DEFAULT_PLACE_EXPERIENCE_CONFIG,
+  );
+  assert.equal(nextStationaryObservation.evaluation.durationSeconds, 480);
+  assert.equal(nextStationaryObservation.evaluation.reason, "too_short");
 });
 
 test("le check-in ne peut être déclenché qu'une seule fois", () => {

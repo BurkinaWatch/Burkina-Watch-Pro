@@ -90,7 +90,6 @@ import {
 } from "../placeExperience";
 import {
   insertPlaceExperienceCandidateSchema,
-  insertPlaceExperienceSchema,
 } from "@workspace/db";
 import {
   CAMERA_AGENT_ENROLLMENT_TTL_SECONDS,

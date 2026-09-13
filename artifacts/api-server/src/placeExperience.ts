@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, gte, inArray, lte } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { z } from "zod";
 import {
   db,
@@ -78,6 +78,13 @@ export type PresenceObservation = {
   accuracyMeters?: number | null;
 };
 
+export type PresenceSessionEvaluation = {
+  startedAt: Date;
+  evaluation: PresenceEvaluation;
+  invalidatedDwell: boolean;
+  reportedReason: PresenceDecisionReason;
+};
+
 export function getPlaceExperienceBlockReason(
   config: Pick<PlaceExperienceConfig, "enabled">,
   readiness: PlaceExperienceReadiness,
@@ -154,6 +161,40 @@ export function evaluatePresence(
   }
 
   return { eligible: true, reason: "eligible", durationSeconds };
+}
+
+export function evaluatePresenceSession(
+  activeVisit: Pick<PlaceExperienceVisit, "startedAt" | "lastSeenAt" | "checkInTriggeredAt"> | null,
+  observation: Omit<PresenceObservation, "startedAt">,
+  config: PlaceExperienceConfig,
+): PresenceSessionEvaluation {
+  const gapSeconds = activeVisit?.lastSeenAt
+    ? Math.max(0, (observation.observedAt.getTime() - activeVisit.lastSeenAt.getTime()) / 1000)
+    : 0;
+  const startedAt = activeVisit && gapSeconds <= config.maxObservationGapSeconds
+    ? activeVisit.startedAt
+    : observation.observedAt;
+  const initialEvaluation = evaluatePresence({
+    startedAt,
+    ...observation,
+  }, config);
+  const invalidatedDwell =
+    Boolean(activeVisit && !activeVisit.checkInTriggeredAt) &&
+    (initialEvaluation.reason === "moving" || initialEvaluation.reason === "inaccurate");
+  const effectiveStartedAt = invalidatedDwell ? observation.observedAt : startedAt;
+  const evaluation = invalidatedDwell
+    ? evaluatePresence({
+        startedAt: effectiveStartedAt,
+        ...observation,
+      }, config)
+    : initialEvaluation;
+
+  return {
+    startedAt: effectiveStartedAt,
+    evaluation,
+    invalidatedDwell,
+    reportedReason: invalidatedDwell ? initialEvaluation.reason : evaluation.reason,
+  };
 }
 
 export async function getPlaceExperienceConfig(): Promise<PlaceExperienceConfig> {
@@ -293,31 +334,8 @@ export async function recordPresence(
 
   const previousVisit = await hasPriorVisit(userId, place.id);
   const activeVisit = await getActiveVisit(userId, place.id);
-  const previousLastSeenAt = activeVisit?.lastSeenAt ?? null;
-  const gapSeconds = previousLastSeenAt
-    ? Math.max(0, (observation.observedAt.getTime() - previousLastSeenAt.getTime()) / 1000)
-    : 0;
-  const startedAt = activeVisit && gapSeconds <= config.maxObservationGapSeconds
-    ? activeVisit.startedAt
-    : observation.observedAt;
-  const initialEvaluation = evaluatePresence({
-    startedAt,
-    observedAt: observation.observedAt,
-    speedMps: observation.speedMps,
-    accuracyMeters: observation.accuracyMeters,
-  }, config);
-  const invalidatedDwell =
-    Boolean(activeVisit && !activeVisit.checkInTriggeredAt) &&
-    (initialEvaluation.reason === "moving" || initialEvaluation.reason === "inaccurate");
-  const effectiveStartedAt = invalidatedDwell ? observation.observedAt : startedAt;
-  const evaluation = invalidatedDwell
-    ? evaluatePresence({
-        startedAt: effectiveStartedAt,
-        observedAt: observation.observedAt,
-        speedMps: observation.speedMps,
-        accuracyMeters: observation.accuracyMeters,
-      }, config)
-    : initialEvaluation;
+  const sessionEvaluation = evaluatePresenceSession(activeVisit, observation, config);
+  const { startedAt, evaluation, invalidatedDwell } = sessionEvaluation;
   const nextStatus = evaluation.eligible ? "eligible" : "observing";
   const shouldTrigger = shouldTriggerCheckIn(evaluation, activeVisit?.checkInTriggeredAt);
   const visitValues = {
@@ -352,7 +370,7 @@ export async function recordPresence(
       : activeVisit?.checkInTriggeredAt
         ? "already_triggered"
         : invalidatedDwell
-          ? initialEvaluation.reason
+          ? sessionEvaluation.reportedReason
           : evaluation.reason,
   };
 }
