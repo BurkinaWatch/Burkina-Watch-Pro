@@ -234,6 +234,7 @@ export default function BurkinaPratique() {
   const [, navigate] = useLocation();
   const [query, setQuery] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const normalizedQuery = normalize(query);
   const intent = useMemo(() => parsePracticalSearch(query), [query]);
 
@@ -506,9 +507,42 @@ export default function BurkinaPratique() {
               </Link>
             ))}
           </div>
+          <div className="mt-5 flex justify-center">
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2 rounded-xl bg-background/70"
+              onClick={() => setShowAllCategories((visible) => !visible)}
+              aria-expanded={showAllCategories}
+              aria-controls="additional-practical-categories"
+              data-testid="button-toggle-all-categories"
+            >
+              {showAllCategories ? "Masquer les autres catégories" : `Voir les ${allCategories.length} catégories`}
+              <ChevronRight className={`h-4 w-4 transition-transform ${showAllCategories ? "rotate-90" : ""}`} aria-hidden="true" />
+            </Button>
+          </div>
+          {showAllCategories ? (
+            <div id="additional-practical-categories" className="mt-4 grid gap-2 rounded-2xl border border-border/70 bg-card p-2 sm:grid-cols-2 lg:grid-cols-3">
+              {allCategories.slice(quickAccess.length).map((category) => (
+                <Link
+                  key={`${category.href}-${category.label}`}
+                  href={category.href}
+                  className="group flex min-w-0 items-center gap-3 rounded-xl p-3 transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  data-testid={`link-category-${category.href.slice(1)}`}
+                >
+                  <CategoryIcon category={category} size="sm" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold">{category.label}</span>
+                    <span className="mt-0.5 block truncate text-xs text-muted-foreground">{category.description}</span>
+                  </span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                </Link>
+              ))}
+            </div>
+          ) : null}
         </section>
 
-        <section className="mx-auto max-w-6xl px-4 pt-14 sm:px-6 md:pt-20">
+        <section className="mx-auto max-w-6xl px-4 pb-4 pt-14 sm:px-6 md:pt-20">
           <div className="rounded-[2rem] border border-emerald-900/10 bg-emerald-950 p-6 text-emerald-50 shadow-xl shadow-emerald-950/10 sm:p-8 md:flex md:items-center md:justify-between md:gap-10">
             <div className="flex items-start gap-4">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-300 text-emerald-950">
@@ -524,33 +558,6 @@ export default function BurkinaPratique() {
               Explorer la carte
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Button>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-6xl px-4 pb-4 pt-14 sm:px-6 md:pt-20">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Tout explorer</p>
-              <h2 className="mt-2 font-display text-3xl font-bold tracking-tight md:text-4xl">Toutes les catégories</h2>
-            </div>
-            <span className="hidden text-sm text-muted-foreground sm:block">{allCategories.length} accès disponibles</span>
-          </div>
-          <div className="mt-7 divide-y divide-border/70 rounded-2xl border border-border/70 bg-card">
-            {allCategories.map((category) => (
-              <Link
-              key={`${category.href}-${category.label}`}
-                href={category.href}
-                className="group flex items-center gap-3 p-4 transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:gap-4 sm:p-5"
-                data-testid={`link-category-${category.href.slice(1)}`}
-              >
-                <CategoryIcon category={category} size="sm" />
-                <span className="min-w-0 flex-1">
-                  <span className="block font-semibold">{category.label}</span>
-                  <span className="mt-0.5 block truncate text-sm text-muted-foreground">{category.description}</span>
-                </span>
-                <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1" aria-hidden="true" />
-              </Link>
-            ))}
           </div>
         </section>
       </main>
