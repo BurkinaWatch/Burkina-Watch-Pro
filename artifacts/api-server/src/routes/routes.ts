@@ -2506,6 +2506,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({
           id: candidate.id,
           status: candidate.status,
+          associatedPlaceId: candidate.associatedPlaceId,
           moderationNote: candidate.moderationNote,
           moderatedAt: candidate.moderatedAt,
         });

@@ -552,15 +552,38 @@ export async function moderatePlaceExperienceCandidate(input: {
   moderatorId: string;
   note?: string | null;
 }) {
-  const [candidate] = await db.update(placeExperienceCandidates)
-    .set({
-      status: input.status,
-      moderationNote: input.note ?? null,
-      moderatedAt: new Date(),
-      moderatedBy: input.moderatorId,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(placeExperienceCandidates.id, input.candidateId), eq(placeExperienceCandidates.status, "PENDING")))
-    .returning();
-  return candidate ?? null;
+  return db.transaction(async (tx) => {
+    const [candidate] = await tx.update(placeExperienceCandidates)
+      .set({
+        status: input.status,
+        moderationNote: input.note ?? null,
+        moderatedAt: new Date(),
+        moderatedBy: input.moderatorId,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(placeExperienceCandidates.id, input.candidateId), eq(placeExperienceCandidates.status, "PENDING")))
+      .returning();
+    if (!candidate) return null;
+    if (input.status !== "APPROVED" || candidate.associatedPlaceId) return candidate;
+
+    const [place] = await tx.insert(places).values({
+      osmId: `community:${candidate.id}`,
+      osmType: "community_candidate",
+      placeType: candidate.category,
+      name: candidate.name,
+      latitude: candidate.latitude,
+      longitude: candidate.longitude,
+      imageUrl: candidate.mediaUrl,
+      source: "COMMUNAUTE",
+      confidenceScore: "0.50",
+      verificationStatus: "verified",
+    }).returning({ id: places.id });
+    if (!place) return candidate;
+
+    const [linkedCandidate] = await tx.update(placeExperienceCandidates)
+      .set({ associatedPlaceId: place.id, updatedAt: new Date() })
+      .where(eq(placeExperienceCandidates.id, candidate.id))
+      .returning();
+    return linkedCandidate ?? candidate;
+  });
 }
