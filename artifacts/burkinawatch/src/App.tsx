@@ -68,6 +68,7 @@ const Telephonie = lazy(() => import("@/pages/Telephonie"));
 const Ministeres = lazy(() => import("@/pages/Ministeres"));
 const LieuxDeCulte = lazy(() => import("@/pages/LieuxDeCulte"));
 const BurkinaPratique = lazy(() => import("@/pages/BurkinaPratique"));
+const PublierOffre = lazy(() => import("@/pages/PublierOffre"));
 
 function PageLoader() {
   return (
@@ -126,6 +127,7 @@ function Router() {
         <Route path="/ministeres">{() => <AuthGuard><Ministeres /></AuthGuard>}</Route>
         <Route path="/lieux-de-culte">{() => <AuthGuard><LieuxDeCulte /></AuthGuard>}</Route>
         <Route path="/burkina-pratique" component={BurkinaPratique} />
+        <Route path="/publier-offre" component={PublierOffre} />
         <Route path="/a-propos" component={APropos} />
         <Route path="/fiabilite" component={Fiabilite} />
         <Route path="/conditions" component={Conditions} />
