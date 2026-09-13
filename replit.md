@@ -11,6 +11,10 @@ _Replace the heading above with the project's name, and this line with one sente
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — the only supported Postgres connection string in
   development and production (including Railway deployments)
+- Railway production operations must follow
+  [`docs/RAILWAY_OPERATIONS_GUARDRAIL.md`](docs/RAILWAY_OPERATIONS_GUARDRAIL.md):
+  diagnose read-only first, present the exact target/diff/risks/rollback plan,
+  stop for explicit confirmation, and report executed versus unexecuted actions.
 
 ## Stack
 
@@ -40,6 +44,10 @@ _Populate as you build — explicit user instructions worth remembering across s
 ## Gotchas
 
 _Populate as you build — sharp edges, "always run X before Y" rules._
+
+- `scripts/pre-start.sh` must not run migrations. Do not use the root
+  `pnpm run build` as a production migration path; its database push is
+  development-only.
 
 ## Pointers
 
