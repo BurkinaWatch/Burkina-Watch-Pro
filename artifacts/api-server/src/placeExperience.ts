@@ -15,6 +15,7 @@ import {
   type PlaceExperience,
   type PlaceExperienceVisit,
 } from "@workspace/db";
+import { readStreetviewObject, writeStreetviewDataUrl } from "./streetviewStorage";
 
 export const DEFAULT_PLACE_EXPERIENCE_CONFIG = {
   enabled: true,
@@ -520,6 +521,26 @@ export async function createPlaceExperienceCandidate(input: {
     status: "PENDING",
   }).returning();
   return candidate;
+}
+
+export async function attachPlaceExperienceCandidateMedia(
+  userId: string,
+  candidateId: string,
+  dataUrl: string,
+): Promise<PlaceExperienceCandidate | null> {
+  const candidate = await getOwnedCandidate(userId, candidateId);
+  if (!candidate) return null;
+  const storageKey = `place-experience/candidates/${candidateId}/photo.jpg`;
+  await writeStreetviewDataUrl(storageKey, dataUrl, 5 * 1024 * 1024);
+  const [updated] = await db.update(placeExperienceCandidates)
+    .set({ mediaUrl: `/api/place-experience/candidates/${candidateId}/media`, updatedAt: new Date() })
+    .where(and(eq(placeExperienceCandidates.id, candidateId), eq(placeExperienceCandidates.userId, userId)))
+    .returning();
+  return updated ?? null;
+}
+
+export async function readPlaceExperienceCandidateMedia(candidateId: string): Promise<Buffer> {
+  return readStreetviewObject(`place-experience/candidates/${candidateId}/photo.jpg`);
 }
 
 export async function getOwnedCandidate(userId: string, candidateId: string): Promise<PlaceExperienceCandidate | null> {
