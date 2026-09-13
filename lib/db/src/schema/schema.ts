@@ -202,8 +202,16 @@ export const trackingSessions = pgTable("tracking_sessions", {
   isActive: boolean("is_active").notNull().default(true),
   isPanicMode: boolean("is_panic_mode").default(false),
   shareToken: text("share_token"),
+  protectionStatus: text("protection_status").notNull().default("active"),
+  destinationLabel: text("destination_label"),
+  destinationPlaceId: text("destination_place_id").references(() => places.id, { onDelete: "set null" }),
+  destinationLatitude: decimal("destination_latitude", { precision: 10, scale: 7 }),
+  destinationLongitude: decimal("destination_longitude", { precision: 10, scale: 7 }),
+  sharedContactIds: text("shared_contact_ids").array(),
+  arrivalConfirmedAt: timestamp("arrival_confirmed_at"),
 }, (table) => [
   index("tracking_sessions_user_id_active_idx").on(table.userId, table.isActive),
+  index("tracking_sessions_protection_status_idx").on(table.protectionStatus),
 ]);
 
 export const onlineSessions = pgTable("online_sessions", {

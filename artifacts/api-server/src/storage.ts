@@ -298,9 +298,16 @@ export interface IStorage {
     onlineUsers: number; // Added for online users count
   }>;
 
-  startTrackingSession(userId: string): Promise<TrackingSession>;
+  startTrackingSession(userId: string, options?: {
+    destinationLabel?: string | null;
+    destinationPlaceId?: string | null;
+    destinationLatitude?: string | number | null;
+    destinationLongitude?: string | number | null;
+    sharedContactIds?: string[] | null;
+  }): Promise<TrackingSession>;
   startPanicTrackingSession(userId: string): Promise<TrackingSession>;
-  stopTrackingSession(sessionId: string): Promise<TrackingSession | undefined>; // Changed parameter to sessionId
+  stopTrackingSession(sessionId: string, protectionStatus?: "stopped" | "arrived"): Promise<TrackingSession | undefined>;
+  confirmTrackingArrival(userId: string): Promise<TrackingSession | undefined>;
   getActiveTrackingSession(userId: string): Promise<TrackingSession | undefined>;
   getActiveTrackingSessions(): Promise<TrackingSession[]>;
   getTrackingSessionByShareToken(shareToken: string): Promise<TrackingSession | undefined>;
@@ -1393,7 +1400,13 @@ export class DbStorage implements IStorage {
     };
   }
 
-  async startTrackingSession(userId: string): Promise<TrackingSession> {
+  async startTrackingSession(userId: string, options: {
+    destinationLabel?: string | null;
+    destinationPlaceId?: string | null;
+    destinationLatitude?: string | number | null;
+    destinationLongitude?: string | number | null;
+    sharedContactIds?: string[] | null;
+  } = {}): Promise<TrackingSession> {
     const activeSession = await this.getActiveTrackingSession(userId);
     if (activeSession) {
       await this.stopTrackingSession(activeSession.id);
@@ -1401,7 +1414,19 @@ export class DbStorage implements IStorage {
 
     const [session] = await db
       .insert(trackingSessions)
-      .values({ userId })
+      .values({
+        userId,
+        protectionStatus: "active",
+        destinationLabel: options.destinationLabel || null,
+        destinationPlaceId: options.destinationPlaceId || null,
+        destinationLatitude: options.destinationLatitude === null || options.destinationLatitude === undefined
+          ? null
+          : String(options.destinationLatitude),
+        destinationLongitude: options.destinationLongitude === null || options.destinationLongitude === undefined
+          ? null
+          : String(options.destinationLongitude),
+        sharedContactIds: options.sharedContactIds?.length ? options.sharedContactIds : null,
+      })
       .returning();
     return session;
   }
@@ -1420,7 +1445,8 @@ export class DbStorage implements IStorage {
       .values({ 
         userId, 
         isPanicMode: true,
-        shareToken 
+        shareToken,
+        protectionStatus: "panic",
       })
       .returning();
     
@@ -1437,7 +1463,7 @@ export class DbStorage implements IStorage {
     return session;
   }
 
-  async stopTrackingSession(sessionId: string): Promise<TrackingSession | undefined> {
+  async stopTrackingSession(sessionId: string, protectionStatus: "stopped" | "arrived" = "stopped"): Promise<TrackingSession | undefined> {
     try {
       // D'abord, récupérer la session pour vérifier son état
       const [existingSession] = await db
@@ -1460,7 +1486,12 @@ export class DbStorage implements IStorage {
       // Arrêter la session
       const [session] = await db
         .update(trackingSessions)
-        .set({ isActive: false, endTime: new Date() })
+        .set({
+          isActive: false,
+          endTime: new Date(),
+          protectionStatus,
+          ...(protectionStatus === "arrived" ? { arrivalConfirmedAt: new Date() } : {}),
+        })
         .where(eq(trackingSessions.id, sessionId))
         .returning();
 
@@ -1473,6 +1504,12 @@ export class DbStorage implements IStorage {
       console.error(`❌ Erreur lors de l'arrêt de la session de tracking ${sessionId}:`, error);
       return undefined;
     }
+  }
+
+  async confirmTrackingArrival(userId: string): Promise<TrackingSession | undefined> {
+    const activeSession = await this.getActiveTrackingSession(userId);
+    if (!activeSession) return undefined;
+    return this.stopTrackingSession(activeSession.id, "arrived");
   }
 
 
