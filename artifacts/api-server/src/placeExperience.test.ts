@@ -195,16 +195,18 @@ test("les validateurs partagés rejettent les coordonnées et perceptions invali
 
 test("la garde d'authentification utilisée par les routes refuse les visiteurs anonymes", async () => {
   const app = express();
+  app.use((req, _res, next) => {
+    if (req.path === "/api/place-experience/authenticated-test") {
+      (req as any).user = { claims: { sub: "user-1" } };
+      (req as any).isAuthenticated = () => true;
+    }
+    next();
+  });
   app.get("/api/place-experience/test", requireAuthenticatedUser, (_req, res) => {
     res.json({ ok: true });
   });
   app.get("/api/place-experience/authenticated-test", requireAuthenticatedUser, (_req, res) => {
     res.json({ ok: true });
-  });
-  app.use((req, _res, next) => {
-    (req as any).user = { claims: { sub: "user-1" } };
-    (req as any).isAuthenticated = () => true;
-    next();
   });
 
   const server = http.createServer(app);
