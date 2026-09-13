@@ -10,6 +10,7 @@ import GoogleMap, { type PlaceMapMarker } from "@/components/GoogleMap";
 import { PlaceCard } from "@/components/PlaceCard";
 import { OfferCard } from "@/components/OfferCard";
 import { PracticalSignalCard } from "@/components/PracticalSignalCard";
+import { PublicSourceCard, type PublicSourceItem } from "@/components/PublicSourceCard";
 import { offlineStorage } from "@/lib/offlineStorage";
 import {
   filterPracticalPlaces,
@@ -39,6 +40,11 @@ interface PratiqueExplorerProps {
 
 interface PlacesResponse {
   places?: Place[];
+}
+
+interface PublicSourcesResponse {
+  places?: Place[];
+  items?: PublicSourceItem[];
 }
 
 type PracticalConfirmationSummary = {
@@ -129,10 +135,32 @@ export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "", in
     staleTime: 60 * 1000,
   });
 
+  const { data: publicSources } = useQuery<PublicSourcesResponse>({
+    queryKey: ["/api/pratique/public-sources", effectiveIntent.searchText],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (effectiveIntent.searchText.trim()) params.set("search", effectiveIntent.searchText.trim());
+      const response = await fetch(`/api/pratique/public-sources?${params.toString()}`);
+      if (!response.ok) return { places: [], items: [], sources: [] };
+      return response.json();
+    },
+    staleTime: 10 * 60 * 1000,
+    retry: false,
+  });
+
   const places = useMemo(() => {
-    return filterPracticalPlaces(normalizePlaces(data), effectiveIntent, location)
+    const localPlaces = filterPracticalPlaces(normalizePlaces(data), effectiveIntent, location);
+    const publicPlaces = filterPracticalPlaces(publicSources?.places || [], effectiveIntent, location);
+    const seen = new Set<string>();
+    return [...localPlaces, ...publicPlaces]
+      .filter((place) => {
+        const key = `${place.name.toLocaleLowerCase("fr-FR")}|${place.latitude}|${place.longitude}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
       .slice(0, 24);
-  }, [data, effectiveIntent, location]);
+  }, [data, publicSources?.places, effectiveIntent, location]);
 
   const visibleOffers = useMemo(() => {
     const terms = effectiveIntent.searchText.toLocaleLowerCase("fr-FR").trim().split(/\s+/).filter((term) => term.length > 2);
@@ -344,6 +372,19 @@ export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "", in
             </div>
             <div className="grid min-w-0 gap-4 md:grid-cols-2">
               {visibleSignals.map((signal) => <PracticalSignalCard key={signal.id} signal={signal} />)}
+            </div>
+          </div>
+        ) : null}
+
+        {publicSources?.items?.length ? (
+          <div className="mt-10" data-testid="practical-public-sources">
+            <div className="mb-4">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-sky-700 dark:text-sky-300">Sources publiques</p>
+              <h3 className="mt-1 text-2xl font-bold text-emerald-950 dark:text-emerald-50">Informations externes trouvées</h3>
+              <p className="mt-1 text-sm text-muted-foreground">Ces publications restent séparées des lieux vérifiés et gardent leur lien d’origine.</p>
+            </div>
+            <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {publicSources.items.slice(0, 6).map((item) => <PublicSourceCard key={item.id} item={item} />)}
             </div>
           </div>
         ) : null}

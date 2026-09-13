@@ -85,6 +85,7 @@ import { getOfficialNews } from "../newsService";
 import { CINEMAS_INFO, RECENT_FILMS } from "../cineData";
 import { fetchEvents, clearEventsCache } from "../eventsService";
 import { overpassService } from "../overpassService";
+import { fetchPublicPracticalSources } from "../publicPracticalSources";
 import { dataMigrationService } from "../dataMigrationService";
 import { BOUTIQUES_DATA } from "../boutiquesData";
 import { PHARMACIES_DATA } from "../pharmaciesData";
@@ -1345,6 +1346,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching practical signals:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des signaux" });
+    }
+  });
+
+  app.get("/api/pratique/public-sources", async (req, res) => {
+    try {
+      const search = typeof req.query.search === "string" ? req.query.search.slice(0, 160) : "";
+      const result = await fetchPublicPracticalSources(search);
+      res.set("Cache-Control", "public, max-age=300");
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching public practical sources:", error instanceof Error ? error.message : error);
+      res.status(502).json({ error: "Les sources publiques sont temporairement indisponibles", places: [], items: [], sources: [] });
     }
   });
 
