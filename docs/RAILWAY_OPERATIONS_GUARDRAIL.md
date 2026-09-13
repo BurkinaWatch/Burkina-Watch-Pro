@@ -41,6 +41,24 @@ la migration, le redéploiement ou toute autre action mutante. Une confirmation
 de la nouvelle cible ne réautorise pas l'action : elle exige un nouveau
 diagnostic complet et une nouvelle proposition.
 
+
+### Opérations longues ou asynchrones
+
+Une opération longue conserve l'empreinte capturée au diagnostic pendant toute
+sa durée. Elle ne remplace jamais cette empreinte par une cible relue en cours
+d'opération.
+
+Avant chaque étape mutante, relire la cible Railway par identifiant de projet,
+d'environnement et de service, puis comparer cette lecture à l'empreinte
+diagnostiquée. Cette relecture est obligatoire même si l'étape précédente a
+réussi, si l'opération est asynchrone ou si la confirmation initiale est
+toujours valide.
+
+À la première divergence, arrêter l'opération avant l'écriture de l'étape
+concernée et ne lancer aucune étape suivante. Le rapport doit distinguer les
+étapes déjà exécutées de l'étape bloquée, indiquer l'empreinte diagnostiquée et
+la cible relue, puis demander un nouveau diagnostic complet avant toute reprise.
+
 ## Phase 2 — Proposition obligatoire avant écriture
 
 Présenter une proposition complète avant d'appeler une action mutante. Elle
@@ -108,6 +126,8 @@ sans secret, chaque valeur comparée :
 - la cible reçue (projet, environnement, service) ;
 - chaque valeur divergente et la raison de l'arrêt ;
 - la confirmation que l'action a été bloquée avant toute écriture.
+- pour une opération longue, les étapes déjà exécutées et l'étape bloquée avant
+  sa mutation.
 
 Quand plusieurs identifiants divergent dans la même opération, le rapport les
 énumère tous dans la même cause de blocage. Une correction partielle ou un

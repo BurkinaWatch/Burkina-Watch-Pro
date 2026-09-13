@@ -38,6 +38,9 @@ grep -Fq "confirmation explicite" "$guardrail"
 grep -Fq "push --force" "$guardrail"
 grep -Fq "DATABASE_URL" "$guardrail"
 grep -Fq "scripts/pre-start.sh" "$guardrail"
+grep -Fq "Opérations longues ou asynchrones" "$guardrail"
+grep -Fq "Avant chaque étape mutante" "$guardrail"
+grep -Fq "étapes déjà exécutées" "$guardrail"
 
 if grep -Eq '(^|[[:space:]])(db[[:space:]]+push|drizzle-kit[[:space:]]+push|migrate)([[:space:]]|$)' "$start_wrapper"; then
   echo "The Railway start wrapper must not run database mutations." >&2
@@ -54,6 +57,7 @@ diagnosed_environment="environment-diagnostic"
 diagnosed_service="service-diagnostic"
 write_marker="$(mktemp)"
 rm -f "$write_marker"
+target_guard_report=""
 cleanup() {
   rm -f "$write_marker"
 }
@@ -81,12 +85,15 @@ guard_target() {
       divergence_summary+="$divergence"
     done
 
-    printf 'Cible diagnostiquée : projet=%s, environnement=%s, service=%s\n' \
-      "$expected_project" "$expected_environment" "$expected_service"
-    printf 'Cible reçue : projet=%s, environnement=%s, service=%s\n' \
-      "$received_project" "$received_environment" "$received_service"
-    printf 'Raison de l’arrêt : divergence de cible (%s); opération bloquée avant toute écriture.\n' \
-      "$divergence_summary"
+    target_guard_report="$(
+      printf 'Cible diagnostiquée : projet=%s, environnement=%s, service=%s\n' \
+        "$expected_project" "$expected_environment" "$expected_service"
+      printf 'Cible reçue : projet=%s, environnement=%s, service=%s\n' \
+        "$received_project" "$received_environment" "$received_service"
+      printf 'Raison de l’arrêt : divergence de cible (%s); opération bloquée avant toute écriture.\n' \
+        "$divergence_summary"
+    )"
+    printf '%s' "$target_guard_report"
     return 42
   fi
 }
@@ -142,5 +149,92 @@ test ! -e "$write_marker"
 grep -Fq "Cible diagnostiquée : projet=$diagnosed_project, environnement=$diagnosed_environment, service=$diagnosed_service" <<< "$multi_report"
 grep -Fq "Cible reçue : projet=$multi_received_project, environnement=$multi_received_environment, service=$multi_received_service" <<< "$multi_report"
 grep -Fq "Raison de l’arrêt : divergence de cible (projet, environnement, service); opération bloquée avant toute écriture." <<< "$multi_report"
+
+current_project="$diagnosed_project"
+current_environment="$diagnosed_environment"
+current_service="$diagnosed_service"
+target_reads=0
+target_project_read=""
+target_environment_read=""
+target_service_read=""
+
+read_current_target() {
+  target_reads=$((target_reads + 1))
+  target_project_read="$current_project"
+  target_environment_read="$current_environment"
+  target_service_read="$current_service"
+}
+
+guard_current_target() {
+  local expected_project="$1"
+  local expected_environment="$2"
+  local expected_service="$3"
+  local guard_status
+
+  read_current_target
+  if guard_target \
+    "$expected_project" "$expected_environment" "$expected_service" \
+    "$target_project_read" "$target_environment_read" "$target_service_read" \
+    > /dev/null; then
+    return 0
+  else
+    guard_status=$?
+    return "$guard_status"
+  fi
+}
+
+run_long_operation() {
+  local expected_project="$1"
+  local expected_environment="$2"
+  local expected_service="$3"
+
+  if guard_current_target \
+    "$expected_project" "$expected_environment" "$expected_service"; then
+    printf 'étape exécutée : préparer\n' >> "$write_marker"
+  else
+    printf 'étape bloquée : préparer; aucune écriture pour cette étape.\n%s\n' \
+      "$target_guard_report"
+    return 42
+  fi
+
+  # Simulate a target change while the operation is still in progress.
+  current_service="service-changed-during-operation"
+
+  if guard_current_target \
+    "$expected_project" "$expected_environment" "$expected_service"; then
+    printf 'étape exécutée : redéployer\n' >> "$write_marker"
+  else
+    printf 'étape bloquée : redéployer; aucune écriture pour cette étape.\n%s\n' \
+      "$target_guard_report"
+    return 42
+  fi
+}
+
+rm -f "$write_marker"
+target_reads=0
+long_operation_report_file="$(mktemp)"
+if run_long_operation \
+  "$diagnosed_project" "$diagnosed_environment" "$diagnosed_service" \
+  >"$long_operation_report_file"; then
+  echo "A long Railway operation must stop when its target changes." >&2
+  exit 1
+fi
+long_operation_report="$(<"$long_operation_report_file")"
+rm -f "$long_operation_report_file"
+
+test "$target_reads" -eq 2
+grep -Fq "étape exécutée : préparer" "$write_marker"
+if grep -Fq "étape exécutée : redéployer" "$write_marker"; then
+  echo "A changed Railway target must block the next write." >&2
+  exit 1
+fi
+grep -Fq "étape bloquée : redéployer; aucune écriture pour cette étape." \
+  <<< "$long_operation_report"
+grep -Fq "Cible diagnostiquée : projet=$diagnosed_project, environnement=$diagnosed_environment, service=$diagnosed_service" \
+  <<< "$long_operation_report"
+grep -Fq "Cible reçue : projet=$diagnosed_project, environnement=$diagnosed_environment, service=service-changed-during-operation" \
+  <<< "$long_operation_report"
+grep -Fq "Raison de l’arrêt : divergence de cible (service); opération bloquée avant toute écriture." \
+  <<< "$long_operation_report"
 
 echo "Railway operations guardrail check passed."
