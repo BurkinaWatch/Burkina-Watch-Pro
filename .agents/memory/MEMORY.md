@@ -8,4 +8,5 @@
 - [Politique des variables PostgreSQL](database-env-policy.md) — `lib/db` et l’API n’utilisent pas encore une convention DB unique.
 - [Installations Railway propres](railway-clean-install.md) — une dépendance transitive visible localement peut manquer sur Railway; valider avec une installation gelée et propre.
 - [Routage Web et API Railway](railway-web-api-routing.md) — le domaine principal doit servir le frontend à la racine et conserver l’API sous `/api`.
+- [Dérive de la commande Railway](railway-start-command-drift.md) — un wrapper versionné évite qu’une commande Railway persistée hors dépôt appelle un script absent.
 - [Protection contextuelle des déplacements](contextual-trip-protection.md) — jamais de score ou garantie; partage volontaire limité aux contacts choisis et clôturable à l’arrivée.
