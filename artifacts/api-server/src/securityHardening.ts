@@ -41,6 +41,14 @@ export const placeExperienceMutationLimiter = rateLimit({
   message: { message: "Trop d'actions d'expérience du lieu. Veuillez réessayer plus tard." },
 });
 
+export const placeExperienceReadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 240,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Trop de consultations du contexte des lieux. Veuillez réessayer plus tard." },
+});
+
 // Rate limiting for camera management mutations. This is intentionally
 // separate from the global limiter because camera setup can trigger expensive
 // validation/encryption work even though no network connection is made here.

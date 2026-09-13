@@ -352,12 +352,25 @@ export async function recordPresence(
     ...(shouldTrigger ? { checkInTriggeredAt: observation.observedAt } : {}),
   };
 
-  const visit = activeVisit
-    ? (await db.update(placeExperienceVisits)
-      .set({ ...visitValues, updatedAt: new Date() })
-      .where(eq(placeExperienceVisits.id, activeVisit.id))
-      .returning())[0]
-    : (await db.insert(placeExperienceVisits).values(visitValues).returning())[0];
+  let visit: PlaceExperienceVisit | undefined;
+  try {
+    visit = activeVisit
+      ? (await db.update(placeExperienceVisits)
+        .set({ ...visitValues, updatedAt: new Date() })
+        .where(and(
+          eq(placeExperienceVisits.id, activeVisit.id),
+          inArray(placeExperienceVisits.status, ["observing", "eligible"]),
+        ))
+        .returning())[0]
+      : (await db.insert(placeExperienceVisits).values(visitValues).returning())[0];
+  } catch (error: any) {
+    if (error?.code === "23505" && !activeVisit) {
+      const concurrentVisit = await getActiveVisit(userId, place.id);
+      if (concurrentVisit) return recordPresence(userId, observation, config);
+    }
+    throw error;
+  }
+  if (!visit) return recordPresence(userId, observation, config);
 
   return {
     visit,
@@ -397,40 +410,53 @@ export async function recordPlaceExperience(input: {
   comment?: string | null;
 }): Promise<RecordPlaceExperienceResult> {
   const visit = await getOwnedVisit(input.userId, input.visitId);
-  if (!visit || !visit.checkInTriggeredAt) return { outcome: "not_found" };
+  if (!visit || !visit.checkInTriggeredAt || visit.status !== "eligible") return { outcome: "not_found" };
 
-  const [existingExperience] = await db.select({ id: placeExperiences.id })
-    .from(placeExperiences)
-    .where(and(
-      eq(placeExperiences.visitId, visit.id),
-      eq(placeExperiences.userId, input.userId),
-    ))
-    .limit(1);
-  if (existingExperience) return { outcome: "duplicate" };
+  try {
+    return await db.transaction(async (tx) => {
+      const [existingExperience] = await tx.select({ id: placeExperiences.id })
+        .from(placeExperiences)
+        .where(and(
+          eq(placeExperiences.visitId, visit.id),
+          eq(placeExperiences.userId, input.userId),
+        ))
+        .limit(1);
+      if (existingExperience) return { outcome: "duplicate" as const };
 
-  const [experience] = await db.insert(placeExperiences).values({
-    visitId: visit.id,
-    userId: input.userId,
-    placeId: visit.placeId,
-    candidateId: visit.candidateId,
-    perception: input.perception,
-    reasonCodes: input.reasonCodes ?? null,
-    comment: input.comment ?? null,
-  }).returning();
+      const [experience] = await tx.insert(placeExperiences).values({
+        visitId: visit.id,
+        userId: input.userId,
+        placeId: visit.placeId,
+        candidateId: visit.candidateId,
+        perception: input.perception,
+        reasonCodes: input.reasonCodes ?? null,
+        comment: input.comment ?? null,
+      }).returning();
 
-  await db.update(placeExperienceVisits)
-    .set({ status: "checked_in", updatedAt: new Date() })
-    .where(eq(placeExperienceVisits.id, visit.id));
+      await tx.update(placeExperienceVisits)
+        .set({ status: "checked_in", updatedAt: new Date() })
+        .where(and(
+          eq(placeExperienceVisits.id, visit.id),
+          eq(placeExperienceVisits.status, "eligible"),
+        ));
 
-  return { outcome: "created", experience };
+      return { outcome: "created" as const, experience };
+    });
+  } catch (error: any) {
+    if (error?.code === "23505") return { outcome: "duplicate" };
+    throw error;
+  }
 }
 
 export async function deferPlaceExperience(userId: string, visitId: string): Promise<PlaceExperienceVisit | null> {
   const visit = await getOwnedVisit(userId, visitId);
-  if (!visit || !visit.checkInTriggeredAt) return null;
+  if (!visit || !visit.checkInTriggeredAt || visit.status !== "eligible") return null;
   const [updated] = await db.update(placeExperienceVisits)
     .set({ status: "deferred", updatedAt: new Date() })
-    .where(eq(placeExperienceVisits.id, visit.id))
+    .where(and(
+      eq(placeExperienceVisits.id, visit.id),
+      eq(placeExperienceVisits.status, "eligible"),
+    ))
     .returning();
   return updated ?? null;
 }

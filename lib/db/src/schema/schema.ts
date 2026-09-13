@@ -1274,6 +1274,9 @@ export const placeExperienceVisits = pgTable("place_experience_visits", {
   index("place_experience_visits_user_status_idx").on(table.userId, table.status),
   index("place_experience_visits_user_place_idx").on(table.userId, table.placeId),
   index("place_experience_visits_last_seen_idx").on(table.lastSeenAt),
+  uniqueIndex("place_experience_visits_active_user_place_idx")
+    .on(table.userId, table.placeId)
+    .where(sql`${table.status} in ('observing', 'eligible')`),
 ]);
 
 export const placeExperiences = pgTable("place_experiences", {
@@ -1303,8 +1306,8 @@ export const insertPlaceExperienceCandidateSchema = createInsertSchema(placeExpe
   name: z.string().trim().min(2).max(160),
   category: z.string().trim().min(2).max(80),
   description: z.string().trim().max(1000).optional().nullable(),
-  latitude: z.union([z.string(), z.number()]).transform((value) => String(value)),
-  longitude: z.union([z.string(), z.number()]).transform((value) => String(value)),
+  latitude: z.coerce.number().finite().min(-90).max(90).transform((value) => String(value)),
+  longitude: z.coerce.number().finite().min(-180).max(180).transform((value) => String(value)),
   mediaUrl: z.string().url().max(2000).optional().nullable(),
 }).omit({
   id: true,

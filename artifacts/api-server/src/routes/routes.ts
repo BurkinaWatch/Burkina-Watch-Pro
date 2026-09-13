@@ -68,6 +68,7 @@ import { moderateContent, logModerationAction } from "../contentModeration";
 import {
   signalementMutationLimiter,
   placeExperienceMutationLimiter,
+  placeExperienceReadLimiter,
   surveillanceConnectionTestLimiter,
   surveillanceAgentEnrollmentLimiter,
   surveillanceAgentHeartbeatLimiter,
@@ -2172,7 +2173,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Public minimized context: no identity, visit history, comments or coordinates.
-  app.get("/api/place-experience/context/:placeId", placeExperienceMutationLimiter, async (req, res) => {
+  app.get("/api/place-experience/context/:placeId", placeExperienceReadLimiter, async (req, res) => {
     try {
       const placeId = String(req.params.placeId);
       const context = await getPlaceExperienceContext(placeId);
