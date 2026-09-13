@@ -79,7 +79,7 @@ const intentRules: IntentRule[] = [
   { key: 'restaurants', href: '/restaurants', label: 'Restaurants', family: 'manger', familyLabel: 'Manger', explorerType: 'restaurant', terms: ['restaurants', 'restaurant', 'resto'] },
   { key: 'manger', href: '/restaurants', label: 'Manger', family: 'manger', familyLabel: 'Manger', explorerType: 'restaurant', terms: ['manger', 'maquis', 'café', 'cafe', 'cantine', 'repas', 'déjeuner', 'dejeuner'] },
   { key: 'transport', href: '/gares', label: 'Transport', family: 'transport', familyLabel: 'Transport', explorerType: 'bus_station', terms: ['transport', 'gare', 'bus', 'taxi', 'voyage', 'départ', 'depart'] },
-  { key: 'reparation', href: '/telephonie', label: 'Réparation', family: 'reparation', familyLabel: 'Réparation', explorerType: 'mobile_phone', terms: ['réparation', 'reparation', 'téléphone', 'telephone', 'mobile', 'cassé', 'casse'] },
+  { key: 'reparation', href: '/telephonie', label: 'Réparation', family: 'reparation', familyLabel: 'Réparation', explorerType: 'mobile_phone', terms: ['réparation', 'reparation', 'réparer', 'reparer', 'répare', 'repare', 'téléphone', 'telephone', 'mobile', 'cassé', 'casse'] },
   { key: 'marches', href: '/marches', label: 'Marchés', family: 'achat', familyLabel: 'Achat', explorerType: 'marketplace', terms: ['marché', 'marche', 'marchés', 'marches'] },
   {
     key: 'commerce_precis',
