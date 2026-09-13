@@ -1,0 +1,262 @@
+BURKINAWATCH — PHASE 4/5
+BURKINA PRATIQUE — COUCHE DE SÉCURITÉ CONTEXTUELLE
+
+IMPORTANT :
+
+BURKINA PRATIQUE ne doit pas devenir une plateforme commerciale indépendante.
+
+BURKINA PRATIQUE reste une fonctionnalité de BURKINAWATCH.
+
+La sécurité doit être une couche transversale.
+
+==================================================
+PRINCIPE
+==================================================
+
+NE JAMAIS afficher :
+
+"Lieu sûr"
+
+"100% sécurisé"
+
+"Zone sûre"
+
+"Personne fiable"
+
+ou tout autre affirmation garantissant la sécurité.
+
+La plateforme ne garantit jamais la sécurité d'un lieu ou d'une personne.
+
+==================================================
+CONCEPT
+==================================================
+
+Ajouter :
+
+🛡️ CONTEXTE DE SÉCURITÉ
+
+Ce contexte doit utiliser les informations réellement disponibles :
+
+- fraîcheur ;
+- signalements ;
+- localisation ;
+- accès ;
+- événements ;
+- informations contradictoires ;
+- données citoyennes ;
+- contexte du trajet.
+
+==================================================
+1. SÉCURITÉ DU LIEU
+==================================================
+
+Afficher lorsque les données le permettent :
+
+🟢 Informations récentes disponibles
+
+🟡 Informations partielles
+
+⚪ Informations anciennes
+
+🔴 Informations contestées
+
+Exemples de signaux :
+
+- lieu récemment confirmé ;
+- informations anciennes ;
+- fermeture signalée ;
+- problème signalé ;
+- accès perturbé.
+
+Ne pas convertir ces données en "score de sécurité".
+
+==================================================
+2. SÉCURITÉ DU TRAJET
+==================================================
+
+Lorsqu'un utilisateur demande un itinéraire :
+
+vérifier les signalements pertinents existants.
+
+Afficher lorsque nécessaire :
+
+⚠️ Travaux signalés
+
+🚧 Accès perturbé
+
+🌊 Inondation signalée
+
+🚫 Route bloquée signalée
+
+⚠️ Autre événement pertinent
+
+Afficher la date/heure du signalement.
+
+Ne jamais afficher un signalement ancien comme une situation actuelle sans indication.
+
+==================================================
+3. OFFRES ENTRE PARTICULIERS
+==================================================
+
+Pour une offre provenant d'une source externe ou d'un particulier :
+
+afficher clairement :
+
+Source externe
+
+Identité non vérifiée par BurkinaWatch
+
+ou le niveau réel de vérification disponible.
+
+Ne jamais prétendre avoir vérifié une identité qui ne l'a pas été.
+
+==================================================
+4. RENDEZ-VOUS
+==================================================
+
+Prévoir une action :
+
+🛡️ PROTÉGER MON DÉPLACEMENT
+
+lorsqu'un utilisateur décide de se rendre à un lieu ou à un rendez-vous.
+
+Cette fonction doit réutiliser les mécanismes existants de :
+
+- localisation ;
+- contacts de confiance ;
+- notifications ;
+- SOS ;
+- PANIC.
+
+NE CRÉE PAS de deuxième système.
+
+==================================================
+5. PARTAGE DU DÉPLACEMENT
+==================================================
+
+Permettre, si les mécanismes existants le permettent :
+
+- choisir un contact ;
+- partager la destination ;
+- partager le départ ;
+- éventuellement partager la position pendant le déplacement ;
+- arrêter le partage ;
+- confirmer l'arrivée.
+
+Le partage doit être contrôlé par l'utilisateur.
+
+Prévoir une durée lorsque le système existant le permet.
+
+==================================================
+6. ARRIVÉ
+==================================================
+
+Prévoir :
+
+[JE SUIS ARRIVÉ]
+
+et arrêter proprement le mode de protection lorsqu'il est terminé.
+
+==================================================
+7. SOS / PANIC
+==================================================
+
+Les boutons SOS/PANIC existants doivent rester ceux de BurkinaWatch.
+
+Ne pas les remplacer.
+
+Ne pas créer de nouveaux boutons ayant un comportement concurrent.
+
+Depuis le mode déplacement, fournir simplement un accès aux mécanismes existants.
+
+==================================================
+8. RENDEZ-VOUS COMMERCIAL
+==================================================
+
+Pour une offre provenant d'un particulier :
+
+proposer lorsque pertinent :
+
+[CHOISIR UN LIEU DE RENDEZ-VOUS]
+
+L'utilisateur peut sélectionner un lieu public existant dans Burkina Pratique.
+
+Ne pas déclarer que ce lieu est "sûr".
+
+Présenter seulement les informations disponibles.
+
+==================================================
+9. CONTEXTE
+==================================================
+
+La sécurité doit être :
+
+contextuelle ;
+
+temporelle ;
+
+transparente ;
+
+non garantie.
+
+Elle doit aider l'utilisateur à prendre une décision informée.
+
+==================================================
+10. UX
+==================================================
+
+Dans une fiche :
+
+📍 Lieu
+
+🎁 Offre
+
+👁️ Signaux
+
+🛡️ Contexte
+
+Puis :
+
+[APPELER]
+
+[WHATSAPP]
+
+[ITINÉRAIRE]
+
+[PARTAGER]
+
+[🛡️ PROTÉGER MON DÉPLACEMENT]
+
+Les boutons doivent apparaître uniquement lorsqu'ils sont réellement disponibles.
+
+==================================================
+11. CONFIDENTIALITÉ
+==================================================
+
+Réutiliser les mécanismes existants.
+
+Ne pas collecter de nouvelle donnée personnelle inutile.
+
+Ne pas partager automatiquement la position.
+
+Le partage doit être volontaire.
+
+==================================================
+VALIDATION
+==================================================
+
+Tester :
+
+- lieu normal ;
+- lieu avec signalement ;
+- trajet avec signalement ;
+- offre externe ;
+- rendez-vous ;
+- partage ;
+- arrivée ;
+- accès SOS ;
+- accès PANIC.
+
+Tester Web mobile et Expo si disponible.
+
+NE PAS MODIFIER RAILWAY.
