@@ -119,4 +119,20 @@ for case in "${divergence_cases[@]}"; do
   grep -Fq "Raison de l’arrêt : divergence de cible ($divergence); opération bloquée avant toute écriture." <<< "$report"
 done
 
+multi_received_project="project-received"
+multi_received_environment="environment-received"
+multi_received_service="service-received"
+multi_report=""
+if multi_report="$(attempt_write \
+  "$diagnosed_project" "$diagnosed_environment" "$diagnosed_service" \
+  "$multi_received_project" "$multi_received_environment" "$multi_received_service")"; then
+  echo "Multiple target divergences must block the Railway operation." >&2
+  exit 1
+fi
+
+test ! -e "$write_marker"
+grep -Fq "Cible diagnostiquée : projet=$diagnosed_project, environnement=$diagnosed_environment, service=$diagnosed_service" <<< "$multi_report"
+grep -Fq "Cible reçue : projet=$multi_received_project, environnement=$multi_received_environment, service=$multi_received_service" <<< "$multi_report"
+grep -Fq "Raison de l’arrêt : divergence de cible (projet, environnement, service); opération bloquée avant toute écriture." <<< "$multi_report"
+
 echo "Railway operations guardrail check passed."

@@ -101,12 +101,17 @@ Le contrôle compare toujours les trois valeurs suivantes :
 | Service | Identifiant capturé pendant le diagnostic |
 
 En cas de divergence, l'opération mutante est bloquée avant toute écriture.
-Le rapport doit indiquer, sans secret :
+Le rapport ne doit pas s'arrêter à la première divergence. Il doit indiquer,
+sans secret, chaque valeur comparée :
 
 - la cible diagnostiquée (projet, environnement, service) ;
 - la cible reçue (projet, environnement, service) ;
-- la valeur divergente et la raison de l'arrêt ;
+- chaque valeur divergente et la raison de l'arrêt ;
 - la confirmation que l'action a été bloquée avant toute écriture.
+
+Quand plusieurs identifiants divergent dans la même opération, le rapport les
+énumère tous dans la même cause de blocage. Une correction partielle ou un
+rapport qui ne signale que le premier écart est insuffisant.
 
 ## Règles spécifiques au schéma et au démarrage
 
