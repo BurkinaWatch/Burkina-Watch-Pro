@@ -1,0 +1,226 @@
+BURKINAWATCH — IMPLÉMENTATION PHASE 2
+EXPÉRIENCE DU LIEU — UX + NOTIFICATIONS + CONTRIBUTION
+
+La couche backend/données existe maintenant.
+
+Implémente l’expérience utilisateur complète en réutilisant STRICTEMENT les composants et systèmes déjà présents dans BurkinaWatch.
+
+RÈGLE ABSOLUE :
+
+NE CASSE RIEN.
+
+EXTENDRE > REMPLACER
+RÉUTILISER > DUPLIQUER
+AJOUTER > REFACTORER
+
+NE MODIFIE PAS RAILWAY :
+- aucun secret ;
+- aucune variable ;
+- aucune commande Build ;
+- aucune commande Start ;
+- aucun healthcheck ;
+- aucun domaine ;
+- aucune configuration de production.
+
+==================================================
+1. ACTIVATION
+==================================================
+
+Dans les paramètres utilisateur existants, ajoute proprement une préférence :
+
+« 🛡️ Expérience du lieu »
+
+Description claire :
+
+« BurkinaWatch peut vous demander comment vous vous sentez dans un lieu que vous découvrez. Cette fonction nécessite les notifications et la localisation autorisées. »
+
+L’utilisateur doit pouvoir :
+- activer ;
+- désactiver.
+
+Ne pas activer automatiquement.
+
+==================================================
+2. NOTIFICATION / QUESTION
+==================================================
+
+Lorsque les conditions techniques sont réunies :
+
+- utilisateur opt-in ;
+- notification autorisée ;
+- localisation autorisée ;
+- lieu nouveau ;
+- présence suffisamment longue ;
+- utilisateur probablement stationnaire ;
+
+afficher/envoyer la question :
+
+« 🛡️ Comment vous sentez-vous dans cet endroit ? »
+
+Choix :
+
+🟢 Je me sens en sécurité
+
+🟡 Je ne suis pas sûr(e)
+
+🔴 Je ne me sens pas en sécurité
+
+Plus tard
+
+Interface simple, claire et non anxiogène.
+
+NE PAS dire :
+« Ce lieu est-il dangereux ? »
+
+NE PAS suggérer que BurkinaWatch connaît déjà le niveau de sécurité.
+
+La question porte sur la PERCEPTION DE L’UTILISATEUR.
+
+==================================================
+3. ENREGISTREMENT
+==================================================
+
+Chaque réponse valide doit être enregistrée.
+
+SAFE :
+enregistrer la perception.
+
+UNCERTAIN :
+enregistrer la perception.
+
+UNSAFE :
+enregistrer la perception.
+
+« Plus tard » :
+reporter le questionnaire selon la logique existante.
+
+Ne pas créer plusieurs enregistrements à chaque affichage de la notification.
+
+Prévoir un mécanisme anti-doublon.
+
+==================================================
+4. APRÈS UNE RÉPONSE
+==================================================
+
+Après la réponse, proposer naturellement :
+
+« Vous connaissez cet endroit ? Aidez-nous à mieux le référencer. »
+
+Puis :
+
+« Ajouter ce lieu à BurkinaWatch »
+
+Formulaire :
+
+- 📷 Ajouter une photo
+- Nom du lieu
+- Catégorie
+- Description courte
+- Localisation détectée
+- éventuellement informations complémentaires déjà supportées par le système
+
+Les catégories doivent réutiliser les catégories existantes de Vie quotidienne / Burkina Pratique.
+
+NE PAS créer une deuxième taxonomie.
+
+==================================================
+5. CONTRIBUTION
+==================================================
+
+Après validation du formulaire :
+
+Le lieu est enregistré comme CANDIDAT.
+
+Il ne doit PAS apparaître immédiatement comme lieu officiel si la plateforme possède déjà un système de modération.
+
+Il doit passer par le système de modération existant.
+
+Après APPROBATION :
+- intégrer le lieu dans la base existante ;
+- l’associer à la catégorie correcte ;
+- le rendre disponible dans Burkina Pratique ;
+- le rendre visible sur la carte selon les règles existantes.
+
+Si un lieu identique existe déjà :
+- proposer la fusion/association ;
+- ne pas créer de doublon.
+
+==================================================
+6. CAS « JE NE ME SENS PAS EN SÉCURITÉ »
+==================================================
+
+Après 🔴 :
+
+Afficher quelque chose comme :
+
+« Merci pour votre retour. Votre perception est enregistrée. »
+
+Puis proposer éventuellement :
+
+- Signaler un problème
+- SOS
+- PANIC
+
+UNIQUEMENT en réutilisant les systèmes existants.
+
+Ne pas créer un nouveau système d’urgence.
+
+IMPORTANT :
+
+Une perception « Je ne me sens pas en sécurité » ne doit PAS être automatiquement transformée en incident confirmé.
+
+==================================================
+7. EXPÉRIENCE DU LIEU ≠ NOTE DE SÉCURITÉ
+==================================================
+
+Ne créer aucun score arbitraire :
+
+Interdit :
+- 87/100 sécurité ;
+- « lieu sûr » ;
+- « lieu dangereux » ;
+- « 100 % sécurisé ».
+
+La plateforme doit afficher des informations contextuelles et temporelles.
+
+==================================================
+8. ACCESSIBILITÉ
+==================================================
+
+L’interface doit :
+- fonctionner sur mobile ;
+- fonctionner sur Web si le Web actuel supporte le parcours ;
+- respecter le design existant ;
+- utiliser les composants existants ;
+- ne pas introduire un design « AI/vibe-coded » ;
+- rester cohérente avec BurkinaWatch.
+
+==================================================
+9. TESTS UX
+==================================================
+
+Teste :
+
+1. activation ;
+2. désactivation ;
+3. permission refusée ;
+4. nouveau lieu ;
+5. lieu connu ;
+6. présence courte ;
+7. présence suffisante ;
+8. question ;
+9. SAFE ;
+10. UNCERTAIN ;
+11. UNSAFE ;
+12. Plus tard ;
+13. ajout photo ;
+14. création candidat ;
+15. modération ;
+16. lieu déjà existant ;
+17. absence de doublon ;
+18. fonctionnement normal de Burkina Pratique.
+
+Ne modifie pas les fonctionnalités existantes.
+
+À LA FIN :
+donne un rapport des fichiers modifiés, des parcours implémentés et des tests réalisés.
