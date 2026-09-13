@@ -1,0 +1,183 @@
+BURKINAWATCH — AUDIT PRÉALABLE
+FONCTIONNALITÉ : « EXPÉRIENCE DU LIEU »
+
+IMPORTANT :
+Tu dois travailler sur le projet BurkinaWatch EXISTANT.
+
+OBJECTIF :
+Nous voulons ajouter une fonctionnalité appelée « Expérience du lieu ».
+
+Principe fonctionnel :
+
+Lorsqu’un utilisateur a explicitement activé les notifications push et accepté l’utilisation de la localisation nécessaire à cette fonctionnalité, BurkinaWatch peut détecter qu’il se trouve dans un lieu qui semble nouveau/inconnu pour lui.
+
+Si l’utilisateur reste suffisamment longtemps dans ce lieu, et uniquement dans des conditions compatibles avec une présence réelle dans le lieu, BurkinaWatch lui propose :
+
+« 🛡️ Comment vous sentez-vous dans cet endroit ? »
+
+Réponses :
+- 🟢 Je me sens en sécurité
+- 🟡 Je ne suis pas sûr(e)
+- 🔴 Je ne me sens pas en sécurité
+- Plus tard
+
+IMPORTANT :
+La réponse doit être enregistrée quel que soit le choix de l’utilisateur, sauf « Plus tard » qui peut être traité comme un report sans perception finale.
+
+Après la réponse, BurkinaWatch peut proposer à l’utilisateur de contribuer à l’enrichissement de la plateforme :
+- ajouter une photo ;
+- nommer le lieu ;
+- choisir une catégorie ;
+- ajouter une courte description ;
+- confirmer la localisation.
+
+Le lieu proposé devient un CANDIDAT et ne doit pas être publié automatiquement sans validation/modération.
+
+La fonctionnalité doit réutiliser les systèmes existants de BurkinaWatch :
+- lieux ;
+- catégories Vie quotidienne / Burkina Pratique ;
+- carte ;
+- géolocalisation ;
+- notifications push ;
+- authentification ;
+- système utilisateur ;
+- administration/modération ;
+- SOS ;
+- PANIC ;
+- contacts de confiance ;
+- signalements ;
+- base de données existante.
+
+RÈGLE ABSOLUE DE SÉCURITÉ TECHNIQUE :
+
+1. NE MODIFIE PAS Railway.
+2. NE MODIFIE PAS les variables d’environnement Railway.
+3. NE MODIFIE PAS les secrets.
+4. NE MODIFIE PAS le domaine.
+5. NE MODIFIE PAS les commandes Build/Start.
+6. NE MODIFIE PAS le healthcheck.
+7. NE MODIFIE PAS la configuration de production.
+8. NE MODIFIE PAS la base de production directement.
+9. Aucune migration destructive.
+10. Ne supprime aucune fonctionnalité existante.
+11. Ne remplace aucun système existant qui fonctionne.
+12. Ne crée pas une deuxième base de données des lieux.
+13. Ne crée pas un deuxième système de géolocalisation.
+14. Ne crée pas un deuxième système de notifications.
+15. Ne crée pas un deuxième système SOS/PANIC.
+16. Ne crée pas un deuxième système de modération.
+17. EXTENDRE > REMPLACER.
+18. RÉUTILISER > DUPLIQUER.
+19. AJOUTER > REFACTORER.
+
+AVANT TOUTE MODIFICATION :
+
+Explore réellement le repository et identifie :
+
+A. Architecture générale
+- frontend ;
+- backend ;
+- API ;
+- base de données ;
+- ORM ;
+- authentification ;
+- système de permissions ;
+- système de notifications ;
+- système de localisation ;
+- système de lieux ;
+- catégories ;
+- administration ;
+- modération ;
+- SOS ;
+- PANIC ;
+- contacts de confiance ;
+- cartes.
+
+B. Fonctionnement actuel de Burkina Pratique / Vie quotidienne.
+
+C. Modèle de données existant pour les lieux.
+
+D. Système actuel de notifications push.
+
+E. Système actuel de géolocalisation.
+
+F. Capacités réelles de la version Web et de la version Mobile si plusieurs clients existent.
+
+G. Possibilité réelle de détecter :
+- entrée dans une zone ;
+- présence prolongée ;
+- déplacement ;
+- immobilité ;
+- nouveau lieu ;
+- retour dans un lieu déjà connu.
+
+H. Système actuel de collecte de photos et médias.
+
+I. Système actuel de modération/admin.
+
+J. Systèmes existants pouvant être réutilisés pour SOS/PANIC et partage de localisation.
+
+K. Schéma exact de la base de données.
+
+L. Routes/API existantes concernées.
+
+M. Risques de régression.
+
+IMPORTANT SUR LA PSYCHOLOGIE :
+
+Ne code surtout pas une règle disant qu’une personne « sait » si elle est en sécurité après un nombre scientifiquement universel de minutes.
+
+Le délai doit être CONFIGURABLE.
+
+Il doit être considéré comme un paramètre produit/expérimental, pas comme une vérité psychologique.
+
+Il faut également distinguer :
+- passage rapide ;
+- déplacement ;
+- présence probable dans un lieu ;
+- séjour suffisamment prolongé.
+
+Ne déclenche pas inutilement une question lorsque l’utilisateur conduit ou se déplace rapidement.
+
+IMPORTANT SUR LA NOTION DE « NOUVEAU LIEU » :
+
+Ne considère pas chaque nouvelle coordonnée GPS comme un nouveau lieu.
+
+Le système doit utiliser les lieux existants et une logique raisonnable de proximité/géofencing/candidat.
+
+Un « lieu inconnu » signifie idéalement :
+- lieu existant que l’utilisateur n’a jamais visité selon les données disponibles ;
+OU
+- lieu candidat qui n’existe pas encore dans BurkinaWatch.
+
+IMPORTANT SUR LA CONFIDENTIALITÉ :
+
+Ne crée pas inutilement un historique permanent des déplacements de l’utilisateur.
+
+Sépare autant que possible :
+- les données nécessaires au fonctionnement ;
+- les données de contribution ;
+- les données statistiques/anonymisées.
+
+La fonctionnalité doit être OPT-IN.
+
+Ne doit jamais être activée silencieusement.
+
+NE MODIFIE RIEN POUR LE MOMENT.
+
+À LA FIN, FOURNIS UNIQUEMENT :
+
+1. Architecture actuelle pertinente.
+2. Fichiers concernés.
+3. Modèles/base de données concernés.
+4. APIs existantes réutilisables.
+5. Capacités réelles Web/Mobile.
+6. Ce qui peut être implémenté immédiatement.
+7. Ce qui nécessite une adaptation.
+8. Risques techniques.
+9. Stratégie d’implémentation additive.
+10. Ordre exact des modifications recommandées.
+11. Tests nécessaires.
+12. Confirmation explicite que Railway peut rester totalement inchangé.
+
+NE MODIFIE AUCUN FICHIER.
