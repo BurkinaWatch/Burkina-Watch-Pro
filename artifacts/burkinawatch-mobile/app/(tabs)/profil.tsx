@@ -6,6 +6,7 @@ import { getGetMobileSessionsQueryKey, useGetMobileSessions } from '@workspace/a
 import { useColors } from '@/hooks/useColors';
 import { Screen } from '@/components/Screen';
 import { useAuth } from '@/lib/auth';
+import { PlaceExperienceMobileCard } from '@/components/PlaceExperienceMobileCard';
 
 const items = [
   { label: 'Mes signalements', description: 'Suivre vos contributions citoyennes', icon: 'file-text' as const, route: '/feed' },
@@ -118,6 +119,7 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
       )}
+      {isAuthenticated ? <PlaceExperienceMobileCard /> : null}
       <View style={styles.items}>
         {items.map((item) => (
           <Pressable key={item.label} onPress={() => router.push(item.route)} style={[styles.item, { backgroundColor: colors.card, borderColor: colors.border }]} testID={`profile-${item.label}`}>

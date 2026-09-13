@@ -4,6 +4,8 @@ import { BellRing, MapPin, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { registerServiceWorker, requestPushPermission, subscribeToPush } from "@/lib/pushNotifications";
@@ -28,6 +30,8 @@ export function PlaceExperienceSettings() {
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [eligibleVisit, setEligibleVisit] = useState<PresenceResponse["visit"] & { placeName?: string }>();
+  const [candidate, setCandidate] = useState({ name: "", category: "", description: "", photo: "" });
+  const [candidateBusy, setCandidateBusy] = useState(false);
   const lastPresenceAt = useRef(0);
 
   const configQuery = useQuery<PlaceExperienceConfigResponse>({
@@ -135,6 +139,35 @@ export function PlaceExperienceSettings() {
     }
   }
 
+  async function submitCandidate(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setCandidateBusy(true);
+    try {
+      if (!navigator.geolocation) throw new Error("La géolocalisation est indisponible.");
+      const position = await new Promise<GeolocationPosition>((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 15_000 }),
+      );
+      await apiRequest("POST", "/api/place-experience/candidates", {
+        name: candidate.name,
+        category: candidate.category,
+        description: candidate.description || null,
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        mediaDataUrl: candidate.photo || undefined,
+      });
+      setCandidate({ name: "", category: "", description: "", photo: "" });
+      toast({ title: "Proposition envoyée", description: "Elle restera en attente de modération." });
+    } catch (error) {
+      toast({
+        title: "Proposition impossible",
+        description: error instanceof Error ? error.message : "Vérifiez les champs et réessayez.",
+        variant: "destructive",
+      });
+    } finally {
+      setCandidateBusy(false);
+    }
+  }
+
   if (!configQuery.data) return null;
 
   const enabled = configQuery.data.readiness.enabled;
@@ -164,6 +197,25 @@ export function PlaceExperienceSettings() {
         {!configQuery.data.readiness.pushSubscriptionActive && enabled ? (
           <p className="flex items-center gap-2 text-xs text-amber-700"><BellRing className="h-3.5 w-3.5" /> Les notifications push ne sont pas prêtes.</p>
         ) : null}
+        <form onSubmit={(event) => void submitCandidate(event)} className="space-y-2 rounded-md border p-3">
+          <p className="text-sm font-medium">Proposer un lieu ou service</p>
+          <p className="text-xs text-muted-foreground">La position actuelle sera utilisée. La photo JPEG est facultative et stockée de façon persistante.</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Input required minLength={2} maxLength={160} value={candidate.name} onChange={(event) => setCandidate({ ...candidate, name: event.target.value })} placeholder="Nom du lieu" />
+            <Input required minLength={2} maxLength={80} value={candidate.category} onChange={(event) => setCandidate({ ...candidate, category: event.target.value })} placeholder="Catégorie" />
+          </div>
+          <Textarea maxLength={1000} value={candidate.description} onChange={(event) => setCandidate({ ...candidate, description: event.target.value })} placeholder="Description facultative" />
+          <div className="flex flex-wrap items-center gap-2">
+            <Input type="file" accept="image/jpeg" className="max-w-xs" onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onload = () => setCandidate((current) => ({ ...current, photo: typeof reader.result === "string" ? reader.result : "" }));
+              reader.readAsDataURL(file);
+            }} />
+            <Button type="submit" size="sm" disabled={candidateBusy}>{candidateBusy ? "Envoi…" : "Proposer"}</Button>
+          </div>
+        </form>
         {eligibleVisit ? (
           <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3">
             <p className="text-sm font-medium">Comment avez-vous vécu {eligibleVisit.placeName || "ce lieu"} ?</p>

@@ -13,6 +13,7 @@ import {
 } from '@expo-google-fonts/inter';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Notifications from 'expo-notifications';
 import { setAuthTokenGetter, setBaseUrl } from '@workspace/api-client-react';
 import { AuthProvider } from '@/lib/auth';
 import { getAccessToken } from '@/lib/session';
@@ -21,6 +22,13 @@ import { getAccessToken } from '@/lib/session';
 SplashScreen.preventAutoHideAsync();
 setBaseUrl(process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : null);
 setAuthTokenGetter(getAccessToken);
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 const queryClient = new QueryClient();
 
