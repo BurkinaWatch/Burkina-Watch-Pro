@@ -1323,6 +1323,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/pratique/signals", async (req, res) => {
+    try {
+      const limit = typeof req.query.limit === "string" ? Number.parseInt(req.query.limit, 10) : 12;
+      const now = Date.now();
+      const signalements = await storage.getSignalements({
+        limit: Math.min(Math.max(limit, 1), 50),
+        excludePlaceContributions: true,
+      });
+      const userId = (req as any).user?.claims?.sub;
+      const freshSignals = signalements
+        .filter((signalement: any) => !signalement.expiresAt || new Date(signalement.expiresAt).getTime() > now)
+        .map(async (signalement: any) => ({
+          ...signalement,
+          confirmations: await storage.getPracticalConfirmationSummary({ signalementId: signalement.id }, userId),
+        }));
+
+      res.set("Cache-Control", "public, max-age=60");
+      res.json(await Promise.all(freshSignals));
+    } catch (error) {
+      console.error("Error fetching practical signals:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des signaux" });
+    }
+  });
+
   app.get("/api/pratique/confirmations", async (req, res) => {
     try {
       const offerId = typeof req.query.offerId === "string" ? req.query.offerId : undefined;
