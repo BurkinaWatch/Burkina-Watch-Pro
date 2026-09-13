@@ -45,12 +45,36 @@ export type PresenceEvaluation = {
   durationSeconds: number;
 };
 
+export type PlaceExperienceReadiness = {
+  enabled: boolean;
+  locationPermissionGranted: boolean;
+  pushSubscriptionActive: boolean;
+};
+
 export type PresenceObservation = {
   startedAt: Date;
   observedAt: Date;
   speedMps?: number | null;
   accuracyMeters?: number | null;
 };
+
+export function getPlaceExperienceBlockReason(
+  config: Pick<PlaceExperienceConfig, "enabled">,
+  readiness: PlaceExperienceReadiness,
+): "feature_disabled" | "consent_required" | "location_permission_required" | "push_subscription_required" | null {
+  if (!config.enabled) return "feature_disabled";
+  if (!readiness.enabled) return "consent_required";
+  if (!readiness.locationPermissionGranted) return "location_permission_required";
+  if (!readiness.pushSubscriptionActive) return "push_subscription_required";
+  return null;
+}
+
+export function shouldTriggerCheckIn(
+  evaluation: PresenceEvaluation,
+  checkInTriggeredAt: Date | null | undefined,
+): boolean {
+  return evaluation.eligible && !checkInTriggeredAt;
+}
 
 export type PresenceResult = {
   visit: PlaceExperienceVisit;
@@ -263,7 +287,7 @@ export async function recordPresence(
     accuracyMeters: observation.accuracyMeters,
   }, config);
   const nextStatus = evaluation.eligible ? "eligible" : "observing";
-  const shouldTrigger = evaluation.eligible && !activeVisit?.checkInTriggeredAt;
+  const shouldTrigger = shouldTriggerCheckIn(evaluation, activeVisit?.checkInTriggeredAt);
   const visitValues = {
     userId,
     placeId: place.id,
@@ -313,6 +337,15 @@ export async function recordPlaceExperience(input: {
 }) {
   const visit = await getOwnedVisit(input.userId, input.visitId);
   if (!visit || !visit.checkInTriggeredAt) return null;
+
+  const [existingExperience] = await db.select({ id: placeExperiences.id })
+    .from(placeExperiences)
+    .where(and(
+      eq(placeExperiences.visitId, visit.id),
+      eq(placeExperiences.userId, input.userId),
+    ))
+    .limit(1);
+  if (existingExperience) return null;
 
   const [experience] = await db.insert(placeExperiences).values({
     visitId: visit.id,

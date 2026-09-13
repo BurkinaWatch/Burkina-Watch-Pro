@@ -76,6 +76,7 @@ import {
 import {
   createPlaceExperienceCandidate,
   deferPlaceExperience,
+  getPlaceExperienceBlockReason,
   getOwnedCandidate,
   getOwnedVisit,
   getPlaceExperienceConfig,
@@ -2243,12 +2244,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           getPlaceExperienceConfig(),
           getPlaceExperienceReadiness(userId),
         ]);
-        if (!config.enabled) {
-          return res.status(409).json({ error: "La fonctionnalité n'est pas disponible" });
+        const blockReason = getPlaceExperienceBlockReason(config, readiness);
+        if (blockReason === "feature_disabled") {
+          return res.status(409).json({ error: "La fonctionnalité n'est pas disponible", reason: blockReason });
         }
-        if (!readiness.enabled || !readiness.locationPermissionGranted || !readiness.pushSubscriptionActive) {
+        if (blockReason) {
           return res.status(403).json({
             error: "Le consentement, la localisation et les notifications push sont requis",
+            reason: blockReason,
             readiness: {
               enabled: readiness.enabled,
               locationPermissionGranted: readiness.locationPermissionGranted,
