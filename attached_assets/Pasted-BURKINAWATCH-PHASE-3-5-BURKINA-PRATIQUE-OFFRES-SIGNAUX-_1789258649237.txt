@@ -1,0 +1,317 @@
+BURKINAWATCH — PHASE 3/5
+BURKINA PRATIQUE — OFFRES + SIGNAUX + SOURCES
+
+IMPORTANT :
+
+Cette phase ajoute une nouvelle couche de données.
+
+Elle ne remplace pas le système actuel des lieux.
+
+==================================================
+OBJECTIF PRODUIT
+==================================================
+
+Burkina Pratique doit pouvoir répondre non seulement :
+
+"Où est ce service ?"
+
+mais :
+
+"Qu'est-ce qui est concrètement proposé actuellement ?"
+
+Exemples :
+
+"Poulet braisé à 2500 F ce soir."
+
+"Plombier disponible aujourd'hui."
+
+"Samsung d'occasion à 180000 F."
+
+"Chambre disponible ce week-end."
+
+"Promotion sur tel produit."
+
+"Service de dépannage disponible dans tel quartier."
+
+==================================================
+ARCHITECTURE
+==================================================
+
+Créer, si l'audit confirme que c'est nécessaire, une couche :
+
+OFFRE
+
+Une offre doit pouvoir comporter lorsque disponible :
+
+- titre ;
+- description ;
+- catégorie ;
+- lieu associé ;
+- structure/personne source ;
+- prix ;
+- devise ;
+- zone ;
+- date de publication ;
+- date de début ;
+- date de fin ;
+- disponibilité ;
+- téléphone ;
+- WhatsApp ;
+- URL source ;
+- nom de la source ;
+- média ;
+- date de collecte ;
+- statut ;
+- niveau de confiance.
+
+IMPORTANT :
+
+Une OFFRE ne doit pas devenir automatiquement un LIEU.
+
+Elle peut être associée à un lieu existant.
+
+==================================================
+SOURCES
+==================================================
+
+Prévoir une architecture d'adapters/connecteurs permettant d'ingérer des informations depuis :
+
+1. sources internes BurkinaWatch ;
+2. sites web publics ;
+3. APIs autorisées ;
+4. flux RSS ;
+5. pages officielles lorsqu'une méthode d'accès autorisée existe ;
+6. autres sources structurées disponibles légalement.
+
+IMPORTANT :
+
+NE PAS implémenter de contournement de protection.
+
+NE PAS mettre en place un scraping agressif.
+
+NE PAS contourner :
+- authentification ;
+- CAPTCHA ;
+- restrictions techniques ;
+- protections anti-bot ;
+- restrictions d'utilisation.
+
+Si une plateforme nécessite une API officielle ou une autorisation :
+
+documenter la dépendance.
+
+Ne pas prétendre que l'intégration est fonctionnelle si elle ne l'est pas.
+
+==================================================
+NORMALISATION
+==================================================
+
+Les sources externes peuvent produire des textes très différents.
+
+Créer une normalisation :
+
+SOURCE
+ ↓
+DONNÉE BRUTE
+ ↓
+EXTRACTION
+ ↓
+NORMALISATION
+ ↓
+OFFRE
+ ↓
+VALIDATION
+ ↓
+BURKINA PRATIQUE
+
+==================================================
+FIABILITÉ
+==================================================
+
+Chaque offre doit conserver sa provenance.
+
+Afficher :
+
+Source :
+"Page officielle"
+
+ou
+
+"Source externe"
+
+ou
+
+"Utilisateur BurkinaWatch"
+
+Afficher :
+
+Publié il y a X heures.
+
+Ne jamais transformer :
+
+"publié"
+
+en
+
+"encore disponible"
+
+sans confirmation.
+
+==================================================
+EXPIRATION
+==================================================
+
+Les offres doivent pouvoir expirer.
+
+Exemple :
+
+Offre valable samedi.
+
+Après samedi :
+
+ne plus la présenter comme active.
+
+Prévoir :
+
+ACTIVE
+EXPIRED
+CANCELLED
+PENDING
+UNVERIFIED
+
+Les dates doivent être utilisées lorsqu'elles existent.
+
+==================================================
+SIGNAUX
+==================================================
+
+Réutiliser les signalements/contributions existants.
+
+Permettre de représenter :
+
+- route bloquée ;
+- travaux ;
+- inondation ;
+- embouteillage ;
+- accès difficile ;
+- établissement fermé ;
+- service indisponible ;
+- information contestée ;
+- autre signal pertinent.
+
+Chaque signal doit avoir :
+
+- date/heure ;
+- localisation ;
+- source ;
+- type ;
+- statut ;
+- fraîcheur.
+
+==================================================
+CONFIRMATION CITOYENNE
+==================================================
+
+Permettre lorsque pertinent :
+
+✓ confirmer
+
+✕ signaler
+
+⚠ contester
+
+Les confirmations ne deviennent pas automatiquement vérité.
+
+Les informations contradictoires doivent produire :
+
+"À confirmer"
+
+==================================================
+MOBILE MONEY
+==================================================
+
+Pour les points concernés :
+
+✓ retrait disponible
+
+✓ dépôt disponible
+
+⚠ manque de liquidité
+
+⚠ service indisponible
+
+Les informations de liquidité doivent expirer rapidement.
+
+==================================================
+FICHE LIEU
+==================================================
+
+Conserver la fiche existante.
+
+Ajouter si possible :
+
+📍 Lieu
+
+🎁 Offres disponibles
+
+👁️ Signaux récents
+
+🛡️ Contexte
+
+Les offres doivent être associées au lieu existant lorsqu'une correspondance fiable existe.
+
+==================================================
+DONNÉES FICTIVES
+==================================================
+
+INTERDICTION ABSOLUE d'inventer :
+
+- offre ;
+- prix ;
+- disponibilité ;
+- promotion ;
+- téléphone ;
+- adresse ;
+- source ;
+- publication ;
+- stock ;
+- liquidité.
+
+==================================================
+BASE DE DONNÉES
+==================================================
+
+Avant toute migration :
+
+examiner le schéma existant.
+
+Privilégier une extension additive.
+
+Aucune suppression de colonne/table existante.
+
+Aucune migration destructive.
+
+Si une migration présente un risque :
+
+STOP + rapport.
+
+==================================================
+VALIDATION
+==================================================
+
+Tester :
+
+- création d'offre ;
+- association à un lieu ;
+- source ;
+- date ;
+- expiration ;
+- affichage ;
+- signal ;
+- confirmation ;
+- contradiction ;
+- Mobile Money.
+
+Build complet.
+
+NE PAS modifier Railway.
