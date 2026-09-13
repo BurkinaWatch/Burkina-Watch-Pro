@@ -282,7 +282,7 @@ export default function BurkinaPratique() {
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     rememberSearch(query);
-    if (intent.matched && intent.filters.length > 0) {
+    if (intent.matched && intent.explorerType) {
       document.getElementById("pratique-explorer")?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
@@ -327,7 +327,7 @@ export default function BurkinaPratique() {
                         id="burkina-pratique-search"
                         value={query}
                         onChange={(event) => setQuery(event.target.value)}
-                        placeholder="Pharmacie, station, banque, restaurant..."
+                        placeholder="Réparer mon téléphone, acheter une chaussure Nike..."
                         className="h-14 rounded-2xl border-emerald-900/15 bg-background/95 pl-12 text-base shadow-lg shadow-emerald-950/5 focus-visible:ring-amber-500"
                         autoComplete="off"
                         data-testid="input-burkina-pratique-search"
@@ -343,12 +343,12 @@ export default function BurkinaPratique() {
                         searchResults.map((category) => (
                           <Link
                             key={`${category.href}-${category.label}`}
-                            href={category.href === intent.href && intent.matched && intent.filters.length > 0 ? "#pratique-explorer" : category.href === intent.href && intent.matched ? buildPracticalRoute(intent) : category.href}
+                            href={intent.matched && intent.explorerType ? "#pratique-explorer" : category.href === intent.href && intent.matched ? buildPracticalRoute(intent) : category.href}
                             className="flex items-center gap-3 rounded-xl p-3 text-left transition-colors hover:bg-muted"
                             data-testid={`link-search-result-${category.href.slice(1)}`}
                             onClick={(event) => {
                               rememberSearch(query);
-                              if (intent.matched && intent.filters.length > 0) {
+                              if (intent.matched && intent.explorerType) {
                                 event.preventDefault();
                                 document.getElementById("pratique-explorer")?.scrollIntoView({ behavior: "smooth", block: "start" });
                               }
