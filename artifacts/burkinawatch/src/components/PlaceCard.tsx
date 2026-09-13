@@ -6,8 +6,10 @@ import type { Place } from "@shared/schema";
 import { SourceBadge } from "./SourceBadge";
 import { LocationValidator } from "./LocationValidator";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { getCurrentMobileMoneyStatus, getFreshnessClasses, getPlaceFreshness } from "@/lib/placeFreshness";
 import { PlacePracticalContext } from "./PlacePracticalContext";
+import { ProtectTripDialog } from "./ProtectTripDialog";
 
 interface PlaceWithDistance extends Place {
   distance?: number;
@@ -49,6 +51,7 @@ const PLACE_TYPE_COLORS: Record<string, string> = {
 
 export function PlaceCard({ place }: PlaceCardProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const typeLabel = PLACE_TYPE_LABELS[place.placeType] || place.placeType;
   const typeColor = PLACE_TYPE_COLORS[place.placeType] || "bg-muted text-muted-foreground";
   
@@ -299,7 +302,7 @@ export function PlaceCard({ place }: PlaceCardProps) {
           </div>
         )}
 
-        <PlacePracticalContext placeId={place.id} />
+        <PlacePracticalContext placeId={place.id} freshness={freshness} />
 
         {plats && (
           <div className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -413,6 +416,14 @@ export function PlaceCard({ place }: PlaceCardProps) {
             compact
           />
           <div className="flex flex-wrap gap-2">
+            {user && Number.isFinite(Number(place.latitude)) && Number.isFinite(Number(place.longitude)) ? (
+              <ProtectTripDialog
+                placeId={place.id}
+                placeName={displayName}
+                latitude={place.latitude}
+                longitude={place.longitude}
+              />
+            ) : null}
             <Button variant="outline" size="sm" className="gap-1.5" onClick={sharePlace}>
               <Share2 className="w-3.5 h-3.5" />
               Partager

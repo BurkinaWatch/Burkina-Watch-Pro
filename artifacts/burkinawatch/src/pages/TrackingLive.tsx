@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, StopCircle, Loader2, Share2, ArrowLeft, RefreshCw } from "lucide-react";
+import { MapPin, StopCircle, Loader2, Share2, ArrowLeft, RefreshCw, ShieldCheck } from "lucide-react";
 import type { TrackingSession, EmergencyContact } from "@shared/schema";
 
 type TrackingSessionWithSignal = TrackingSession & {
@@ -80,7 +80,10 @@ export default function TrackingLive() {
         );
       });
 
-      const res = await apiRequest("POST", "/api/tracking/start");
+      const res = await apiRequest("POST", "/api/tracking/start", {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      });
       return res.json();
     },
     onSuccess: () => {
@@ -210,7 +213,28 @@ export default function TrackingLive() {
     const mapsUrl = `https://www.google.com/maps?q=${currentPosition.lat},${currentPosition.lng}`;
     const message = `📍 Ma position actuelle:\n\n${mapsUrl}\n\nTracking en cours...`;
 
-    contacts.forEach((contact, index) => {
+    const sharedContactIds = activeSession?.sharedContactIds || [];
+    const selectedContacts = sharedContactIds.length > 0
+      ? contacts.filter((contact) => sharedContactIds.includes(contact.id))
+      : contacts;
+    if (selectedContacts.length === 0) {
+      toast({
+        title: "Aucun contact sélectionné",
+        description: "Choisissez un contact avant de partager le déplacement.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const trackingUrl = activeSession?.shareToken
+      ? `${window.location.origin}/track/${activeSession.shareToken}`
+      : null;
+    const destination = activeSession?.destinationLabel
+      ? `Destination : ${activeSession.destinationLabel}`
+      : "Destination non renseignée";
+    const message = `🛡️ Déplacement protégé\n\n${destination}\n${trackingUrl ? `Suivi volontaire : ${trackingUrl}\n` : ""}${currentPosition ? `Position actuelle : ${mapsUrl}` : ""}\n\nJe confirmerai mon arrivée dans BurkinaWatch.`;
+
+    selectedContacts.forEach((contact, index) => {
       const cleanPhone = contact.phone.replace(/[^\d+]/g, '');
       const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
       
@@ -224,6 +248,29 @@ export default function TrackingLive() {
       description: "Position envoyée à vos contacts d'urgence",
     });
   };
+
+  const confirmArrivalMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/tracking/arrive");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tracking/session"] });
+      toast({
+        title: "Arrivée confirmée",
+        description: "Le mode de protection est terminé.",
+      });
+      setIsTracking(false);
+      setCurrentPosition(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Arrivée non confirmée",
+        description: error?.message || "Impossible de terminer la protection.",
+        variant: "destructive",
+      });
+    },
+  });
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -269,9 +316,17 @@ export default function TrackingLive() {
                 Sécurité et traçabilité
               </h3>
               <p className="text-sm text-blue-800 dark:text-blue-200">
-                Le suivi de localisation enregistre votre position toutes les 30 secondes. En cas d'incident ou d'accident, cette trajectoire peut aider les secours à vous retrouver rapidement.
+                Le suivi de localisation est volontaire. Les contacts sélectionnés peuvent recevoir la destination et le lien de suivi. BurkinaWatch ne garantit pas la sécurité du lieu ou du trajet.
               </p>
             </div>
+
+            {isTracking && activeSession?.destinationLabel && (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-300">Déplacement protégé</p>
+                <p className="mt-1 font-semibold">{activeSession.destinationLabel}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Le partage reste contrôlé par vous et s’arrête lorsque vous confirmez votre arrivée.</p>
+              </div>
+            )}
 
             {isTracking && activeSession?.signalStatus === "signal_lost" && (
               <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-red-900 dark:border-red-800 dark:bg-red-950/30 dark:text-red-100">
@@ -333,7 +388,18 @@ export default function TrackingLive() {
                     className="w-full"
                   >
                     <Share2 className="w-4 h-4 mr-2" />
-                    Partager Position Actuelle
+                    Partager le déplacement
+                  </Button>
+
+                  <Button
+                    size="lg"
+                    variant="default"
+                    onClick={() => confirmArrivalMutation.mutate()}
+                    disabled={confirmArrivalMutation.isPending}
+                    className="w-full gap-2"
+                  >
+                    {confirmArrivalMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                    Je suis arrivé
                   </Button>
 
                   <Button
