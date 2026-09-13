@@ -1184,3 +1184,164 @@ export const insertNotificationPreferencesSchema = createInsertSchema(notificati
 
 export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
 export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
+
+// ============================================================================
+// EXPÉRIENCE DU LIEU — présence opt-in et contributions modérées
+// ============================================================================
+
+export const placeExperienceVisitStatuses = [
+  "observing",
+  "eligible",
+  "checked_in",
+  "deferred",
+  "closed",
+] as const;
+export type PlaceExperienceVisitStatus = typeof placeExperienceVisitStatuses[number];
+
+export const placeExperiencePerceptions = ["SAFE", "UNCERTAIN", "UNSAFE"] as const;
+export type PlaceExperiencePerception = typeof placeExperiencePerceptions[number];
+
+export const placeExperienceCandidateStatuses = [
+  "PENDING",
+  "APPROVED",
+  "REJECTED",
+  "DUPLICATE",
+] as const;
+export type PlaceExperienceCandidateStatus = typeof placeExperienceCandidateStatuses[number];
+
+export const placeExperienceConsents = pgTable("place_experience_consents", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  enabled: boolean("enabled").notNull().default(false),
+  locationPermissionGranted: boolean("location_permission_granted").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("place_experience_consents_user_idx").on(table.userId),
+]);
+
+export const placeExperienceSettings = pgTable("place_experience_settings", {
+  id: text("id").primaryKey().default("default"),
+  enabled: boolean("enabled").notNull().default(true),
+  dwellThresholdSeconds: integer("dwell_threshold_seconds").notNull().default(900),
+  radiusMeters: integer("radius_meters").notNull().default(75),
+  maxSpeedMps: decimal("max_speed_mps", { precision: 6, scale: 2 }).notNull().default("2.00"),
+  minAccuracyMeters: integer("min_accuracy_meters").notNull().default(100),
+  maxObservationGapSeconds: integer("max_observation_gap_seconds").notNull().default(600),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const placeExperienceCandidates = pgTable("place_experience_candidates", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  associatedPlaceId: text("associated_place_id").references(() => places.id, { onDelete: "set null" }),
+  name: text("name").notNull(),
+  category: text("category").notNull(),
+  description: text("description"),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
+  mediaUrl: text("media_url"),
+  source: text("source").notNull().default("PLACE_EXPERIENCE"),
+  status: text("status").notNull().default("PENDING"),
+  moderationNote: text("moderation_note"),
+  moderatedAt: timestamp("moderated_at"),
+  moderatedBy: text("moderated_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("place_experience_candidates_user_idx").on(table.userId, table.createdAt),
+  index("place_experience_candidates_status_idx").on(table.status, table.createdAt),
+  index("place_experience_candidates_location_idx").on(table.latitude, table.longitude),
+]);
+
+export const placeExperienceVisits = pgTable("place_experience_visits", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  placeId: text("place_id").references(() => places.id, { onDelete: "set null" }),
+  candidateId: text("candidate_id").references(() => placeExperienceCandidates.id, { onDelete: "set null" }),
+  startedAt: timestamp("started_at").notNull(),
+  lastSeenAt: timestamp("last_seen_at").notNull(),
+  estimatedDurationSeconds: integer("estimated_duration_seconds").notNull().default(0),
+  lastLatitude: decimal("last_latitude", { precision: 10, scale: 7 }),
+  lastLongitude: decimal("last_longitude", { precision: 10, scale: 7 }),
+  lastAccuracyMeters: decimal("last_accuracy_meters", { precision: 8, scale: 2 }),
+  lastSpeedMps: decimal("last_speed_mps", { precision: 8, scale: 2 }),
+  status: text("status").notNull().default("observing"),
+  checkInTriggeredAt: timestamp("check_in_triggered_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("place_experience_visits_user_status_idx").on(table.userId, table.status),
+  index("place_experience_visits_user_place_idx").on(table.userId, table.placeId),
+  index("place_experience_visits_last_seen_idx").on(table.lastSeenAt),
+]);
+
+export const placeExperiences = pgTable("place_experiences", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  visitId: text("visit_id").notNull().references(() => placeExperienceVisits.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  placeId: text("place_id").references(() => places.id, { onDelete: "set null" }),
+  candidateId: text("candidate_id").references(() => placeExperienceCandidates.id, { onDelete: "set null" }),
+  perception: text("perception").notNull(),
+  reasonCodes: text("reason_codes").array(),
+  comment: text("comment"),
+  processingStatus: text("processing_status").notNull().default("recorded"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("place_experiences_visit_user_idx").on(table.visitId, table.userId),
+  index("place_experiences_place_idx").on(table.placeId, table.createdAt),
+  index("place_experiences_user_idx").on(table.userId, table.createdAt),
+]);
+
+export const insertPlaceExperienceConsentSchema = createInsertSchema(placeExperienceConsents).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPlaceExperienceCandidateSchema = createInsertSchema(placeExperienceCandidates, {
+  name: z.string().trim().min(2).max(160),
+  category: z.string().trim().min(2).max(80),
+  description: z.string().trim().max(1000).optional().nullable(),
+  latitude: z.union([z.string(), z.number()]).transform((value) => String(value)),
+  longitude: z.union([z.string(), z.number()]).transform((value) => String(value)),
+  mediaUrl: z.string().url().max(2000).optional().nullable(),
+}).omit({
+  id: true,
+  source: true,
+  status: true,
+  moderationNote: true,
+  moderatedAt: true,
+  moderatedBy: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPlaceExperienceVisitSchema = createInsertSchema(placeExperienceVisits).omit({
+  id: true,
+  estimatedDurationSeconds: true,
+  status: true,
+  checkInTriggeredAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPlaceExperienceSchema = createInsertSchema(placeExperiences, {
+  perception: z.enum(placeExperiencePerceptions),
+  reasonCodes: z.array(z.string().trim().min(1).max(50)).max(8).optional().nullable(),
+  comment: z.string().trim().max(1000).optional().nullable(),
+}).omit({
+  id: true,
+  userId: true,
+  processingStatus: true,
+  createdAt: true,
+});
+
+export type InsertPlaceExperienceConsent = z.infer<typeof insertPlaceExperienceConsentSchema>;
+export type PlaceExperienceConsent = typeof placeExperienceConsents.$inferSelect;
+export type InsertPlaceExperienceCandidate = z.infer<typeof insertPlaceExperienceCandidateSchema>;
+export type PlaceExperienceCandidate = typeof placeExperienceCandidates.$inferSelect;
+export type InsertPlaceExperienceVisit = z.infer<typeof insertPlaceExperienceVisitSchema>;
+export type PlaceExperienceVisit = typeof placeExperienceVisits.$inferSelect;
+export type InsertPlaceExperience = z.infer<typeof insertPlaceExperienceSchema>;
+export type PlaceExperience = typeof placeExperiences.$inferSelect;
