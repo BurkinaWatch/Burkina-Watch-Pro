@@ -855,7 +855,7 @@ export class DbStorage implements IStorage {
       status: offer.status || "PENDING",
       currency: offer.currency || "XOF",
       collectedAt: new Date(),
-      confidenceScore: offer.confidenceScore || "0.35",
+      confidenceScore: "0.35",
     } as any).returning();
     return result[0] as Offer;
   }
@@ -970,7 +970,7 @@ export class DbStorage implements IStorage {
         }
       }
       const nonZero = Object.values(counts).filter((value) => value > 0).length;
-      const state = nonZero > 1
+      const state: "confirmed" | "reported" | "contested" | "mixed" | "unknown" = nonZero > 1
         ? "mixed"
         : counts.confirm > 0
           ? "confirmed"
