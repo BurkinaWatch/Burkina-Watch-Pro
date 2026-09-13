@@ -1,0 +1,161 @@
+📋 DIAGNOSTIC COMPLET DU DÉPLOIEMENT BURKINA-WATCH
+État du déploiement
+Élément	Valeur
+Service	Burkina-Watch-Pro
+Service ID	e4b15780-624b-4745-a0ff-941d15af64ef
+Environnement	production (d27ab513-c2f6-4c76-8d15-a1a4cc56e273)
+Déploiement actif	471efb8d-e188-4704-9194-380af0552af9
+Statut déploiement	SUCCESS
+Commit	5a43c9b7efe89d109488fb67bb2641a8f1dd9992
+Message commit	Merge pull request #5 : Include Drizzle migration in build script
+Branche	main
+Runtime Node	Node.js 18.20.5 (via Nixpacks)
+Statut conteneur	Online (1 running)
+Port	8080
+Domaine public	burkina-watch-pro-production.up.railway.app
+Build command	pnpm --filter @workspace/db run push && npm run build
+Start command	npm run start
+❌ Erreur 1 : crypto is not defined
+Erreur complète
+ReferenceError: crypto is not defined
+  at module (artifacts/api-server/src/storage.ts)
+  Error updating online status: ReferenceError: crypto is not defined
+  Error connecting user 09ce213c-4b05-4b7e-b004-1cbd2ca2b142: ReferenceError: crypto is not defined
+
+Endpoint affecté
+POST /api/user/online
+Statut HTTP : 500
+Durée réponse : 482-651 ms
+Localisations du problème dans le code
+Le fichier artifacts/api-server/src/storage.ts utilise crypto.randomUUID() à deux endroits :
+
+Ligne 1441 : const shareToken = crypto.randomUUID();
+Ligne 2358 : const sessionId = crypto.randomUUID();
+Import présent ?
+❌ NON — crypto n'est pas importé de node:crypto dans storage.ts
+
+Version déployée contient le correctif ?
+❌ NON — Le commit actuel (5a43c9b) ne contient pas l'import import crypto from "node:crypto";
+
+Conclusion
+Confirmé par les logs — Le code exécuté en production tente d'utiliser crypto.randomUUID() sans importer le module crypto de Node.js. Cette erreur survient à chaque tentative de :
+
+Créer un token de partage de suivi (startTrackingSession)
+Créer une session de suivi (ligne 2358)
+Connecter un utilisateur via POST /api/user/online
+Redéploiement nécessaire
+✅ OUI — Cette erreur requiert un correctif du code source et un redéploiement.
+
+❌ Erreur 2 : Schéma PostgreSQL incomplet
+Erreur complète
+[TRACKING] Moniteur indisponible, nouvelle tentative au prochain intervalle: 
+Failed query: select "id", "user_id", "started_at", "ended_at", "is_active", 
+"is_panic_mode", "share_token", "protection_status", "destination_label", 
+"destination_place_id", "destination_latitude", "destination_longitude", 
+"shared_contact_ids", "arrival_confirmed_at" from "tracking_sessions" 
+where "tracking_sessions"."is_active" = $1
+
+Cause probable
+La requête SQL cherche la colonne protection_status dans tracking_sessions, mais cette colonne n'existe pas (ou d'autres colonnes attendues manquent). Le schéma PostgreSQL en production n'a pas été synchronisé avec le schéma défini dans le code (lib/db/src/schema/schema.ts).
+
+État build/migration
+Build command spécifié : pnpm --filter @workspace/db run push && npm run build
+Trace de migration en logs : ❌ AUCUNE — Pas de log contenant pnpm, drizzle, push, ou migration
+Conclusion : La migration Drizzle n'a pas été exécutée pendant le build, même si la commande est configurée
+Pourquoi la migration n'a pas fonctionné
+DATABASE_URL n'est disponible que au runtime, pas pendant le build
+Le buildCommand pnpm --filter @workspace/db run push s'exécute pendant la phase de build (container isolé)
+DATABASE_URL n'existe pas dans ce container de build
+Donc drizzle-kit push échoue silencieusement ou ne s'exécute pas
+Résultat : Le schéma PostgreSQL reste inchangé, les colonnes attendues n'existent pas
+Fréquence de l'erreur
+Débute : 2026-09-13T02:24:28Z (immédiatement après démarrage du container)
+Intervalle : ~60 secondes entre chaque tentative
+Persistance : Continue sans interruption jusqu'à présent
+📊 Tableau de comparaison du schéma
+Colonnes attendues vs. réalité
+Colonne attendue	Type attendu	Présente ?	Type BD	Issue
+id	text PK	✅ Probablement	text	-
+user_id	text FK	✅ Probablement	text	-
+started_at	timestamp	❓ Incertain	-	Ancienne baseline start_time
+ended_at	timestamp	❓ Incertain	-	Ancienne baseline end_time
+is_active	boolean	✅ Probablement	boolean	-
+is_panic_mode	boolean	❓ Incertain	-	À vérifier
+share_token	text nullable	✅ Probablement	text	-
+protection_status	text NOT NULL	❌ MANQUANTE	-	ERREUR CONFIRMÉE
+destination_label	text nullable	❌ MANQUANTE	-	ERREUR CONFIRMÉE
+destination_place_id	text FK nullable	❌ MANQUANTE	-	ERREUR CONFIRMÉE
+destination_latitude	decimal(10,7) nullable	❌ MANQUANTE	-	ERREUR CONFIRMÉE
+destination_longitude	decimal(10,7) nullable	❌ MANQUANTE	-	ERREUR CONFIRMÉE
+shared_contact_ids	text[] nullable	❌ MANQUANTE	-	ERREUR CONFIRMÉE
+arrival_confirmed_at	timestamp nullable	❌ MANQUANTE	-	ERREUR CONFIRMÉE
+Indices manquants
+Index attendu	Présent ?
+tracking_sessions_user_id_active_idx	❌ PROBABLEMENT MANQUANT
+tracking_sessions_protection_status_idx	❌ PROBABLEMENT MANQUANT
+Conclusion schéma
+Confirmé par erreur de requête — Au minimum 7 colonnes critiques manquent dans la table tracking_sessions en production. Le schéma PostgreSQL est fortement divergent du schéma attendu par le code.
+
+Autres erreurs détectées
+Erreur	Source	Fréquence	Cause probable
+request errored	Deploy logs	~2× observées	Erreur générique, probablement liée à l'une des deux erreurs principales
+Postgres volume warning	Service status	1	Avertissement non spécifié (lecture seule)
+🔍 Causes probables — Synthèse
+Erreur crypto (confirmée par logs)
+✅ Confirmé par les logs : ReferenceError: crypto is not defined
+✅ Confirmé par le code : artifacts/api-server/src/storage.ts ligne 1441 et 2358 utilisent crypto.randomUUID() sans import
+✅ Confirmé par inspection : node:crypto n'est pas importé en haut du fichier
+Conclusion : Bug de code dans production. Redéploiement avec import correctif obligatoire.
+Erreur schéma (confirmée par la requête)
+✅ Confirmé par la requête : La colonne protection_status est demandée mais n'existe pas (et autres colonnes manquantes)
+✅ Confirmé par les logs de build : Aucune trace de migration drizzle-kit push dans les logs du build
+⚠️ Probable mais non confirmé en lecture seule : DATABASE_URL n'était pas disponible au moment du build (testable seulement en exécutant le build)
+Conclusion : Migration non exécutée. Le schéma PostgreSQL n'a pas été synchronisé. Impossible d'exécuter requêtes de suivi.
+💡 Plan de correction proposé
+Correction 1 : Ajouter l'import crypto
+Fichier : artifacts/api-server/src/storage.ts
+
+Diff attendu :
+
++ import crypto from "node:crypto";
+  import {
+    type User,
+    ...
+
+Colonnes impactées : Aucune Données impactées : Aucune (correctif code pur) Risque de perte de données : 0% Risque d'indisponibilité : 0% (correctif n'affecte pas les dépendances) Procédure de retour arrière : Revert le commit ou redéployer sans le changement Redéploiement nécessaire : ✅ OUI — Obligatoire pour déployer le correctif
+
+Correction 2 : Synchroniser le schéma PostgreSQL
+Fichier/Ressource : Drizzle migration via pnpm --filter @workspace/db run push
+
+Colonnes à ajouter :
+
+protection_status (text NOT NULL, default='active')
+destination_label (text nullable)
+destination_place_id (text FK nullable)
+destination_latitude (decimal(10,7) nullable)
+destination_longitude (decimal(10,7) nullable)
+shared_contact_ids (text[] nullable)
+arrival_confirmed_at (timestamp nullable)
+Indices à créer :
+
+tracking_sessions_user_id_active_idx
+tracking_sessions_protection_status_idx
+Données impactées : Zéro lignes supprimées/modifiées (ajouts seuls, colonnes nullable ou avec defaults) Risque de perte de données : 0% (schéma additif pur) Risque d'indisponibilité : Minimal si migration courte ; possibles locks courts sur la table Procédure de retour arrière : Pas applicable (migration est idempotente ; si elle échoue, relancer ; si elle réussit partiellement, peut être complétée)
+
+Pourquoi la migration n'a pas fonctionné hier
+
+Buildcommand incluait pnpm --filter @workspace/db run push
+Mais DATABASE_URL n'existe que au runtime, pas pendant le build
+Le build s'exécute dans un container isolé sans accès à DATABASE_URL
+Donc la commande a échoué silencieusement ou n'a pas exécuté
+Solution correcte
+
+La migration doit s'exécuter au démarrage du conteneur, quand DATABASE_URL est disponible
+La PR #6 (pré-startup script) implémente cela : /scripts/pre-start-migration.sh s'exécute avant le démarrage de l'API
+À condition que la PR #6 soit mergée et déployée
+⚠️ État actuel et blocages
+Blocage	Sévérité	Statut
+crypto undefined	🔴 CRITIQUE	Rend l'endpoint /api/user/online inutilisable
+Schéma incomplet	🔴 CRITIQUE	Rend le moniteur de suivi inutilisable (erreur toutes les ~60s)
+Migration non exécutée	🔴 CRITIQUE	Cause de l'erreur schéma
+Aucun changement n'a été exécuté. Voulez-vous confirmer explicitement l'opération proposée en production ?
