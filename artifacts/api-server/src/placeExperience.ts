@@ -476,12 +476,19 @@ export async function getPlaceExperienceContext(placeId: string) {
   }).from(places).where(eq(places.id, placeId)).limit(1);
   if (!place) return null;
 
-  const perceptions = await db.select({
-    perception: placeExperiences.perception,
-    createdAt: placeExperiences.createdAt,
-  }).from(placeExperiences)
-    .where(and(eq(placeExperiences.placeId, placeId), eq(placeExperiences.processingStatus, "recorded")))
-    .orderBy(desc(placeExperiences.createdAt)).limit(20);
+  let perceptions: Array<{ perception: string; createdAt: Date }> = [];
+  try {
+    perceptions = await db.select({
+      perception: placeExperiences.perception,
+      createdAt: placeExperiences.createdAt,
+    }).from(placeExperiences)
+      .where(and(eq(placeExperiences.placeId, placeId), eq(placeExperiences.processingStatus, "recorded")))
+      .orderBy(desc(placeExperiences.createdAt)).limit(20);
+  } catch (error: any) {
+    // The additive phase 1 tables may not exist until the owner's planned
+    // schema publication. Keep the public context useful with existing data.
+    if (error?.cause?.code !== "42P01" && error?.code !== "42P01") throw error;
+  }
 
   const now = Date.now();
   const recentDataWindowMs = 30 * 86_400_000;
