@@ -299,11 +299,11 @@ export default function BurkinaPratique() {
   return (
     <div className="min-h-[100dvh] bg-background text-foreground">
       <Header />
-      <main className="relative overflow-hidden pb-28">
+      <main className="relative overflow-x-clip pb-36 sm:pb-28">
         <section className="border-b border-primary/10 bg-gradient-to-br from-amber-50 via-background to-emerald-50/80 dark:from-amber-950/30 dark:via-background dark:to-emerald-950/20">
           <div className="mx-auto max-w-6xl px-4 pb-12 pt-10 sm:px-6 md:pb-16 md:pt-16">
-            <div className="grid items-center gap-10 lg:grid-cols-[1.08fr_.92fr]">
-              <div className="pr-0 lg:pr-8">
+            <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,1.08fr)_minmax(22rem,.92fr)] lg:items-center lg:gap-10">
+              <div className="min-w-0 lg:pr-8">
                 <div className="pratique-reveal inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-background/70 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-amber-800 shadow-sm dark:border-amber-700/60 dark:text-amber-300">
                   <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
                   La vie pratique, en un geste
@@ -319,21 +319,25 @@ export default function BurkinaPratique() {
                   <label htmlFor="burkina-pratique-search" className="sr-only">
                     Que cherchez-vous ?
                   </label>
-                  <Search className="pointer-events-none absolute left-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-                  <Input
-                    id="burkina-pratique-search"
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Pharmacie, station, banque, restaurant..."
-                    className="h-14 rounded-2xl border-emerald-900/15 bg-background/95 pl-12 pr-28 text-base shadow-lg shadow-emerald-950/5 focus-visible:ring-amber-500"
-                    autoComplete="off"
-                    data-testid="input-burkina-pratique-search"
-                  />
-                  <Button type="submit" className="absolute right-1.5 top-1.5 h-11 rounded-xl bg-emerald-800 px-4 text-sm text-emerald-50 hover:bg-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 dark:hover:bg-emerald-400" data-testid="button-burkina-pratique-search">
-                    Rechercher
-                  </Button>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <div className="relative min-w-0 flex-1">
+                      <Search className="pointer-events-none absolute left-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                      <Input
+                        id="burkina-pratique-search"
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value)}
+                        placeholder="Pharmacie, station, banque, restaurant..."
+                        className="h-14 rounded-2xl border-emerald-900/15 bg-background/95 pl-12 text-base shadow-lg shadow-emerald-950/5 focus-visible:ring-amber-500"
+                        autoComplete="off"
+                        data-testid="input-burkina-pratique-search"
+                      />
+                    </div>
+                    <Button type="submit" className="h-14 shrink-0 rounded-2xl bg-emerald-800 px-5 text-sm text-emerald-50 hover:bg-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 dark:hover:bg-emerald-400 sm:px-6" data-testid="button-burkina-pratique-search">
+                      Rechercher
+                    </Button>
+                  </div>
                   {normalizedQuery && (
-                    <div className="absolute left-0 right-0 top-[4.25rem] z-20 overflow-hidden rounded-2xl border bg-background p-2 shadow-xl" data-testid="search-results">
+                    <div className="mt-2 overflow-hidden rounded-2xl border bg-background p-2 shadow-xl" data-testid="search-results">
                       {searchResults.length > 0 ? (
                         searchResults.map((category) => (
                           <Link
@@ -436,23 +440,25 @@ export default function BurkinaPratique() {
                 ) : null}
               </div>
 
-              <div className="pratique-reveal pratique-reveal-delay-2 relative hidden min-h-[300px] lg:block" aria-hidden="true">
-                <div className="absolute right-0 top-0 h-72 w-72 rounded-[3rem] border border-amber-400/30 bg-amber-300/20 rotate-6" />
-                <div className="absolute bottom-2 left-10 h-56 w-56 rounded-[2.5rem] border border-emerald-500/20 bg-emerald-500/10 -rotate-6" />
-                <div className="absolute inset-8 flex rotate-3 items-center justify-center rounded-[2.5rem] border border-background/80 bg-background/75 p-8 shadow-2xl shadow-emerald-950/10 backdrop-blur">
-                  <div className="w-full rounded-3xl border border-emerald-900/10 bg-emerald-950 p-6 text-emerald-50 shadow-xl">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/70">Autour de vous</span>
-                      <MapPin className="h-5 w-5 text-amber-300" />
-                    </div>
-                    <div className="mt-8 flex items-end gap-2">
-                      <span className="font-display text-5xl font-bold">8</span>
-                      <span className="pb-1 text-sm text-emerald-100/70">catégories<br />à explorer</span>
-                    </div>
-                    <div className="mt-6 flex gap-1.5">
-                      <span className="h-1.5 flex-1 rounded-full bg-rose-400" />
-                      <span className="h-1.5 flex-1 rounded-full bg-amber-300" />
-                      <span className="h-1.5 flex-1 rounded-full bg-emerald-400" />
+              <div className="pratique-reveal pratique-reveal-delay-2 relative hidden min-w-0 lg:flex lg:min-h-[360px] lg:items-center lg:justify-center" aria-hidden="true">
+                <div className="relative aspect-[1.15] w-full max-w-[32rem]">
+                  <div className="absolute right-0 top-0 h-[72%] w-[72%] rounded-[3rem] border border-amber-400/30 bg-amber-300/20 rotate-6" />
+                  <div className="absolute bottom-0 left-[8%] h-[58%] w-[58%] rounded-[2.5rem] border border-emerald-500/20 bg-emerald-500/10 -rotate-6" />
+                  <div className="absolute inset-[8%] flex rotate-3 items-center justify-center rounded-[2.5rem] border border-background/80 bg-background/75 p-5 shadow-2xl shadow-emerald-950/10 backdrop-blur sm:p-8">
+                    <div className="w-full max-w-[24rem] rounded-3xl border border-emerald-900/10 bg-emerald-950 p-5 text-emerald-50 shadow-xl sm:p-6">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/70">Autour de vous</span>
+                        <MapPin className="h-5 w-5 text-amber-300" />
+                      </div>
+                      <div className="mt-8 flex items-end gap-2">
+                        <span className="font-display text-5xl font-bold">8</span>
+                        <span className="pb-1 text-sm text-emerald-100/70">catégories<br />à explorer</span>
+                      </div>
+                      <div className="mt-6 flex gap-1.5">
+                        <span className="h-1.5 flex-1 rounded-full bg-rose-400" />
+                        <span className="h-1.5 flex-1 rounded-full bg-amber-300" />
+                        <span className="h-1.5 flex-1 rounded-full bg-emerald-400" />
+                      </div>
                     </div>
                   </div>
                 </div>

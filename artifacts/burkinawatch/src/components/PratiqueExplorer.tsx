@@ -197,8 +197,8 @@ export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "", in
   );
 
   return (
-    <section className="border-y border-emerald-900/10 bg-emerald-50/40 py-12 dark:bg-emerald-950/10" data-testid="pratique-explorer">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section className="scroll-mt-20 border-y border-emerald-900/10 bg-emerald-50/40 py-12 dark:bg-emerald-950/10 sm:py-14" data-testid="pratique-explorer">
+      <div className="mx-auto min-w-0 max-w-6xl px-4 sm:px-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">Nouveau dans Burkina Pratique</p>
@@ -248,8 +248,8 @@ export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "", in
           <p className="mt-2 text-xs text-amber-700 dark:text-amber-300" role="status">{locationError}</p>
         ) : null}
 
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-          <div className="relative flex-1">
+          <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <div className="relative min-w-0">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
             <Input
               value={localSearch}
@@ -259,11 +259,11 @@ export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "", in
               aria-label="Filtrer les lieux"
             />
           </div>
-          <div className="flex gap-2">
-            <Button type="button" variant={viewMode === "list" ? "default" : "outline"} onClick={() => setViewMode("list")} className="gap-2">
+            <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2">
+              <Button type="button" variant={viewMode === "list" ? "default" : "outline"} onClick={() => setViewMode("list")} className="w-full min-w-0 gap-1.5 px-2 sm:gap-2 sm:px-3">
               <List className="h-4 w-4" /> Liste
             </Button>
-            <Button type="button" variant={viewMode === "map" ? "default" : "outline"} onClick={() => setViewMode("map")} className="gap-2">
+              <Button type="button" variant={viewMode === "map" ? "default" : "outline"} onClick={() => setViewMode("map")} className="w-full min-w-0 gap-1.5 px-2 sm:gap-2 sm:px-3">
               <MapIcon className="h-4 w-4" /> Carte
             </Button>
             <Button type="button" variant="outline" size="icon" onClick={() => void refetch()} aria-label="Actualiser les lieux">
@@ -289,7 +289,7 @@ export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "", in
               />
             </div>
           ) : places.length ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {places.slice(0, 6).map((place) => (
                 <PlaceCard key={place.id} place={place} />
               ))}
@@ -309,7 +309,7 @@ export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "", in
               <h3 className="mt-1 text-2xl font-bold text-emerald-950 dark:text-emerald-50">Offres disponibles</h3>
               <p className="mt-1 text-sm text-muted-foreground">Chaque offre garde sa source, sa date et son statut.</p>
             </div>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {visibleOffers.map((offer) => <OfferCard key={offer.id} offer={offer} />)}
             </div>
           </div>
@@ -322,7 +322,7 @@ export function PratiqueExplorer({ initialType = "pharmacy", searchTerm = "", in
               <h3 className="mt-1 text-2xl font-bold text-emerald-950 dark:text-emerald-50">Signaux récents</h3>
               <p className="mt-1 text-sm text-muted-foreground">Les confirmations contradictoires restent affichées comme « À confirmer ».</p>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid min-w-0 gap-4 md:grid-cols-2">
               {visibleSignals.map((signal) => <PracticalSignalCard key={signal.id} signal={signal} />)}
             </div>
           </div>
