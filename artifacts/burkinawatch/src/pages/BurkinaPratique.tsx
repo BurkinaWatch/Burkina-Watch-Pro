@@ -381,6 +381,16 @@ export default function BurkinaPratique() {
                     <MapPin className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
                     Autour de moi
                   </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full bg-background/70"
+                    onClick={() => navigate("/publier-offre")}
+                  >
+                    <ShoppingBag className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                    Proposer une offre
+                  </Button>
                 </div>
                 {!normalizedQuery && recentSearches.length > 0 ? (
                   <div className="mt-4 flex flex-wrap items-center gap-2" data-testid="practical-recent-searches">

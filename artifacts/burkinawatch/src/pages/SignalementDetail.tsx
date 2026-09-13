@@ -14,6 +14,7 @@ import type { Signalement, Categorie, Statut } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import VerificationBadge from "@/components/VerificationBadge";
+import { PracticalConfirmationActions, type PracticalConfirmationSummary } from "@/components/PracticalConfirmationActions";
 
 export default function SignalementDetail() {
   const { id } = useParams<{ id: string }>();
@@ -58,6 +59,9 @@ export default function SignalementDetail() {
   const pageUrl = `https://${window.location.host}/signalement/${id}`;
   const pageTitle = `${signalement.titre} | Burkina Watch`;
   const pageDescription = signalement.description.substring(0, 160);
+  const practicalConfirmations = (signalement as Signalement & {
+    confirmations?: PracticalConfirmationSummary;
+  }).confirmations;
 
   return (
     <>
@@ -158,6 +162,14 @@ export default function SignalementDetail() {
               <p className="mt-2 text-xs text-muted-foreground">
                 Ce badge indique la méthode utilisée pour établir le score de fiabilité.
               </p>
+            </div>
+
+            <div className="mb-6 rounded-lg border border-sky-900/10 bg-sky-50/50 p-4 dark:bg-sky-950/10">
+              <p className="mb-2 text-sm font-semibold">Contexte citoyen</p>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Confirmez, signalez ou contestez cette information. Des avis contradictoires restent affichés comme « À confirmer ».
+              </p>
+              <PracticalConfirmationActions signalementId={signalement.id} initialSummary={practicalConfirmations} compact />
             </div>
 
             <div className="mb-6 max-w-sm">
