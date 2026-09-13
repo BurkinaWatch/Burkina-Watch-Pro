@@ -1,0 +1,259 @@
+BURKINAWATCH — IMPLÉMENTATION PHASE 3
+EXPÉRIENCE DU LIEU + CONTEXTE DE SÉCURITÉ
+
+La fonctionnalité « Expérience du lieu » est maintenant implémentée.
+
+Nous devons maintenant l'intégrer profondément au modèle de sécurité existant de BurkinaWatch.
+
+RÈGLE ABSOLUE :
+
+NE PAS CRÉER UN NOUVEAU SYSTÈME DE SÉCURITÉ.
+
+Réutilise les systèmes existants :
+- SOS ;
+- PANIC ;
+- localisation ;
+- contacts de confiance ;
+- signalements ;
+- notifications ;
+- carte ;
+- lieux ;
+- événements/signes citoyens ;
+- administration/modération.
+
+NE MODIFIE PAS RAILWAY.
+
+==================================================
+1. DISTINGUER TROIS TYPES D’INFORMATION
+==================================================
+
+Le système doit clairement distinguer :
+
+A. PERCEPTION
+
+« Je ne me sens pas en sécurité ici. »
+
+C'est une expérience subjective.
+
+B. SIGNAL
+
+Exemples :
+- route bloquée ;
+- problème d'accès ;
+- éclairage insuffisant signalé ;
+- fermeture ;
+- présence signalée d’un problème ;
+- difficulté d'accès ;
+- information citoyenne récente.
+
+C. INCIDENT
+
+Un événement explicitement signalé selon le système existant.
+
+Ne jamais fusionner automatiquement ces trois notions.
+
+==================================================
+2. CONTEXTE DE SÉCURITÉ D’UN LIEU
+==================================================
+
+Lorsqu’un utilisateur consulte un lieu, permettre à BurkinaWatch d’afficher un contexte factuel lorsque les données existent :
+
+Exemples :
+
+« 🛡️ Informations disponibles »
+
+« Perceptions récentes : plusieurs utilisateurs ont déclaré se sentir en sécurité. »
+
+ou :
+
+« ⚠️ Des problèmes d’accès ont récemment été signalés. »
+
+ou :
+
+« ℹ️ Peu de données récentes disponibles. »
+
+Ne jamais transformer cela en garantie de sécurité.
+
+Ne jamais écrire :
+« Ce lieu est sûr. »
+
+==================================================
+3. DIMENSION TEMPORELLE
+==================================================
+
+Les informations doivent tenir compte de leur ancienneté.
+
+Une perception vieille de plusieurs mois ne doit pas être présentée comme une situation actuelle.
+
+Utiliser si possible :
+- date ;
+- ancienneté ;
+- récent ;
+- ancien ;
+- données insuffisantes.
+
+Ne pas inventer de seuils si le projet possède déjà une politique de fraîcheur.
+
+==================================================
+4. CONTEXTE DU TRAJET
+==================================================
+
+Lorsqu’un utilisateur veut aller vers un lieu, intégrer si possible les signaux existants concernant le trajet.
+
+Exemple :
+
+« ⚠️ Une difficulté d’accès a été signalée récemment sur cet itinéraire. »
+
+Ne pas dire :
+
+« Cet itinéraire est dangereux. »
+
+==================================================
+5. PROTECTION DU DÉPLACEMENT
+==================================================
+
+Réutiliser le système existant pour proposer :
+
+« 🛡️ Protéger mon déplacement »
+
+Si le système existant le permet :
+- choisir un contact de confiance ;
+- partager destination ;
+- partager départ ;
+- partager localisation pendant une durée ;
+- confirmer l’arrivée.
+
+Ne recrée aucun mécanisme parallèle.
+
+==================================================
+6. LIEUX DE RENDEZ-VOUS
+==================================================
+
+Si l’utilisateur consulte une offre provenant d’une personne ou d’une source externe et doit rencontrer quelqu’un :
+
+permettre, si l’architecture actuelle le permet :
+
+« Choisir un lieu de rendez-vous »
+
+Utiliser les lieux existants.
+
+Ne jamais présenter automatiquement un lieu comme « sûr ».
+
+Afficher plutôt :
+« Informations de sécurité disponibles pour ce lieu »
+
+==================================================
+7. SOURCE ET CONFIANCE
+==================================================
+
+Pour toute information provenant d’une contribution ou d’une source externe :
+
+indiquer clairement son statut.
+
+Exemples :
+
+« Contribution citoyenne »
+
+« Source externe »
+
+« Identité non vérifiée par BurkinaWatch »
+
+« Information récente »
+
+« Information non confirmée »
+
+Ne jamais transformer une donnée externe en information officielle sans validation.
+
+==================================================
+8. BOUCLE D’ENRICHISSEMENT
+==================================================
+
+La fonctionnalité doit créer cette boucle :
+
+Utilisateur
+↓
+Découvre un lieu
+↓
+Présence
+↓
+Expérience du lieu
+↓
+Perception de sécurité
+↓
+Contribution éventuelle
+↓
+Photo + nom + catégorie + description
+↓
+Modération
+↓
+Lieu intégré à Burkina Pratique
+↓
+Lieu disponible pour les futurs utilisateurs
+↓
+Nouvelles perceptions
+↓
+Contexte enrichi
+
+Cette boucle doit fonctionner avec les systèmes existants.
+
+==================================================
+9. PROTECTION CONTRE LES ABUS
+==================================================
+
+Prévoir/réutiliser :
+- authentification ;
+- rate limiting ;
+- anti-spam ;
+- modération ;
+- contrôle des contributions ;
+- protection contre les doublons ;
+- possibilité de rejet ;
+- possibilité de signaler une contribution problématique.
+
+Une personne ne doit pas pouvoir manipuler facilement la perception d’un lieu par des centaines de réponses artificielles.
+
+Ne développe pas un système complexe si un mécanisme existant peut être réutilisé.
+
+==================================================
+10. PRIVACY
+==================================================
+
+Ne publie jamais l’identité d’un utilisateur simplement parce qu’il a donné une perception.
+
+Ne publie pas son trajet.
+
+Ne publie pas son historique de présence.
+
+Les données publiques doivent être agrégées/minimisées selon les possibilités de l’architecture actuelle.
+
+==================================================
+11. TESTS
+==================================================
+
+Teste notamment :
+
+- perception ;
+- signal ;
+- incident ;
+- ancienneté ;
+- lieu ;
+- trajet ;
+- contact de confiance ;
+- SOS ;
+- PANIC ;
+- contribution ;
+- modération ;
+- utilisateur malveillant ;
+- doublons ;
+- permissions.
+
+À LA FIN :
+
+Fournis :
+1. fichiers modifiés ;
+2. systèmes existants réutilisés ;
+3. nouvelles APIs ;
+4. nouvelles tables/champs ;
+5. tests ;
+6. éventuelles limites techniques ;
+7. confirmation que Railway n’a pas été modifié.
