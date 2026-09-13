@@ -1,0 +1,277 @@
+BURKINAWATCH — PHASE 5/5
+AUDIT FINAL BURKINA PRATIQUE 2.0
+
+MISSION STRICTEMENT EN LECTURE SEULE.
+
+NE MODIFIE AUCUN FICHIER.
+
+NE CORRIGE RIEN.
+
+==================================================
+OBJECTIF
+==================================================
+
+Vérifier que BURKINA PRATIQUE est devenu :
+
+LIEUX
++
+OFFRES
++
+SIGNAUX
++
+RECHERCHE PAR BESOIN
++
+CONTEXTE DE SÉCURITÉ
+
+sans casser le BurkinaWatch existant.
+
+==================================================
+1. EXISTANT
+==================================================
+
+Tester :
+
+- accueil ;
+- navigation ;
+- authentification ;
+- carte ;
+- SOS ;
+- PANIC ;
+- Bulletin Citoyen ;
+- signalements ;
+- notifications ;
+- catégories ;
+- fiches ;
+- lieux ;
+- recherches ;
+- StreetView/contributions ;
+- cache/offline.
+
+==================================================
+2. CATÉGORIES
+==================================================
+
+Vérifier que toutes les catégories existantes sont toujours accessibles.
+
+Vérifier qu'aucun contenu existant n'a disparu.
+
+==================================================
+3. RECHERCHE
+==================================================
+
+Tester :
+
+"pharmacie"
+
+"pharmacie ouverte"
+
+"je veux retirer de l'argent"
+
+"restaurant"
+
+"où manger pour 3000"
+
+"mécanicien"
+
+"ma voiture est en panne"
+
+"plombier"
+
+"réparation téléphone"
+
+"acheter du ciment"
+
+"station"
+
+"urgence"
+
+Recherche inconnue.
+
+==================================================
+4. OFFRES
+==================================================
+
+Tester :
+
+- source ;
+- date ;
+- expiration ;
+- prix ;
+- lieu associé ;
+- disponibilité ;
+- affichage ;
+- partage ;
+- lien source.
+
+Vérifier qu'aucune offre fictive n'est générée.
+
+==================================================
+5. SIGNAUX
+==================================================
+
+Tester :
+
+- confirmation ;
+- fermeture ;
+- accès perturbé ;
+- route bloquée ;
+- travaux ;
+- inondation ;
+- embouteillage ;
+- contradiction ;
+- fraîcheur.
+
+==================================================
+6. SÉCURITÉ
+==================================================
+
+Tester :
+
+- contexte du lieu ;
+- contexte du trajet ;
+- offre externe ;
+- rendez-vous ;
+- protection déplacement ;
+- contact de confiance ;
+- partage ;
+- arrivée ;
+- SOS ;
+- PANIC.
+
+Vérifier qu'aucun système parallèle n'a été créé.
+
+==================================================
+7. MOBILE
+==================================================
+
+Tester :
+
+- Web desktop ;
+- Web mobile ;
+- Expo mobile si présent.
+
+Vérifier :
+
+- boutons tactiles ;
+- navigation ;
+- recherche ;
+- carte ;
+- fiches ;
+- sécurité.
+
+==================================================
+8. PERFORMANCE
+==================================================
+
+Vérifier :
+
+- requêtes API ;
+- cache ;
+- pagination ;
+- chargement ;
+- images ;
+- carte ;
+- recherche.
+
+Rechercher les doublons de requêtes et données.
+
+==================================================
+9. BASE DE DONNÉES
+==================================================
+
+Vérifier :
+
+- migrations ;
+- intégrité ;
+- données existantes ;
+- relations ;
+- doublons ;
+- suppression éventuelle ;
+- compatibilité.
+
+==================================================
+10. RAILWAY
+==================================================
+
+CRITIQUE :
+
+Vérifier qu'aucune modification de cette évolution n'a impacté :
+
+- variables d'environnement ;
+- secrets ;
+- build ;
+- start ;
+- Docker ;
+- configuration Railway ;
+- port ;
+- healthcheck ;
+- base de données ;
+- domaine ;
+- déploiement.
+
+Ne rien modifier.
+
+Si un risque est détecté :
+
+STOP et classer le problème.
+
+==================================================
+11. NON-RÉGRESSION
+==================================================
+
+Comparer :
+
+AVANT
+
+VS
+
+APRÈS
+
+Toute fonctionnalité existante cassée = RÉGRESSION.
+
+==================================================
+12. RAPPORT
+==================================================
+
+Classer chaque problème :
+
+🔴 CRITIQUE
+🟠 MAJEUR
+🟡 MINEUR
+🔵 INFO
+
+Pour chaque problème :
+
+- description ;
+- fichier ;
+- cause ;
+- impact ;
+- recommandation.
+
+Fournir également :
+
+FICHIERS CRÉÉS
+
+FICHIERS MODIFIÉS
+
+MIGRATIONS
+
+FONCTIONNALITÉS EXISTANTES PRÉSERVÉES
+
+NOUVELLES FONCTIONNALITÉS
+
+TESTS
+
+RISQUES
+
+RAILWAY
+
+VERDICT :
+
+GO
+
+ou
+
+NO-GO
+
+NE MODIFIE RIEN.
