@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import {
   type User,
   type UpsertUser,
