@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Phone, Clock, Navigation, Globe, Mail, ExternalLink, Locate, Activity, ShieldCheck, UtensilsCrossed, Star, DollarSign, Share2, MessageCircle, Camera, Pencil, AlertTriangle } from "lucide-react";
+import { MapPin, Phone, Clock, Globe, Mail, ExternalLink, Locate, Activity, ShieldCheck, UtensilsCrossed, Star, DollarSign, Share2, MessageCircle, Camera, Pencil, AlertTriangle } from "lucide-react";
 import type { Place } from "@shared/schema";
 import { SourceBadge } from "./SourceBadge";
 import { LocationValidator } from "./LocationValidator";
@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getCurrentMobileMoneyStatus, getFreshnessClasses, getPlaceFreshness } from "@/lib/placeFreshness";
 import { PlacePracticalContext } from "./PlacePracticalContext";
 import { ProtectTripDialog } from "./ProtectTripDialog";
+import { RouteWithContextButton } from "./RouteWithContextButton";
 
 interface PlaceWithDistance extends Place {
   distance?: number;
@@ -104,11 +105,6 @@ export function PlaceCard({ place }: PlaceCardProps) {
     (place.placeContributionSummary?.pending || 0) + (place.placeContributionSummary?.needsInfo || 0);
 
   const cleanPhone = phone ? String(phone).replace(/[^\d+]/g, "") : null;
-
-  const openInMaps = () => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${place.latitude},${place.longitude}`;
-    window.open(url, "_blank");
-  };
 
   const openLocation = () => {
     const url = `https://www.google.com/maps?q=${place.latitude},${place.longitude}`;
@@ -437,15 +433,11 @@ export function PlaceCard({ place }: PlaceCardProps) {
               Ajouter une photo
             </Button>
           </div>
-          <Button
-            onClick={openInMaps}
-            className="w-full gap-2"
-            variant="default"
-            data-testid={`button-directions-${place.id}`}
-          >
-            <Navigation className="w-4 h-4" />
-            Itinéraire
-          </Button>
+          <RouteWithContextButton
+            placeId={place.id}
+            latitude={place.latitude}
+            longitude={place.longitude}
+          />
         </div>
       </CardContent>
     </Card>

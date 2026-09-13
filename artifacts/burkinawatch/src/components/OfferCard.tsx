@@ -49,6 +49,9 @@ export function OfferCard({ offer }: { offer: OfferWithContext }) {
           <span>Source : {sourceLabels[offer.sourceType] || offer.sourceType}</span>
           <span>· collectée le {formatDate(offer.collectedAt)}</span>
         </div>
+        {offer.sourceType === "USER" || offer.sourceType === "EXTERNAL" ? (
+          <p className="text-xs font-medium text-amber-800 dark:text-amber-300">Identité non vérifiée par BurkinaWatch.</p>
+        ) : null}
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm leading-5 text-muted-foreground">{offer.description}</p>
