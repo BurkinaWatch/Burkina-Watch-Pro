@@ -484,6 +484,7 @@ export async function getPlaceExperienceContext(placeId: string) {
     .orderBy(desc(placeExperiences.createdAt)).limit(20);
 
   const now = Date.now();
+  const recentDataWindowMs = 30 * 86_400_000;
   const freshness = (date: Date | null) => {
     if (!date) return "date inconnue";
     const ageDays = Math.max(0, Math.floor((now - date.getTime()) / 86_400_000));
@@ -492,12 +493,14 @@ export async function getPlaceExperienceContext(placeId: string) {
   return {
     place,
     disclaimer: "Informations communautaires, sans score de sécurité ni garantie.",
+    hasRecentData: perceptions.some((item) => now - item.createdAt.getTime() <= recentDataWindowMs),
     insufficientData: perceptions.length === 0,
     perceptions: perceptions.map((item) => ({
       type: "perception" as const,
       perception: item.perception,
-      source: "place_experience",
-      status: "recorded",
+      source: "Contribution citoyenne",
+      sourceType: "community",
+      status: "Information non confirmée",
       observedAt: item.createdAt,
       freshness: freshness(item.createdAt),
     })),

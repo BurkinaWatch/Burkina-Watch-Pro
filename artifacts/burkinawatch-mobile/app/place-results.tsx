@@ -56,6 +56,8 @@ type SecurityContext = {
   perceptions?: SecurityContextItem[];
   signals?: SecurityContextItem[];
   incidents?: SecurityContextItem[];
+  insufficientData?: boolean;
+  hasRecentData?: boolean;
 };
 
 const ENDPOINTS: Record<string, string> = {
@@ -138,7 +140,7 @@ function contextFreshness(item: SecurityContextItem) {
 function SecurityContextCard({ placeId, colors }: { placeId: string; colors: ReturnType<typeof useColors> }) {
   const contextQuery = useQuery<SecurityContext>({
     queryKey: ['mobile-place-security-context', placeId],
-    queryFn: () => requestJson<SecurityContext>(`/places/${encodeURIComponent(placeId)}/security-context`),
+    queryFn: () => requestJson<SecurityContext>(`/place-experience/context/${encodeURIComponent(placeId)}`),
     staleTime: 60 * 1000,
     retry: 1,
   });
@@ -173,6 +175,13 @@ function SecurityContextCard({ placeId, colors }: { placeId: string; colors: Ret
           ))}
         </View>
       ) : null) : null}
+      {!contextQuery.isLoading && !contextQuery.isError &&
+      (contextQuery.data?.insufficientData || contextQuery.data?.hasRecentData === false ||
+        sections.every((section) => section.items.length === 0)) ? (
+        <Text style={[styles.insufficientData, { color: colors.mutedForeground }]}>
+          Peu de données récentes disponibles.
+        </Text>
+      ) : null}
       <Text style={[styles.disclaimer, { color: colors.mutedForeground }]}>
         Contexte indicatif, temporel et non garanti. Il ne constitue pas une garantie de sécurité ni un score de sécurité.
       </Text>

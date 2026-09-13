@@ -115,9 +115,9 @@ export function PlacePracticalContext({
   });
 
   const { data: securityContext } = useQuery<SecurityContext | null>({
-    queryKey: ["/api/places/security-context", placeId],
+      queryKey: ["/api/place-experience/context", placeId],
     queryFn: async () => {
-      const response = await fetch(`/api/places/${encodeURIComponent(placeId)}/security-context`);
+      const response = await fetch(`/api/place-experience/context/${encodeURIComponent(placeId)}`);
       if (!response.ok) return null;
       const payload = await response.json();
       return payload?.data || payload || null;

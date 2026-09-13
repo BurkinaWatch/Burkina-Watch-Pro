@@ -1,6 +1,6 @@
 import * as Location from 'expo-location';
 import { Feather } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
@@ -28,6 +28,12 @@ type StopTrackingResponse = {
 export default function TrackingLiveScreen() {
   const colors = useColors();
   const router = useRouter();
+  const params = useLocalSearchParams<{
+    destinationName?: string;
+    destinationAddress?: string;
+    destinationLatitude?: string;
+    destinationLongitude?: string;
+  }>();
   const { isAuthenticated } = useAuth();
   const subscription = useRef<Location.LocationSubscription | null>(null);
   const [isTracking, setIsTracking] = useState(false);
@@ -118,7 +124,18 @@ export default function TrackingLiveScreen() {
       const current = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
-      await requestJson('/tracking/start', { method: 'POST' });
+      const destinationLatitude = Number(params.destinationLatitude);
+      const destinationLongitude = Number(params.destinationLongitude);
+      await requestJson('/tracking/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          destinationLabel: params.destinationName || undefined,
+          destinationAddress: params.destinationAddress || undefined,
+          destinationLatitude: Number.isFinite(destinationLatitude) ? destinationLatitude : undefined,
+          destinationLongitude: Number.isFinite(destinationLongitude) ? destinationLongitude : undefined,
+        }),
+      });
       await sendLocation(current);
       await startWatching();
       setIsTracking(true);

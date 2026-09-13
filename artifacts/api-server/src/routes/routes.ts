@@ -2187,15 +2187,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const days = Math.max(0, Math.floor((now - new Date(value).getTime()) / 86_400_000));
         return days === 0 ? "aujourd'hui" : days === 1 ? "il y a 1 jour" : `il y a ${days} jours`;
       };
-      const incidents = signals.filter((item: any) =>
+      const practicalSignalTypes = new Set([
+        "route_bloquee",
+        "travaux",
+        "inondation",
+        "embouteillage",
+        "etablissement_ferme",
+        "service_indisponible",
+        "mobile_money_retrait",
+        "mobile_money_depot",
+        "mobile_money_liquidite",
+      ]);
+      const eligibleSignals = signals.filter((item: any) =>
         item.statut !== "rejete" && item.moderationStatus !== "rejected" &&
         (!item.expiresAt || new Date(item.expiresAt).getTime() > now),
+      );
+      const signalEntries = eligibleSignals.filter((item: any) =>
+        Boolean(item.signalType) || practicalSignalTypes.has(item.contributionType),
+      ).map((item: any) => ({
+        type: "signal",
+        title: item.titre,
+        category: item.categorie,
+        source: item.sourceName || item.sourceType || "Contribution citoyenne",
+        status: item.statut || item.verificationStatus || "Information non confirmée",
+        observedAt: item.createdAt,
+        freshness: freshness(item.createdAt),
+      }));
+      const incidents = eligibleSignals.filter((item: any) =>
+        !item.signalType && !practicalSignalTypes.has(item.contributionType),
       ).map((item: any) => ({
         type: "incident",
         title: item.titre,
         category: item.categorie,
-        source: item.sourceName || item.sourceType || "community",
-        status: item.statut || item.verificationStatus || "pending",
+        source: item.sourceName || item.sourceType || "Contribution citoyenne",
+        status: item.statut || item.verificationStatus || "Information non confirmée",
         observedAt: item.createdAt,
         freshness: freshness(item.createdAt),
       }));
@@ -2203,20 +2228,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type: "signal",
         title: item.title,
         category: item.category,
-        source: item.sourceName || item.sourceType || "community",
-        status: item.status,
+        source: item.sourceName || item.sourceType || "Source externe",
+        status: item.status || "Information non confirmée",
         observedAt: item.updatedAt || item.createdAt,
         freshness: freshness(item.updatedAt || item.createdAt),
       }));
       res.json({
         ...context,
         incidents,
-        signals: practicalOffers,
+        signals: [...signalEntries, ...practicalOffers],
         insufficientData: context.insufficientData && incidents.length === 0 && practicalOffers.length === 0,
         disclaimer: "Informations communautaires et pratiques, sans score de sécurité ni garantie.",
         // Keep the categories explicit for consumers (and avoid implying that
         // an offer is an incident or a community perception).
-        practicalSignals: practicalOffers,
+        practicalSignals: [...signalEntries, ...practicalOffers],
         offers: practicalOffers,
       });
     } catch (error) {
