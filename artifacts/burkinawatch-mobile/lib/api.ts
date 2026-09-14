@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import { getAccessToken, refreshAccessToken } from '@/lib/session';
+import { getApiUrl } from '@/lib/apiConfig';
 
 export type Signalement = {
   id: number | string;
@@ -22,15 +23,12 @@ export type Stats = {
   enCours?: number;
 };
 
-const domain = process.env.EXPO_PUBLIC_DOMAIN;
-const origin = domain ? `https://${domain}` : '';
-
 export async function requestJson<T>(
   path: string,
   options?: RequestInit,
   allowRefresh = true,
 ): Promise<T> {
-  const apiUrl = Platform.OS === 'web' ? `/api${path}` : `${origin}/api${path}`;
+  const apiUrl = Platform.OS === 'web' ? `/api${path}` : getApiUrl(path);
   const accessToken = await getAccessToken();
   const response = await fetch(apiUrl, {
     ...options,

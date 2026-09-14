@@ -17,10 +17,11 @@ import * as Notifications from 'expo-notifications';
 import { setAuthTokenGetter, setBaseUrl } from '@workspace/api-client-react';
 import { AuthProvider } from '@/lib/auth';
 import { getAccessToken } from '@/lib/session';
+import { getApiOrigin } from '@/lib/apiConfig';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
-setBaseUrl(process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : null);
+setBaseUrl(getApiOrigin());
 setAuthTokenGetter(getAccessToken);
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -58,14 +59,20 @@ export default function RootLayout() {
     Inter_600SemiBold,
     Inter_700Bold,
   });
+  const [startupTimedOut, setStartupTimedOut] = React.useState(false);
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    const timeout = setTimeout(() => setStartupTimedOut(true), 1500);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  useEffect(() => {
+    if (fontsLoaded || fontError || startupTimedOut) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [fontsLoaded, fontError, startupTimedOut]);
 
-  if (!fontsLoaded && !fontError) return null;
+  if (!fontsLoaded && !fontError && !startupTimedOut) return null;
 
   return (
     <SafeAreaProvider>

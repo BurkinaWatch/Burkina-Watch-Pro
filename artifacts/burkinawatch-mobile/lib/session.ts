@@ -1,6 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import { getApiOrigin } from '@/lib/apiConfig';
 
 export type MobileUser = {
   id: string;
@@ -33,9 +34,6 @@ export type MobileTokenResponse = {
 
 const ACCESS_TOKEN_KEY = 'burkinawatch.mobile.access-token';
 const REFRESH_TOKEN_KEY = 'burkinawatch.mobile.refresh-token';
-
-const domain = process.env.EXPO_PUBLIC_DOMAIN;
-const origin = domain ? `https://${domain}` : '';
 
 async function readValue(key: string): Promise<string | null> {
   return Platform.OS === 'web'
@@ -88,7 +86,8 @@ export async function refreshAccessToken(): Promise<string | null> {
 
   refreshInFlight = (async () => {
     const refreshToken = await getRefreshToken();
-    if (!refreshToken) return null;
+    const origin = getApiOrigin();
+    if (!refreshToken || !origin) return null;
 
     try {
       const response = await fetch(`${origin}/api/auth/mobile/refresh`, {
@@ -120,8 +119,9 @@ export async function refreshAccessToken(): Promise<string | null> {
 
 export async function logoutMobileSession(): Promise<void> {
   const refreshToken = await getRefreshToken();
+  const origin = getApiOrigin();
   try {
-    if (refreshToken) {
+    if (refreshToken && origin) {
       await fetch(`${origin}/api/auth/mobile/logout`, {
         method: 'POST',
         headers: {

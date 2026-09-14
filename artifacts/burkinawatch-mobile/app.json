@@ -5,6 +5,11 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
+    "splash": {
+      "image": "./assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F7F9FC"
+    },
     "scheme": "burkinawatch-mobile",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -27,6 +32,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-updates",
       [
         "expo-location",
         {
@@ -42,6 +48,14 @@
       "eas": {
         "projectId": "ceea1e43-cf44-46bb-a41e-b5a958e043ac"
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/ceea1e43-cf44-46bb-a41e-b5a958e043ac",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     },
     "owner": "burkinawatch"
   }
