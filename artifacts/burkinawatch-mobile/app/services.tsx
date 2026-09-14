@@ -1,27 +1,67 @@
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
-import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Screen } from '@/components/Screen';
 import { SectionTitle } from '@/components/Brand';
 import { categoryLabels, categoryRoutes } from '@/lib/practicalNavigation';
 
 const serviceGroups = [
-  { title: 'Sécurité & mobilité', items: [['Urgences', '/urgences', 'phone-call'], ['Stations-service', '/stations', 'truck'], ['Gares routières', '/gares', 'navigation'], ['Suivi en direct', '/tracking-live', 'radio'], ['Surveillance', '/surveillance', 'video'], ['StreetView citoyen', '/streetview', 'camera'], ['Ouaga 3D', '/ouaga3d', 'box']] },
-  { title: 'Vie quotidienne', items: [['Pharmacies de garde', '/pharmacies', 'plus-square'], ['Hôpitaux', '/hopitaux', 'heart'], ['Restaurants', '/restaurants', 'coffee'], ['Hôtels', '/hotels', 'home'], ['Banques', '/banques', 'credit-card'], ['Cimetières', '/cimetieres', 'map-pin']] },
-  { title: 'Information & citoyenneté', items: [['Marchés', '/marches', 'shopping-bag'], ['Boutiques', '/boutiques', 'shopping-bag'], ['Marchés & boutiques', '/boutiques-marches', 'grid'], ['Universités', '/universites', 'book-open'], ['Mairies & préfectures', '/mairies-prefectures', 'map'], ['Ministères', '/ministeres', 'briefcase'], ['Bulletin citoyen', '/bulletin', 'file-text'], ['Contribuer', '/contribuer', 'edit-3'], ['Classement', '/leaderboard', 'award']] },
-  { title: 'Culture & information', items: [['Cinéma', '/cine', 'film'], ['Événements', '/events', 'calendar'], ['Lieux de culte', '/lieux-de-culte', 'heart'], ['Météo', '/meteo', 'cloud'], ['Sonabel & ONEA', '/sonabel-onea', 'zap'], ['Téléphonie', '/telephonie', 'smartphone']] },
-  { title: 'Compte & transparence', items: [['Fil d’actualité', '/feed', 'radio'], ['Notifications', '/notifications', 'bell'], ['Guide', '/guide', 'book-open'], ['À propos', '/a-propos', 'info'], ['Fiabilité', '/fiabilite', 'check-circle'], ['Conditions', '/conditions', 'file-text'], ['Confidentialité', '/confidentialite', 'lock'], ['Connexion', '/connexion', 'log-in']] },
+  {
+    title: 'Sécurité & mobilité',
+    items: [
+      ['Urgences', '/urgences', 'phone-call'],
+      ['Stations-service', '/stations', 'truck'],
+      ['Gares routières', '/gares', 'navigation'],
+      ['Suivi en direct', '/tracking-live', 'radio'],
+    ],
+  },
+  {
+    title: 'Vie quotidienne',
+    items: [
+      ['Pharmacies de garde', '/pharmacies', 'plus-square'],
+      ['Hôpitaux', '/hopitaux', 'heart'],
+      ['Restaurants', '/restaurants', 'coffee'],
+      ['Hôtels', '/hotels', 'home'],
+      ['Banques', '/banques', 'credit-card'],
+    ],
+  },
+  {
+    title: 'Information & citoyenneté',
+    items: [
+      ['Marchés', '/marches', 'shopping-bag'],
+      ['Boutiques', '/boutiques', 'shopping-bag'],
+      ['Marchés & boutiques', '/boutiques-marches', 'grid'],
+      ['Téléphonie', '/telephonie', 'smartphone'],
+      ['Fil d’actualité', '/feed', 'radio'],
+      ['Notifications', '/notifications', 'bell'],
+    ],
+  },
 ] as const;
 
-type NativeRoute = '/feed' | '/(tabs)/alertes' | '/connexion' | '/tracking-live';
+type NativeRoute = '/feed' | '/(tabs)/alertes' | '/connexion' | '/tracking-live' | '/sos';
 
-const nativeRoutes: Record<string, NativeRoute> = {
-  '/feed': '/feed',
-  '/notifications': '/(tabs)/alertes',
-  '/connexion': '/connexion',
-  '/tracking-live': '/tracking-live',
+type NativeDestination =
+  | { route: NativeRoute }
+  | { endpoint: string; title: string };
+
+const nativeDestinations: Record<string, NativeDestination> = {
+  '/urgences': { route: '/sos' },
+  '/feed': { route: '/feed' },
+  '/notifications': { route: '/(tabs)/alertes' },
+  '/connexion': { route: '/connexion' },
+  '/tracking-live': { route: '/tracking-live' },
+  '/pharmacies': { endpoint: '/places/pharmacy?limit=5000', title: 'Pharmacies' },
+  '/hopitaux': { endpoint: '/places/hospital?limit=500', title: 'Hôpitaux & santé' },
+  '/banques': { endpoint: '/banques', title: "Retrait d'argent" },
+  '/stations': { endpoint: '/stations', title: 'Stations-service' },
+  '/boutiques': { endpoint: '/boutiques', title: 'Boutiques & artisans' },
+  '/boutiques-marches': { endpoint: '/boutiques', title: 'Boutiques & marchés' },
+  '/restaurants': { endpoint: '/places?placeType=restaurant&limit=500', title: 'Restaurants' },
+  '/marches': { endpoint: '/marches', title: 'Marchés' },
+  '/hotels': { endpoint: '/places?placeType=hotel&limit=500', title: 'Hôtels & auberges' },
+  '/gares': { endpoint: '/transport', title: 'Transport' },
+  '/telephonie': { endpoint: '/telephonie', title: 'Téléphonie & réparation' },
 };
 
 export default function ServicesScreen() {
@@ -33,39 +73,23 @@ export default function ServicesScreen() {
   const selectedRoute = selectedCategory ? categoryRoutes[selectedCategory] : undefined;
   const selectedLabel = selectedRoute ? categoryLabels[selectedRoute] : undefined;
 
-  async function openFeature(route: string) {
-    const nativeRoute = nativeRoutes[route];
-    if (nativeRoute) {
-      router.push(nativeRoute);
+  function openFeature(route: string) {
+    const destination = nativeDestinations[route];
+    if (!destination) return;
+
+    if ('route' in destination) {
+      router.push(destination.route);
       return;
     }
 
-    const domain = process.env.EXPO_PUBLIC_DOMAIN?.replace(/^https?:\/\//, '').replace(/\/+$/, '');
-    if (!domain) {
-      Alert.alert(
-        'Service indisponible',
-        'La route BurkinaWatch n’est pas configurée dans cette version de l’application.',
-      );
-      return;
-    }
-
-    try {
-      const webUrl = `https://${domain}${route}`;
-      if (Platform.OS === 'web') {
-        window.location.assign(webUrl);
-      } else {
-        await WebBrowser.openBrowserAsync(webUrl);
-      }
-    } catch {
-      Alert.alert(
-        'Ouverture impossible',
-        'Cette page BurkinaWatch ne peut pas être ouverte pour le moment. Vérifiez votre connexion puis réessayez.',
-      );
-    }
+    router.push({
+      pathname: '/place-results',
+      params: { endpoint: destination.endpoint, title: destination.title },
+    });
   }
 
   return (
-    <Screen title="Tous les services" subtitle="L’écosystème BurkinaWatch sur mobile" showBack>
+    <Screen title="Services disponibles" subtitle="Les parcours BurkinaWatch intégrés à l’application" showBack>
       <Pressable
         onPress={() => router.push('/burkina-pratique')}
         style={({ pressed }) => [
@@ -96,7 +120,7 @@ export default function ServicesScreen() {
             {group.items.map(([label, route, icon]) => (
               <Pressable
                 key={route}
-                onPress={() => void openFeature(route)}
+                onPress={() => openFeature(route)}
                 accessibilityRole="button"
                 accessibilityLabel={`Ouvrir ${label}`}
                 style={({ pressed }) => [
@@ -117,7 +141,7 @@ export default function ServicesScreen() {
           </View>
         </View>
       ))}
-      <Text style={[styles.note, { color: colors.mutedForeground }]}>Les parcours natifs prioritaires restent dans l’application. Les fonctionnalités Web complexes s’ouvrent sur leur route BurkinaWatch existante, sans créer de serveur parallèle ni perdre le contexte produit.</Text>
+      <Text style={[styles.note, { color: colors.mutedForeground }]}>Les services affichés restent dans l’application et utilisent les mêmes données BurkinaWatch. Les pages Web non intégrées ne sont pas proposées ici afin d’éviter les parcours incomplets.</Text>
     </Screen>
   );
 }

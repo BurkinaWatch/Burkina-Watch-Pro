@@ -68,7 +68,7 @@ export const practicalQuickLinks: PracticalItem[] = [
 ];
 
 export const practicalCategories: PracticalItem[] = [
-  ...practicalQuickLinks.slice(0, 4),
+  ...practicalQuickLinks,
   {
     label: 'Hôpitaux & santé',
     route: '/hopitaux',
@@ -98,13 +98,6 @@ export const practicalCategories: PracticalItem[] = [
     keywords: ['boutique', 'magasin', 'commerce'],
   },
   {
-    label: 'Commerces & artisans',
-    route: '/boutiques',
-    icon: 'tool',
-    description: 'Acheter, réparer et trouver un service de proximité',
-    keywords: ['commerce', 'magasin', 'ciment', 'matériaux', 'plombier', 'artisan'],
-  },
-  {
     label: 'Boutiques & marchés',
     route: '/boutiques-marches',
     icon: 'grid',
@@ -126,60 +119,11 @@ export const practicalCategories: PracticalItem[] = [
     keywords: ['hôtel', 'auberge', 'hébergement'],
   },
   {
-    label: 'Mairies & préfectures',
-    route: '/mairies-prefectures',
-    icon: 'map',
-    description: 'Services administratifs',
-    keywords: ['mairie', 'préfecture', 'administration'],
-  },
-  {
-    label: 'Ministères',
-    route: '/ministeres',
-    icon: 'briefcase',
-    description: 'Institutions et services publics',
-    keywords: ['ministère', 'service public'],
-  },
-  {
-    label: 'Universités & instituts',
-    route: '/universites',
-    icon: 'book-open',
-    description: 'Étudier et se former',
-    keywords: ['université', 'institut', 'école'],
-  },
-  {
-    label: 'Lieux de culte',
-    route: '/lieux-de-culte',
-    icon: 'heart',
-    description: 'Églises et mosquées',
-    keywords: ['église', 'mosquée', 'culte'],
-  },
-  {
-    label: 'SONABEL & ONEA',
-    route: '/sonabel-onea',
-    icon: 'zap',
-    description: 'Électricité et eau',
-    keywords: ['sonabel', 'onea', 'eau', 'électricité'],
-  },
-  {
     label: 'Téléphonie',
     route: '/telephonie',
     icon: 'smartphone',
     description: 'Opérateurs et agences',
     keywords: ['téléphonie', 'téléphone', 'orange', 'moov'],
-  },
-  {
-    label: 'Cinéma',
-    route: '/cine',
-    icon: 'film',
-    description: 'Séances et salles',
-    keywords: ['cinéma', 'film'],
-  },
-  {
-    label: 'Météo',
-    route: '/meteo',
-    icon: 'cloud',
-    description: 'Conditions et alertes météo',
-    keywords: ['météo', 'pluie', 'temps'],
   },
 ];
 
