@@ -18,9 +18,14 @@ L’application mobile est un compagnon natif du site BurkinaWatch. Elle conserv
 
 ## Catalogue de services
 
-L’écran **Tous les services** expose les routes existantes `/leaderboard`, `/tracking-live`, `/surveillance`, `/contribuer`, `/pharmacies`, `/urgences`, `/bulletin`, `/events`, `/streetview`, `/ouaga3d`, `/restaurants`, `/boutiques-marches`, `/marches`, `/boutiques`, `/banques`, `/stations`, `/hopitaux`, `/universites`, `/gares`, `/cine`, `/meteo`, `/hotels`, `/cimetieres`, `/sonabel-onea`, `/mairies-prefectures`, `/telephonie`, `/ministeres`, `/lieux-de-culte`, `/a-propos`, `/fiabilite`, `/conditions`, `/confidentialite`, `/guide` et `/notifications`.
+L’écran **Services disponibles** ne propose que les parcours qui restent fonctionnels dans l’application :
 
-Les parcours qui dépendent de contrôles Web ou de contrats API non exposés par le client mobile ouvrent la route Web officielle. Cette transition est volontaire : elle ne contourne ni l’autorisation serveur, ni les sessions, ni la propriété des contenus.
+- sécurité et mobilité : urgences/SOS, stations-service, gares routières et suivi en direct ;
+- vie quotidienne : pharmacies, hôpitaux, restaurants, hôtels et banques ;
+- information et citoyenneté : marchés, boutiques, téléphonie, fil d’actualité et notifications ;
+- recherche guidée : **Burkina Pratique**, avec les mêmes résultats API dans l’écran mobile.
+
+Les pages Web qui ne disposent pas d’un écran mobile ou d’un contrat API mobile ne sont pas affichées dans l’APK. L’application ne tente donc pas d’ouvrir une route Web absente de sa configuration et n’affiche pas de faux parcours indisponibles.
 
 ## Limites contractuelles documentées
 
