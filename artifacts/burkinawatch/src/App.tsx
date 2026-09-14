@@ -17,6 +17,7 @@ import "./i18n/config";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
 import { useOfflineCache } from "./hooks/useOfflineCache";
 import { OnboardingProvider } from "./hooks/use-onboarding";
+import { ErrorBoundary, type ErrorFallbackProps } from "@/components/error-boundary";
 
 const Home = lazy(() => import("@/pages/Home"));
 const Feed = lazy(() => import("@/pages/Feed"));
@@ -198,12 +199,48 @@ function AppContent() {
       <Toaster />
       <OfflineIndicator />
       <Router />
-      <Suspense fallback={null}>
+      <Suspense fallback={<AppLoadingState />}>
         <ChatBot />
       </Suspense>
       <PWAInstallPrompt />
       <InteractiveTutorial />
     </>
+  );
+}
+
+function AppLoadingState() {
+  return (
+    <div className="flex min-h-[60vh] w-full items-center justify-center bg-background p-6">
+      <div className="flex items-center gap-3 rounded-lg border bg-card px-5 py-4 text-sm text-muted-foreground shadow-sm">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
+        <span>Chargement de BurkinaWatch…</span>
+      </div>
+    </div>
+  );
+}
+
+function AppErrorFallback({ error, resetError }: ErrorFallbackProps) {
+  return (
+    <div className="flex min-h-[60vh] w-full items-center justify-center bg-background p-6">
+      <div className="max-w-md rounded-lg border bg-card p-6 text-center shadow-sm">
+        <h1 className="text-lg font-semibold text-foreground">La page n’a pas pu être chargée</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Réessayez. Si le problème persiste, rechargez le site.
+        </p>
+        {import.meta.env.DEV ? (
+          <pre className="mt-3 max-h-32 overflow-auto rounded bg-muted p-3 text-left text-xs text-muted-foreground">
+            {error.message}
+          </pre>
+        ) : null}
+        <button
+          type="button"
+          onClick={resetError}
+          className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+        >
+          Réessayer
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -216,7 +253,9 @@ function App() {
             <StealthModeProvider>
               <TooltipProvider>
                 <OnboardingProvider>
-                  <AppContent />
+                  <ErrorBoundary FallbackComponent={AppErrorFallback}>
+                    <AppContent />
+                  </ErrorBoundary>
                 </OnboardingProvider>
               </TooltipProvider>
             </StealthModeProvider>
