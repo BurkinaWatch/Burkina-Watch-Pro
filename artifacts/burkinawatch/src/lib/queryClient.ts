@@ -1,5 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { persistQueryClient } from "@tanstack/react-query-persist-client";
+import { persistQueryClient, type PersistedClient } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 
 async function throwIfResNotOk(res: Response) {
@@ -71,8 +71,10 @@ if (typeof window !== "undefined") {
     storage: window.localStorage,
     key: "REACT_QUERY_OFFLINE_CACHE_V5",
     deserialize: (cacheString) => {
-      const persisted = JSON.parse(cacheString) as {
-        clientState?: { queries?: Array<Record<string, unknown>> };
+      const persisted = JSON.parse(cacheString) as PersistedClient & {
+        clientState: PersistedClient["clientState"] & {
+          queries?: Array<Record<string, unknown>>;
+        };
       };
       // Pending-query promises are not safely serializable. Ignore them when
       // restoring so an old or interrupted cache cannot break hydration.
