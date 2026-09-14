@@ -1,0 +1,68 @@
+CONTEXTE
+Tu travailles sur le projet Burkina Watch (app de signalement citoyen).
+Le contexte d'usage est sensible : les utilisateurs peuvent signaler de la
+corruption ou des incidents dans un pays où la société civile est sous
+surveillance accrue. La sécurité des utilisateurs (anonymat, protection des
+données personnelles) est donc une priorité au même niveau que la stabilité
+du produit.
+
+RÈGLES NON-NÉGOCIABLES
+1. Ne supprime, n'écrase et ne réécris AUCUN fichier ou historique git.
+2. N'effectue AUCUN commit, push, ou déploiement automatique.
+3. Pour chaque faille trouvée, commence par un rapport avant toute
+   correction. N'applique un correctif que si je te le confirme
+   explicitement, faille par faille.
+4. Si une correction touche la structure de la base de données ou casse
+   la compatibilité avec des données existantes, propose d'abord une
+   migration réversible, jamais une modification en place.
+5. Ne touche à aucune fonctionnalité non listée ci-dessous.
+
+PHASE 1 — AUDIT (lecture seule, aucune modification)
+Analyse le dépôt et produis un rapport structuré sur les points suivants :
+
+A. Secrets exposés
+   - Recherche dans tout l'historique git (pas seulement le code actuel)
+     des clés API, tokens, identifiants de base de données, ou credentials
+     codés en dur (variables commençant par API_KEY, SECRET, TOKEN, DATABASE_URL, etc.)
+   - Vérifie que .env est bien listé dans .gitignore ET qu'aucun .env
+     n'a été commit par le passé
+   - Liste tout fichier de config qui contiennent des valeurs sensibles
+
+B. Découplage identité / signalement
+   - Identifie où et comment un signalement est stocké en base
+   - Précise si l'identifiant utilisateur (session, compte, IP) est stocké
+     dans la même table/document que le contenu du signalement, ou lié
+     par une clé étrangère facilement joignable
+   - Signale si un administrateur peut retrouver "qui a signalé quoi"
+     depuis l'interface ou la base
+
+C. Métadonnées des photos uploadées
+   - Vérifie si les métadonnées EXIF (GPS précis, modèle d'appareil,
+     horodatage) sont conservées sur les images uploadées par les
+     utilisateurs, en base et/ou dans les fichiers servis publiquement
+
+D. Précision de la géolocalisation
+   - Identifie la précision GPS actuellement stockée/affichée pour un
+     signalement (coordonnées exactes vs arrondies)
+
+E. Logs et rétention
+   - Liste ce qui est loggé côté serveur pour chaque signalement
+     (adresse IP, user-agent, timestamp, identifiant de session)
+   - Précise la durée de rétention si elle est configurée quelque part
+
+Pour chaque point, indique : fichier(s) concerné(s), niveau de risque
+(faible/moyen/élevé), et une recommandation de correction.
+
+NE PASSE PAS À LA PHASE 2 avant que j'aie validé le rapport.
+
+PHASE 2 — CORRECTIONS (uniquement après ma validation point par point)
+Pour chaque faille que je valide :
+   - Propose un diff minimal, isolé, qui ne touche qu'au point concerné
+   - Explique en une phrase ce que le changement fait et ne fait pas
+   - Si la correction nécessite une variable d'environnement nouvelle,
+     ajoute-la à un fichier .env.example (jamais de valeur réelle en dur)
+   - Attends ma confirmation avant d'appliquer chaque diff
+
+LIVRABLE ATTENDU DE LA PHASE 1
+Un rapport markdown, section par section (A à E), sans aucune modification
+de fichier.
