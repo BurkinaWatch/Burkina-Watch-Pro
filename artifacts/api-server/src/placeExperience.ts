@@ -309,7 +309,11 @@ export async function purgeExpiredPlaceExperienceData(
       return { visitsDeleted: deleted.length, experiencesAnonymized: anonymized.rows.length };
     });
   } catch (error: any) {
-    if (error?.code === "42P01") {
+    const missingOptionalTable =
+      error?.code === "42P01" ||
+      error?.cause?.code === "42P01" ||
+      error?.cause?.cause?.code === "42P01";
+    if (missingOptionalTable) {
       console.warn("Place experience retention skipped: optional tables are not published in this database");
       return { visitsDeleted: 0, experiencesAnonymized: 0 };
     }
