@@ -69,16 +69,28 @@ export const queryClient = new QueryClient({
 if (typeof window !== "undefined") {
   const localStoragePersister = createSyncStoragePersister({
     storage: window.localStorage,
+    key: "REACT_QUERY_OFFLINE_CACHE_V5",
+    deserialize: (cacheString) => {
+      const persisted = JSON.parse(cacheString) as {
+        clientState?: { queries?: Array<Record<string, unknown>> };
+      };
+      // Pending-query promises are not safely serializable. Ignore them when
+      // restoring so an old or interrupted cache cannot break hydration.
+      if (Array.isArray(persisted.clientState?.queries)) {
+        persisted.clientState.queries = persisted.clientState.queries.map(({ promise: _promise, ...query }) => query);
+      }
+      return persisted;
+    },
   });
 
-  persistQueryClient({
+  const [, restorePromise] = persistQueryClient({
     queryClient,
     persister: localStoragePersister,
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     // The workspace port can encounter a persisted cache written by the
     // legacy dependency graph. Use a fresh buster so pending queries from that
     // cache cannot be hydrated into the new client.
-    buster: "v4-workspace-port",
+    buster: "v5-safe-hydration",
     dehydrateOptions: {
       shouldDehydrateQuery: (query) => {
         const key = query.queryKey.map(String).join("/");
@@ -95,5 +107,8 @@ if (typeof window !== "undefined") {
         ].some((prefix) => key === prefix || key.startsWith(`${prefix}/`));
       },
     },
+  });
+  void restorePromise.catch((error) => {
+    console.warn("[QueryCache] persisted cache discarded after restore failure", error);
   });
 }
