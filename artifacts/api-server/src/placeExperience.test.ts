@@ -10,6 +10,7 @@ import {
   evaluatePresence,
   evaluatePresenceSession,
   getPlaceExperienceBlockReason,
+  isMissingOptionalPlaceExperienceTableError,
   placeExperienceConsentInputSchema,
   placeExperiencePresenceInputSchema,
   placeExperienceResponseInputSchema,
@@ -76,6 +77,23 @@ test("le consentement, la permission de localisation et le push sont tous requis
       pushSubscriptionActive: true,
     }),
     null,
+  );
+});
+
+test("une table optionnelle absente désactive proprement l'expérience du lieu", () => {
+  assert.equal(
+    isMissingOptionalPlaceExperienceTableError({ code: "42P01" }),
+    true,
+  );
+  assert.equal(
+    isMissingOptionalPlaceExperienceTableError({
+      cause: { cause: { code: "42P01" } },
+    }),
+    true,
+  );
+  assert.equal(
+    isMissingOptionalPlaceExperienceTableError({ code: "23505" }),
+    false,
   );
 });
 

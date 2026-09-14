@@ -37,6 +37,16 @@ export type PlaceExperienceConfig = {
   maxObservationGapSeconds: number;
 };
 
+export function isMissingOptionalPlaceExperienceTableError(error: unknown): boolean {
+  const candidate = error as {
+    code?: unknown;
+    cause?: unknown;
+  } | null;
+  if (!candidate || typeof candidate !== "object") return false;
+  if (candidate.code === "42P01") return true;
+  return isMissingOptionalPlaceExperienceTableError(candidate.cause);
+}
+
 export type PresenceDecisionReason =
   | "eligible"
   | "already_triggered"
@@ -201,11 +211,19 @@ export function evaluatePresenceSession(
 }
 
 export async function getPlaceExperienceConfig(): Promise<PlaceExperienceConfig> {
-  const [settings] = await db
-    .select()
-    .from(placeExperienceSettings)
-    .where(eq(placeExperienceSettings.id, "default"))
-    .limit(1);
+  let settings: typeof placeExperienceSettings["$inferSelect"] | undefined;
+  try {
+    [settings] = await db
+      .select()
+      .from(placeExperienceSettings)
+      .where(eq(placeExperienceSettings.id, "default"))
+      .limit(1);
+  } catch (error) {
+    if (isMissingOptionalPlaceExperienceTableError(error)) {
+      return { ...DEFAULT_PLACE_EXPERIENCE_CONFIG, enabled: false };
+    }
+    throw error;
+  }
 
   if (!settings) {
     return { ...DEFAULT_PLACE_EXPERIENCE_CONFIG };
@@ -227,24 +245,36 @@ export async function getPlaceExperienceReadiness(userId: string): Promise<{
   pushSubscriptionActive: boolean;
   consent: PlaceExperienceConsent | null;
 }> {
-  const [[consent], [subscription]] = await Promise.all([
-    db.select().from(placeExperienceConsents)
-      .where(eq(placeExperienceConsents.userId, userId))
-      .limit(1),
-    db.select({ id: pushSubscriptions.id }).from(pushSubscriptions)
-      .where(and(
-        eq(pushSubscriptions.userId, userId),
-        eq(pushSubscriptions.isActive, true),
-      ))
-      .limit(1),
-  ]);
+  try {
+    const [[consent], [subscription]] = await Promise.all([
+      db.select().from(placeExperienceConsents)
+        .where(eq(placeExperienceConsents.userId, userId))
+        .limit(1),
+      db.select({ id: pushSubscriptions.id }).from(pushSubscriptions)
+        .where(and(
+          eq(pushSubscriptions.userId, userId),
+          eq(pushSubscriptions.isActive, true),
+        ))
+        .limit(1),
+    ]);
 
-  return {
-    enabled: consent?.enabled ?? false,
-    locationPermissionGranted: consent?.locationPermissionGranted ?? false,
-    pushSubscriptionActive: Boolean(subscription),
-    consent: consent ?? null,
-  };
+    return {
+      enabled: consent?.enabled ?? false,
+      locationPermissionGranted: consent?.locationPermissionGranted ?? false,
+      pushSubscriptionActive: Boolean(subscription),
+      consent: consent ?? null,
+    };
+  } catch (error) {
+    if (isMissingOptionalPlaceExperienceTableError(error)) {
+      return {
+        enabled: false,
+        locationPermissionGranted: false,
+        pushSubscriptionActive: false,
+        consent: null,
+      };
+    }
+    throw error;
+  }
 }
 
 export async function savePlaceExperienceConsent(
@@ -309,11 +339,7 @@ export async function purgeExpiredPlaceExperienceData(
       return { visitsDeleted: deleted.length, experiencesAnonymized: anonymized.rows.length };
     });
   } catch (error: any) {
-    const missingOptionalTable =
-      error?.code === "42P01" ||
-      error?.cause?.code === "42P01" ||
-      error?.cause?.cause?.code === "42P01";
-    if (missingOptionalTable) {
+    if (isMissingOptionalPlaceExperienceTableError(error)) {
       console.warn("Place experience retention skipped: optional tables are not published in this database");
       return { visitsDeleted: 0, experiencesAnonymized: 0 };
     }
