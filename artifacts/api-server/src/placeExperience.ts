@@ -289,24 +289,32 @@ export async function purgeExpiredPlaceExperienceData(
     : DEFAULT_PLACE_EXPERIENCE_RETENTION_DAYS;
   const cutoff = new Date(now.getTime() - safeRetentionDays * 86_400_000);
 
-  return db.transaction(async (tx) => {
-    const expired = await tx.select({ id: placeExperienceVisits.id })
-      .from(placeExperienceVisits)
-      .where(lt(placeExperienceVisits.lastSeenAt, cutoff));
-    const visitIds = expired.map(({ id }) => id);
-    if (visitIds.length === 0) return { visitsDeleted: 0, experiencesAnonymized: 0 };
+  try {
+    return await db.transaction(async (tx) => {
+      const expired = await tx.select({ id: placeExperienceVisits.id })
+        .from(placeExperienceVisits)
+        .where(lt(placeExperienceVisits.lastSeenAt, cutoff));
+      const visitIds = expired.map(({ id }) => id);
+      if (visitIds.length === 0) return { visitsDeleted: 0, experiencesAnonymized: 0 };
 
-    const anonymized = await tx.execute(sql`
-      UPDATE place_experiences
-      SET user_id = NULL, visit_id = NULL, comment = NULL, anonymized_at = ${now}
-      WHERE visit_id IN (${sql.join(visitIds.map((id) => sql`${id}`), sql`, `)})
-      RETURNING id
-    `);
-    const deleted = await tx.delete(placeExperienceVisits)
-      .where(inArray(placeExperienceVisits.id, visitIds))
-      .returning({ id: placeExperienceVisits.id });
-    return { visitsDeleted: deleted.length, experiencesAnonymized: anonymized.rows.length };
-  });
+      const anonymized = await tx.execute(sql`
+        UPDATE place_experiences
+        SET user_id = NULL, visit_id = NULL, comment = NULL, anonymized_at = ${now}
+        WHERE visit_id IN (${sql.join(visitIds.map((id) => sql`${id}`), sql`, `)})
+        RETURNING id
+      `);
+      const deleted = await tx.delete(placeExperienceVisits)
+        .where(inArray(placeExperienceVisits.id, visitIds))
+        .returning({ id: placeExperienceVisits.id });
+      return { visitsDeleted: deleted.length, experiencesAnonymized: anonymized.rows.length };
+    });
+  } catch (error: any) {
+    if (error?.code === "42P01") {
+      console.warn("Place experience retention skipped: optional tables are not published in this database");
+      return { visitsDeleted: 0, experiencesAnonymized: 0 };
+    }
+    throw error;
+  }
 }
 
 async function findNearestPlace(
