@@ -76,6 +76,7 @@ import {
 } from "../securityHardening";
 import {
   attachPlaceExperienceCandidateMedia,
+  canReadPlaceExperienceCandidateMedia,
   createPlaceExperienceCandidate,
   deferPlaceExperience,
   getPlaceExperienceContext,
@@ -768,6 +769,38 @@ function mapOsmBrandToMarque(brand: string): string {
 // ============================================
 // ENREGISTREMENT DES ROUTES
 // ============================================
+export function registerPlaceExperienceCandidateMediaRoute(
+  app: Express,
+  dependencies: {
+    getCandidate?: typeof getPlaceExperienceCandidate;
+    readMedia?: typeof readPlaceExperienceCandidateMedia;
+  } = {},
+): void {
+  const getCandidate = dependencies.getCandidate ?? getPlaceExperienceCandidate;
+  const readMedia = dependencies.readMedia ?? readPlaceExperienceCandidateMedia;
+
+  app.get("/api/place-experience/candidates/:candidateId/media", async (req: any, res) => {
+    try {
+      const candidate = await getCandidate(req.params.candidateId);
+      if (!candidate?.mediaUrl) return res.status(404).end();
+      if (!canReadPlaceExperienceCandidateMedia(candidate, req.user)) {
+        return res.status(403).json({ error: "Accès refusé" });
+      }
+      const content = await readMedia(candidate.id);
+      res
+        .type("jpg")
+        .set(
+          "Cache-Control",
+          candidate.status === "APPROVED" ? "public, max-age=3600" : "private, no-store",
+        )
+        .send(content);
+    } catch (error) {
+      console.error("Error reading place experience candidate media:", error);
+      res.status(404).end();
+    }
+  });
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
   startTrackingSignalMonitor();
@@ -2491,22 +2524,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
-  app.get("/api/place-experience/candidates/:candidateId/media", async (req: any, res) => {
-    try {
-      const candidate = await getPlaceExperienceCandidate(req.params.candidateId);
-      if (!candidate?.mediaUrl) return res.status(404).end();
-      const isModerator = ["admin", "moderateur", "moderator"].includes(req.user?.role);
-      const canRead = candidate.status === "APPROVED" ||
-        candidate.userId === req.user?.claims?.sub ||
-        isModerator;
-      if (!canRead) return res.status(403).json({ error: "Accès refusé" });
-      const content = await readPlaceExperienceCandidateMedia(candidate.id);
-      res.type("jpg").set("Cache-Control", candidate.status === "APPROVED" ? "public, max-age=3600" : "private, no-store").send(content);
-    } catch (error) {
-      console.error("Error reading place experience candidate media:", error);
-      res.status(404).end();
-    }
-  });
+  registerPlaceExperienceCandidateMediaRoute(app);
 
   app.get(
     "/api/admin/place-experience/candidates",

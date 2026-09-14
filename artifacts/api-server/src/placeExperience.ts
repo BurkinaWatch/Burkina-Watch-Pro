@@ -559,6 +559,16 @@ export async function readPlaceExperienceCandidateMedia(candidateId: string): Pr
   return readStreetviewObject(`place-experience/candidates/${candidateId}/photo.jpg`);
 }
 
+export function canReadPlaceExperienceCandidateMedia(
+  candidate: Pick<PlaceExperienceCandidate, "status" | "userId">,
+  viewer?: { claims?: { sub?: string }; role?: string } | null,
+): boolean {
+  const isModerator = ["admin", "moderateur", "moderator"].includes(viewer?.role ?? "");
+  return candidate.status === "APPROVED" ||
+    candidate.userId === viewer?.claims?.sub ||
+    isModerator;
+}
+
 export async function getOwnedCandidate(userId: string, candidateId: string): Promise<PlaceExperienceCandidate | null> {
   const [candidate] = await db.select()
     .from(placeExperienceCandidates)

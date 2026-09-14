@@ -4,6 +4,7 @@ import http from "node:http";
 import test from "node:test";
 import express from "express";
 import {
+  canReadPlaceExperienceCandidateMedia,
   DEFAULT_PLACE_EXPERIENCE_CONFIG,
   distanceMeters,
   evaluatePresence,
@@ -12,10 +13,16 @@ import {
   placeExperienceConsentInputSchema,
   placeExperiencePresenceInputSchema,
   placeExperienceResponseInputSchema,
+  readPlaceExperienceCandidateMedia,
   shouldTriggerCheckIn,
 } from "./placeExperience";
 import { requireAuthenticatedUser } from "./authorization";
 import { insertPlaceExperienceCandidateSchema } from "@workspace/db";
+import {
+  deleteStreetviewObject,
+  writeStreetviewDataUrl,
+} from "./streetviewStorage";
+import { registerPlaceExperienceCandidateMediaRoute } from "./routes/routes";
 
 const baseObservation = {
   startedAt: new Date("2026-09-13T10:00:00.000Z"),
@@ -289,4 +296,115 @@ test("la garde d'authentification utilisée par les routes refuse les visiteurs 
     server.close();
     await once(server, "close");
   }
+});
+
+test("les photos de candidats restent privées selon le statut et le rôle", async () => {
+  const candidateId = "task-124-candidate-media";
+  const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0xff, 0xd9]);
+  const dataUrl = `data:image/jpeg;base64,${jpeg.toString("base64")}`;
+  const candidates = new Map(
+    ["PENDING", "APPROVED", "REJECTED"].map((status) => [
+      status,
+      {
+        id: candidateId,
+        userId: "owner-1",
+        mediaUrl: `/api/place-experience/candidates/${candidateId}/media`,
+        status,
+      } as any,
+    ]),
+  );
+  const app = express();
+  app.use((req, _res, next) => {
+    const userId = req.headers["x-test-user"];
+    const role = req.headers["x-test-role"];
+    if (userId || role) {
+      (req as any).user = {
+        claims: { sub: typeof userId === "string" ? userId : undefined },
+        role: typeof role === "string" ? role : undefined,
+      };
+    }
+    next();
+  });
+  registerPlaceExperienceCandidateMediaRoute(app, {
+    getCandidate: async () => candidates.get(app.locals.status) ?? null,
+    readMedia: async () => jpeg,
+  });
+  const server = http.createServer(app);
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+
+  const request = async (
+    status: string,
+    headers: Record<string, string> = {},
+  ) => {
+    app.locals.status = status;
+    return fetch(
+      `http://127.0.0.1:${(server.address() as { port: number }).port}/api/place-experience/candidates/${candidateId}/media`,
+      { headers },
+    );
+  };
+
+  try {
+    const pendingOwner = await request("PENDING", { "x-test-user": "owner-1" });
+    assert.equal(pendingOwner.status, 200);
+    assert.equal(pendingOwner.headers.get("cache-control"), "private, no-store");
+    assert.deepEqual(Buffer.from(await pendingOwner.arrayBuffer()), jpeg);
+
+    const pendingOther = await request("PENDING", { "x-test-user": "other-1" });
+    assert.equal(pendingOther.status, 403);
+
+    const pendingModerator = await request("PENDING", { "x-test-role": "moderator" });
+    assert.equal(pendingModerator.status, 200);
+    assert.deepEqual(Buffer.from(await pendingModerator.arrayBuffer()), jpeg);
+
+    const approvedAnonymous = await request("APPROVED");
+    assert.equal(approvedAnonymous.status, 200);
+    assert.equal(approvedAnonymous.headers.get("cache-control"), "public, max-age=3600");
+    assert.equal(approvedAnonymous.headers.get("content-type"), "image/jpeg");
+    assert.deepEqual(Buffer.from(await approvedAnonymous.arrayBuffer()), jpeg);
+
+    const rejectedOwner = await request("REJECTED", { "x-test-user": "owner-1" });
+    assert.equal(rejectedOwner.status, 200);
+    assert.equal(rejectedOwner.headers.get("cache-control"), "private, no-store");
+
+    const rejectedModerator = await request("REJECTED", { "x-test-role": "moderateur" });
+    assert.equal(rejectedModerator.status, 200);
+    assert.deepEqual(Buffer.from(await rejectedModerator.arrayBuffer()), jpeg);
+
+    const rejectedOther = await request("REJECTED", { "x-test-user": "other-1" });
+    assert.equal(rejectedOther.status, 403);
+  } finally {
+    server.close();
+    await once(server, "close");
+  }
+
+  await writeStreetviewDataUrl(
+    `place-experience/candidates/${candidateId}/photo.jpg`,
+    dataUrl,
+    5 * 1024 * 1024,
+  );
+  try {
+    assert.deepEqual(await readPlaceExperienceCandidateMedia(candidateId), jpeg);
+  } finally {
+    await deleteStreetviewObject(`place-experience/candidates/${candidateId}/photo.jpg`);
+  }
+});
+
+test("la politique média refuse les candidats non modérés aux autres utilisateurs", () => {
+  for (const status of ["PENDING", "REJECTED"]) {
+    assert.equal(
+      canReadPlaceExperienceCandidateMedia(
+        { status, userId: "owner-1" },
+        { claims: { sub: "other-1" } },
+      ),
+      false,
+    );
+  }
+  assert.equal(
+    canReadPlaceExperienceCandidateMedia(
+      { status: "APPROVED", userId: "owner-1" },
+      undefined,
+    ),
+    true,
+  );
 });
