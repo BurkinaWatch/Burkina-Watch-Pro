@@ -42,8 +42,8 @@ import { LevelProgress } from "@/components/LevelProgress";
 import { useTranslation } from "react-i18next";
 import { getLevelInfo } from "@shared/pointsSystem";
 import { useRef } from "react";
-import { getGetMobileSessionsQueryKey, useGetMobileSessions } from "@workspace/api-client-react";
 
+const mobileSessionsQueryKey = ["/api/auth/mobile/sessions"] as const;
 
 export default function Profil() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -391,7 +391,7 @@ export default function Profil() {
     try {
       const response = await apiRequest("POST", "/api/auth/mobile/revoke-all");
       const result = (await response.json()) as { revokedCount?: number };
-      queryClient.invalidateQueries({ queryKey: getGetMobileSessionsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: mobileSessionsQueryKey });
       toast({
         title: "Sessions mobiles révoquées",
         description: `${result.revokedCount ?? 0} session(s) mobile(s) ne pourront plus être renouvelée(s).`,
@@ -411,11 +411,16 @@ export default function Profil() {
     data: mobileSessionsData,
     isLoading: mobileSessionsLoading,
     isError: mobileSessionsError,
-  } = useGetMobileSessions({
-    query: {
-      enabled: isAuthenticated,
-      queryKey: getGetMobileSessionsQueryKey(),
-    },
+  } = useQuery<{ sessions?: Array<{
+    id: string;
+    createdAt: string;
+    expiresAt: string;
+    device: string;
+    browser: string;
+  }> }>({
+    queryKey: mobileSessionsQueryKey,
+    enabled: isAuthenticated,
+    retry: false,
   });
 
   const { data: activeSession, isLoading: sessionLoading } = useQuery<TrackingSession>({
@@ -750,7 +755,9 @@ export default function Profil() {
   };
 
   const { points, badge } = calculateUserStats();
-  const mobileSessions = mobileSessionsData?.sessions ?? [];
+  const mobileSessions = Array.isArray(mobileSessionsData?.sessions)
+    ? mobileSessionsData.sessions
+    : [];
 
   // Get current level info for LevelProgress component
   const currentLevelName = (() => {

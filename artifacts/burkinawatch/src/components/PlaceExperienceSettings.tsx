@@ -38,6 +38,8 @@ export function PlaceExperienceSettings() {
     queryKey: ["/api/place-experience/config"],
     staleTime: 60 * 1000,
   });
+  const config = configQuery.data?.config;
+  const readiness = configQuery.data?.readiness;
 
   const consentMutation = useMutation({
     mutationFn: (body: { enabled: boolean; locationPermissionGranted: boolean }) =>
@@ -48,7 +50,6 @@ export function PlaceExperienceSettings() {
   });
 
   useEffect(() => {
-    const readiness = configQuery.data?.readiness;
     if (!readiness?.enabled || !readiness.locationPermissionGranted || !readiness.pushSubscriptionActive) return;
     if (!navigator.geolocation) return;
 
@@ -76,7 +77,7 @@ export function PlaceExperienceSettings() {
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
-  }, [configQuery.data?.readiness]);
+  }, [readiness]);
 
   async function toggleExperience(enabled: boolean) {
     setBusy(true);
@@ -84,7 +85,7 @@ export function PlaceExperienceSettings() {
       if (!enabled) {
         await consentMutation.mutateAsync({
           enabled: false,
-          locationPermissionGranted: Boolean(configQuery.data?.readiness.locationPermissionGranted),
+          locationPermissionGranted: Boolean(readiness?.locationPermissionGranted),
         });
         toast({ title: "Expérience du lieu désactivée", description: "Aucune présence ne sera observée." });
         return;
@@ -168,9 +169,9 @@ export function PlaceExperienceSettings() {
     }
   }
 
-  if (!configQuery.data) return null;
+  if (!config || !readiness) return null;
 
-  const enabled = configQuery.data.readiness.enabled;
+  const enabled = readiness.enabled;
   return (
     <Card className="mt-6">
       <CardHeader>
@@ -188,13 +189,13 @@ export function PlaceExperienceSettings() {
             <div>
               <p className="text-sm font-medium">Présence locale volontaire</p>
               <p className="text-xs text-muted-foreground">
-                La localisation active et les notifications sont nécessaires. Délai actuel : {Math.round(configQuery.data.config.dwellThresholdSeconds / 60)} minutes.
+                 La localisation active et les notifications sont nécessaires. Délai actuel : {Math.round(config.dwellThresholdSeconds / 60)} minutes.
               </p>
             </div>
           </div>
-          <Switch checked={enabled} disabled={busy || !configQuery.data.config.enabled} onCheckedChange={(value) => void toggleExperience(value)} />
+          <Switch checked={enabled} disabled={busy || !config.enabled} onCheckedChange={(value) => void toggleExperience(value)} />
         </div>
-        {!configQuery.data.readiness.pushSubscriptionActive && enabled ? (
+        {!readiness.pushSubscriptionActive && enabled ? (
           <p className="flex items-center gap-2 text-xs text-amber-700"><BellRing className="h-3.5 w-3.5" /> Les notifications push ne sont pas prêtes.</p>
         ) : null}
         <form onSubmit={(event) => void submitCandidate(event)} className="space-y-2 rounded-md border p-3">
