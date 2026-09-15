@@ -1,0 +1,55 @@
+CONTEXTE
+Suite à l'audit Phase 1, tu vas corriger les failles UNE PAR UNE, dans
+l'ordre indiqué ci-dessous. Ne passe au point suivant qu'après ma
+confirmation explicite que le correctif précédent est validé.
+
+RÈGLES NON-NÉGOCIABLES (rappel)
+- Aucun commit, push ou déploiement automatique.
+- Diff minimal et isolé pour chaque point — ne touche à rien d'autre.
+- Si une correction impacte le schéma de base de données, propose une
+  migration réversible (jamais de modification destructive en place).
+- Explique en une phrase ce que chaque diff fait et ne fait pas, avant
+  que je te dise de l'appliquer.
+
+CORRECTIF 1 — B1 (priorité critique)
+Le signalement est actuellement rattaché à userId et ce lien peut
+apparaître dans les réponses d'API publiques.
+- Montre-moi précisément quel(s) endpoint(s) exposent userId (ou un champ
+  qui permet de le déduire) dans une réponse consultable publiquement.
+- Propose une correction qui retire userId de toute réponse API publique,
+  tout en conservant le lien en base de données UNIQUEMENT pour un usage
+  de modération interne strictement contrôlé (si ce lien est nécessaire).
+- Si aucun usage légitime ne justifie de garder ce lien en base, propose
+  en option une version qui le supprime aussi côté stockage.
+N'applique rien avant ma confirmation.
+
+CORRECTIF 2 — A1
+Ajoute .env, .env.local et toute variante à .gitignore s'ils n'y sont
+pas déjà. Vérifie aussi qu'aucun fichier .env n'existe actuellement
+suivi par git (git ls-files | grep .env). N'applique rien avant ma
+confirmation.
+
+CORRECTIF 3 — D1
+Propose une fonction d'arrondi de précision GPS (ex: 3 décimales ≈ 111m
+de précision) appliquée UNIQUEMENT à la donnée exposée publiquement.
+Les coordonnées exactes originales restent en base pour un usage
+interne si nécessaire (ex: carte de chaleur agrégée), mais ne sont
+jamais renvoyées telles quelles à un client non-authentifié comme admin.
+N'applique rien avant ma confirmation.
+
+CORRECTIF 4 — C1
+Ajoute un nettoyage des métadonnées EXIF (notamment GPS, modèle
+d'appareil, horodatage précis) au moment de l'upload, avant stockage.
+Précise quelle librairie tu comptes utiliser et si elle nécessite une
+nouvelle dépendance. N'applique rien avant ma confirmation.
+
+CORRECTIF 5 — E1
+Avant de coder quoi que ce soit, réponds à ces questions :
+- Où sont stockés les logs actuellement (fichier, base, Railway) ?
+- Qui y a accès en pratique ?
+- Existe-t-il déjà un mécanisme de purge automatique côté hébergeur ?
+Propose ensuite une politique de rétention concrète (ex: purge à 30
+jours) et montre où l'implémenter. N'applique rien avant ma confirmation.
+
+Commence par le Correctif 1 uniquement. Attends ma validation avant de
+proposer le diff du Correctif 2.
