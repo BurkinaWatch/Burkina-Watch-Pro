@@ -265,7 +265,8 @@ test("all SMTP email flows work with Nodemailer and keep the GPX content attachm
     assert.match(signalLost.messageId, /.+/);
 
     assert.equal(smtp.messages.length, 4);
-    assert.match(decodeMessageBody(smtp.messages[0].raw), /Votre code de connexion Burkina Watch/);
+    assert.match(messageHeaders(smtp.messages[0].raw), /^Subject:/m);
+    assert.match(decodeMessageBody(smtp.messages[0].raw), /Votre code de connexion est/);
     assert.match(decodeMessageBody(smtp.messages[0].raw), /123456/);
     assert.match(decodeMessageBody(smtp.messages[1].raw), /a activé le suivi de localisation en direct/);
     assert.match(decodeMessageBody(smtp.messages[1].raw), /12\.345678/);
