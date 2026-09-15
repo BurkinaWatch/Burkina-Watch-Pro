@@ -1,0 +1,52 @@
+CONTEXTE
+securityHardening.ts existe déjà avec Helmet configuré mais n'est pas
+appelé. Avant d'activer quoi que ce soit, il faut vérifier son contenu
+exact et le mettre à jour pour qu'il corresponde aux origines externes
+réellement utilisées.
+
+ÉTAPE 1 — Montre le contenu complet actuel
+Affiche le contenu intégral de securityHardening.ts, en particulier :
+- la configuration CSP complète (toutes les directives et sources
+  actuellement listées)
+- la configuration HPP et rate limiting déjà présente
+- toute autre option Helmet déjà définie (HSTS, frameguard, etc.)
+
+ÉTAPE 2 — Compare avec les origines réelles
+Origines externes confirmées comme réellement utilisées par le
+frontend :
+- tiles OpenStreetMap : https://{s}.tile.openstreetmap.org
+- Google Fonts : https://fonts.googleapis.com, https://fonts.gstatic.com
+- cdnjs (icônes Leaflet) : https://cdnjs.cloudflare.com
+- Unsplash (images d'exemple) : https://images.unsplash.com
+- médias dynamiques retournés par l'API elle-même (mediaUrl,
+  profileImageUrl, etc. — probablement le propre domaine de l'app ou
+  un bucket de stockage à identifier)
+
+Pour chacune, précise si la CSP actuelle de securityHardening.ts
+l'autorise déjà ou non. Pour unpkg.com et nominatim.openstreetmap.org
+présents dans la CSP mais absents du constat frontend : recherche
+explicitement dans le code s'ils sont utilisés quelque part (ex: une
+feature de géocodage qui appellerait Nominatim), avant de les retirer
+ou de les garder.
+
+ÉTAPE 3 — Identifie le domaine de stockage des médias
+Cherche dans le code où mediaUrl/profileImageUrl sont générées
+(bucket S3, stockage local, autre) pour connaître le domaine exact à
+whitelister dans la CSP (directive img-src / media-src).
+
+ÉTAPE 4 — Propose le diff complet
+Une fois les étapes 1 à 3 faites, propose :
+- une CSP mise à jour couvrant exactement les origines confirmées,
+  avec le stockage de médias identifié
+- une configuration CORS avec liste blanche explicite des origines
+  légitimes (le domaine de production burkinawatch.com, et tout
+  domaine mobile/app si applicable), credentials désactivées comme
+  actuellement sauf besoin identifié
+- l'ajout de app.disable("x-powered-by")
+- le branchement de applySecurityMiddlewares(app) dans app.ts
+
+Recommande aussi si la CSP doit d'abord être déployée en mode
+Content-Security-Policy-Report-Only pour observer les violations sans
+rien bloquer, avant de passer en mode bloquant.
+
+N'applique rien. Montre uniquement le contenu et le diff proposé.
