@@ -2,6 +2,10 @@ import { Express, Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
+// CSP_REPORT_ONLY=true ou variable absente : observation sans blocage.
+// CSP_REPORT_ONLY=false : activation de la CSP bloquante.
+const cspReportOnly = process.env.CSP_REPORT_ONLY !== "false";
+
 // Rate limiting global
 export const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -105,15 +109,23 @@ export function applySecurityMiddlewares(app: Express) {
   // 1. Protection des headers HTTP avec Helmet
   app.use(helmet({
     contentSecurityPolicy: {
+      reportOnly: cspReportOnly,
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.openstreetmap.org", "https://unpkg.com"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://unpkg.com"],
-        imgSrc: ["'self'", "data:", "https:", "blob:"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "https:",
+          "blob:",
+          "https://*.openstreetmap.org",
+          "https://cdnjs.cloudflare.com",
+          "https://images.unsplash.com",
+          ...mediaOrigins,
+        ],
         connectSrc: [
           "'self'",
-          "https://*.openstreetmap.org",
-          "https://nominatim.openstreetmap.org",
           ...mediaGatewayOrigins,
         ],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
