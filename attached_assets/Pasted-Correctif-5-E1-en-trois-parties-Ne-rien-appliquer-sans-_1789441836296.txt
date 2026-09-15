@@ -1,0 +1,44 @@
+Correctif 5 — E1, en trois parties. Ne rien appliquer sans ma
+confirmation à chaque étape.
+
+PARTIE 1 — Correctif urgent, indépendant du reste
+Retire complètement console.log("📝 PATCH /api/signalements/:id -
+Données reçues:", req.body) du PATCH /api/signalements/:id. Si un log
+de debug reste utile, limite-le à une liste explicite de champs non
+sensibles (ex: id du signalement, statut, catégorie) — jamais le body
+complet. Montre le diff isolé pour cette partie seule.
+
+PARTIE 2 — Politique de rétention
+Durées validées :
+- audit_logs (severity normale) : 90 jours
+- audit_logs (severity critique/élevée) : 180 jours
+- refresh_tokens expirés ou révoqués : purge à la prochaine passe du
+  scheduler (~6h)
+- moderation_logs (PostgreSQL) : 30 jours
+
+Implémente, sur le modèle du scheduler existant de placeExperience.ts :
+- une méthode de purge pour audit_logs, avec un seuil de 90 jours pour
+  severity normale et 180 jours pour severity critique/élevée (précise
+  quelles valeurs de severity comptent comme "critique" selon le schéma
+  existant)
+- une méthode de purge pour refresh_tokens expirés ou révoqués
+- une méthode de purge pour moderation_logs à 30 jours (dépend de la
+  Partie 3 ci-dessous, qui doit être faite en premier si cette table
+  n'est pas encore alimentée)
+- l'enregistrement de ces nouvelles purges dans le scheduler existant
+  (démarrage + toutes les 6h), sans dupliquer la logique
+
+PARTIE 3 — Correction de la modération
+Fais les deux, dans cet ordre :
+1. Corrige logModerationAction() pour écrire une entrée structurée
+   dans la table PostgreSQL moderation_logs existante (avec son champ
+   content), au lieu de se limiter à console.log(). Précise si le champ
+   content doit lui-même être tronqué ou limité en taille.
+2. Réduis ce qui part encore dans console.log() pour cette fonction à
+   des métadonnées non sensibles seulement (userId, type, severity,
+   résultat approuvé/bloqué — sans le contenu signalé ni les mots
+   détectés en clair si possible).
+
+Pour chaque partie, montre le diff séparément avant de passer à la
+suivante. N'applique rien avant ma confirmation explicite, partie par
+partie.
