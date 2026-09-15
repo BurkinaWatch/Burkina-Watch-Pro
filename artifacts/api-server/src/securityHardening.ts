@@ -1,10 +1,6 @@
 import { Express, Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-// @ts-ignore - no type declarations available
-import hpp from "hpp";
-// @ts-ignore - no type declarations available
-import xss from "xss-clean";
 
 // CSP_REPORT_ONLY=true ou variable absente : observation sans blocage.
 // CSP_REPORT_ONLY=false : activation de la CSP bloquante.
@@ -146,16 +142,14 @@ export function applySecurityMiddlewares(app: Express) {
     crossOriginEmbedderPolicy: false,
   }));
 
-  // 2. Protection contre la pollution des paramètres HTTP (HPP)
-  app.use(hpp());
+  // HPP et xss-clean ont été retirés le 15 septembre 2026 suite à une
+  // incompatibilité avec router@2.2.0 : ces middlewares réassignaient
+  // req.query, devenu en lecture seule, ce qui causait des réponses 500 sur
+  // toutes les routes. Leur remplacement par une protection HPP et une
+  // sanitization XSS modernes, compatibles avec la version actuelle
+  // d'Express, reste un suivi séparé, non couvert par ce correctif.
 
-  // 3. Nettoyage basique des entrées XSS
-  // xss-clean n'est plus maintenu et ne constitue pas une garantie
-  // de protection XSS moderne. Son remplacement par une sanitization
-  // ciblée doit être réévalué séparément, hors périmètre de ce correctif.
-  app.use(xss());
-
-  // 4. Rate limiting global (activé en production sur /api)
+  // 2. Rate limiting global (activé en production sur /api)
   if (process.env.NODE_ENV === "production") {
     app.use("/api", globalLimiter);
   } else {
