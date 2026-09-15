@@ -1,0 +1,24 @@
+Bonnes pratiques relatives au contenu
+Le document ne contient pas d'attribut "meta description"
+Les résultats de recherche peuvent inclure des attributs "meta description" pour résumer de façon concise le contenu de la page. En savoir plus sur la meta description
+Rédigez votre code HTML de sorte à autoriser les robots d'exploration à analyser le contenu de votre application.
+Exploration et indexation
+La page renvoie un code d'état HTTP d'échec 500
+Les pages renvoyant des codes d'état HTTP d'échec peuvent ne pas être indexées correctement. En savoir plus sur les codes d'état HTTP
+Le fichier robots.txt n'est pas valide La requête pour le fichier robots.txt a renvoyé l'état HTTP 500
+Si votre fichier robots.txt n'est pas créé correctement, il se peut que les robots d'exploration ne puissent pas comprendre comment votre site Web doit être exploré ou indexé. En savoir plus sur les fichiers robots.txt
+Pour que votre contenu apparaisse dans les résultats de recherche, les robots d'exploration doivent accéder à votre application.
+Autres éléments à vérifier manuellement (1)
+Afficher
+Exécutez ces outils de validation supplémentaires sur votre site pour vérifier les bonnes pratiques de SEO complémentaires.
+Audits réussis (5)
+Afficher
+Non applicable (2)
+Afficher
+2/3
+Navigation agentique
+Ces vérifications garantissent des sites Web de haute qualité et consultables pour les agents IA, et valident l'exactitude des intégrations WebMCP. Cette catégorie est encore en cours de développement et susceptible d'être modifiée.
+Accessibilité pour les agents
+llms.txt ne suit pas les recommandations Échec avec le code d'état HTTP 500
+Si votre fichier llms.txt ne suit pas les recommandations, il se peut que les grands modèles de langage ne comprennent pas comment votre site Web doit être exploré ou utilisé pour l'entraînement. Le fichier llms.txt doit être un fichier Markdown contenant au moins un en-tête H1.
+Ces audits mettent en évidence les bonnes pratiques visant à améliorer l'accessibilité du site Web pour les agents IA.
