@@ -1756,8 +1756,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/signalements/:id", isAuthenticated, signalementMutationLimiter, async (req: any, res) => {
     try {
-      console.log("📝 PATCH /api/signalements/:id - Données reçues:", req.body);
-      
       const signalement = await storage.getSignalement(req.params.id);
 
       if (!signalement) {
