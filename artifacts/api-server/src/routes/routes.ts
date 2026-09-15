@@ -156,6 +156,21 @@ import {
   deriveOpaqueStreamPath,
 } from "@workspace/db";
 
+const PUBLIC_SIGNALEMENT_IDENTITY_FIELDS = new Set([
+  "userId",
+  "sourceName",
+  "auteurFirstName",
+  "auteurLastName",
+]);
+
+function toPublicSignalement(signalement: object) {
+  return Object.fromEntries(
+    Object.entries(signalement).filter(
+      ([field]) => !PUBLIC_SIGNALEMENT_IDENTITY_FIELDS.has(field),
+    ),
+  );
+}
+
 // Create a Map for quick pharmacy lookups by name
 const pharmaciesDataMap = new Map<string, typeof PHARMACIES_DATA[0]>();
 PHARMACIES_DATA.forEach(p => {
@@ -1243,6 +1258,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/signalements", async (req, res) => {
     try {
       const { categorie, statut, isSOS, limit, placeContributions, placeId, moderationStatus } = req.query;
+      let isControlledModerationRequest = false;
+
       if (placeContributions === "true") {
         if (!(await storage.supportsPlaceContributions())) {
           return res.status(503).json({ error: "La modération des lieux sera disponible après la migration du schéma." });
@@ -1253,6 +1270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!currentUser || !["admin", "moderateur", "moderator"].includes(currentUser.role || "")) {
           return res.status(403).json({ error: "Accès réservé à la modération" });
         }
+        isControlledModerationRequest = true;
       }
 
       const signalements = await storage.getSignalements({
@@ -1268,7 +1286,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Ajouter les headers de cache
       res.set('Cache-Control', 'public, max-age=300'); // Cache 5 minutes
-      res.json(signalements);
+      res.json(
+        isControlledModerationRequest
+          ? signalements
+          : signalements.map(toPublicSignalement),
+      );
     } catch (error) {
       console.error("Error fetching signalements:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des signalements" });
@@ -1289,7 +1311,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
          userId,
        );
 
-       res.json({ ...signalement, confirmations });
+       res.json({
+         ...toPublicSignalement(signalement),
+         confirmations,
+       });
     } catch (error) {
       console.error("Error fetching signalement:", error);
       res.status(500).json({ error: "Erreur lors de la récupération du signalement" });
@@ -1397,7 +1422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const freshSignals = signalements
         .filter((signalement: any) => !signalement.expiresAt || new Date(signalement.expiresAt).getTime() > now)
         .map(async (signalement: any) => ({
-          ...signalement,
+          ...toPublicSignalement(signalement),
           confirmations: await storage.getPracticalConfirmationSummary({ signalementId: signalement.id }, userId),
         }));
 
@@ -1601,7 +1626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const verificationStatus = signalement.verificationStatus || "pending";
       const verificationMode = signalement.verificationMode || "pending";
       res.status(201).json({
-        ...signalementWithoutMedia,
+        ...toPublicSignalement(signalementWithoutMedia),
         medias: medias ? medias.map(() => "[MEDIA_DATA]") : [],
         verification: {
           status: verificationStatus,
@@ -1751,7 +1776,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
 
-      res.json(updatedSignalement);
+      res.json(
+        isModerator
+          ? updatedSignalement
+          : updatedSignalement
+            ? toPublicSignalement(updatedSignalement)
+            : updatedSignalement,
+      );
     } catch (error) {
       console.error("❌ Error updating signalement:", error);
       res.status(500).json({ error: "Erreur lors de la mise à jour du signalement" });
@@ -1877,7 +1908,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
 
-      res.json({ ...updatedSignalement, isLiked });
+      res.json({
+        ...toPublicSignalement(updatedSignalement),
+        isLiked,
+      });
     } catch (error) {
       console.error("Error liking signalement:", error);
       res.status(500).json({ error: "Erreur lors du like" });
@@ -1900,7 +1934,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "Quelqu'un a partagé votre signalement"
       );
 
-      res.json(signalement);
+      res.json(toPublicSignalement(signalement));
     } catch (error) {
       console.error("Error sharing signalement:", error);
       res.status(500).json({ error: "Erreur lors du partage" });
@@ -2645,10 +2679,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/users/:userId/signalements", async (req, res) => {
+  app.get("/api/users/:userId/signalements", async (req: any, res) => {
     try {
-      const signalements = await storage.getSignalementsByUserId(req.params.userId);
-      res.json(signalements);
+      const requestedUserId = req.params.userId;
+      const authenticatedUserId = req.user?.claims?.sub ?? req.user?.id;
+
+      if (!authenticatedUserId) {
+        return res.status(401).json({ error: "Authentification requise" });
+      }
+
+      const isModerator = ["admin", "moderateur", "moderator"].includes(
+        req.user?.role,
+      );
+      const isOwner = authenticatedUserId === requestedUserId;
+
+      if (!isOwner && !isModerator) {
+        return res.status(403).json({ error: "Accès non autorisé" });
+      }
+
+      const signalements = await storage.getSignalementsByUserId(requestedUserId);
+      res.json(
+        isModerator
+          ? signalements
+          : signalements.map(toPublicSignalement),
+      );
     } catch (error) {
       console.error("Error fetching user signalements:", error);
       res.status(500).json({ error: "Erreur lors de la récupération des signalements" });
