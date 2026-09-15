@@ -270,7 +270,11 @@ test("all SMTP email flows work with Nodemailer and keep the GPX content attachm
     assert.match(decodeMessageBody(smtp.messages[0].raw), /123456/);
     assert.match(decodeMessageBody(smtp.messages[1].raw), /a activé le suivi de localisation en direct/);
     assert.match(decodeMessageBody(smtp.messages[1].raw), /12\.345678/);
-    assert.match(decodeMessageBody(smtp.messages[3].raw), /signal de Utilisateur Test perdu/);
+    assert.match(decodeMessageBody(smtp.messages[3].raw), /Signal de suivi perdu/);
+    assert.match(
+      decodeMessageBody(smtp.messages[3].raw),
+      /Aucune nouvelle position de Utilisateur Test depuis plus de 5 minutes/,
+    );
     assert.match(decodeMessageBody(smtp.messages[3].raw), /12\.345678/);
 
     const expectedFilename = "burkina-watch-tracking-test-session.gpx";
