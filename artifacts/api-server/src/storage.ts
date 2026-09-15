@@ -78,6 +78,8 @@ import {
 } from "@workspace/db";
 import { db } from "./db";
 import { eq, desc, and, or, sql, isNull, isNotNull, inArray, notInArray, gt } from "drizzle-orm";
+import { sanitizeImageDataUrl, sanitizeSignalementMedia } from "./imagePrivacy";
+import { streetviewConfig } from "./streetviewConfig";
 
 const baseSignalementSelection = {
   id: signalements.id,
@@ -1021,12 +1023,13 @@ export class DbStorage implements IStorage {
       throw new Error("PLACE_CONTRIBUTION_SCHEMA_MISSING");
     }
 
+    const sanitizedSignalement = await sanitizeSignalementMedia(insertSignalement);
     const values = {
-      ...insertSignalement,
-      medias: insertSignalement.medias || [],
+      ...sanitizedSignalement,
+      medias: sanitizedSignalement.medias || [],
       ...(placeContributionColumns
         ? {
-            moderationStatus: insertSignalement.placeId && insertSignalement.contributionType
+            moderationStatus: sanitizedSignalement.placeId && sanitizedSignalement.contributionType
               ? "pending"
               : "not_applicable",
           }
@@ -1108,9 +1111,10 @@ export class DbStorage implements IStorage {
       return this.getSignalement(id);
     }
 
+    const sanitizedUpdates = await sanitizeSignalementMedia(persistedUpdates);
     const result = await db
       .update(signalements)
-      .set(persistedUpdates)
+      .set(sanitizedUpdates)
       .where(eq(signalements.id, id))
       .returning(await getSignalementSelection());
     return result[0] as unknown as Signalement | undefined;
@@ -2440,16 +2444,32 @@ L'équipe Burkina Watch
   }
 
   async createVirtualTour(tour: InsertVirtualTour, photos: InsertStreetviewPoint[]): Promise<VirtualTour> {
+    const sanitizedPhotos = await Promise.all(
+      photos.map(async (photo) => ({
+        ...photo,
+        imageData: await sanitizeImageDataUrl(
+          photo.imageData,
+          streetviewConfig.photoMaxBytes,
+        ),
+        thumbnailData: photo.thumbnailData
+          ? await sanitizeImageDataUrl(
+              photo.thumbnailData,
+              streetviewConfig.photoMaxBytes,
+            )
+          : null,
+      })),
+    );
+
     const [createdTour] = await db
       .insert(virtualTours)
       .values({
         ...tour,
-        photoCount: photos.length,
+        photoCount: sanitizedPhotos.length,
       })
       .returning();
 
-    if (photos.length > 0) {
-      const photosWithTourId = photos.map((photo, index) => ({
+    if (sanitizedPhotos.length > 0) {
+      const photosWithTourId = sanitizedPhotos.map((photo, index) => ({
         ...photo,
         tourId: createdTour.id,
         orderIndex: index,

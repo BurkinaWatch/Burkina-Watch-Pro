@@ -7,6 +7,7 @@ export const streetviewConfig = {
   maxVideoBytes: numberFromEnv("STREETVIEW_MAX_VIDEO_MB", 100) * 1024 * 1024,
   minDurationSeconds: numberFromEnv("STREETVIEW_MIN_DURATION_SECONDS", 2),
   maxDurationSeconds: numberFromEnv("STREETVIEW_MAX_DURATION_SECONDS", 180),
+  photoMaxBytes: numberFromEnv("STREETVIEW_MAX_PHOTO_MB", 2) * 1024 * 1024,
   thumbnailMaxBytes: numberFromEnv("STREETVIEW_MAX_THUMBNAIL_KB", 512) * 1024,
   allowedMimeTypes: ["video/mp4", "video/webm", "video/quicktime"] as const,
 };

@@ -34,6 +34,7 @@ import { createMobileSessionsHandler } from "../mobileSessions";
 import { csrfProtection, issueCsrfToken } from "../csrfProtection";
 import { getAuthenticatedUserId } from "../authorization";
 import { streetviewConfig } from "../streetviewConfig";
+import { ImagePrivacyError } from "../imagePrivacy";
 import {
   abortStreetviewMultipartUpload,
   completeStreetviewMultipartUpload,
@@ -1684,6 +1685,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(503).json({ error: "Les contributions de lieux nécessitent la migration du schéma." });
         return;
       }
+      if (error instanceof ImagePrivacyError) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
       console.error("Error creating signalement:", error);
       res.status(500).json({ error: "Erreur lors de la création du signalement" });
     }
@@ -1830,6 +1835,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             : updatedSignalement,
       );
     } catch (error) {
+      if (error instanceof ImagePrivacyError) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
       console.error("❌ Error updating signalement:", error);
       res.status(500).json({ error: "Erreur lors de la mise à jour du signalement" });
     }
@@ -5868,10 +5877,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!photo.imageData || !photo.imageData.startsWith('data:image/')) {
           return res.status(400).json({ error: "Format d'image invalide" });
         }
-        const sizeMB = photo.imageData.length / (1024 * 1024);
-        if (sizeMB > 2) {
+        if (photo.imageData.length > streetviewConfig.photoMaxBytes) {
+          const sizeMB = photo.imageData.length / (1024 * 1024);
           return res.status(400).json({ 
-            error: `Une image est trop volumineuse (${sizeMB.toFixed(1)}MB). Maximum: 2MB` 
+            error: `Une image est trop volumineuse (${sizeMB.toFixed(1)}MB). Maximum: ${(streetviewConfig.photoMaxBytes / (1024 * 1024)).toFixed(0)}MB`,
           });
         }
       }
