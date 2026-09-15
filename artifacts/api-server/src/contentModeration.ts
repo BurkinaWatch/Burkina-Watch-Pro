@@ -1,11 +1,14 @@
-
 import { OpenAI } from "openai";
+import { moderationLogs } from "@workspace/db";
+import { db } from "./db";
 
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     })
   : null;
+
+const MODERATION_LOG_CONTENT_MAX_CHARS = 2_000;
 
 export interface ModerationResult {
   isApproved: boolean;
@@ -164,13 +167,34 @@ export async function logModerationAction(
   result: ModerationResult,
   type: string
 ) {
-  // Log pour historique (sera stocké en base de données)
-  console.log("📋 Modération:", {
-    userId,
-    type,
-    severity: result.severity,
-    approved: result.isApproved,
-    flaggedWords: result.flaggedWords,
-    timestamp: new Date().toISOString(),
-  });
+  const loggedContent = Array.from(content)
+    .slice(0, MODERATION_LOG_CONTENT_MAX_CHARS)
+    .join("");
+
+  try {
+    await db.insert(moderationLogs).values({
+      userId,
+      contentType: type,
+      content: loggedContent,
+      severity: result.severity,
+      isApproved: result.isApproved,
+      flaggedWords: result.flaggedWords,
+      reason: result.reason ?? null,
+      suggestion: result.suggestion ?? null,
+    });
+
+    console.log("📋 Modération enregistrée:", {
+      userId,
+      type,
+      severity: result.severity,
+      approved: result.isApproved,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("[MODERATION] Échec de journalisation:", {
+      userId,
+      type,
+      error: error instanceof Error ? error.message : "erreur inconnue",
+    });
+  }
 }

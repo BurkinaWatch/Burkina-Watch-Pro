@@ -58,6 +58,7 @@ import {
   signalementLikes,
   chatMessages,
   auditLogs,
+  moderationLogs,
   streetviewPoints,
   virtualTours,
   streetviewContributions,
@@ -77,7 +78,7 @@ import {
   agentMediaSessions,
 } from "@workspace/db";
 import { db } from "./db";
-import { eq, desc, and, or, sql, isNull, isNotNull, inArray, notInArray, gt } from "drizzle-orm";
+import { eq, desc, and, or, sql, isNull, isNotNull, inArray, notInArray, gt, lt, lte, ne } from "drizzle-orm";
 import { sanitizeImageDataUrl, sanitizeSignalementMedia } from "./imagePrivacy";
 import { streetviewConfig } from "./streetviewConfig";
 
@@ -427,6 +428,9 @@ export interface IStorage {
     severity?: "info" | "warning" | "critical";
   }): Promise<AuditLog>;
   hasAuditLog(action: string, resourceType: string, resourceId: string): Promise<boolean>;
+  purgeExpiredAuditLogs(now?: Date): Promise<{ deleted: number }>;
+  purgeExpiredRefreshTokens(now?: Date): Promise<number>;
+  purgeExpiredModerationLogs(now?: Date): Promise<{ deleted: number }>;
 
   // --- New methods for online users ---
   userConnected(userId: string): Promise<void>;
@@ -2341,6 +2345,53 @@ L'équipe Burkina Watch
       ))
       .limit(1);
     return Boolean(auditLog);
+  }
+
+  async purgeExpiredAuditLogs(now = new Date()): Promise<{ deleted: number }> {
+    const normalCutoff = new Date(now.getTime() - 90 * 86_400_000);
+    const criticalCutoff = new Date(now.getTime() - 180 * 86_400_000);
+
+    const deleted = await db
+      .delete(auditLogs)
+      .where(or(
+        and(
+          lt(auditLogs.createdAt, normalCutoff),
+          or(
+            isNull(auditLogs.severity),
+            ne(auditLogs.severity, "critical"),
+          ),
+        ),
+        and(
+          lt(auditLogs.createdAt, criticalCutoff),
+          eq(auditLogs.severity, "critical"),
+        ),
+      ))
+      .returning({ id: auditLogs.id });
+
+    return { deleted: deleted.length };
+  }
+
+  async purgeExpiredRefreshTokens(now = new Date()): Promise<number> {
+    const deleted = await db
+      .delete(refreshTokens)
+      .where(or(
+        lte(refreshTokens.expiresAt, now),
+        isNotNull(refreshTokens.revokedAt),
+      ))
+      .returning({ id: refreshTokens.id });
+
+    return deleted.length;
+  }
+
+  async purgeExpiredModerationLogs(now = new Date()): Promise<{ deleted: number }> {
+    const cutoff = new Date(now.getTime() - 30 * 86_400_000);
+
+    const deleted = await db
+      .delete(moderationLogs)
+      .where(lt(moderationLogs.createdAt, cutoff))
+      .returning({ id: moderationLogs.id });
+
+    return { deleted: deleted.length };
   }
 
   // --- New methods for online users ---

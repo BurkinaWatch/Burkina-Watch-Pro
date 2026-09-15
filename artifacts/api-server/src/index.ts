@@ -3,6 +3,7 @@ import { initializeApp } from "./app";
 import { logger } from "./lib/logger";
 import { configureWebServing } from "./webServing";
 import { purgeExpiredPlaceExperienceData } from "./placeExperience";
+import { storage } from "./storage";
 
 const rawPort = process.env["PORT"];
 
@@ -20,12 +21,34 @@ if (Number.isNaN(port) || port <= 0) {
 
 await initializeApp();
 configureWebServing(app);
-void purgeExpiredPlaceExperienceData().catch((error) => {
-  logger.error({ err: error }, "Place experience retention purge failed");
+async function runRetentionPurges() {
+  const [
+    placeExperience,
+    auditLogsDeleted,
+    refreshTokensDeleted,
+    moderationLogsDeleted,
+  ] = await Promise.all([
+    purgeExpiredPlaceExperienceData(),
+    storage.purgeExpiredAuditLogs(),
+    storage.purgeExpiredRefreshTokens(),
+    storage.purgeExpiredModerationLogs(),
+  ]);
+
+  logger.info({
+    placeExperience,
+    auditLogsDeleted,
+    refreshTokensDeleted,
+    moderationLogsDeleted,
+  }, "Retention purges completed");
+}
+
+void runRetentionPurges().catch((error) => {
+  logger.error({ err: error }, "Retention purge failed");
 });
+
 setInterval(() => {
-  void purgeExpiredPlaceExperienceData().catch((error) => {
-    logger.error({ err: error }, "Place experience retention purge failed");
+  void runRetentionPurges().catch((error) => {
+    logger.error({ err: error }, "Retention purge failed");
   });
 }, 6 * 60 * 60 * 1000).unref();
 
