@@ -163,12 +163,52 @@ const PUBLIC_SIGNALEMENT_IDENTITY_FIELDS = new Set([
   "auteurLastName",
 ]);
 
-function toPublicSignalement(signalement: object) {
-  return Object.fromEntries(
+function roundGpsCoordinate(value: unknown): string | null | undefined {
+  if (value === null || value === undefined) {
+    return value;
+  }
+
+  if (typeof value !== "string" && typeof value !== "number") {
+    throw new Error("Invalid GPS coordinate");
+  }
+
+  if (typeof value === "string" && value.trim() === "") {
+    throw new Error("Invalid GPS coordinate");
+  }
+
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    throw new Error("Invalid GPS coordinate");
+  }
+
+  return numericValue.toFixed(3);
+}
+
+function toPublicSignalement(
+  signalement: object,
+  options: { roundCoordinates?: boolean } = {},
+) {
+  const publicSignalement = Object.fromEntries(
     Object.entries(signalement).filter(
       ([field]) => !PUBLIC_SIGNALEMENT_IDENTITY_FIELDS.has(field),
     ),
   );
+
+  if (options.roundCoordinates === true) {
+    for (const field of ["latitude", "longitude"] as const) {
+      if (!(field in publicSignalement)) {
+        continue;
+      }
+
+      try {
+        publicSignalement[field] = roundGpsCoordinate(publicSignalement[field]);
+      } catch {
+        publicSignalement[field] = null;
+      }
+    }
+  }
+
+  return publicSignalement;
 }
 
 // Create a Map for quick pharmacy lookups by name
@@ -1289,7 +1329,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(
         isControlledModerationRequest
           ? signalements
-          : signalements.map(toPublicSignalement),
+          : signalements.map((signalement) =>
+              toPublicSignalement(signalement, { roundCoordinates: true }),
+            ),
       );
     } catch (error) {
       console.error("Error fetching signalements:", error);
@@ -1312,7 +1354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
        );
 
        res.json({
-         ...toPublicSignalement(signalement),
+         ...toPublicSignalement(signalement, { roundCoordinates: true }),
          confirmations,
        });
     } catch (error) {
@@ -1422,7 +1464,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const freshSignals = signalements
         .filter((signalement: any) => !signalement.expiresAt || new Date(signalement.expiresAt).getTime() > now)
         .map(async (signalement: any) => ({
-          ...toPublicSignalement(signalement),
+          ...toPublicSignalement(signalement, { roundCoordinates: true }),
           confirmations: await storage.getPracticalConfirmationSummary({ signalementId: signalement.id }, userId),
         }));
 
@@ -1626,7 +1668,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const verificationStatus = signalement.verificationStatus || "pending";
       const verificationMode = signalement.verificationMode || "pending";
       res.status(201).json({
-        ...toPublicSignalement(signalementWithoutMedia),
+        ...toPublicSignalement(signalementWithoutMedia, {
+          roundCoordinates: true,
+        }),
         medias: medias ? medias.map(() => "[MEDIA_DATA]") : [],
         verification: {
           status: verificationStatus,
@@ -1780,7 +1824,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isModerator
           ? updatedSignalement
           : updatedSignalement
-            ? toPublicSignalement(updatedSignalement)
+            ? toPublicSignalement(updatedSignalement, {
+                roundCoordinates: !isOwner,
+              })
             : updatedSignalement,
       );
     } catch (error) {
@@ -1909,7 +1955,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({
-        ...toPublicSignalement(updatedSignalement),
+        ...toPublicSignalement(updatedSignalement, {
+          roundCoordinates: true,
+        }),
         isLiked,
       });
     } catch (error) {
@@ -2701,7 +2749,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(
         isModerator
           ? signalements
-          : signalements.map(toPublicSignalement),
+          : signalements.map((signalement) =>
+              toPublicSignalement(signalement, {
+                roundCoordinates: !isOwner,
+              }),
+            ),
       );
     } catch (error) {
       console.error("Error fetching user signalements:", error);
