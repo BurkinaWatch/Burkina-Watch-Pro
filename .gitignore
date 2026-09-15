@@ -47,3 +47,13 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Environment files
+# Covers .env.local, .env.development, .env.test,
+# .env.production and their local variants.
+.env
+.env.*
+
+# Keep configuration templates tracked
+!.env.example
+!.env.*.example
