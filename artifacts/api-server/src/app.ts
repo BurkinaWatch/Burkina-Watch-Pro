@@ -4,8 +4,13 @@ import pinoHttp from "pino-http";
 import healthRouter from "./routes/health";
 import { registerRoutes } from "./routes/routes";
 import { logger } from "./lib/logger";
+import { applySecurityMiddlewares } from "./securityHardening";
 
 const app: Express = express();
+
+const allowedCorsOrigins = new Set([
+  "https://burkinawatch.com",
+]);
 
 app.use(
   pinoHttp({
@@ -26,9 +31,22 @@ app.use(
     },
   }),
 );
-app.use(cors());
+
+app.disable("x-powered-by");
+
+app.use(cors({
+  origin(origin, callback) {
+    // Les clients mobiles natifs et les requêtes sans en-tête Origin
+    // ne nécessitent pas de validation CORS.
+    callback(null, !origin || allowedCorsOrigins.has(origin));
+  },
+  credentials: false,
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+applySecurityMiddlewares(app);
 
 app.use("/api", healthRouter);
 

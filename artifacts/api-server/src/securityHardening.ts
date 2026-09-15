@@ -6,6 +6,10 @@ import hpp from "hpp";
 // @ts-ignore - no type declarations available
 import xss from "xss-clean";
 
+// CSP_REPORT_ONLY=true ou variable absente : observation sans blocage.
+// CSP_REPORT_ONLY=false : activation de la CSP bloquante.
+const cspReportOnly = process.env.CSP_REPORT_ONLY !== "false";
+
 // Rate limiting global
 export const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -109,15 +113,23 @@ export function applySecurityMiddlewares(app: Express) {
   // 1. Protection des headers HTTP avec Helmet
   app.use(helmet({
     contentSecurityPolicy: {
+      reportOnly: cspReportOnly,
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://*.openstreetmap.org", "https://unpkg.com"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://unpkg.com"],
-        imgSrc: ["'self'", "data:", "https:", "blob:"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "https:",
+          "blob:",
+          "https://*.openstreetmap.org",
+          "https://cdnjs.cloudflare.com",
+          "https://images.unsplash.com",
+          ...mediaOrigins,
+        ],
         connectSrc: [
           "'self'",
-          "https://*.openstreetmap.org",
-          "https://nominatim.openstreetmap.org",
           ...mediaGatewayOrigins,
         ],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
@@ -138,6 +150,9 @@ export function applySecurityMiddlewares(app: Express) {
   app.use(hpp());
 
   // 3. Nettoyage basique des entrées XSS
+  // xss-clean n'est plus maintenu et ne constitue pas une garantie
+  // de protection XSS moderne. Son remplacement par une sanitization
+  // ciblée doit être réévalué séparément, hors périmètre de ce correctif.
   app.use(xss());
 
   // 4. Rate limiting global (activé en production sur /api)
