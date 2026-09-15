@@ -7,4 +7,4 @@ Le script de build statique Expo utilise un port Metro configurable (`METRO_PORT
 
 **Why:** Le build statique échouait avant la compilation si 8081 était occupé, en proposant un autre port en mode non interactif.
 
-**How to apply:** Fournir un port Metro libre lors des builds isolés; ne pas interpréter une collision de port comme une erreur de l’application mobile.
+**How to apply:** Fournir un port Metro libre lors des builds isolés; ne pas interpréter une collision de port comme une erreur de l’application mobile. Le script nettoie aussi `static-build` et peut faire varier les chemins d’assets suivis par Git; restaurer ces artefacts avant de valider un changement sans rapport.
