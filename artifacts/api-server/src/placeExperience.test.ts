@@ -3,6 +3,7 @@ import { once } from "node:events";
 import http from "node:http";
 import test from "node:test";
 import express from "express";
+import sharp from "sharp";
 import {
   canReadPlaceExperienceCandidateMedia,
   DEFAULT_PLACE_EXPERIENCE_CONFIG,
@@ -318,8 +319,22 @@ test("la garde d'authentification utilisée par les routes refuse les visiteurs 
 
 test("les photos de candidats restent privées selon le statut et le rôle", async () => {
   const candidateId = "task-124-candidate-media";
-  const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0xff, 0xd9]);
+  const jpeg = await sharp({
+    create: {
+      width: 1,
+      height: 1,
+      channels: 3,
+      background: { r: 255, g: 0, b: 0 },
+    },
+  }).jpeg().toBuffer();
   const dataUrl = `data:image/jpeg;base64,${jpeg.toString("base64")}`;
+  const assertSanitizedJpeg = async (response: Response) => {
+    const content = Buffer.from(await response.arrayBuffer());
+    const metadata = await sharp(content).metadata();
+    assert.equal(metadata.format, "jpeg");
+    assert.equal(metadata.width, 1);
+    assert.equal(metadata.height, 1);
+  };
   const candidates = new Map(
     ["PENDING", "APPROVED", "REJECTED"].map((status) => [
       status,
@@ -366,20 +381,20 @@ test("les photos de candidats restent privées selon le statut et le rôle", asy
     const pendingOwner = await request("PENDING", { "x-test-user": "owner-1" });
     assert.equal(pendingOwner.status, 200);
     assert.equal(pendingOwner.headers.get("cache-control"), "private, no-store");
-    assert.deepEqual(Buffer.from(await pendingOwner.arrayBuffer()), jpeg);
+    await assertSanitizedJpeg(pendingOwner);
 
     const pendingOther = await request("PENDING", { "x-test-user": "other-1" });
     assert.equal(pendingOther.status, 403);
 
     const pendingModerator = await request("PENDING", { "x-test-role": "moderator" });
     assert.equal(pendingModerator.status, 200);
-    assert.deepEqual(Buffer.from(await pendingModerator.arrayBuffer()), jpeg);
+    await assertSanitizedJpeg(pendingModerator);
 
     const approvedAnonymous = await request("APPROVED");
     assert.equal(approvedAnonymous.status, 200);
     assert.equal(approvedAnonymous.headers.get("cache-control"), "public, max-age=3600");
     assert.equal(approvedAnonymous.headers.get("content-type"), "image/jpeg");
-    assert.deepEqual(Buffer.from(await approvedAnonymous.arrayBuffer()), jpeg);
+    await assertSanitizedJpeg(approvedAnonymous);
 
     const rejectedOwner = await request("REJECTED", { "x-test-user": "owner-1" });
     assert.equal(rejectedOwner.status, 200);
@@ -387,7 +402,7 @@ test("les photos de candidats restent privées selon le statut et le rôle", asy
 
     const rejectedModerator = await request("REJECTED", { "x-test-role": "moderateur" });
     assert.equal(rejectedModerator.status, 200);
-    assert.deepEqual(Buffer.from(await rejectedModerator.arrayBuffer()), jpeg);
+    await assertSanitizedJpeg(rejectedModerator);
 
     const rejectedOther = await request("REJECTED", { "x-test-user": "other-1" });
     assert.equal(rejectedOther.status, 403);
@@ -402,7 +417,10 @@ test("les photos de candidats restent privées selon le statut et le rôle", asy
     5 * 1024 * 1024,
   );
   try {
-    assert.deepEqual(await readPlaceExperienceCandidateMedia(candidateId), jpeg);
+    const storedMetadata = await sharp(await readPlaceExperienceCandidateMedia(candidateId)).metadata();
+    assert.equal(storedMetadata.format, "jpeg");
+    assert.equal(storedMetadata.width, 1);
+    assert.equal(storedMetadata.height, 1);
   } finally {
     await deleteStreetviewObject(`place-experience/candidates/${candidateId}/photo.jpg`);
   }
