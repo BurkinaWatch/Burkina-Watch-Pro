@@ -14,3 +14,4 @@
 - [Contexte lieu sans schéma publié](place-experience-schema-availability.md) — le contexte public doit rester lisible si les tables optionnelles de présence ne sont pas encore publiées.
 - [Runtime OTA Expo](expo-ota-runtime.md) — un APK doit embarquer expo-updates et partager le runtime/canal EAS de la publication.
 - [Nettoyage image et codecs natifs](sharp-image-privacy.md) — classifier par magic bytes et refuser HEIC/AVIF si les codecs natifs ne sont pas disponibles.
+- [Runtime Sharp sur Railway](sharp-railway-node-runtime.md) — Nixpacks peut rester sur Node 18; Sharp 0.35.4 exige Node 20.9+ et le runtime doit être déclaré.
