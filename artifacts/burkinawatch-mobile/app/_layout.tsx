@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -35,6 +36,13 @@ Notifications.setNotificationHandler({
 
 const queryClient = new QueryClient();
 
+const appFonts = {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+};
+
 function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerBackTitle: 'Back' }}>
@@ -53,12 +61,10 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-  });
+  // Expo Web's font loader can reject after its 12s FontFaceObserver timeout
+  // when the preview cannot resolve the Google font assets. Native builds
+  // still load the bundled Inter files; Web uses its CSS fallback stack.
+  const [fontsLoaded, fontError] = useFonts(Platform.OS === 'web' ? {} : appFonts);
   const [startupTimedOut, setStartupTimedOut] = React.useState(false);
 
   useEffect(() => {
