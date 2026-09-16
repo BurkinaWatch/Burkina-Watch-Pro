@@ -339,7 +339,7 @@ export default function MobilePlaceResultsScreen() {
                  {place.email ? <Text style={[styles.detail, { color: colors.mutedForeground }]}>{place.email}</Text> : null}
                  {place.website ? <Text style={[styles.detail, { color: colors.mutedForeground }]}>{place.website}</Text> : null}
                 {updatedLabel ? <Text style={[styles.detail, { color: colors.mutedForeground }]}>{updatedLabel}</Text> : null}
-                 {supportsPlaceVerification ? <SecurityContextCard placeId={id} colors={colors} /> : null}
+                 {supportsPlaceVerification && index < 3 ? <SecurityContextCard placeId={id} colors={colors} /> : null}
                 <View style={styles.actions}>
                   {phone ? (
                     <Pressable onPress={() => void Linking.openURL(`tel:${phone}`)} style={[styles.action, { borderColor: colors.border }]}>
