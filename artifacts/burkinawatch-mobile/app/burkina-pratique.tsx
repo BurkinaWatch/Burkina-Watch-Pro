@@ -93,6 +93,13 @@ export default function BurkinaPratiqueScreen() {
       '/marches': { endpoint: '/marches', title: 'Marchés' },
       '/hotels': { endpoint: '/places?placeType=hotel&limit=500', title: 'Hôtels & auberges' },
       '/boutiques-marches': { endpoint: '/boutiques', title: 'Boutiques & marchés' },
+      '/mairies-prefectures': { endpoint: '/mairies-prefectures', title: 'Mairies & préfectures' },
+      '/ministeres': { endpoint: '/ministeres', title: 'Ministères' },
+      '/lieux-de-culte': { endpoint: '/lieux-de-culte', title: 'Lieux de culte' },
+      '/universites': { endpoint: '/universites', title: 'Universités & instituts' },
+      '/sonabel-onea': { endpoint: '/sonabel-onea', title: 'SONABEL & ONEA' },
+      '/cine': { endpoint: '/cinema/info', title: 'Programme ciné' },
+      '/cimetieres': { endpoint: '/cimetieres', title: 'Cimetières' },
     };
     if (parsed.pathname === '/carte') {
       router.push('/(tabs)/carte' as never);

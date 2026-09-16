@@ -9,10 +9,24 @@ import { requestJson } from '@/lib/api';
 import { cachePracticalPlaces, readCachedPracticalPlaces } from '@/lib/storage';
 
 type MobilePlace = {
+  [key: string]: unknown;
   id?: string | number;
   placeId?: string | number;
   name?: string;
   nom?: string;
+  title?: string;
+  nomCourt?: string;
+  description?: string;
+  type?: string;
+  categorie?: string;
+  category?: string;
+  operateur?: string;
+  societe?: string;
+  marque?: string;
+  religion?: string;
+  compagnie?: string;
+  depart?: string;
+  arrivee?: string;
   latitude?: string | number;
   longitude?: string | number;
   address?: string;
@@ -21,8 +35,15 @@ type MobilePlace = {
   ville?: string;
   telephone?: string;
   phone?: string;
+  telephoneSecondaire?: string;
+  email?: string;
+  website?: string;
   horaires?: string;
   opening_hours?: string;
+  services?: string[];
+  carburants?: string[];
+  domaines?: string[];
+  attributions?: string[];
   imageUrl?: string;
   image?: string;
   source?: string;
@@ -36,7 +57,7 @@ type MobilePlace = {
   tags?: Record<string, unknown>;
 };
 
-type ApiResponse = MobilePlace[] | { places?: MobilePlace[]; pharmacies?: MobilePlace[]; boutiques?: MobilePlace[]; banques?: MobilePlace[]; stations?: MobilePlace[]; restaurants?: MobilePlace[]; lastUpdated?: string };
+type ApiResponse = MobilePlace[] | Record<string, unknown>;
 
 type SecurityContextItem = {
   id?: string | number;
@@ -74,11 +95,39 @@ const ENDPOINTS: Record<string, string> = {
   emergency: '/urgences',
 };
 
-function normalizePlaces(data: ApiResponse): MobilePlace[] {
+function normalizePlaces(data: ApiResponse, endpoint: string): MobilePlace[] {
   if (Array.isArray(data)) return data;
-  for (const key of ['places', 'pharmacies', 'boutiques', 'banques', 'stations', 'restaurants'] as const) {
+  const endpointKeys: Record<string, string[]> = {
+    '/telephonie': ['agences'],
+    '/sonabel-onea': ['agences'],
+    '/mairies-prefectures': ['institutions'],
+    '/ministeres': ['ministeres', 'institutions'],
+    '/lieux-de-culte': ['lieux'],
+    '/universites': ['universites', 'etablissements'],
+    '/cimetieres': ['cimetieres'],
+    '/cinema/info': ['cinemas'],
+    '/transport': ['gares', 'trajets'],
+  };
+  const keys = [
+    ...(endpointKeys[endpoint] || []),
+    'places',
+    'pharmacies',
+    'boutiques',
+    'banques',
+    'stations',
+    'restaurants',
+    'marches',
+    'agences',
+    'institutions',
+    'lieux',
+    'universites',
+    'etablissements',
+    'cimetieres',
+    'cinemas',
+  ];
+  for (const key of keys) {
     const value = data[key];
-    if (Array.isArray(value)) return value;
+    if (Array.isArray(value)) return value.filter((item): item is MobilePlace => Boolean(item && typeof item === 'object'));
   }
   return [];
 }
@@ -101,12 +150,14 @@ function getFreshness(place: MobilePlace) {
 
 function getPlaceName(place: MobilePlace) {
   const tags = place.tags || {};
-  return place.name || place.nom || String(tags.name || tags['name:fr'] || tags.operator || 'Lieu sans nom');
+  return place.name || place.nom || place.title || place.nomCourt ||
+    String(tags.name || tags['name:fr'] || tags.operator || 'Lieu sans nom');
 }
 
 function getPhone(place: MobilePlace) {
   const tags = place.tags || {};
-  return place.telephone || place.phone || (typeof tags.phone === 'string' ? tags.phone : null);
+  return place.telephone || place.phone || place.telephoneSecondaire ||
+    (typeof tags.phone === 'string' ? tags.phone : null);
 }
 
 function getImage(place: MobilePlace) {
@@ -119,6 +170,30 @@ function getUpdatedLabel(place: MobilePlace) {
   if (!rawDate) return null;
   const date = new Date(rawDate);
   return Number.isNaN(date.getTime()) ? null : `Mise à jour : ${date.toLocaleDateString('fr-FR')}`;
+}
+
+function getAddress(place: MobilePlace) {
+  return place.address || place.adresse ||
+    [place.quartier, place.ville].filter((value): value is string => typeof value === 'string' && Boolean(value)).join(', ');
+}
+
+function getExtraDetails(place: MobilePlace) {
+  const details: string[] = [];
+  if (place.type) details.push(place.type);
+  if (place.categorie) details.push(place.categorie);
+  if (place.operateur) details.push(place.operateur);
+  if (place.societe) details.push(place.societe);
+  if (place.marque) details.push(place.marque);
+  if (place.religion) details.push(place.religion);
+  if (place.depart || place.arrivee) {
+    details.push(`Trajet : ${place.depart || 'Départ'} → ${place.arrivee || 'Arrivée'}`);
+  }
+  if (place.compagnie) details.push(`Compagnie : ${place.compagnie}`);
+  for (const values of [place.services, place.carburants, place.domaines]) {
+    if (Array.isArray(values) && values.length) details.push(values.join(' · '));
+  }
+  if (place.description) details.push(place.description);
+  return details;
 }
 
 function contextItems(value: unknown): SecurityContextItem[] {
@@ -210,12 +285,13 @@ export default function MobilePlaceResultsScreen() {
     },
     retry: 1,
   });
-  const places = useMemo(() => normalizePlaces(query.data || []), [query.data]);
+  const places = useMemo(() => normalizePlaces(query.data || [], endpoint), [endpoint, query.data]);
+  const supportsPlaceVerification = endpoint.startsWith('/places');
 
   return (
     <Screen
       title={title}
-      subtitle="Données existantes de BurkinaWatch"
+      subtitle="Même catalogue de services que le site Web BurkinaWatch"
       showBack
       refreshing={query.isRefetching}
       onRefresh={() => void query.refetch()}
@@ -241,7 +317,8 @@ export default function MobilePlaceResultsScreen() {
           const image = getImage(place);
           const freshness = getFreshness(place);
           const updatedLabel = getUpdatedLabel(place);
-          const address = place.address || place.adresse || [place.quartier, place.ville].filter(Boolean).join(', ');
+           const address = getAddress(place);
+           const extraDetails = getExtraDetails(place);
           const latitude = Number(place.latitude);
           const longitude = Number(place.longitude);
           return (
@@ -255,9 +332,14 @@ export default function MobilePlaceResultsScreen() {
                   </View>
                 </View>
                 {address ? <Text style={[styles.detail, { color: colors.mutedForeground }]}>{address}</Text> : null}
-                {place.horaires || place.opening_hours ? <Text style={[styles.detail, { color: colors.mutedForeground }]}>{place.horaires || place.opening_hours}</Text> : null}
+                 {extraDetails.map((detail, detailIndex) => (
+                   <Text key={`${id}-detail-${detailIndex}`} style={[styles.detail, { color: colors.mutedForeground }]}>{detail}</Text>
+                 ))}
+                 {place.horaires || place.opening_hours ? <Text style={[styles.detail, { color: colors.mutedForeground }]}>{place.horaires || place.opening_hours}</Text> : null}
+                 {place.email ? <Text style={[styles.detail, { color: colors.mutedForeground }]}>{place.email}</Text> : null}
+                 {place.website ? <Text style={[styles.detail, { color: colors.mutedForeground }]}>{place.website}</Text> : null}
                 {updatedLabel ? <Text style={[styles.detail, { color: colors.mutedForeground }]}>{updatedLabel}</Text> : null}
-                <SecurityContextCard placeId={id} colors={colors} />
+                 {supportsPlaceVerification ? <SecurityContextCard placeId={id} colors={colors} /> : null}
                 <View style={styles.actions}>
                   {phone ? (
                     <Pressable onPress={() => void Linking.openURL(`tel:${phone}`)} style={[styles.action, { borderColor: colors.border }]}>
@@ -299,14 +381,16 @@ export default function MobilePlaceResultsScreen() {
                     <Text style={[styles.actionText, { color: colors.foreground }]}>Partager</Text>
                   </Pressable>
                 </View>
-                <View style={styles.validationRow}>
-                  <Pressable onPress={() => void requestJson(`/places/${id}/confirm`, { method: 'POST' })} accessibilityRole="button">
-                    <Text style={[styles.validationText, { color: colors.primary }]}>✓ Confirmer</Text>
-                  </Pressable>
-                  <Pressable onPress={() => void requestJson(`/places/${id}/report`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ comment: 'Fermeture ou problème signalé depuis la fiche mobile.' }) })} accessibilityRole="button">
-                    <Text style={[styles.validationText, { color: colors.destructive }]}>⚠ Signaler</Text>
-                  </Pressable>
-                </View>
+                 {supportsPlaceVerification ? (
+                   <View style={styles.validationRow}>
+                     <Pressable onPress={() => void requestJson(`/places/${id}/confirm`, { method: 'POST' })} accessibilityRole="button">
+                       <Text style={[styles.validationText, { color: colors.primary }]}>✓ Confirmer</Text>
+                     </Pressable>
+                     <Pressable onPress={() => void requestJson(`/places/${id}/report`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ comment: 'Fermeture ou problème signalé depuis la fiche mobile.' }) })} accessibilityRole="button">
+                       <Text style={[styles.validationText, { color: colors.destructive }]}>⚠ Signaler</Text>
+                     </Pressable>
+                   </View>
+                 ) : null}
               </View>
             </View>
           );

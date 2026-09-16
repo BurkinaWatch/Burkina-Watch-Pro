@@ -125,6 +125,55 @@ export const practicalCategories: PracticalItem[] = [
     description: 'Opérateurs et agences',
     keywords: ['téléphonie', 'téléphone', 'orange', 'moov'],
   },
+  {
+    label: 'Mairies & préfectures',
+    route: '/mairies-prefectures',
+    icon: 'landmark',
+    description: 'Services administratifs de proximité',
+    keywords: ['mairie', 'préfecture', 'administration'],
+  },
+  {
+    label: 'Ministères',
+    route: '/ministeres',
+    icon: 'briefcase',
+    description: 'Institutions et services publics',
+    keywords: ['ministère', 'institution', 'service public'],
+  },
+  {
+    label: 'Lieux de culte',
+    route: '/lieux-de-culte',
+    icon: 'compass',
+    description: 'Églises et mosquées',
+    keywords: ['église', 'mosquée', 'culte', 'religion'],
+  },
+  {
+    label: 'Universités & instituts',
+    route: '/universites',
+    icon: 'book-open',
+    description: 'Étudier et se former',
+    keywords: ['université', 'institut', 'école', 'étudier'],
+  },
+  {
+    label: 'SONABEL & ONEA',
+    route: '/sonabel-onea',
+    icon: 'zap',
+    description: 'Électricité et eau',
+    keywords: ['sonabel', 'onea', 'eau', 'électricité'],
+  },
+  {
+    label: 'Programme ciné',
+    route: '/cine',
+    icon: 'film',
+    description: 'Séances et salles de cinéma',
+    keywords: ['ciné', 'cinéma', 'film', 'séance'],
+  },
+  {
+    label: 'Cimetières',
+    route: '/cimetieres',
+    icon: 'map-pin',
+    description: 'Repères et lieux de recueillement',
+    keywords: ['cimetière', 'recueillement'],
+  },
 ];
 
 export const categoryRoutes: Record<string, string> = {
