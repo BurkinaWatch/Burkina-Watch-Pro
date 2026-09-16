@@ -12,6 +12,7 @@
 - [Protection contextuelle des déplacements](contextual-trip-protection.md) — jamais de score ou garantie; partage volontaire limité aux contacts choisis et clôturable à l’arrivée.
 - [État des tests Bash](railway-guardrail-shell-tests.md) — éviter les substitutions de commande pour mesurer un état modifié par une garde multi-étapes.
 - [Contexte lieu sans schéma publié](place-experience-schema-availability.md) — le contexte public doit rester lisible si les tables optionnelles de présence ne sont pas encore publiées.
+- [Enveloppes API des services mobiles](mobile-service-api-envelopes.md) — les services pratiques ont des enveloppes JSON distinctes; borner les requêtes secondaires par fiche.
 - [Runtime OTA Expo](expo-ota-runtime.md) — un APK doit embarquer expo-updates et partager le runtime/canal EAS de la publication.
 - [Nettoyage image et codecs natifs](sharp-image-privacy.md) — classifier par magic bytes et refuser HEIC/AVIF si les codecs natifs ne sont pas disponibles.
 - [Runtime Sharp sur Railway](sharp-railway-node-runtime.md) — Nixpacks peut rester sur Node 18; Sharp 0.35.4 exige Node 20.9+ et le runtime doit être déclaré.
