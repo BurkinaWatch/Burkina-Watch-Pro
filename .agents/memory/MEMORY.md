@@ -17,3 +17,4 @@
 - [Runtime Sharp sur Railway](sharp-railway-node-runtime.md) — Nixpacks peut rester sur Node 18; Sharp 0.35.4 exige Node 20.9+ et le runtime doit être déclaré.
 - [Rollback Railway](railway-rollback-behavior.md) — un rollback crée un nouveau déploiement basé sur l’ancien commit; vérifier son statut et l’URL publique avant de conclure.
 - [Audit base production Railway](railway-production-database-audit.md) — la production active peut être Railway même si la base de production Replit n’est pas provisionnée.
+- [Tests MIME Nodemailer](nodemailer-smtp-mime.md) — analyser le MIME décodé; quoted-printable et noms de fichiers sans guillemets sont valides.

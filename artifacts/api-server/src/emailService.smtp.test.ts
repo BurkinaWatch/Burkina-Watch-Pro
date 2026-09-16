@@ -194,6 +194,10 @@ function decodeMessageBody(raw: string): string {
   return body;
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function extractAttachment(raw: string, filename: string): string {
   const headers = messageHeaders(raw);
   const boundary = headers.match(/boundary="?([^";\r\n"]+)/i)?.[1];
@@ -201,7 +205,9 @@ function extractAttachment(raw: string, filename: string): string {
 
   const part = raw
     .split(`--${boundary}`)
-    .find((candidate) => candidate.includes(`filename="${filename}"`));
+    .find((candidate) =>
+      new RegExp(`filename="?${escapeRegExp(filename)}"?`, "i").test(candidate),
+    );
   assert(part, `attachment ${filename} must be present`);
 
   const partHeaderEnd = part.indexOf("\r\n\r\n");
@@ -278,7 +284,10 @@ test("all SMTP email flows work with Nodemailer and keep the GPX content attachm
     assert.match(decodeMessageBody(smtp.messages[3].raw), /12\.345678/);
 
     const expectedFilename = "burkina-watch-tracking-test-session.gpx";
-    assert.match(smtp.messages[2].raw, new RegExp(`filename="${expectedFilename}"`));
+    assert.match(
+      smtp.messages[2].raw,
+      new RegExp(`filename="?${escapeRegExp(expectedFilename)}"?`),
+    );
     assert.equal(extractAttachment(smtp.messages[2].raw, expectedFilename), gpx);
     assert.doesNotMatch(smtp.messages[2].raw, /filename="raw"|filename="path"/i);
   } finally {
