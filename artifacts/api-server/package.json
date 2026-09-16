@@ -27,7 +27,7 @@
     "groq-sdk": "^0.37.0",
     "helmet": "^8.1.0",
     "hpp": "^0.2.3",
-    "nodemailer": "^7.0.3",
+    "nodemailer": "^9.1.0",
     "openai": "^6.33.0",
     "passport": "^0.7.0",
     "pg": "8.22.0",

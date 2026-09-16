@@ -162,6 +162,42 @@ function messageBody(raw: string): string {
   return raw.slice(headerEnd + 4);
 }
 
+function decodeQuotedPrintable(value: string): string {
+  const bytes: number[] = [];
+
+  for (let index = 0; index < value.length; index += 1) {
+    const character = value[index];
+    if (character === "=" && value[index + 1] === "\r" && value[index + 2] === "\n") {
+      index += 2;
+      continue;
+    }
+
+    if (character === "=" && /^[0-9a-f]{2}$/i.test(value.slice(index + 1, index + 3))) {
+      bytes.push(Number.parseInt(value.slice(index + 1, index + 3), 16));
+      index += 2;
+      continue;
+    }
+
+    const encodedCharacter = Buffer.from(character, "utf8");
+    bytes.push(...encodedCharacter);
+  }
+
+  return Buffer.from(bytes).toString("utf8");
+}
+
+function decodeMessageBody(raw: string): string {
+  const headers = messageHeaders(raw);
+  const body = messageBody(raw);
+  if (/content-transfer-encoding:\s*quoted-printable/i.test(headers)) {
+    return decodeQuotedPrintable(body);
+  }
+  return body;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function extractAttachment(raw: string, filename: string): string {
   const headers = messageHeaders(raw);
   const boundary = headers.match(/boundary="?([^";\r\n"]+)/i)?.[1];
@@ -169,7 +205,9 @@ function extractAttachment(raw: string, filename: string): string {
 
   const part = raw
     .split(`--${boundary}`)
-    .find((candidate) => candidate.includes(`filename="${filename}"`));
+    .find((candidate) =>
+      new RegExp(`filename="?${escapeRegExp(filename)}"?`, "i").test(candidate),
+    );
   assert(part, `attachment ${filename} must be present`);
 
   const partHeaderEnd = part.indexOf("\r\n\r\n");
@@ -233,15 +271,23 @@ test("all SMTP email flows work with Nodemailer and keep the GPX content attachm
     assert.match(signalLost.messageId, /.+/);
 
     assert.equal(smtp.messages.length, 4);
-    assert.match(smtp.messages[0].raw, /Votre code de connexion Burkina Watch/);
-    assert.match(smtp.messages[0].raw, /123456/);
-    assert.match(smtp.messages[1].raw, /a activé le suivi de sécurité en direct/);
-    assert.match(smtp.messages[1].raw, /12\.345678/);
-    assert.match(smtp.messages[3].raw, /signal de Utilisateur Test perdu/);
-    assert.match(smtp.messages[3].raw, /12\.345678/);
+    assert.match(messageHeaders(smtp.messages[0].raw), /^Subject:/m);
+    assert.match(decodeMessageBody(smtp.messages[0].raw), /Votre code de connexion est/);
+    assert.match(decodeMessageBody(smtp.messages[0].raw), /123456/);
+    assert.match(decodeMessageBody(smtp.messages[1].raw), /a activé le suivi de localisation en direct/);
+    assert.match(decodeMessageBody(smtp.messages[1].raw), /12\.345678/);
+    assert.match(decodeMessageBody(smtp.messages[3].raw), /Signal de suivi perdu/);
+    assert.match(
+      decodeMessageBody(smtp.messages[3].raw),
+      /Aucune nouvelle position de Utilisateur Test depuis plus de 5 minutes/,
+    );
+    assert.match(decodeMessageBody(smtp.messages[3].raw), /12\.345678/);
 
     const expectedFilename = "burkina-watch-tracking-test-session.gpx";
-    assert.match(smtp.messages[2].raw, new RegExp(`filename="${expectedFilename}"`));
+    assert.match(
+      smtp.messages[2].raw,
+      new RegExp(`filename="?${escapeRegExp(expectedFilename)}"?`),
+    );
     assert.equal(extractAttachment(smtp.messages[2].raw, expectedFilename), gpx);
     assert.doesNotMatch(smtp.messages[2].raw, /filename="raw"|filename="path"/i);
   } finally {
