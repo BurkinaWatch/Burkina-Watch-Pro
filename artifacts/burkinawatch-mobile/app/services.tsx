@@ -33,6 +33,13 @@ const serviceGroups = [
       ['Boutiques', '/boutiques', 'shopping-bag'],
       ['Marchés & boutiques', '/boutiques-marches', 'grid'],
       ['Téléphonie', '/telephonie', 'smartphone'],
+      ['Mairies & préfectures', '/mairies-prefectures', 'landmark'],
+      ['Ministères', '/ministeres', 'briefcase'],
+      ['Lieux de culte', '/lieux-de-culte', 'compass'],
+      ['Universités & instituts', '/universites', 'book-open'],
+      ['SONABEL & ONEA', '/sonabel-onea', 'zap'],
+      ['Programme ciné', '/cine', 'film'],
+      ['Cimetières', '/cimetieres', 'map-pin'],
       ['Fil d’actualité', '/feed', 'radio'],
       ['Notifications', '/notifications', 'bell'],
     ],
@@ -62,6 +69,13 @@ const nativeDestinations: Record<string, NativeDestination> = {
   '/hotels': { endpoint: '/places?placeType=hotel&limit=500', title: 'Hôtels & auberges' },
   '/gares': { endpoint: '/transport', title: 'Transport' },
   '/telephonie': { endpoint: '/telephonie', title: 'Téléphonie & réparation' },
+  '/mairies-prefectures': { endpoint: '/mairies-prefectures', title: 'Mairies & préfectures' },
+  '/ministeres': { endpoint: '/ministeres', title: 'Ministères' },
+  '/lieux-de-culte': { endpoint: '/lieux-de-culte', title: 'Lieux de culte' },
+  '/universites': { endpoint: '/universites', title: 'Universités & instituts' },
+  '/sonabel-onea': { endpoint: '/sonabel-onea', title: 'SONABEL & ONEA' },
+  '/cine': { endpoint: '/cinema/info', title: 'Programme ciné' },
+  '/cimetieres': { endpoint: '/cimetieres', title: 'Cimetières' },
 };
 
 export default function ServicesScreen() {
