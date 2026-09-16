@@ -33,7 +33,7 @@ const serviceGroups = [
       ['Boutiques', '/boutiques', 'shopping-bag'],
       ['Marchés & boutiques', '/boutiques-marches', 'grid'],
       ['Téléphonie', '/telephonie', 'smartphone'],
-      ['Mairies & préfectures', '/mairies-prefectures', 'landmark'],
+      ['Mairies & préfectures', '/mairies-prefectures', 'home'],
       ['Ministères', '/ministeres', 'briefcase'],
       ['Lieux de culte', '/lieux-de-culte', 'compass'],
       ['Universités & instituts', '/universites', 'book-open'],

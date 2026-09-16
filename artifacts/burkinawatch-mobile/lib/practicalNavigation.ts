@@ -128,7 +128,7 @@ export const practicalCategories: PracticalItem[] = [
   {
     label: 'Mairies & préfectures',
     route: '/mairies-prefectures',
-    icon: 'landmark',
+    icon: 'home',
     description: 'Services administratifs de proximité',
     keywords: ['mairie', 'préfecture', 'administration'],
   },
