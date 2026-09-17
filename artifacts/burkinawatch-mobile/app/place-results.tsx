@@ -7,6 +7,7 @@ import { useColors } from '@/hooks/useColors';
 import { EmptyState, ErrorState, LoadingState, Screen } from '@/components/Screen';
 import { requestJson } from '@/lib/api';
 import { cachePracticalPlaces, readCachedPracticalPlaces } from '@/lib/storage';
+import { MOBILE_CLINIC_NETWORK } from '@/lib/mobileClinics';
 
 type MobilePlace = {
   [key: string]: unknown;
@@ -236,6 +237,44 @@ function contextFreshness(item: SecurityContextItem) {
   return Number.isNaN(parsed.getTime()) ? 'Fraîcheur inconnue' : `Actualisé le ${parsed.toLocaleDateString('fr-FR')}`;
 }
 
+function MobileClinicNetworkCard({ colors }: { colors: ReturnType<typeof useColors> }) {
+  return (
+    <View style={[styles.mobileClinicCard, { backgroundColor: colors.card, borderColor: colors.border }]} testID="mobile-clinic-network">
+      <View style={styles.mobileClinicHeader}>
+        <View style={[styles.mobileClinicIcon, { backgroundColor: colors.muted }]}>
+          <Feather name="truck" size={19} color={colors.primary} />
+        </View>
+        <View style={styles.mobileClinicCopy}>
+          <Text style={[styles.mobileClinicTitle, { color: colors.foreground }]}>{MOBILE_CLINIC_NETWORK.unitCount} cliniques mobiles nationales</Text>
+          <Text style={[styles.mobileClinicMeta, { color: colors.mutedForeground }]}>{MOBILE_CLINIC_NETWORK.regionCount} régions couvertes · réseau itinérant</Text>
+        </View>
+      </View>
+      <Text style={[styles.detail, { color: colors.mutedForeground }]}>
+        {MOBILE_CLINIC_NETWORK.status}. Ces unités n’ont pas d’adresse permanente : confirmez leur prochaine sortie auprès du ministère.
+      </Text>
+      <View style={styles.mobileClinicStats}>
+        <Text style={[styles.mobileClinicStat, { color: colors.foreground }]}>627 sorties en 2025</Text>
+        <Text style={[styles.mobileClinicStat, { color: colors.foreground }]}>Dépistage seins et col</Text>
+      </View>
+      <Text style={[styles.detail, { color: colors.mutedForeground }]}>{MOBILE_CLINIC_NETWORK.contact.address}</Text>
+      <View style={styles.actions}>
+        <Pressable onPress={() => void Linking.openURL(`tel:${MOBILE_CLINIC_NETWORK.contact.phone}`)} style={[styles.action, { borderColor: colors.border }]}>
+          <Feather name="phone" size={14} color={colors.primary} />
+          <Text style={[styles.actionText, { color: colors.foreground }]}>Appeler</Text>
+        </Pressable>
+        <Pressable onPress={() => void Linking.openURL(`mailto:${MOBILE_CLINIC_NETWORK.contact.email}`)} style={[styles.action, { borderColor: colors.border }]}>
+          <Feather name="mail" size={14} color={colors.primary} />
+          <Text style={[styles.actionText, { color: colors.foreground }]}>Email</Text>
+        </Pressable>
+        <Pressable onPress={() => void Linking.openURL(MOBILE_CLINIC_NETWORK.contact.url)} style={[styles.action, { borderColor: colors.border }]}>
+          <Feather name="external-link" size={14} color={colors.primary} />
+          <Text style={[styles.actionText, { color: colors.foreground }]}>Source</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 function SecurityContextCard({ placeId, colors }: { placeId: string; colors: ReturnType<typeof useColors> }) {
   const contextQuery = useQuery<SecurityContext>({
     queryKey: ['mobile-place-security-context', placeId],
@@ -341,6 +380,7 @@ export default function MobilePlaceResultsScreen() {
       {!query.isLoading && !query.isError && !places.length ? (
         <EmptyState title="Aucun lieu disponible" description="Aucune fiche existante ne correspond pour le moment." icon="map-pin" />
       ) : null}
+      {endpoint.includes('/places/hospital') ? <MobileClinicNetworkCard colors={colors} /> : null}
       <View style={styles.list}>
         {places.map((place, index) => {
           const id = String(place.id || place.placeId || index);
@@ -470,6 +510,14 @@ const styles = StyleSheet.create({
   validationText: { fontFamily: 'Inter_600SemiBold', fontSize: 11 },
   filterNotice: { alignItems: 'center', borderRadius: 12, borderWidth: 1, flexDirection: 'row', gap: 8, padding: 10 },
   filterText: { flex: 1, fontFamily: 'Inter_400Regular', fontSize: 11, lineHeight: 16 },
+  mobileClinicCard: { borderRadius: 16, borderWidth: 1, gap: 10, marginBottom: 10, padding: 14 },
+  mobileClinicHeader: { alignItems: 'center', flexDirection: 'row', gap: 10 },
+  mobileClinicIcon: { alignItems: 'center', borderRadius: 11, height: 38, justifyContent: 'center', width: 38 },
+  mobileClinicCopy: { flex: 1, gap: 3 },
+  mobileClinicTitle: { fontFamily: 'Inter_700Bold', fontSize: 14 },
+  mobileClinicMeta: { fontFamily: 'Inter_400Regular', fontSize: 11 },
+  mobileClinicStats: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  mobileClinicStat: { backgroundColor: '#ecfdf5', borderRadius: 7, fontFamily: 'Inter_600SemiBold', fontSize: 10, paddingHorizontal: 8, paddingVertical: 5 },
   backLink: { alignItems: 'center', flexDirection: 'row', gap: 7, justifyContent: 'center', paddingVertical: 12 },
   backLinkText: { fontFamily: 'Inter_600SemiBold', fontSize: 12 },
 });
