@@ -303,7 +303,11 @@ export class OverpassService {
         
         const response = await fetch(endpoint, {
           method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json",
+            "User-Agent": "BurkinaWatch/1.0 (OpenStreetMap data synchronization)",
+          },
           body: `data=${encodeURIComponent(query)}`,
           signal: controller.signal,
         });
