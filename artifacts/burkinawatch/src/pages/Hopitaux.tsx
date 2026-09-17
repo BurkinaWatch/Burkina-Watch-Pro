@@ -1,4 +1,4 @@
-import { Hospital, ChevronLeft, MapPin, Phone, Clock, Search, Building2, Landmark, Cross, HeartPulse, Activity, Globe, Navigation, RefreshCw, Locate, Loader2, Truck, Mail, ExternalLink, Info } from "lucide-react";
+import { Hospital, ChevronLeft, MapPin, Phone, Clock, Search, Building2, Landmark, Cross, HeartPulse, Activity, Globe, Navigation, RefreshCw, Locate, Loader2 } from "lucide-react";
 import { VoiceSearchInput } from "@/components/VoiceSearchInput";
 import { Helmet } from "react-helmet-async";
 import { Link } from "wouter";
@@ -14,7 +14,6 @@ import { REGION_NAMES } from "@/lib/regions";
 import { useToast } from "@/hooks/use-toast";
 import { LocationValidator } from "@/components/LocationValidator";
 import { getLocationErrorMessage, requestUserLocation } from "@/lib/geolocation";
-import { MOBILE_CLINIC_NETWORK } from "@/data/mobileClinics";
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371;
@@ -256,73 +255,6 @@ export default function Hopitaux() {
                   <span className="hidden sm:inline">Les plus proches</span>
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-primary/5 to-transparent" data-testid="mobile-clinic-network">
-            <CardHeader className="pb-3">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-xl bg-emerald-500/15 p-2.5">
-                    <Truck className="h-5 w-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      {MOBILE_CLINIC_NETWORK.unitCount} cliniques mobiles nationales
-                      <Badge variant="outline" className="border-emerald-500/40 text-[10px] text-emerald-700">Réseau itinérant</Badge>
-                    </CardTitle>
-                    <CardDescription className="mt-1 max-w-3xl">
-                      {MOBILE_CLINIC_NETWORK.status}. Elles ne disposent pas d’une adresse fixe : leur localisation dépend des campagnes et des sorties sanitaires.
-                    </CardDescription>
-                  </div>
-                </div>
-                <Badge variant="secondary" className="w-fit shrink-0">{MOBILE_CLINIC_NETWORK.regionCount} régions couvertes</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="rounded-lg border bg-background/60 p-3">
-                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
-                    <HeartPulse className="h-4 w-4 text-emerald-600" />
-                    Services documentés
-                  </div>
-                  <ul className="space-y-1.5 text-xs text-muted-foreground">
-                    {MOBILE_CLINIC_NETWORK.services.map((service) => <li key={service}>• {service}</li>)}
-                  </ul>
-                </div>
-                <div className="rounded-lg border bg-background/60 p-3">
-                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
-                    <Activity className="h-4 w-4 text-emerald-600" />
-                    Activité rapportée pour 2025
-                  </div>
-                  <ul className="space-y-1.5 text-xs text-muted-foreground">
-                    {MOBILE_CLINIC_NETWORK.impact.map((item) => <li key={item}>• {item}</li>)}
-                  </ul>
-                </div>
-              </div>
-              <div className="flex flex-col gap-3 rounded-lg border border-emerald-500/20 bg-background/60 p-3 text-xs sm:flex-row sm:items-center sm:justify-between">
-                <div className="space-y-1">
-                  <p className="flex items-center gap-2 font-semibold"><Info className="h-4 w-4 text-emerald-600" /> Où trouver la prochaine sortie ?</p>
-                  <p className="text-muted-foreground">
-                    Contactez le ministère pour confirmer la prochaine localisation, la date de passage et les modalités de prise en charge.
-                  </p>
-                  <p className="text-muted-foreground">{MOBILE_CLINIC_NETWORK.contact.address}</p>
-                </div>
-                <div className="flex shrink-0 flex-wrap gap-2">
-                  <Button variant="outline" size="sm" className="gap-1.5" asChild>
-                    <a href={`tel:${MOBILE_CLINIC_NETWORK.contact.phone}`}><Phone className="h-3.5 w-3.5" />{MOBILE_CLINIC_NETWORK.contact.phone}</a>
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-1.5" asChild>
-                    <a href={`mailto:${MOBILE_CLINIC_NETWORK.contact.email}`}><Mail className="h-3.5 w-3.5" />Email</a>
-                  </Button>
-                  <Button variant="ghost" size="sm" className="gap-1.5" asChild>
-                    <a href={MOBILE_CLINIC_NETWORK.contact.url} target="_blank" rel="noreferrer"><ExternalLink className="h-3.5 w-3.5" />Source officielle</a>
-                  </Button>
-                </div>
-              </div>
-              <p className="text-[11px] text-muted-foreground">
-                Source : <a className="underline underline-offset-2" href={MOBILE_CLINIC_NETWORK.source.url} target="_blank" rel="noreferrer">{MOBILE_CLINIC_NETWORK.source.label}</a>. Les 15 unités sont comptées comme un réseau national et non comme 15 établissements fixes afin de ne pas afficher une fausse adresse.
-              </p>
             </CardContent>
           </Card>
 
