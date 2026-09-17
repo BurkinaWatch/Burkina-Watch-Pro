@@ -13,5 +13,5 @@ export function getWebAppUrl() {
 
   const domain = process.env.EXPO_PUBLIC_DOMAIN?.trim();
   const origin = domain ? normalizeUrl(domain) : null;
-  return origin ? `${origin}/burkinawatch` : null;
+  return origin;
 }

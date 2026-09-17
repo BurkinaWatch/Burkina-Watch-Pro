@@ -169,7 +169,7 @@ async function startMetro(expoPublicDomain, expoPublicReplId) {
     EXPO_PUBLIC_DOMAIN: expoPublicDomain,
     EXPO_PUBLIC_WEB_URL:
       process.env.EXPO_PUBLIC_WEB_URL ||
-      `https://${expoPublicDomain}/burkinawatch`,
+      `https://${expoPublicDomain}`,
     EXPO_PUBLIC_REPL_ID: expoPublicReplId,
   };
 
