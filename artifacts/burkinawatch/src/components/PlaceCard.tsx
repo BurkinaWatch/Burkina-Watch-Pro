@@ -32,6 +32,7 @@ interface PlaceWithDistance extends Place {
 
 interface PlaceCardProps {
   place: PlaceWithDistance;
+  showPracticalContext?: boolean;
 }
 
 const PLACE_TYPE_LABELS: Record<string, string> = {
@@ -50,7 +51,7 @@ const PLACE_TYPE_COLORS: Record<string, string> = {
   shop: "bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400",
 };
 
-export function PlaceCard({ place }: PlaceCardProps) {
+export function PlaceCard({ place, showPracticalContext = true }: PlaceCardProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const typeLabel = PLACE_TYPE_LABELS[place.placeType] || place.placeType;
@@ -298,7 +299,9 @@ export function PlaceCard({ place }: PlaceCardProps) {
           </div>
         )}
 
-        <PlacePracticalContext placeId={place.id} freshness={freshness} />
+        {showPracticalContext && (
+          <PlacePracticalContext placeId={place.id} freshness={freshness} />
+        )}
 
         {plats && (
           <div className="flex items-start gap-2 text-sm text-muted-foreground">

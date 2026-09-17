@@ -404,7 +404,7 @@ export function PlacesListPage({
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {filteredPlaces.map((place) => (
                   <div key={place.id} className={selectedPlaceId === String(place.id) ? "rounded-xl ring-2 ring-primary ring-offset-2" : undefined}>
-                    <PlaceCard place={place} />
+                    <PlaceCard place={place} showPracticalContext={false} />
                     <Button
                       variant="ghost"
                       size="sm"
