@@ -32,7 +32,6 @@ import {
   Home,
   Car,
   Phone,
-  Heart
 } from "lucide-react";
 import { useState } from "react";
 import { format, formatDistanceToNow } from "date-fns";
@@ -395,13 +394,6 @@ export default function WeatherAlerts({
                       </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
-                      <Heart className="w-4 h-4 text-red-500" />
-                      <div>
-                        <p className="font-medium">SAMU</p>
-                        <p className="text-muted-foreground">112</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
                       <Shield className="w-4 h-4 text-blue-500" />
                       <div>
                         <p className="font-medium">Police</p>
@@ -409,10 +401,10 @@ export default function WeatherAlerts({
                       </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
-                      <AlertTriangle className="w-4 h-4 text-orange-500" />
+                      <Shield className="w-4 h-4 text-blue-500" />
                       <div>
-                        <p className="font-medium">Protection Civile</p>
-                        <p className="text-muted-foreground">1010</p>
+                        <p className="font-medium">Gendarmerie</p>
+                        <p className="text-muted-foreground">16</p>
                       </div>
                     </div>
                   </div>
