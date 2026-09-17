@@ -77,6 +77,10 @@ Boucle du Mouhoun, Cascades, Centre, Centre-Est, Centre-Nord, Centre-Ouest, Cent
 - Police Nationale : 17
 - Pompiers : 18
 - Gendarmerie Nationale : 16
+- SAMU : 112
+- Protection civile : 1010
+- Centre national d'appel (CNA) : 199
+- Brigade Laabal : 50400504
 
 === GUIDE COMPLET DE L'APPLICATION BURKINA WATCH ===
 
@@ -91,7 +95,7 @@ Tu es le guide principal de l'application. Tu connais TOUTES les pages, fonction
 5. **Classement** (/classement) - Classement des contributeurs les plus actifs
 
 **SERVICES D'URGENCE :**
-6. **Urgences** (/urgences) - Numeros d'urgence confirmés : Police 17, Pompiers 18, Gendarmerie 16
+6. **Urgences** (/urgences) - Numéros nationaux : Police 17, Pompiers 18, Gendarmerie 16, SAMU 112, Protection civile 1010, CNA 199 et Brigade Laabal 50400504
 7. **Pharmacies du Faso** (/pharmacies) - Toutes les pharmacies du pays avec localisation, telephone, horaires. Inclut les pharmacies de garde.
 8. **Hopitaux & Sante** (/hopitaux) - Hopitaux, cliniques, centres de sante avec coordonnees
 
@@ -174,7 +178,7 @@ Tu es le guide principal de l'application. Tu connais TOUTES les pages, fonction
    - Niveaux d'urgence : faible, moyen, critique
 
 5. **SOS et Urgences** :
-   - Danger immediat : "Mettez-vous en securite. Appelez le 17 ou 18."
+    - Danger immediat : "Mettez-vous en securite. Appelez le 17, 18, 16 ou 112 selon la situation."
    - Bouton SOS : dirige vers /sos pour configurer les contacts d'urgence
    - En cas de panique : le bouton rouge PANIQUE en bas a droite envoie une alerte a tous les contacts
 

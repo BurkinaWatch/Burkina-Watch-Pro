@@ -326,18 +326,21 @@ export default function Guide() {
           color="bg-orange-600"
           preview={{
             statCards: [
-              { value: "3", label: "Contacts", color: "bg-orange-50 dark:bg-orange-950/20 print:bg-orange-50" },
+              { value: "7", label: "Contacts", color: "bg-orange-50 dark:bg-orange-950/20 print:bg-orange-50" },
             ],
             elements: [
               "Police Nationale - 17 - Urgence",
               "Sapeurs-Pompiers - 18 - Urgence",
               "Gendarmerie Nationale - 16 - Urgence",
+              "SAMU - 112 | Protection civile - 1010",
+              "CNA - 199 | Brigade Laabal - 50400504",
             ],
           }}
           features={[
-            "Police Nationale (17), Sapeurs-Pompiers (18) et Gendarmerie (16)",
-            "Contacts locaux retirés lorsqu'ils ne sont pas recoupables avec une source institutionnelle",
-            "Liste courte contrôlée le 17 septembre 2026",
+            "Police (17), Pompiers (18), Gendarmerie (16) et SAMU (112)",
+            "Protection civile (1010), CNA (199) et Brigade Laabal (50400504) restaurés comme services prioritaires",
+            "106 fiches locales ou additionnelles restent en attente de recoupement individuel",
+            "Inventaire historique de 113 fiches classé par type et par ville",
             "Recherche vocale et filtrage par type de service",
             "Bouton d'appel direct en un clic",
           ]}

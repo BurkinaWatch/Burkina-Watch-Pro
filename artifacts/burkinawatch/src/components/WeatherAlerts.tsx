@@ -407,6 +407,34 @@ export default function WeatherAlerts({
                         <p className="text-muted-foreground">16</p>
                       </div>
                     </div>
+                    <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
+                      <Phone className="w-4 h-4 text-green-500" />
+                      <div>
+                        <p className="font-medium">SAMU</p>
+                        <p className="text-muted-foreground">112</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
+                      <Phone className="w-4 h-4 text-amber-500" />
+                      <div>
+                        <p className="font-medium">Protection civile</p>
+                        <p className="text-muted-foreground">1010</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
+                      <Phone className="w-4 h-4 text-purple-500" />
+                      <div>
+                        <p className="font-medium">CNA</p>
+                        <p className="text-muted-foreground">199</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
+                      <Phone className="w-4 h-4 text-orange-500" />
+                      <div>
+                        <p className="font-medium">Brigade Laabal</p>
+                        <p className="text-muted-foreground">50400504</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -698,6 +726,22 @@ export function WeatherAlertsBanner() {
                 <div className="flex items-center gap-2">
                   <span className="font-medium">Gendarmerie:</span>
                   <a href="tel:16" className="text-primary underline">16</a>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">SAMU:</span>
+                  <a href="tel:112" className="text-primary underline">112</a>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Protection civile:</span>
+                  <a href="tel:1010" className="text-primary underline">1010</a>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">CNA:</span>
+                  <a href="tel:199" className="text-primary underline">199</a>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Brigade Laabal:</span>
+                  <a href="tel:50400504" className="text-primary underline">50400504</a>
                 </div>
               </div>
             </div>

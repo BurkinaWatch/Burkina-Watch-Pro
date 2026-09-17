@@ -34,7 +34,7 @@ export default function APropos() {
             <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">Version 1.2</span>
             <span className="px-3 py-1 bg-green-500/10 text-green-600 dark:text-green-400 rounded-full text-sm font-medium">11 000+ Points d'intérêt</span>
             <span className="px-3 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-sm font-medium">135 Pharmacies</span>
-            <span className="px-3 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full text-sm font-medium">106 Services d'urgence</span>
+            <span className="px-3 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full text-sm font-medium">7 Contacts prioritaires</span>
           </div>
         </div>
 
@@ -130,7 +130,9 @@ export default function APropos() {
                     <div>
                       <h4 className="font-semibold">Numéros d'Urgence</h4>
                       <p className="text-sm text-muted-foreground">
-                         3 contacts nationaux conservés après audit : Police (17), Pompiers (18) et Gendarmerie (16)
+                          7 services nationaux conservés : Police (17), Pompiers (18), Gendarmerie (16),
+                          SAMU (112), Protection civile (1010), CNA (199) et Brigade Laabal (50400504).
+                          Les 106 autres fiches historiques restent à recouper individuellement.
                       </p>
                     </div>
                   </div>
