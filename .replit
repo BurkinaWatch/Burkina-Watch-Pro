@@ -1,4 +1,4 @@
-modules = ["nodejs-24", "python-base-3.13", "postgresql-16"]
+modules = ["nodejs-24", "python-base-3.13", "postgresql-16", "java-graalvm22.3"]
 
 [deployment]
 router = "application"
@@ -42,4 +42,4 @@ timeoutMs = 120000
 
 [nix]
 channel = "stable-25_05"
-packages = ["glib", "nspr", "nss", "dbus"]
+packages = ["glib", "nspr", "nss", "dbus", "gradle", "android-tools", "unzip"]
