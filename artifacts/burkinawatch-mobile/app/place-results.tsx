@@ -97,6 +97,30 @@ const ENDPOINTS: Record<string, string> = {
 
 function normalizePlaces(data: ApiResponse, endpoint: string): MobilePlace[] {
   if (Array.isArray(data)) return data;
+  if (endpoint === '/boutiques-marches') {
+    return ['boutiques', 'marches'].flatMap((key) => {
+      const value = data[key];
+      return Array.isArray(value)
+        ? value.filter((item): item is MobilePlace => Boolean(item && typeof item === 'object'))
+        : [];
+    });
+  }
+  if (endpoint === '/transport') {
+    return ['gares', 'trajets'].flatMap((key) => {
+      const value = data[key];
+      return Array.isArray(value)
+        ? value.filter((item): item is MobilePlace => Boolean(item && typeof item === 'object'))
+        : [];
+    });
+  }
+  if (endpoint === '/cinema/info') {
+    return ['cinemas', 'recentFilms'].flatMap((key) => {
+      const value = data[key];
+      return Array.isArray(value)
+        ? value.filter((item): item is MobilePlace => Boolean(item && typeof item === 'object'))
+        : [];
+    });
+  }
   const endpointKeys: Record<string, string[]> = {
     '/telephonie': ['agences'],
     '/sonabel-onea': ['agences'],
@@ -274,7 +298,15 @@ export default function MobilePlaceResultsScreen() {
     queryKey: ['mobile-practical-places', endpoint],
     queryFn: async () => {
       try {
-        const data = await requestJson<ApiResponse>(endpoint);
+        const data = endpoint === '/boutiques-marches'
+          ? await Promise.all([
+              requestJson<ApiResponse>('/boutiques'),
+              requestJson<ApiResponse>('/marches'),
+            ]).then(([boutiques, marches]) => ({
+              boutiques: Array.isArray(boutiques) ? boutiques : boutiques.boutiques || [],
+              marches: Array.isArray(marches) ? marches : marches.marches || [],
+            }))
+          : await requestJson<ApiResponse>(endpoint);
         await cachePracticalPlaces(endpoint, data);
         return data;
       } catch (error) {

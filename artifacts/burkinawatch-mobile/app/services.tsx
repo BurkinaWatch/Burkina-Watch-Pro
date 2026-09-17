@@ -63,7 +63,7 @@ const nativeDestinations: Record<string, NativeDestination> = {
   '/banques': { endpoint: '/banques', title: "Retrait d'argent" },
   '/stations': { endpoint: '/stations', title: 'Stations-service' },
   '/boutiques': { endpoint: '/boutiques', title: 'Boutiques & artisans' },
-  '/boutiques-marches': { endpoint: '/boutiques', title: 'Boutiques & marchés' },
+  '/boutiques-marches': { endpoint: '/boutiques-marches', title: 'Boutiques & marchés' },
   '/restaurants': { endpoint: '/places?placeType=restaurant&limit=500', title: 'Restaurants' },
   '/marches': { endpoint: '/marches', title: 'Marchés' },
   '/hotels': { endpoint: '/places?placeType=hotel&limit=500', title: 'Hôtels & auberges' },

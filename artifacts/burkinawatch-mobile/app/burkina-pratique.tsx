@@ -92,7 +92,7 @@ export default function BurkinaPratiqueScreen() {
       '/hopitaux': { endpoint: '/places/hospital?limit=500', title: 'Hôpitaux & santé' },
       '/marches': { endpoint: '/marches', title: 'Marchés' },
       '/hotels': { endpoint: '/places?placeType=hotel&limit=500', title: 'Hôtels & auberges' },
-      '/boutiques-marches': { endpoint: '/boutiques', title: 'Boutiques & marchés' },
+      '/boutiques-marches': { endpoint: '/boutiques-marches', title: 'Boutiques & marchés' },
       '/mairies-prefectures': { endpoint: '/mairies-prefectures', title: 'Mairies & préfectures' },
       '/ministeres': { endpoint: '/ministeres', title: 'Ministères' },
       '/lieux-de-culte': { endpoint: '/lieux-de-culte', title: 'Lieux de culte' },
