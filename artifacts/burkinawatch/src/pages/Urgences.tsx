@@ -31,8 +31,6 @@ interface EmergencyService {
   longitude?: number;
   available24h?: boolean;
   services?: string[];
-  verificationStatus?: "confirmed" | "priority-restored";
-  verificationNote?: string;
 }
 
 export default function Urgences() {
@@ -473,7 +471,7 @@ export default function Urgences() {
               <div className="flex-1">
                 <h2 className="text-2xl font-bold mb-2">Urgences Burkina</h2>
                 <p className="text-muted-foreground">
-                   Contacts nationaux et services prioritaires conservés pour les situations critiques au Burkina Faso
+                  Contacts nationaux conservés après audit pour les situations critiques au Burkina Faso
                 </p>
               </div>
             </div>
@@ -486,12 +484,11 @@ export default function Urgences() {
             <div className="flex items-start gap-3">
               <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
               <div className="space-y-1 text-sm">
-                 <p className="font-semibold">Contacts nationaux et services prioritaires</p>
+                <p className="font-semibold">Contacts confirmés uniquement</p>
                 <p className="text-muted-foreground">
-                   Les 7 services nationaux affichés comprennent 3 contacts confirmés
-                   et 4 services prioritaires restaurés depuis la liste historique.
-                   Les 106 autres fiches historiques locales ou additionnelles restent
-                   exclues tant qu'elles ne sont pas recoupées individuellement.
+                  Les anciennes fiches locales et les numéros courts non recoupables ont été retirés.
+                  Nous préférons afficher moins de contacts plutôt que de vous orienter vers un faux numéro.
+                  La liste affichée a été contrôlée le 17 septembre 2026 à partir des portails institutionnels.
                 </p>
               </div>
             </div>
@@ -578,11 +575,6 @@ export default function Urgences() {
                   <Badge className={`w-fit ${getTypeColor(service.type)}`}>
                     {service.type}
                   </Badge>
-                  {service.verificationStatus === "priority-restored" && (
-                    <Badge variant="outline" className="w-fit border-amber-500 text-amber-700 dark:text-amber-300">
-                      Prioritaire — à revalider
-                    </Badge>
-                  )}
                   {(() => {
                     const distance = getServiceDistance(service);
                     return distance !== null ? (
@@ -615,11 +607,6 @@ export default function Urgences() {
                     {service.phone}
                   </a>
                 </div>
-                {service.verificationNote && (
-                  <p className="text-xs text-amber-700 dark:text-amber-300">
-                    {service.verificationNote}
-                  </p>
-                )}
 
                 <div className="flex gap-2 pt-2">
                   <Button
@@ -671,10 +658,9 @@ export default function Urgences() {
         <Card className="mt-6 bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800">
           <CardContent className="p-4">
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-               <strong>Note importante :</strong> En cas d'urgence vitale, composez le <strong>17</strong> (Police),
-               <strong> 18</strong> (Pompiers), <strong> 16</strong> (Gendarmerie) ou <strong>112</strong> (SAMU).
-               Les services prioritaires 1010, 199 et 50400504 sont également listés,
-               mais doivent être revalidés avant de remplacer les numéros de secours confirmés.
+              <strong>Note importante :</strong> En cas d'urgence vitale, composez le <strong>17</strong> (Police),
+              <strong> 18</strong> (Pompiers) ou <strong> 16</strong> (Gendarmerie).
+              Ces numéros nationaux sont gratuits et disponibles 24h/24.
             </p>
           </CardContent>
         </Card>

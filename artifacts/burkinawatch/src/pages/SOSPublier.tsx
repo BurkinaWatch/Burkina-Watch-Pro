@@ -288,7 +288,7 @@ export default function SOSPublier() {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <a href="tel:17" className="block">
             <Card className="bg-card hover-elevate cursor-pointer transition-all hover:shadow-lg">
               <CardContent className="p-4 text-center">
@@ -313,42 +313,6 @@ export default function SOSPublier() {
                 <Phone className="w-8 h-8 mx-auto mb-2 text-blue-600" />
                 <p className="font-semibold">Gendarmerie</p>
                 <p className="text-2xl font-bold text-blue-600">16</p>
-              </CardContent>
-            </Card>
-          </a>
-          <a href="tel:112" className="block">
-            <Card className="bg-card hover-elevate cursor-pointer transition-all hover:shadow-lg">
-              <CardContent className="p-4 text-center">
-                <Phone className="w-8 h-8 mx-auto mb-2 text-green-600" />
-                <p className="font-semibold">SAMU</p>
-                <p className="text-2xl font-bold text-green-600">112</p>
-              </CardContent>
-            </Card>
-          </a>
-          <a href="tel:1010" className="block">
-            <Card className="bg-card hover-elevate cursor-pointer transition-all hover:shadow-lg">
-              <CardContent className="p-4 text-center">
-                <Phone className="w-8 h-8 mx-auto mb-2 text-amber-600" />
-                <p className="font-semibold">Protection civile</p>
-                <p className="text-2xl font-bold text-amber-600">1010</p>
-              </CardContent>
-            </Card>
-          </a>
-          <a href="tel:199" className="block">
-            <Card className="bg-card hover-elevate cursor-pointer transition-all hover:shadow-lg">
-              <CardContent className="p-4 text-center">
-                <Phone className="w-8 h-8 mx-auto mb-2 text-purple-600" />
-                <p className="font-semibold">CNA</p>
-                <p className="text-2xl font-bold text-purple-600">199</p>
-              </CardContent>
-            </Card>
-          </a>
-          <a href="tel:50400504" className="block">
-            <Card className="bg-card hover-elevate cursor-pointer transition-all hover:shadow-lg">
-              <CardContent className="p-4 text-center">
-                <Phone className="w-8 h-8 mx-auto mb-2 text-orange-600" />
-                <p className="font-semibold">Brigade Laabal</p>
-                <p className="text-2xl font-bold text-orange-600">50400504</p>
               </CardContent>
             </Card>
           </a>

@@ -1,12 +1,11 @@
 /**
  * Contacts d'urgence conservés après audit.
  *
- * Les trois numéros nationaux confirmés sont complétés par les quatre
- * services prioritaires historiques demandés par l'équipe. Ces quatre fiches
- * sont explicitement distinguées des contacts confirmés et restent à
- * revalider lorsque la source institutionnelle ne publie pas le numéro.
+ * Cette liste est volontairement courte : les anciennes fiches locales
+ * contenaient des numéros et des adresses qui n'étaient pas recoupables avec
+ * une source institutionnelle. Un contact d'urgence non vérifié est plus
+ * dangereux qu'une fiche absente.
  */
-import { LEGACY_URGENCIES_AUDIT } from "./urgenciesAudit";
 
 const EMERGENCY_SOURCES = [
   {
@@ -32,21 +31,14 @@ export interface EmergencyService {
   longitude?: number;
   available24h?: boolean;
   services?: string[];
-  verificationStatus: "confirmed" | "priority-restored";
+  verificationStatus: "confirmed";
   verifiedAt: string;
   sourceUrls: string[];
-  verificationNote?: string;
 }
 
 const VERIFIED_AT = "2026-09-17";
 const SECURITY_SOURCE = EMERGENCY_SOURCES[0].url;
 const GOVERNMENT_SOURCE = EMERGENCY_SOURCES[1].url;
-const SAMU_SOURCE =
-  "https://gouvernement.gov.bf/actualites/sante-publique-le-service-daide-medicale-urgente-samu-desormais-operationnel-a-ouagadougou/";
-const CIVIL_PROTECTION_SOURCE =
-  "https://gouvernement.gov.bf/actualites/protection-civile-30-officiers-sapeurs-pompiers-prets-a-servir/";
-const LAABAL_SOURCE =
-  "https://gouvernement.gov.bf/actualites/brigade-laabal-ou-le-pari-dune-reconquete-civique-de-nos-villes-et-campagnes/";
 
 /**
  * Numéros nationaux de secours retenus pour l'affichage public.
@@ -96,66 +88,6 @@ export const EMERGENCY_SERVICES: EmergencyService[] = [
     verifiedAt: VERIFIED_AT,
     sourceUrls: [SECURITY_SOURCE, GOVERNMENT_SOURCE],
   },
-  {
-    id: "national-samu-112",
-    name: "SAMU National — Urgences médicales",
-    type: "Ambulance",
-    city: "National",
-    address: "Service d'aide médicale urgente",
-    phone: "112",
-    available24h: true,
-    services: ["Urgences médicales", "Ambulances", "Évacuations sanitaires"],
-    verificationStatus: "priority-restored",
-    verifiedAt: VERIFIED_AT,
-    sourceUrls: [SAMU_SOURCE],
-    verificationNote:
-      "Service prioritaire restauré depuis la liste historique; confirmer le numéro court auprès du SAMU avant de le présenter comme confirmé.",
-  },
-  {
-    id: "national-civil-protection-1010",
-    name: "Protection civile",
-    type: "Pompiers",
-    city: "National",
-    address: "Service national de protection civile",
-    phone: "1010",
-    available24h: true,
-    services: ["Protection civile", "Catastrophes naturelles", "Secours"],
-    verificationStatus: "priority-restored",
-    verifiedAt: VERIFIED_AT,
-    sourceUrls: [CIVIL_PROTECTION_SOURCE],
-    verificationNote:
-      "Service prioritaire restauré depuis la liste historique; le portail officiel confirme l'organisme, mais pas le numéro dans la page consultée.",
-  },
-  {
-    id: "national-cna-199",
-    name: "Centre national d'appel (CNA)",
-    type: "Police",
-    city: "National",
-    address: "Centre national d'appel",
-    phone: "199",
-    available24h: true,
-    services: ["Signalements", "Sécurité nationale"],
-    verificationStatus: "priority-restored",
-    verifiedAt: VERIFIED_AT,
-    sourceUrls: [SECURITY_SOURCE, GOVERNMENT_SOURCE],
-    verificationNote:
-      "Numéro historique restauré à la demande; sa confirmation institutionnelle actuelle reste à obtenir.",
-  },
-  {
-    id: "national-laabal-50400504",
-    name: "Brigade Laabal — Lutte contre l'incivisme",
-    type: "Police",
-    city: "National",
-    address: "Service national de lutte contre l'incivisme",
-    phone: "50400504",
-    available24h: true,
-    services: ["Incivisme", "Ordre public", "Salubrité", "Sécurité routière"],
-    verificationStatus: "priority-restored",
-    verifiedAt: VERIFIED_AT,
-    sourceUrls: [LAABAL_SOURCE],
-    verificationNote:
-      "Service prioritaire restauré depuis la liste historique; confirmer la ligne téléphonique auprès de la Brigade Laabal.",
-  },
 ];
 
 let lastUpdate = new Date();
@@ -203,10 +135,9 @@ export const urgenciesService = {
         .length,
       lastUpdate: lastUpdate.toISOString(),
       verification: {
-          status: "confirmed-plus-priority-restored" as const,
+        status: "conservative-confirmed-only" as const,
         verifiedAt: VERIFIED_AT,
-          excludedUnverifiedCount: LEGACY_URGENCIES_AUDIT.pendingVerificationCount,
-          audit: LEGACY_URGENCIES_AUDIT,
+        excludedUnverifiedCount: 110,
         sources: EMERGENCY_SOURCES,
       },
     };
