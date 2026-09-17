@@ -6,6 +6,7 @@ import { getGetMobileSessionsQueryKey, useGetMobileSessions } from '@workspace/a
 import { useColors } from '@/hooks/useColors';
 import { Screen } from '@/components/Screen';
 import { useAuth } from '@/lib/auth';
+import { useInterfaceMode } from '@/lib/interfaceMode';
 import { PlaceExperienceMobileCard } from '@/components/PlaceExperienceMobileCard';
 
 const items = [
@@ -19,6 +20,7 @@ export default function ProfileScreen() {
   const colors = useColors();
   const router = useRouter();
   const { user, isLoading, isAuthenticated, signOut, revokeAllSessions } = useAuth();
+  const { mode, selectMode } = useInterfaceMode();
   const [isRevokingSessions, setIsRevokingSessions] = useState(false);
   const { data: mobileSessionsData, isLoading: mobileSessionsLoading, isError: mobileSessionsError } = useGetMobileSessions({
     query: {
@@ -71,6 +73,25 @@ export default function ProfileScreen() {
         <Feather name={isAuthenticated ? 'log-out' : 'log-in'} size={18} color={colors.primary} />
         <Text style={[styles.signInText, { color: colors.primary }]}>{isAuthenticated ? 'Se déconnecter' : 'Se connecter à BurkinaWatch'}</Text>
       </Pressable>
+      <View style={[styles.modeCard, { backgroundColor: colors.card, borderColor: colors.border }]} testID="interface-mode-card">
+        <View style={styles.modeCopy}>
+          <Text style={[styles.modeTitle, { color: colors.foreground }]}>Présentation de l’application</Text>
+          <Text style={[styles.modeText, { color: colors.mutedForeground }]}>
+            Mode actuel : {mode === 'web' ? 'interface du site Web' : 'interface mobile simplifiée'}.
+          </Text>
+        </View>
+        <Pressable
+          onPress={async () => {
+            await selectMode('web');
+            router.replace('/web-interface');
+          }}
+          style={[styles.modeButton, { backgroundColor: colors.primary }]}
+          testID="button-switch-web-interface"
+        >
+          <Feather name="globe" size={16} color={colors.primaryForeground} />
+          <Text style={[styles.modeButtonText, { color: colors.primaryForeground }]}>Ouvrir l’interface du site Web</Text>
+        </Pressable>
+      </View>
       {isAuthenticated && (
         <View style={[styles.securityCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.securityCopy}>
@@ -168,4 +189,10 @@ const styles = StyleSheet.create({
   itemTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 14 },
   itemText: { fontFamily: 'Inter_400Regular', fontSize: 11, marginTop: 3 },
   note: { fontFamily: 'Inter_400Regular', fontSize: 11, lineHeight: 17, textAlign: 'center' },
+  modeCard: { borderRadius: 16, borderWidth: 1, gap: 12, padding: 14 },
+  modeCopy: { gap: 4 },
+  modeTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 14 },
+  modeText: { fontFamily: 'Inter_400Regular', fontSize: 11, lineHeight: 17 },
+  modeButton: { alignItems: 'center', borderRadius: 10, flexDirection: 'row', gap: 7, justifyContent: 'center', paddingHorizontal: 10, paddingVertical: 10 },
+  modeButtonText: { fontFamily: 'Inter_600SemiBold', fontSize: 11 },
 });

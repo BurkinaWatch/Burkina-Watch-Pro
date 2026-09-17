@@ -19,6 +19,7 @@ import { setAuthTokenGetter, setBaseUrl } from '@workspace/api-client-react';
 import { AuthProvider } from '@/lib/auth';
 import { getAccessToken } from '@/lib/session';
 import { getApiOrigin } from '@/lib/apiConfig';
+import { InterfaceModeProvider } from '@/lib/interfaceMode';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -46,6 +47,7 @@ const appFonts = {
 function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerBackTitle: 'Back' }}>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="feed" options={{ headerShown: false }} />
       <Stack.Screen name="signaler" options={{ headerShown: false }} />
@@ -55,6 +57,7 @@ function RootLayoutNav() {
       <Stack.Screen name="place-results" options={{ headerShown: false }} />
       <Stack.Screen name="tracking-live" options={{ headerShown: false }} />
       <Stack.Screen name="connexion" options={{ headerShown: false }} />
+      <Stack.Screen name="web-interface" options={{ headerShown: false }} />
       <Stack.Screen name="signalement/[id]" options={{ headerShown: false }} />
     </Stack>
   );
@@ -85,11 +88,13 @@ export default function RootLayout() {
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <GestureHandlerRootView>
-              <KeyboardProvider>
-                <RootLayoutNav />
-              </KeyboardProvider>
-            </GestureHandlerRootView>
+            <InterfaceModeProvider>
+              <GestureHandlerRootView>
+                <KeyboardProvider>
+                  <RootLayoutNav />
+                </KeyboardProvider>
+              </GestureHandlerRootView>
+            </InterfaceModeProvider>
           </AuthProvider>
         </QueryClientProvider>
       </ErrorBoundary>
