@@ -501,7 +501,13 @@ export class OverpassService {
         }
       } catch (err) {
         errors++;
+        if (errors <= 3) {
+          console.error(`[Overpass] Échec enregistrement ${placeType} (${element.type}/${element.id}):`, err);
+        }
       }
+    }
+    if (response.elements.length > 0) {
+      console.log(`[Overpass] Synchronisation ${placeType}: ${response.elements.length} éléments lus, ${added} ajoutés, ${updated} mis à jour, ${errors} erreurs`);
     }
     return { added, updated, errors };
   }
