@@ -581,6 +581,41 @@ function transformOsmToStation(place: Place) {
   };
 }
 
+function transformLocalToPlace(entry: Record<string, any>, placeType: string) {
+  const name = entry.name || entry.nom || "Lieu sans nom";
+  const latitude = Number(entry.latitude);
+  const longitude = Number(entry.longitude);
+
+  return {
+    id: `local-${placeType}-${entry.id || name}`,
+    osmId: null,
+    osmType: null,
+    placeType,
+    name,
+    latitude: Number.isFinite(latitude) ? String(latitude) : "0",
+    longitude: Number.isFinite(longitude) ? String(longitude) : "0",
+    address: entry.address || entry.adresse || null,
+    quartier: entry.quartier || null,
+    ville: entry.ville || null,
+    region: entry.region || null,
+    telephone: entry.telephone || entry.phone || null,
+    email: entry.email || null,
+    website: entry.website || entry.siteWeb || null,
+    horaires: entry.horaires || null,
+    imageUrl: null,
+    tags: {
+      ...(entry.tags || {}),
+      category: entry.categorie || entry.type || placeType,
+      operator: entry.operateur || undefined,
+    },
+    source: "BurkinaWatch",
+    confidenceScore: "1.00",
+    confirmations: entry.confirmations || 0,
+    reports: entry.reports || 0,
+    verificationStatus: "verified",
+  };
+}
+
 function transformOsmToHopital(place: Place) {
   const tags = place.tags as Record<string, string> || {};
   return {
@@ -1260,10 +1295,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { type } = req.params;
       const { region } = req.query;
       
-      const response = await overpassService.getPlaces({ 
+      let response = await overpassService.getPlaces({ 
         placeType: type,
         region: region as string | undefined
       });
+
+      if (type === "hospital" && response.places.length === 0) {
+        try {
+          await overpassService.syncPlaceType("hospital");
+          response = await overpassService.getPlaces({
+            placeType: type,
+            region: region as string | undefined,
+          });
+        } catch (syncError) {
+          console.error("Erreur sync hôpitaux OSM:", syncError);
+        }
+      }
       
       // Transform based on type if needed
       let transformed: any[] = response.places;
@@ -3809,31 +3856,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Banques et GAB
-  app.get("/api/banques", async (req, res) => {
-    try {
-      const { region, search } = req.query;
-      const resultBanks = await overpassService.getPlaces({ placeType: "bank" });
-      const resultAtms = await overpassService.getPlaces({ placeType: "atm" });
-      const banks = resultBanks.places || [];
-      const atms = resultAtms.places || [];
-      let allBanks = [...banks, ...atms].map(transformOsmToBanque);
-
-      if (search) {
-        const query = (search as string).toLowerCase();
-        allBanks = allBanks.filter(b => b.nom.toLowerCase().includes(query));
-      }
-      if (region && region !== "all") {
-        allBanks = allBanks.filter(b => b.region === region);
-      }
-
-      res.json(allBanks);
-    } catch (error) {
-      console.error("Error fetching banks:", error);
-      res.status(500).json({ error: "Erreur lors de la récupération des banques" });
-    }
-  });
-
   // Boutiques et Commerces
   app.get("/api/boutiques", async (req, res) => {
     try {
@@ -4777,7 +4799,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { placeType, region, ville, search, verificationStatus, limit, offset } = req.query;
       
-      const response = await overpassService.getPlaces({
+      let response = await overpassService.getPlaces({
         placeType: placeType as string,
         region: region as string,
         ville: ville as string,
@@ -4786,6 +4808,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
         limit: limit ? parseInt(limit as string) : undefined,
         offset: offset ? parseInt(offset as string) : undefined,
       });
+
+      // Les catégories d'hébergement sont regroupées dans une seule page Web.
+      // Le catalogue doit donc couvrir hôtels, auberges, hostels et motels.
+      if (placeType === "hotel") {
+        const accommodationTypes = ["hotel", "guest_house", "hostel", "motel"];
+        let accommodationResults = await Promise.all(
+          accommodationTypes.map((type) => overpassService.getPlaces({ placeType: type })),
+        );
+        let accommodationPlaces = accommodationResults.flatMap((result) => result.places || []);
+
+        if (accommodationPlaces.length === 0) {
+          try {
+            await Promise.all(accommodationTypes.map((type) => overpassService.syncPlaceType(type)));
+            accommodationResults = await Promise.all(
+              accommodationTypes.map((type) => overpassService.getPlaces({ placeType: type })),
+            );
+            accommodationPlaces = accommodationResults.flatMap((result) => result.places || []);
+          } catch (syncError) {
+            console.error("Erreur sync hébergements OSM:", syncError);
+          }
+        }
+
+        response = {
+          places: accommodationPlaces,
+          lastUpdated: accommodationResults
+            .map((result) => result.lastUpdated)
+            .find(Boolean) || null,
+        };
+      }
+
+      // Ces pages ont un catalogue BurkinaWatch fiable. On l'expose aussi
+      // via l'endpoint générique utilisé par Burkina Pratique afin d'éviter
+      // qu'une table OSM vide masque des données déjà disponibles sur le site.
+      if (response.places.length === 0 && placeType) {
+        let localPlaces: Record<string, any>[] = [];
+
+        if (placeType === "fuel") {
+          const { stationsService } = await import("../stationsService");
+          localPlaces = stationsService.getAllStations();
+        } else if (placeType === "shop") {
+          localPlaces = BOUTIQUES_DATA;
+        } else if (placeType === "mobile_phone") {
+          const { ALL_AGENCES_TELEPHONIE } = await import("../telephonieData");
+          localPlaces = ALL_AGENCES_TELEPHONIE;
+        } else if (placeType === "bank") {
+          const { BANQUES_DATA } = await import("../banquesData");
+          localPlaces = BANQUES_DATA;
+        }
+
+        if (localPlaces.length > 0) {
+          const placesFromCatalog = localPlaces
+            .map((entry) => transformLocalToPlace(entry, String(placeType)))
+            .filter((place) => {
+              if (region && place.region !== region) return false;
+              if (ville && place.ville !== ville) return false;
+              if (search) {
+                const query = String(search).toLocaleLowerCase("fr-FR");
+                return [place.name, place.address, place.quartier, place.ville]
+                  .filter(Boolean)
+                  .join(" ")
+                  .toLocaleLowerCase("fr-FR")
+                  .includes(query);
+              }
+              return true;
+            });
+
+          return res.json({
+            places: placesFromCatalog,
+            total: placesFromCatalog.length,
+            lastUpdated: new Date(),
+            source: "BurkinaWatch",
+          });
+        }
+      }
 
       // Transformation spécifique pour les hôpitaux et cliniques
       if (placeType === "hospital" || placeType === "clinic") {
