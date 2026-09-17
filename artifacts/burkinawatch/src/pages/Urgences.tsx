@@ -486,7 +486,7 @@ export default function Urgences() {
             <div className="flex items-start gap-3">
               <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
               <div className="space-y-1 text-sm">
-                <p className="font-semibold">Contacts confirmés uniquement</p>
+                 <p className="font-semibold">Contacts nationaux et services prioritaires</p>
                 <p className="text-muted-foreground">
                    Les 7 services nationaux affichés comprennent 3 contacts confirmés
                    et 4 services prioritaires restaurés depuis la liste historique.
