@@ -130,7 +130,7 @@ export default function APropos() {
                     <div>
                       <h4 className="font-semibold">Numéros d'Urgence</h4>
                       <p className="text-sm text-muted-foreground">
-                        106 contacts vérifiés : Police (17), Pompiers (18), SAMU (112), CNA (199), Brigade Laabal (50 40 05 04)
+                         3 contacts nationaux conservés après audit : Police (17), Pompiers (18) et Gendarmerie (16)
                       </p>
                     </div>
                   </div>

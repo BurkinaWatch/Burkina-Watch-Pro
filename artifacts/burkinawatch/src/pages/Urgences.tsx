@@ -14,7 +14,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Search, MapPin, Phone, AlertTriangle, Shield, Activity, Heart, Users, ArrowLeft, RefreshCw, Download, Smartphone, Loader2, Navigation } from "lucide-react";
 import { VoiceSearchInput } from "@/components/VoiceSearchInput";
-import { SiWhatsapp } from "react-icons/si";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { getLocationErrorMessage, requestUserLocation } from "@/lib/geolocation";
@@ -472,7 +471,7 @@ export default function Urgences() {
               <div className="flex-1">
                 <h2 className="text-2xl font-bold mb-2">Urgences Burkina</h2>
                 <p className="text-muted-foreground">
-                  Contacts officiels pour les situations critiques au Burkina Faso
+                  Contacts nationaux conservés après audit pour les situations critiques au Burkina Faso
                 </p>
               </div>
             </div>
