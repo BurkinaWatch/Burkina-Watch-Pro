@@ -692,16 +692,12 @@ export function WeatherAlertsBanner() {
                   <a href="tel:18" className="text-primary underline">18</a>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">SAMU:</span>
-                  <a href="tel:112" className="text-primary underline">112</a>
-                </div>
-                <div className="flex items-center gap-2">
                   <span className="font-medium">Police:</span>
                   <a href="tel:17" className="text-primary underline">17</a>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">Protection Civile:</span>
-                  <a href="tel:1010" className="text-primary underline">1010</a>
+                  <span className="font-medium">Gendarmerie:</span>
+                  <a href="tel:16" className="text-primary underline">16</a>
                 </div>
               </div>
             </div>
