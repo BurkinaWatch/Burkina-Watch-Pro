@@ -326,18 +326,18 @@ export default function Guide() {
           color="bg-orange-600"
           preview={{
             statCards: [
-              { value: "3", label: "Contacts", color: "bg-orange-50 dark:bg-orange-950/20 print:bg-orange-50" },
+              { value: "113", label: "Services", color: "bg-orange-50 dark:bg-orange-950/20 print:bg-orange-50" },
             ],
             elements: [
-              "Police Nationale - 17 - Urgence",
-              "Sapeurs-Pompiers - 18 - Urgence",
-              "Gendarmerie Nationale - 16 - Urgence",
+              "Brigade Laabal - 50 40 05 04 - Numero Vert 24H/24",
+              "Centre National d'Appel (CNA) - 199 - 24H/24 7J/7",
+              "WhatsApp 71 20 33 .. / 68 24 44 ..",
             ],
           }}
           features={[
-            "Police Nationale (17), Sapeurs-Pompiers (18) et Gendarmerie (16)",
-            "Contacts locaux retirés lorsqu'ils ne sont pas recoupables avec une source institutionnelle",
-            "Liste courte contrôlée le 17 septembre 2026",
+            "Brigade Laabal (50 40 05 04) - Numero vert 24h/24",
+            "Centre National d'Appel CNA (199) - Signaler tout fait suspect",
+            "Numeros WhatsApp officiels pour alertes",
             "Recherche vocale et filtrage par type de service",
             "Bouton d'appel direct en un clic",
           ]}

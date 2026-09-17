@@ -307,12 +307,12 @@ export default function SOSPublier() {
               </CardContent>
             </Card>
           </a>
-          <a href="tel:16" className="block">
+          <a href="tel:50400504" className="block">
             <Card className="bg-card hover-elevate cursor-pointer transition-all hover:shadow-lg">
               <CardContent className="p-4 text-center">
-                <Phone className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-                <p className="font-semibold">Gendarmerie</p>
-                <p className="text-2xl font-bold text-blue-600">16</p>
+                <Phone className="w-8 h-8 mx-auto mb-2 text-green-600" />
+                <p className="font-semibold">Brigade Laabal</p>
+                <p className="text-2xl font-bold text-green-600">50.40.05.04</p>
               </CardContent>
             </Card>
           </a>

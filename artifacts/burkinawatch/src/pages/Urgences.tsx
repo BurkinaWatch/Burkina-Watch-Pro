@@ -14,6 +14,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Search, MapPin, Phone, AlertTriangle, Shield, Activity, Heart, Users, ArrowLeft, RefreshCw, Download, Smartphone, Loader2, Navigation } from "lucide-react";
 import { VoiceSearchInput } from "@/components/VoiceSearchInput";
+import { SiWhatsapp } from "react-icons/si";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { getLocationErrorMessage, requestUserLocation } from "@/lib/geolocation";
@@ -471,25 +472,93 @@ export default function Urgences() {
               <div className="flex-1">
                 <h2 className="text-2xl font-bold mb-2">Urgences Burkina</h2>
                 <p className="text-muted-foreground">
-                  Contacts nationaux conservés après audit pour les situations critiques au Burkina Faso
+                  Contacts officiels pour les situations critiques au Burkina Faso
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Notice de vérification */}
-        <Card className="mb-6 border-amber-500/30 bg-amber-500/5">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
-              <div className="space-y-1 text-sm">
-                <p className="font-semibold">Contacts confirmés uniquement</p>
-                <p className="text-muted-foreground">
-                  Les anciennes fiches locales et les numéros courts non recoupables ont été retirés.
-                  Nous préférons afficher moins de contacts plutôt que de vous orienter vers un faux numéro.
-                  La liste affichée a été contrôlée le 17 septembre 2026 à partir des portails institutionnels.
-                </p>
+        {/* Brigade Laabal Card */}
+        <Card className="mb-6 border-blue-500/30 bg-blue-500/5">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Brigade Laabal</h3>
+                  <p className="text-muted-foreground">Restauration de l'ordre public et lutte contre l'incivisme</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">Numéro Vert</Badge>
+                    <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">24H/24</Badge>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <Button 
+                  size="lg" 
+                  className="flex-1 md:flex-none gap-2 bg-blue-600 hover:bg-blue-700"
+                  onClick={() => window.location.href = "tel:50400504"}
+                >
+                  <Phone className="w-5 h-5" />
+                  <span className="text-lg font-bold">Appeler le 50 40 05 04</span>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* CNA Card */}
+        <Card className="mb-6 border-primary/30 bg-primary/5">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <Phone className="w-8 h-8 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Centre National d'Appel (CNA)</h3>
+                  <p className="text-muted-foreground">Signaler tout fait suspect ou acte de terrorisme</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">24H/24</Badge>
+                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">7J/7</Badge>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <Button 
+                  size="lg" 
+                  className="flex-1 md:flex-none gap-2 bg-primary hover:bg-primary/90"
+                  onClick={() => window.location.href = "tel:199"}
+                >
+                  <Phone className="w-5 h-5" />
+                  <span className="text-lg font-bold">Appeler le 199</span>
+                </Button>
+                
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className="flex-1 md:flex-none gap-2 border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20"
+                    onClick={() => window.open("https://wa.me/22671203333", "_blank")}
+                  >
+                    <SiWhatsapp className="w-5 h-5" />
+                    <span>WhatsApp 71 20 33 33</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className="flex-1 md:flex-none gap-2 border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20"
+                    onClick={() => window.open("https://wa.me/22668244444", "_blank")}
+                  >
+                    <SiWhatsapp className="w-5 h-5" />
+                    <span>WhatsApp 68 24 44 44</span>
+                  </Button>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -658,9 +727,9 @@ export default function Urgences() {
         <Card className="mt-6 bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800">
           <CardContent className="p-4">
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              <strong>Note importante :</strong> En cas d'urgence vitale, composez le <strong>17</strong> (Police),
-              <strong> 18</strong> (Pompiers) ou <strong> 16</strong> (Gendarmerie).
-              Ces numéros nationaux sont gratuits et disponibles 24h/24.
+              <strong>Note importante :</strong> En cas d'urgence vitale, composez le <strong>17</strong> (Police), 
+              <strong> 18</strong> (Pompiers) ou <strong> 116</strong> (Enfance en danger). 
+              Ces numéros sont gratuits et disponibles 24h/24.
             </p>
           </CardContent>
         </Card>

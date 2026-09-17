@@ -20,4 +20,3 @@
 - [Audit base production Railway](railway-production-database-audit.md) — la production active peut être Railway même si la base de production Replit n’est pas provisionnée.
 - [Tests MIME Nodemailer](nodemailer-smtp-mime.md) — analyser le MIME décodé; quoted-printable et noms de fichiers sans guillemets sont valides.
 - [Source des stations](station-source-fallback.md) — OSM complète le catalogue BurkinaWatch; une synchronisation OSM vide ne doit pas rendre la liste vide.
-- [Audit des contacts critiques](emergency-contact-audit.md) — pour les numéros d’urgence, une liste courte et institutionnellement recoupable vaut mieux qu’un annuaire local non vérifiable.

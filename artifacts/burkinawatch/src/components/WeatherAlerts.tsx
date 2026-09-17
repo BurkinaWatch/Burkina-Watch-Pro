@@ -32,6 +32,7 @@ import {
   Home,
   Car,
   Phone,
+  Heart
 } from "lucide-react";
 import { useState } from "react";
 import { format, formatDistanceToNow } from "date-fns";
@@ -394,6 +395,13 @@ export default function WeatherAlerts({
                       </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
+                      <Heart className="w-4 h-4 text-red-500" />
+                      <div>
+                        <p className="font-medium">SAMU</p>
+                        <p className="text-muted-foreground">112</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
                       <Shield className="w-4 h-4 text-blue-500" />
                       <div>
                         <p className="font-medium">Police</p>
@@ -401,10 +409,10 @@ export default function WeatherAlerts({
                       </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
-                      <Shield className="w-4 h-4 text-blue-500" />
+                      <AlertTriangle className="w-4 h-4 text-orange-500" />
                       <div>
-                        <p className="font-medium">Gendarmerie</p>
-                        <p className="text-muted-foreground">16</p>
+                        <p className="font-medium">Protection Civile</p>
+                        <p className="text-muted-foreground">1010</p>
                       </div>
                     </div>
                   </div>
@@ -692,12 +700,16 @@ export function WeatherAlertsBanner() {
                   <a href="tel:18" className="text-primary underline">18</a>
                 </div>
                 <div className="flex items-center gap-2">
+                  <span className="font-medium">SAMU:</span>
+                  <a href="tel:112" className="text-primary underline">112</a>
+                </div>
+                <div className="flex items-center gap-2">
                   <span className="font-medium">Police:</span>
                   <a href="tel:17" className="text-primary underline">17</a>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">Gendarmerie:</span>
-                  <a href="tel:16" className="text-primary underline">16</a>
+                  <span className="font-medium">Protection Civile:</span>
+                  <a href="tel:1010" className="text-primary underline">1010</a>
                 </div>
               </div>
             </div>

@@ -300,14 +300,12 @@ export default function Hopitaux() {
                     )}
                     <LocationValidator placeId={h.placeId} initialConfirmations={h.confirmations} initialReports={h.reports} compact />
                     <div className="flex gap-2 pt-2 border-t">
-                      {h.phone && (
-                        <Button variant="outline" size="sm" className="flex-1 text-xs h-8" asChild>
-                          <a href={`tel:${h.phone}`}>
-                            <Phone className="w-3 h-3 mr-1" />
-                            Appeler
-                          </a>
-                        </Button>
-                      )}
+                      <Button variant="outline" size="sm" className="flex-1 text-xs h-8" asChild>
+                        <a href={`tel:${h.phone || "112"}`}>
+                          <Phone className="w-3 h-3 mr-1" />
+                          Appeler
+                        </a>
+                      </Button>
                       <Button variant="default" size="sm" className="flex-1 text-xs h-8" onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${h.latitude},${h.longitude}`)}>
                         <Navigation className="w-3 h-3 mr-1" />
                         Itinéraire
