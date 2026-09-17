@@ -3746,11 +3746,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Stations-service
   app.get("/api/stations", async (req, res) => {
     try {
-      const { region, search } = req.query;
-      const result = await overpassService.getPlaces({ placeType: "fuel" });
-      const dbPlaces = result.places || [];
-      const lastUpdated = result.lastUpdated;
-      let stations = dbPlaces.map(transformOsmToStation);
+      const { stationsService } = await import("../stationsService");
+      const { region, search, marque, ville, is24h } = req.query;
+      let stations: any[] = [...stationsService.getAllStations()];
+
+      try {
+        const [fuelResult, carWashResult] = await Promise.all([
+          overpassService.getPlaces({ placeType: "fuel" }),
+          overpassService.getPlaces({ placeType: "car_wash" }),
+        ]);
+        const osmPlaces = [...(fuelResult.places || []), ...(carWashResult.places || [])];
+        stations = [...stations, ...osmPlaces.map(transformOsmToStation)];
+      } catch (osmError) {
+        console.error("Erreur chargement OSM stations:", osmError);
+      }
 
       if (search) {
         const query = (search as string).toLowerCase();
@@ -3763,11 +3772,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (region && region !== "all") {
         stations = stations.filter(s => s.region === region);
       }
+      if (marque && marque !== "all") {
+        stations = stations.filter(s => s.marque === marque);
+      }
+      if (ville) {
+        stations = stations.filter(s => s.ville?.toLowerCase().includes((ville as string).toLowerCase()));
+      }
+      if (is24h === "true") {
+        stations = stations.filter(s => s.is24h);
+      }
 
       res.set('Cache-Control', 'public, max-age=3600');
       res.json({
         stations,
-        lastUpdated: lastUpdated?.toISOString() || new Date().toISOString()
+        lastUpdated: stationsService.getStats().lastUpdate,
+        source: "Données BurkinaWatch + OpenStreetMap",
       });
     } catch (error) {
       console.error("Error fetching stations:", error);
@@ -3777,32 +3796,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/stations/stats", async (req, res) => {
     try {
-      const result = await overpassService.getPlaces({ placeType: "fuel" });
-      const stations = result.places || [];
-      
-      const parMarque: Record<string, number> = {};
-      const parRegion: Record<string, number> = {};
-      const villes = new Set<string>();
-      
-      stations.forEach(s => {
-        const transformed = transformOsmToStation(s);
-        parMarque[transformed.marque] = (parMarque[transformed.marque] || 0) + 1;
-        if (transformed.region) {
-          parRegion[transformed.region] = (parRegion[transformed.region] || 0) + 1;
-        }
-        if (transformed.ville) {
-          villes.add(transformed.ville);
-        }
-      });
+      const { stationsService } = await import("../stationsService");
+      const stats = stationsService.getStats();
 
       res.json({
-        total: stations.length,
-        par24h: stations.filter(s => (s.tags as any)?.opening_hours?.includes("24")).length,
-        parMarque,
-        parRegion,
-        nombreVilles: villes.size,
-        lastUpdate: new Date(),
-        source: "PostgreSQL"
+        ...stats,
+        source: "Données BurkinaWatch + OpenStreetMap",
       });
     } catch (error) {
       console.error("Erreur stats stations:", error);
