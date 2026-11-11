@@ -22,3 +22,4 @@
 - [Tests MIME Nodemailer](nodemailer-smtp-mime.md) — analyser le MIME décodé; quoted-printable et noms de fichiers sans guillemets sont valides.
 - [Catalogues locaux et OSM](station-source-fallback.md) — OSM complète les catalogues BurkinaWatch; une synchronisation vide ne doit pas rendre la liste vide.
 - [Requêtes Overpass](overpass-user-agent.md) — un User-Agent explicite est nécessaire pour éviter les refus 406/429 des endpoints publics.
+- [Packs Git temporaires abandonnés](stale-git-temporary-packs.md) — des checkpoints interrompus peuvent laisser de gros `tmp_pack_*` dans `.git`; vérifier qu’ils sont anciens et qu’aucun Git ne tourne avant nettoyage.
