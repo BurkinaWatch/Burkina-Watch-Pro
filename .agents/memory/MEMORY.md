@@ -3,7 +3,7 @@
 - [Compatibilité SecureStore Expo](expo-secure-store-web.md) — le preview Web peut manquer les méthodes natives; garder un fallback conditionnel sans remplacer SecureStore natif.
 - [Installation post-fusion](post-merge-install.md) — ne pas forcer le mode hors ligne; le lockfile peut référencer un paquet absent du cache local.
 - [Validation isolée](release-check-isolation.md) — isoler les dépendances et exécuter les builds lourds séquentiellement pour préserver Metro, Vite et la mémoire du workspace.
-- [Build Android sous mémoire contrainte](android-release-build-memory.md) — limiter architectures et workers, mais réserver assez de metaspace pour Lint après la compilation native.
+- [Build Android sous mémoire contrainte](android-release-build-memory.md) — limiter workers/ABI; Android 36 échoue sous GraalVM 19 et passe avec OpenJDK 21.
 - [Assets Expo locaux](expo-local-assets.md) — les images mobiles doivent rester dans le périmètre Metro de l’artefact Expo.
 - [Schémas Railway et développement](railway-schema-source.md) — l’API privilégie Railway; les changements de schéma doivent passer par la publication, pas par le push dev seul.
 - [Politique des variables PostgreSQL](database-env-policy.md) — `lib/db` et l’API n’utilisent pas encore une convention DB unique.

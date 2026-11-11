@@ -20,3 +20,9 @@ Pour les tablettes Android anciennes, le packaging legacy des bibliothèques nat
 **Why:** La validation d’un APK ARM signé ne suffit pas à garantir son installation sur un appareil réel; les appareils Android 10 peuvent encore être 32 bits ou x86, et certains installateurs gèrent mieux les bibliothèques extraites.
 
 **How to apply:** Pour un livrable de dépannage, augmenter le versionCode, activer `expo.useLegacyPackaging` et inspecter les quatre dossiers ABI avant de remettre le fichier à l’utilisateur.
+
+Pour une compilation Android API 36, définir explicitement `JAVA_HOME` sur un OpenJDK 21 installé plutôt que laisser Gradle utiliser le GraalVM 19 par défaut; `JdkImageTransform` échoue avec celui-ci sur `core-for-system-modules.jar`, tandis qu’un build APK complet passe avec OpenJDK 21.
+
+**Why:** Le rebuild complet avec un cache Gradle neuf a échoué lors de la transformation du JDK sous GraalVM 19, puis a réussi sous OpenJDK 21 sans changer le projet.
+
+**How to apply:** Limiter le changement à la commande Gradle Android. Ne pas modifier le JDK global ni les workflows pour ce seul build.

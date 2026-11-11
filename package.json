@@ -12,7 +12,8 @@
     "build:artifacts": "pnpm -r --if-present run build",
     "release:check": "bash ./scripts/release-check.sh && pnpm run test:release-check",
     "start": "bash scripts/pre-start.sh",
-    "test:release-check": "bash ./scripts/release-check.test.sh && bash ./scripts/check-database-url-policy.test.sh && bash ./scripts/railway-operations-guardrail.test.sh",
+    "test:release-check": "bash ./scripts/release-check.test.sh && bash ./scripts/android-cache-ignore.test.sh && node ./scripts/test-urgences-auth.mjs && bash ./scripts/check-database-url-policy.test.sh && bash ./scripts/railway-operations-guardrail.test.sh",
+    "test:urgences-auth": "node ./scripts/test-urgences-auth.mjs",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
