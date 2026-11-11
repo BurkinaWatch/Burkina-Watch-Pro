@@ -2,7 +2,8 @@
 - [Build Expo statique](expo-build-port.md) — le script de build mobile suppose localhost:8081; il entre en conflit avec le serveur mockup-sandbox déjà actif.
 - [Compatibilité SecureStore Expo](expo-secure-store-web.md) — le preview Web peut manquer les méthodes natives; garder un fallback conditionnel sans remplacer SecureStore natif.
 - [Installation post-fusion](post-merge-install.md) — ne pas forcer le mode hors ligne; le lockfile peut référencer un paquet absent du cache local.
-- [Validation isolée](release-check-isolation.md) — les contrôles de publication doivent installer et compiler dans une copie temporaire, jamais dans les node_modules suivis par Metro.
+- [Validation isolée](release-check-isolation.md) — isoler les dépendances et exécuter les builds lourds séquentiellement pour préserver Metro, Vite et la mémoire du workspace.
+- [Build Android sous mémoire contrainte](android-release-build-memory.md) — limiter architectures et workers, mais réserver assez de metaspace pour Lint après la compilation native.
 - [Assets Expo locaux](expo-local-assets.md) — les images mobiles doivent rester dans le périmètre Metro de l’artefact Expo.
 - [Schémas Railway et développement](railway-schema-source.md) — l’API privilégie Railway; les changements de schéma doivent passer par la publication, pas par le push dev seul.
 - [Politique des variables PostgreSQL](database-env-policy.md) — `lib/db` et l’API n’utilisent pas encore une convention DB unique.
@@ -19,5 +20,5 @@
 - [Rollback Railway](railway-rollback-behavior.md) — un rollback crée un nouveau déploiement basé sur l’ancien commit; vérifier son statut et l’URL publique avant de conclure.
 - [Audit base production Railway](railway-production-database-audit.md) — la production active peut être Railway même si la base de production Replit n’est pas provisionnée.
 - [Tests MIME Nodemailer](nodemailer-smtp-mime.md) — analyser le MIME décodé; quoted-printable et noms de fichiers sans guillemets sont valides.
-- [Source des stations](station-source-fallback.md) — OSM complète le catalogue BurkinaWatch; une synchronisation OSM vide ne doit pas rendre la liste vide.
+- [Catalogues locaux et OSM](station-source-fallback.md) — OSM complète les catalogues BurkinaWatch; une synchronisation vide ne doit pas rendre la liste vide.
 - [Requêtes Overpass](overpass-user-agent.md) — un User-Agent explicite est nécessaire pour éviter les refus 406/429 des endpoints publics.

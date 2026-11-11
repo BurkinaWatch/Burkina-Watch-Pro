@@ -118,6 +118,10 @@ import { fetchPublicPracticalSources } from "../publicPracticalSources";
 import { dataMigrationService } from "../dataMigrationService";
 import { BOUTIQUES_DATA } from "../boutiquesData";
 import { PHARMACIES_DATA } from "../pharmaciesData";
+import {
+  getCatalogFallbackEntries,
+  selectPlacesWithCatalogFallback,
+} from "../placeCatalogFallback";
 import type { Place } from "@workspace/db";
 import {
   encryptCameraPassword,
@@ -4842,20 +4846,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // via l'endpoint générique utilisé par Burkina Pratique afin d'éviter
       // qu'une table OSM vide masque des données déjà disponibles sur le site.
       if (response.places.length === 0 && placeType) {
-        let localPlaces: Record<string, any>[] = [];
-
-        if (placeType === "fuel") {
-          const { stationsService } = await import("../stationsService");
-          localPlaces = stationsService.getAllStations();
-        } else if (placeType === "shop") {
-          localPlaces = BOUTIQUES_DATA;
-        } else if (placeType === "mobile_phone") {
-          const { ALL_AGENCES_TELEPHONIE } = await import("../telephonieData");
-          localPlaces = ALL_AGENCES_TELEPHONIE;
-        } else if (placeType === "bank") {
-          const { BANQUES_DATA } = await import("../banquesData");
-          localPlaces = BANQUES_DATA;
-        }
+        const localPlaces = getCatalogFallbackEntries(String(placeType));
 
         if (localPlaces.length > 0) {
           const placesFromCatalog = localPlaces
@@ -4873,10 +4864,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
               return true;
             });
+          const placesToServe = selectPlacesWithCatalogFallback(
+            response.places,
+            placesFromCatalog,
+          );
 
           return res.json({
-            places: placesFromCatalog,
-            total: placesFromCatalog.length,
+            places: placesToServe,
+            total: placesToServe.length,
             lastUpdated: new Date(),
             source: "BurkinaWatch",
           });

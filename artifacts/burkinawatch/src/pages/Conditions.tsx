@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import { Footer } from "@/components/Footer";
 
 export default function Conditions() {
   return (
@@ -305,7 +306,7 @@ export default function Conditions() {
                 Email : <span className="font-semibold text-foreground">contact@burkinawatch.com</span>
               </p>
               <p className="text-sm text-muted-foreground mt-2">
-                Burkina Watch - Initiative Citoyenne
+                BurkinaWatch — Un produit SOTYSSI
               </p>
             </div>
           </CardContent>
@@ -315,10 +316,12 @@ export default function Conditions() {
           <p className="text-sm text-center text-muted-foreground">
             <strong className="text-foreground">Important :</strong> En utilisant Burkina Watch, 
             vous reconnaissez avoir lu, compris et accepté les présentes conditions d'utilisation 
-            dans leur intégralité.
+            dans leur intégralité. BurkinaWatch est un produit SOTYSSI.
           </p>
         </div>
       </section>
+
+      <Footer />
       <BottomNav />
     </div>
   );

@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Shield, AlertCircle, Map, Users } from "lucide-react";
 import logo from "@assets/burkina_watch_logo.png";
 import heroImage from "@assets/generated_images/Citizens_collaborating_with_smartphones_in_Burkina_68dc35a5.png";
+import { Footer } from "@/components/Footer";
 
 export default function Landing() {
   return (
@@ -130,12 +131,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <footer className="border-t py-8">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>&copy; 2024 Burkina Watch. Tous droits réservés.</p>
-          <p className="mt-2">Application citoyenne pour un Burkina Faso plus sûr et solidaire</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

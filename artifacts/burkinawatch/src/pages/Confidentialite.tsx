@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import { Footer } from "@/components/Footer";
 
 export default function Confidentialite() {
   return (
@@ -395,12 +396,14 @@ export default function Confidentialite() {
                 Pour toute question relative a vos donnees personnelles :
               </p>
               <p className="text-sm font-semibold text-foreground">contact@burkinawatch.com</p>
-              <p className="text-xs text-muted-foreground">BurkinaWatch - Initiative Citoyenne</p>
+              <p className="text-xs text-muted-foreground">BurkinaWatch — Un produit SOTYSSI</p>
             </div>
           </CardContent>
         </Card>
 
       </section>
+
+      <Footer />
       <BottomNav />
     </div>
   );

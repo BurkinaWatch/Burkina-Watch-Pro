@@ -8,6 +8,10 @@ out-tsc
 .expo
 .expo-shared
 
+# Local Android toolchains and Gradle caches (regenerable, not project source)
+/.android-sdk-local/
+/.gradle-local/
+
 # dependencies
 node_modules
 

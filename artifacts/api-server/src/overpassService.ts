@@ -487,6 +487,14 @@ export class OverpassService {
   async syncPlaceType(placeType: string): Promise<{ added: number; updated: number; errors: number }> {
     const query = this.buildOverpassQuery(placeType);
     const response = await this.fetchFromOverpass(query);
+
+    if (response.elements.length === 0) {
+      console.warn(
+        `[Overpass] Synchronisation ${placeType} sans résultat; les données existantes sont conservées`,
+      );
+      return { added: 0, updated: 0, errors: 0 };
+    }
+
     let added = 0, updated = 0, errors = 0;
 
     for (const element of response.elements) {

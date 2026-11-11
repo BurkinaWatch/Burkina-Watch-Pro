@@ -13,7 +13,7 @@ const items = [
   { label: 'Mes signalements', description: 'Suivre vos contributions citoyennes', icon: 'file-text' as const, route: '/feed' },
   { label: 'Classement citoyen', description: 'Découvrir les contributeurs actifs', icon: 'award' as const, route: '/services' },
   { label: 'Préférences', description: 'Notifications et confidentialité', icon: 'sliders' as const, route: '/alertes' },
-  { label: 'À propos & aide', description: 'Guide, fiabilité et conditions', icon: 'info' as const, route: '/services' },
+  { label: 'À propos & aide', description: 'Guide, fiabilité et conditions', icon: 'info' as const, route: '/about' },
 ] as const;
 
 export default function ProfileScreen() {

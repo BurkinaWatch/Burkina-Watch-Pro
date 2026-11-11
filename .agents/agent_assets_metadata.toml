@@ -14,3 +14,45 @@ mtime_ms = 1789219106884
 storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:766d3c29-01ad-41d8-90b6-ccbc39f09e61/7c885a60-7523-4c61-aeeb-325970bd6d7b/bbdc3350-8276-4cd0-a18d-0d950be09a0b"
 storage_version_token = "1789219607892884"
 content_type = "application/pdf"
+
+[[outputs]]
+id = "SgT4TiW4P-kDAK7_vjs76"
+uri = "file://deliverables/BurkinaWatch-Mobile-1.0.0-arm64.apk"
+type = "unspecified"
+title = "BurkinaWatch Mobile 1.0.0 — APK Android arm64"
+description = "APK installable pour appareils Android arm64 récents. Signature APK v2 vérifiée; SHA-256: 8a1cc69cfaa9733e9b82c7ec59eeb1e634e48877ecbd3c7631d277bf76578403."
+logical_id = "772ff71b-1e2d-4af6-9c19-285ebc1ed5c1"
+content_hash = "sha256:8a1cc69cfaa9733e9b82c7ec59eeb1e634e48877ecbd3c7631d277bf76578403"
+size = 58730031
+mtime_ms = 1789836638920
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:766d3c29-01ad-41d8-90b6-ccbc39f09e61/772ff71b-1e2d-4af6-9c19-285ebc1ed5c1/e7607412-0af5-415b-b2d0-b47efd3f3167"
+storage_version_token = "1789836658247118"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "qx5aAyvkepx1qb74Uc9Zj"
+uri = "file://deliverables/BurkinaWatch-Mobile-1.0.0-universal.apk"
+type = "unspecified"
+title = "BurkinaWatch Mobile 1.0.0 — APK universel"
+description = "APK Android compatible ARM 32 bits et ARM 64 bits, vérifié pour Android 7 et versions ultérieures."
+logical_id = "c87ebd73-5aee-4dff-a94b-f1a33338937a"
+content_hash = "sha256:c24524a5b5a82a141f6b92afae27347ec2aefbbcb108cc9b731f031142a0d0fe"
+size = 75414305
+mtime_ms = 1789850766873
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:766d3c29-01ad-41d8-90b6-ccbc39f09e61/c87ebd73-5aee-4dff-a94b-f1a33338937a/8a16c9ca-6cf8-4bfd-8285-7e14b322784a"
+storage_version_token = "1789850784106635"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "tDmjV4vbhwjfRp8NyeLAb"
+uri = "file://deliverables/BurkinaWatch-Mobile-1.0.1-universal.apk"
+type = "unspecified"
+title = "BurkinaWatch Mobile 1.0.1 — APK universel compatible"
+description = "Nouvel APK de dépannage pour Android 10 : ARM 32/64 bits et x86 32/64 bits, packaging natif legacy, versionCode 2. SHA-256 : f5e04a8ac127f00cef8e16f855d50e55a46d3e8d9e3f3be3c1c5d3a54a61247b"
+logical_id = "ab01d2d2-485f-4f8f-806f-de80843e21c9"
+content_hash = "sha256:f5e04a8ac127f00cef8e16f855d50e55a46d3e8d9e3f3be3c1c5d3a54a61247b"
+size = 66231758
+mtime_ms = 1789875251388
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:766d3c29-01ad-41d8-90b6-ccbc39f09e61/ab01d2d2-485f-4f8f-806f-de80843e21c9/6c2a1e8c-09e6-458c-b606-bf443fa0ca18"
+storage_version_token = "1789892963141889"
+content_type = "application/octet-stream"

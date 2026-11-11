@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import { Footer } from "@/components/Footer";
 import EmergencyPanel from "@/components/EmergencyPanel";
 import SignalementCard from "@/components/SignalementCard";
 import StatCard from "@/components/StatCard";
@@ -1318,72 +1319,7 @@ export default function Home() {
       <EmergencyPanel />
 
       {/* Footer */}
-      <footer className="border-t bg-muted/30 py-6 sm:py-8 mt-8 sm:mt-16 mb-20 sm:mb-0">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center space-y-4">
-            {/* Contact Info */}
-            <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4">
-              <a
-                href="tel:+22665511323"
-                className="flex items-center gap-2 px-3 py-2 rounded-full bg-green-500/10 hover:bg-green-500/20 text-green-600 dark:text-green-400 transition-all hover:scale-105"
-                title="Appeler"
-              >
-                <Phone className="w-4 h-4" />
-                <span className="text-xs font-medium hidden sm:inline">+226 65511323</span>
-              </a>
-              <a
-                href="https://wa.me/22670019540"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-3 py-2 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 transition-all hover:scale-105"
-                title="WhatsApp"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span className="text-xs font-medium hidden sm:inline">WhatsApp</span>
-              </a>
-              <a
-                href="mailto:contact@burkinawatch.com"
-                className="flex items-center gap-2 px-3 py-2 rounded-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 transition-all hover:scale-105"
-                title="Email"
-              >
-                <Mail className="w-4 h-4" />
-                <span className="text-xs font-medium hidden sm:inline">Email</span>
-              </a>
-            </div>
-
-            {/* Legal Links */}
-            <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-6 text-xs sm:text-sm">
-              <Link href="/a-propos">
-                <span className="text-muted-foreground hover:text-primary transition-colors cursor-pointer">
-                  À propos
-                </span>
-              </Link>
-              <span className="text-muted-foreground">•</span>
-              <Link href="/conditions">
-                <span className="text-muted-foreground hover:text-primary transition-colors cursor-pointer">
-                  Conditions d'utilisation
-                </span>
-              </Link>
-              <span className="text-muted-foreground">•</span>
-              <Link href="/confidentialite">
-                <span className="text-muted-foreground hover:text-primary transition-colors cursor-pointer">
-                  Politique de confidentialite
-                </span>
-              </Link>
-            </div>
-
-            {/* Copyright */}
-            <div className="pt-2 border-t border-border/50">
-              <p className="text-xs text-muted-foreground">
-                © {new Date().getFullYear()} Burkina Watch. Tous droits réservés.
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Plateforme citoyenne de veille et d'engagement pour le Burkina Faso
-              </p>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       <BottomNav />
     </div>

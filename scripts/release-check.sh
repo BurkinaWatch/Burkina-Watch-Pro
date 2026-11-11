@@ -32,6 +32,8 @@ run_gate "PostgreSQL connection variable policy" \
 echo "Release check: creating an isolated validation workspace"
 tar \
   --exclude='./.git' \
+  --exclude='./.local' \
+  --exclude='./.local/*' \
   --exclude='./node_modules' \
   --exclude='*/node_modules' \
   --exclude='./dist' \
@@ -39,9 +41,27 @@ tar \
   --exclude='./static-build' \
   --exclude='*/static-build' \
   --exclude='./.expo' \
+  --exclude='./.expo/*' \
   --exclude='*/.expo' \
+  --exclude='*/.expo/*' \
   --exclude='./.cache' \
+  --exclude='./.cache/*' \
   --exclude='*/.cache' \
+  --exclude='*/.cache/*' \
+  --exclude='./.android-sdk-local' \
+  --exclude='./.android-sdk-local/*' \
+  --exclude='./.gradle-local' \
+  --exclude='./.gradle-local/*' \
+  --exclude='./.tmp' \
+  --exclude='./.tmp/*' \
+  --exclude='*/.gradle' \
+  --exclude='*/.gradle/*' \
+  --exclude='*/android/.gradle' \
+  --exclude='*/android/.gradle/*' \
+  --exclude='*/android/build' \
+  --exclude='*/android/build/*' \
+  --exclude='*/android/app/build' \
+  --exclude='*/android/app/build/*' \
   --exclude='*.tsbuildinfo' \
   --exclude='*/.tsbuildinfo' \
   -C "$repo_root" -cf - . | tar -C "$validation_root" -xf -

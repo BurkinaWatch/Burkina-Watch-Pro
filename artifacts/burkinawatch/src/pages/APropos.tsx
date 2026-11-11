@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import { Footer, SotyssiBranding } from "@/components/Footer";
 import { TutorialTrigger } from "@/components/InteractiveTutorial";
 
 export default function APropos() {
@@ -495,15 +496,19 @@ export default function APropos() {
           <p className="italic text-lg">
             "Ensemble, bâtissons un Burkina Faso connecté, informé et solidaire."
           </p>
-          <p className="mt-4 font-semibold text-foreground">
-            Burkina Watch v1.2 - Au service du peuple burkinabè
-          </p>
-          <p className="mt-2 text-xs">
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <p className="font-semibold text-foreground">
+              Burkina Watch v1.2 - Au service du peuple burkinabè
+            </p>
+            <SotyssiBranding compact />
+          </div>
+          <p className="mt-4 text-xs">
             La patrie ou la mort, nous vaincrons
           </p>
         </div>
       </section>
 
+      <Footer />
       <BottomNav />
     </div>
   );

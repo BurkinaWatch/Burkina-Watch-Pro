@@ -57,6 +57,7 @@ function RootLayoutNav() {
       <Stack.Screen name="place-results" options={{ headerShown: false }} />
       <Stack.Screen name="tracking-live" options={{ headerShown: false }} />
       <Stack.Screen name="connexion" options={{ headerShown: false }} />
+      <Stack.Screen name="about" options={{ headerShown: false }} />
       <Stack.Screen name="web-interface" options={{ headerShown: false }} />
       <Stack.Screen name="signalement/[id]" options={{ headerShown: false }} />
     </Stack>
